@@ -1,5 +1,8 @@
 # passwerk
 
+![CI](https://github.com/ShahriarBijoy/passwerk/actions/workflows/ci.yml/badge.svg)
+![AAS conformance](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/conformance-badge.json)
+
 **The sovereign EU Battery Passport toolkit for AI agents.**
 
 Drop in a supplier's messy documents (BOMs, Excel exports, energy bills, supplier
@@ -23,8 +26,13 @@ Conformance is proven, not claimed: every emitted passport is replayed through t
 
 ## Status
 
-**Phase 0 of 8: repository bootstrap.** Nothing to run yet. See `docs/BUILD_PLAN.md` for
-the full plan and `docs/DECISIONS.md` for the architecture decision log.
+**Phase 3 of 8 done: oracle parity in CI.** `@passwerk/rules` (artefacts and knowledge base)
+and `@passwerk/core` (model, AAS JSON and AASX emitters for IDTA 02035-1/-3/-6, validation
+L1 to L3) are implemented. Every emitted golden passport is replayed through the official
+`aas-test-engines` on every CI run with 12/12 verdict parity (`docs/CONFORMANCE.md`), and a
+sovereignty test plus a `--network none` Docker job prove zero network calls. Next: the
+remaining four submodel emitters, then ingest and mapping. See `docs/BUILD_PLAN.md` and
+`docs/DECISIONS.md`.
 
 ## Packages
 
@@ -43,6 +51,7 @@ Requires Node 20 or newer and pnpm 10.
 pnpm install
 pnpm check      # lint + typecheck + test
 pnpm build
+pnpm oracle     # replay golden passports through aas-test-engines (needs uv)
 ```
 
 Contributor instructions for humans and coding agents live in `AGENTS.md` and `CLAUDE.md`.
