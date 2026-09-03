@@ -6,6 +6,7 @@
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
 export * from './emit/aasJson.js';
+export * from './emit/aasx.js';
 export * from './emit/canonical.js';
 export * from './emit/elements.js';
 export * from './emit/environment.js';
