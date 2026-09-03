@@ -14,7 +14,13 @@ export * from './emit/ids.js';
 export * from './emit/submodels/carbonFootprint.js';
 export * from './emit/submodels/materialComposition.js';
 export * from './emit/submodels/nameplate.js';
-export { submodelFromTemplate } from './emit/submodels/shared.js';
+export {
+  documentIds,
+  integral,
+  submodelFromTemplate,
+  templateCategory,
+  timestamp,
+} from './emit/submodels/shared.js';
 export * from './model/attributeIds.js';
 export * from './model/composites.js';
 export * from './model/field.js';
