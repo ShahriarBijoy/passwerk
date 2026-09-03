@@ -1,0 +1,10 @@
+.git
+node_modules
+**/node_modules
+**/dist
+coverage
+tools/oracle/out
+tools/oracle/.venv
+**/__pycache__
+*.tsbuildinfo
+docs/research-passwerk.md
