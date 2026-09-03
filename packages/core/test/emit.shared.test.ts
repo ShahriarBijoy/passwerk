@@ -34,9 +34,10 @@ describe('emit shared helpers', () => {
   });
 
   it('templateCategory maps the draft category to the template strings', () => {
+    // no batteryCategory attribute: meta.category decides
     const withCategory = (category: string) =>
-      PassportDraft.parse({ ...base, meta: { ...base.meta, category } });
-    expect(templateCategory(PassportDraft.parse(base))).toBe('ev');
+      PassportDraft.parse({ ...base, meta: { ...base.meta, category }, attributes: {} });
+    expect(templateCategory(withCategory('EV'))).toBe('ev');
     expect(templateCategory(withCategory('LMT'))).toBe('lmt');
     expect(templateCategory(withCategory('INDUSTRIAL_GT_2KWH'))).toBe('industrial');
     const explicit = PassportDraft.parse({
