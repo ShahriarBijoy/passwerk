@@ -1,5 +1,5 @@
 {
-  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Light means of transport battery without a carbon footprint submodel.",
+  "$comment": "Fictional data (see lmt-valid.json). Broken on purpose: stateOfCharge is missing although Product Condition data is present, so the mandatory StateOfCharge block of IDTA 02035-5 is absent from the emitted output (PW-L3-MISSING).",
   "meta": {
     "schemaVersion": "1.0",
     "category": "LMT",
@@ -421,18 +421,6 @@
           "page": 2
         }
       ]
-    },
-    "stateOfCharge": {
-      "value": "55",
-      "unit": "%",
-      "status": "present",
-      "source": [
-        {
-          "file": "bms-export.csv",
-          "cell": "B2"
-        }
-      ],
-      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "numberOfFullCycles": {
       "value": "7",

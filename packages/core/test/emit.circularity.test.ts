@@ -74,9 +74,14 @@ describe('emitCircularity', () => {
     const second = suppliers?.value?.[1] as SMC | undefined;
     expect(second?.value?.map((e) => e.idShort)).toEqual([
       'NameOfSupplier',
+      'AddressOfSupplier',
+      'EmailAddressOfSupplier',
       'SupplierWebAddress',
       'Components',
     ]);
+    expect(mlp(child(child(second, 'AddressOfSupplier'), 'Street'))).toEqual({
+      en: 'Hafenstrasse 9',
+    });
     const comps = child(second, 'Components') as SML | undefined;
     expect(comps?.value?.map((c) => val(child(c, 'PartNumber')))).toEqual(['MW-BMS-7']);
   });

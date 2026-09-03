@@ -15,18 +15,27 @@ describe('buildEnvironment', () => {
     expect(env.submodels?.map((s) => s.idShort)).toEqual([
       'BatteryNameplate',
       'CarbonFootprint',
+      'TechnicalData',
+      'ProductCondition',
       'MaterialComposition',
+      'Circularity',
     ]);
     expect(shell?.submodels?.map((r) => r.keys[0]?.value)).toEqual(env.submodels?.map((s) => s.id));
     expect(shell?.submodels?.[0]?.type).toBe(aas.types.ReferenceTypes.ModelReference);
     expect(shell?.submodels?.[0]?.keys[0]?.type).toBe(aas.types.KeyTypes.Submodel);
   });
   it('omits submodels without data', () => {
-    const env = buildEnvironment(PassportDraft.parse(samples['lmt-valid']));
-    expect(env.submodels?.map((s) => s.idShort)).toEqual([
+    const lmt = buildEnvironment(PassportDraft.parse(samples['lmt-valid']));
+    expect(lmt.submodels?.map((s) => s.idShort)).toEqual([
       'BatteryNameplate',
+      'TechnicalData',
+      'ProductCondition',
       'MaterialComposition',
+      'Circularity',
     ]);
+    const industrial = buildEnvironment(PassportDraft.parse(samples['industrial-valid']));
+    expect(industrial.submodels?.map((s) => s.idShort)).not.toContain('ProductCondition');
+    expect(industrial.submodels?.map((s) => s.idShort)).toContain('Circularity');
   });
   it('passes aas-core verification for every valid sample', () => {
     for (const name of ['ev-valid', 'lmt-valid', 'industrial-valid'] as const) {

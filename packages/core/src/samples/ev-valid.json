@@ -864,7 +864,13 @@
           "name": {
             "en": "Nordsee Battery Service"
           },
-          "website": "https://service.nordsee-battery.example"
+          "website": "https://service.nordsee-battery.example",
+          "address": {
+            "nationalCode": "DE",
+            "postalCode": "26382",
+            "street": "Hafenstrasse 9"
+          },
+          "email": "service@nordsee-battery.example"
         }
       ],
       "status": "present",
