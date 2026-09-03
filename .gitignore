@@ -25,3 +25,4 @@ Thumbs.db
 # Oracle outputs and Python venvs
 tools/oracle/out/
 .venv/
+__pycache__/
