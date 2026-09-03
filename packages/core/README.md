@@ -17,5 +17,8 @@ const aasx = emitAasx(draft); // OPC package with the JSON inside, re-validated 
 - Verdicts are `valid`, `valid_with_warnings` or `invalid` and always come from running the
   validators on the emitted output.
 
-Phase 2 covers IDTA 02035-1 (Nameplate), -3 (Carbon Footprint) and -6 (Material Composition).
-The design is in `docs/superpowers/specs/2026-09-03-core-model-emit-validate-design.md`.
+Emitters exist for IDTA 02035-1 (Nameplate), -3 (Carbon Footprint), -4 (Technical Data),
+-5 (Product Condition), -6 (Material Composition) and -7 (Circularity). Part 2 (Handover
+Documentation) follows with ingest in Phase 4 (ADR D-014). Designs:
+`docs/superpowers/specs/2026-09-03-core-model-emit-validate-design.md` and
+`docs/superpowers/specs/2026-09-04-core-emit-parts-4-5-7-design.md`.

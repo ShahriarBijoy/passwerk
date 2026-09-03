@@ -3,6 +3,7 @@ import evMissing from './ev-missing-material-identifier.json' with { type: 'json
 import evValid from './ev-valid.json' with { type: 'json' };
 import industrialBadDecimal from './industrial-bad-decimal.json' with { type: 'json' };
 import industrialValid from './industrial-valid.json' with { type: 'json' };
+import lmtMissingSoc from './lmt-missing-state-of-charge.json' with { type: 'json' };
 import lmtValid from './lmt-valid.json' with { type: 'json' };
 import lmtWrongDate from './lmt-wrong-date-format.json' with { type: 'json' };
 
@@ -10,6 +11,7 @@ export const VALID_SAMPLE_NAMES = ['ev-valid', 'lmt-valid', 'industrial-valid'] 
 export const BROKEN_SAMPLE_NAMES = [
   'ev-missing-material-identifier',
   'lmt-wrong-date-format',
+  'lmt-missing-state-of-charge',
   'industrial-bad-decimal',
 ] as const;
 export type SampleName = (typeof VALID_SAMPLE_NAMES)[number];
@@ -38,6 +40,11 @@ export const brokenSamples: Record<BrokenSampleName, BrokenSample> = {
     draft: lmtWrongDate as unknown as PassportDraftInput,
     // L1 rejects the date; the emitted xs:date Property also fails aas-core verification.
     expectedFindings: ['PW-L1-VALUE', 'PW-L2-AAS-CORE'],
+  },
+  'lmt-missing-state-of-charge': {
+    draft: lmtMissingSoc as unknown as PassportDraftInput,
+    // L1 is clean; the mandatory StateOfCharge block of the template is absent from the output.
+    expectedFindings: ['PW-L3-MISSING'],
   },
   'industrial-bad-decimal': {
     draft: industrialBadDecimal as unknown as PassportDraftInput,

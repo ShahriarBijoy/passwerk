@@ -184,3 +184,43 @@ CI additionally builds `tools/sovereignty/Dockerfile` and runs `pnpm test` with
 
 **Consequences.** Fast, cross-platform evidence on every `pnpm test`; a hard proof on every
 CI run. Phase 6 extends the exercised surface to every MCP tool, resource and prompt.
+
+## D-014: Handover Documentation (IDTA 02035-2) waits for ingest (2026-09-04)
+
+**Context.** No knowledge-base attribute maps into part 2: the Commission's document data
+point has no DIN attribute (D-008), and every document-kind attribute already lands in a
+`DocumentIdentifier` list of parts 1, 3, 5 or 7. Part 2 additionally requires a VDI 2770
+classification (class id, name, system), a language list and digital files per document.
+
+**Decision.** Defer the part 2 emitter to Phase 4, when ingest produces real files with
+names, languages and content types. Parts 4, 5 and 7 are emitted now. Nothing in the
+architecture changes; the catalogue already carries the part 2 template.
+
+**Consequences.** Six of seven submodels are emitted after Phase 3b. Filling part 2 will need
+either VDI 2770 class ids from a verified source or an explicit per-document classification
+supplied by the user; both are marked `verify` until then.
+
+## D-015: Conventions for the part 4, 5 and 7 emitters (2026-09-04)
+
+**Decision.**
+- `Field.recordedAt` (ISO date-time) is the measurement time of a value. Part 5 `LastUpdate`
+  elements use it and fall back to `meta.createdAt`, the passport assembly time, when absent.
+- Template properties typed `xs:integer` or `xs:unsignedInt` receive the integral lexical form
+  when the decimal string is whole (`"95.0"` to `"95"`); a fractional value passes through and
+  fails L2 honestly.
+- `GeneralInformation/BatteryCategory` uses the strings the part 4 template documents
+  (`ev`, `lmt`, `industrial`, `stationary`), derived from the `batteryCategory` attribute or
+  `meta.category`.
+- `deepDischargeEvents` and `overchargeEvents` share the untyped `NegativeEvent` path; each
+  becomes one event whose value is the KB attribute's English name followed by the count.
+  `verify`: the template gives no value format.
+- The eight recycled-content shares fold into one `RecycledContent` entry per Article 8
+  material (`Cobalt`, `Lithium`, `Nickel`, `Lead`) with pre- and post-consumer shares.
+- The part 7 template types the supplier address fields as MultiLanguageProperty; they are
+  emitted in the first language of the supplier's name.
+- Structural lists whose items are `ZeroToMany` (`InformationOnAccidents`,
+  `SparePartSources`) are emitted empty whenever their submodel is; every other mandatory
+  block is emitted only when its attribute is present, so L3 names the exact gap.
+
+**Consequences.** All three emitters stay data-driven through catalogue paths; no semanticId
+or idShort is typed by hand. The oracle set grows to 14 files.

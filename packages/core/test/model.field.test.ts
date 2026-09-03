@@ -29,3 +29,17 @@ describe('Field', () => {
     expect(AnyField.safeParse({ value: { a: 1 }, status: 'present' }).success).toBe(true);
   });
 });
+
+describe('Field.recordedAt', () => {
+  it('accepts an ISO date-time', () => {
+    expect(
+      AnyField.safeParse({ value: '70', status: 'present', recordedAt: '2026-08-31T06:00:00Z' })
+        .success,
+    ).toBe(true);
+  });
+  it('rejects a German date', () => {
+    expect(
+      AnyField.safeParse({ value: '70', status: 'present', recordedAt: '31.08.2026' }).success,
+    ).toBe(false);
+  });
+});

@@ -12,9 +12,18 @@ export * from './emit/elements.js';
 export * from './emit/environment.js';
 export * from './emit/ids.js';
 export * from './emit/submodels/carbonFootprint.js';
+export * from './emit/submodels/circularity.js';
 export * from './emit/submodels/materialComposition.js';
 export * from './emit/submodels/nameplate.js';
-export { submodelFromTemplate } from './emit/submodels/shared.js';
+export * from './emit/submodels/productCondition.js';
+export {
+  documentIds,
+  integral,
+  submodelFromTemplate,
+  templateCategory,
+  timestamp,
+} from './emit/submodels/shared.js';
+export * from './emit/submodels/technicalData.js';
 export * from './model/attributeIds.js';
 export * from './model/composites.js';
 export * from './model/field.js';

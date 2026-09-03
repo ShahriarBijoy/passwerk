@@ -98,5 +98,9 @@ so no build is needed before `pnpm test`.
   writes `docs/CONFORMANCE.md` plus the README badge JSON. `sovereignty.test.ts` guards every
   network API over the whole public surface; CI also runs the suite in Docker with
   `--network none`. See ADRs D-012 and D-013.
-- **Next: Phase 3b.** The remaining four submodel emitters (parts 2, 4, 5, 7), then Phase 4
-  ingest, extract and mapping.
+- **Phase 3b (emitters for parts 4, 5, 7): done.** Technical Data, Product Condition and
+  Circularity emitters, `Field.recordedAt`, five new composites, extended golden samples plus
+  `lmt-missing-state-of-charge`; oracle parity 14/14. Part 2 waits for ingest (ADR D-014);
+  emitter conventions in ADR D-015.
+- **Next: Phase 4.** Ingest, extract and mapping (`DocumentBundle`, `FactSet`,
+  `suggestMappings`), then the part 2 emitter once real files exist.

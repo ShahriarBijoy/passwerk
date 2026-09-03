@@ -1,9 +1,9 @@
 # AAS conformance
 
-Generated: 2026-09-03T22:34:41Z
+Generated: 2026-09-03T23:08:31Z
 Oracle: aas-test-engines 1.0.3
 passwerk: @passwerk/core 0.0.0
-Parity: 12/12
+Parity: 14/14
 
 | Sample | Format | passwerk L2 | Oracle | Parity | Oracle messages |
 |---|---|---|---|---|---|
@@ -15,6 +15,8 @@ Parity: 12/12
 | industrial-bad-decimal | aasx | 1 error | ERROR | yes | Value '74,9' is not a 'xs:decimal' @ ProductCarbonFootprints.0.PcfCO2eq in Submodel CarbonFootprint[https://passport.musterwerk.example/battery/MW-IND-2026-000007/submodels/CarbonFootprint] @ /submodels/1/submodel_elements/0/value/0/value/1 |
 | industrial-valid | json | 0 errors | ok | yes |  |
 | industrial-valid | aasx | 0 errors | ok | yes |  |
+| lmt-missing-state-of-charge | json | 0 errors | ok | yes |  |
+| lmt-missing-state-of-charge | aasx | 0 errors | ok | yes |  |
 | lmt-valid | json | 0 errors | ok | yes |  |
 | lmt-valid | aasx | 0 errors | ok | yes |  |
 | lmt-wrong-date-format | json | 1 error | ERROR | yes | Value '01.03.2026' is not a 'xs:date' @ DateOfManufacture in Submodel BatteryNameplate[https://passport.musterwerk.example/battery/MW-LMT-2026-000042/submodels/BatteryNameplate] @ /submodels/0/submodel_elements/4 |
