@@ -1,9 +1,10 @@
 /**
- * @passwerk/core — MCP-free library: ingest → extract → map → validate → gap → emit → carrier.
- *
- * Phase 0 placeholder. No product code yet.
+ * @passwerk/core: MCP-free library for EU Digital Battery Passports.
+ * Phase 2: PassportDraft model (L1), AAS JSON + AASX emitters for IDTA 02035-1/-3/-6,
+ * L2 (aas-core verification) and L3 (template conformance). Browser-safe (ADR D-006).
  */
-import { PACKAGE_NAME as RULES_PACKAGE } from '@passwerk/rules';
-
 export const PACKAGE_NAME = '@passwerk/core' as const;
-export const DEPENDS_ON = [RULES_PACKAGE] as const;
+
+export * from './model/field.js';
+export * from './model/provenance.js';
+export * from './model/values.js';
