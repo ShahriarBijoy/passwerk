@@ -5,6 +5,9 @@
  */
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
+export * from './model/attributeIds.js';
+export * from './model/composites.js';
 export * from './model/field.js';
+export * from './model/passport.js';
 export * from './model/provenance.js';
 export * from './model/values.js';
