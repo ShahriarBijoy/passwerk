@@ -14,6 +14,7 @@ export * from './emit/ids.js';
 export * from './emit/submodels/carbonFootprint.js';
 export * from './emit/submodels/materialComposition.js';
 export * from './emit/submodels/nameplate.js';
+export * from './emit/submodels/productCondition.js';
 export {
   documentIds,
   integral,

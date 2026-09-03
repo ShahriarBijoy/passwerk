@@ -604,6 +604,460 @@
           "page": 6
         }
       ]
+    },
+    "stateOfCharge": {
+      "value": "70",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
+    },
+    "numberOfFullCycles": {
+      "value": "12",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "energyThroughput": {
+      "value": "900",
+      "unit": "kWh",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "capacityThroughput": {
+      "value": "2340",
+      "unit": "Ah",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "stateOfCertifiedEnergy": {
+      "value": "99.5",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "remainingUsableBatteryEnergy": {
+      "value": "74.6",
+      "unit": "kWh",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "remainingCapacity": {
+      "value": "194",
+      "unit": "Ah",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "deepDischargeEvents": {
+      "value": "0",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "overchargeEvents": {
+      "value": "1",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "informationOnAccidents": {
+      "value": [
+        {
+          "id": "ACC-MW-EV-2026-000123-01",
+          "uri": "https://passport.musterwerk.example/docs/ACC-MW-EV-2026-000123-01.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "vorfallbericht.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "temperatureInformation": {
+      "value": "23.5",
+      "unit": "degC",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
+    },
+    "timeInExtremeHighTemperature": {
+      "value": "0",
+      "unit": "h",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "timeInExtremeLowTemperature": {
+      "value": "3",
+      "unit": "h",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "timeChargingInExtremeHighTemperature": {
+      "value": "0",
+      "unit": "h",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "timeChargingInExtremeLowTemperature": {
+      "value": "1",
+      "unit": "h",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "remainingPowerCapability": {
+      "value": {
+        "atSocPercent": "80",
+        "powerPercent": "98"
+      },
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "evolutionOfSelfDischarge": {
+      "value": "0",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "currentSelfDischargeRate": {
+      "value": "2",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "remainingRoundTripEnergyEfficiency": {
+      "value": "95.5",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "bms-export.csv",
+          "cell": "B2"
+        }
+      ]
+    },
+    "dismantlingInformation": {
+      "value": [
+        {
+          "id": "DISM-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/docs/DISM-MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "demontage.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "sparePartSources": {
+      "value": [
+        {
+          "name": {
+            "de": "Musterwerk Ersatzteile GmbH",
+            "en": "Musterwerk Spare Parts GmbH"
+          },
+          "address": {
+            "nationalCode": "DE",
+            "postalCode": "28199",
+            "street": "Werkstrasse 2"
+          },
+          "email": "ersatzteile@musterwerk.example",
+          "website": "https://ersatzteile.musterwerk.example",
+          "components": [
+            {
+              "partName": "Battery module",
+              "partNumber": "MW-MOD-48-A"
+            },
+            {
+              "partName": "Cooling plate",
+              "partNumber": "MW-CP-12"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Nordsee Battery Service"
+          },
+          "website": "https://service.nordsee-battery.example"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "ersatzteile.xlsx",
+          "cell": "A2"
+        }
+      ]
+    },
+    "componentPartNumbers": {
+      "value": [
+        {
+          "partName": "Battery management system",
+          "partNumber": "MW-BMS-7"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "ersatzteile.xlsx",
+          "cell": "D2"
+        }
+      ]
+    },
+    "recycledCobaltPreConsumer": {
+      "value": "16",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledCobaltPostConsumer": {
+      "value": "4",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledLithiumPreConsumer": {
+      "value": "6",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledLithiumPostConsumer": {
+      "value": "2",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledNickelPreConsumer": {
+      "value": "6",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledNickelPostConsumer": {
+      "value": "3",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledLeadPreConsumer": {
+      "value": "85",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "recycledLeadPostConsumer": {
+      "value": "10",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "renewableContentShare": {
+      "value": "0",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "safetyMeasures": {
+      "value": [
+        {
+          "id": "SAFETY-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/docs/SAFETY-MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "sicherheit.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "extinguishingAgent": {
+      "value": "water in large quantities",
+      "status": "present",
+      "source": [
+        {
+          "file": "sicherheit.pdf",
+          "page": 3
+        }
+      ]
+    },
+    "endUserInfoWastePrevention": {
+      "value": [
+        {
+          "id": "EOL-PREVENTION-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/docs/EOL-PREVENTION-MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "endUserInfoSeparateCollection": {
+      "value": [
+        {
+          "id": "EOL-SEPARATE-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/docs/EOL-SEPARATE-MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "endUserInfoCollectionAndTreatment": {
+      "value": [
+        {
+          "id": "EOL-COLLECTION-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/docs/EOL-COLLECTION-MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "kreislauf.pdf",
+          "page": 2
+        }
+      ]
     }
   }
 }
