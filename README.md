@@ -26,12 +26,12 @@ Conformance is proven, not claimed: every emitted passport is replayed through t
 
 ## Status
 
-**Phase 3 of 8 done: oracle parity in CI.** `@passwerk/rules` (artefacts and knowledge base)
-and `@passwerk/core` (model, AAS JSON and AASX emitters for IDTA 02035-1/-3/-6, validation
-L1 to L3) are implemented. Every emitted golden passport is replayed through the official
-`aas-test-engines` on every CI run with 12/12 verdict parity (`docs/CONFORMANCE.md`), and a
-sovereignty test plus a `--network none` Docker job prove zero network calls. Next: the
-remaining four submodel emitters, then ingest and mapping. See `docs/BUILD_PLAN.md` and
+**Phase 3b of 8 done: six of seven submodel emitters.** `@passwerk/rules` (artefacts and
+knowledge base) and `@passwerk/core` (model, AAS JSON and AASX emitters for IDTA 02035-1, -3,
+-4, -5, -6 and -7, validation L1 to L3) are implemented. Every emitted golden passport is
+replayed through the official `aas-test-engines` on every CI run with 14/14 verdict parity
+(`docs/CONFORMANCE.md`), and a sovereignty test plus a `--network none` Docker job prove zero
+network calls. Next: ingest, extraction and mapping. See `docs/BUILD_PLAN.md` and
 `docs/DECISIONS.md`.
 
 ## Packages
