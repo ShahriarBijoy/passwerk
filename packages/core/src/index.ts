@@ -5,6 +5,7 @@
  */
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
+export * from './emit/aasJson.js';
 export * from './emit/canonical.js';
 export * from './emit/elements.js';
 export * from './emit/environment.js';
@@ -22,6 +23,7 @@ export * from './model/values.js';
 export * from './samples/index.js';
 export * from './validate/aas.js';
 export * from './validate/finding.js';
+export * from './validate/index.js';
 export { message as findingMessage, RULE_IDS } from './validate/messages.js';
 export * from './validate/schema.js';
 export * from './validate/template.js';

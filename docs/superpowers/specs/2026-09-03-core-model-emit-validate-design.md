@@ -249,7 +249,10 @@ text is a fixed prefix plus the original message.
    `semanticId` or, when the template list has none, by type).
 3. Checks, each a rule id:
    - `PW-L3-MISSING` cardinality `One`/`OneToMany` but no instance element (error);
-   - `PW-L3-TOO-MANY` more than `max` instances (error);
+   - `PW-L3-TOO-MANY` more than `max` instances (error). Not applied to item templates
+     inside a `SubmodelElementList`: the IDTA templates qualify list items inconsistently
+     ("One" on `3/.../LifeCyclePhase`, "OneToMany" on `1/Markings/Markings__00__`), so only
+     the minimum and the list's own cardinality are enforced there;
    - `PW-L3-MODEL-TYPE` instance `modelType` differs (error);
    - `PW-L3-SEMANTIC-ID` instance `semanticId` first key differs (error);
    - `PW-L3-VALUE-TYPE` Property `valueType` differs (error);
