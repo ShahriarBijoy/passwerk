@@ -23,6 +23,10 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@passwerk/rules": "workspace:*"
+    "@aas-core-works/aas-core3.0-typescript": "1.0.5",
+    "@passwerk/rules": "workspace:*",
+    "decimal.js": "10.6.0",
+    "fflate": "0.8.3",
+    "zod": "4.5.4"
   }
 }

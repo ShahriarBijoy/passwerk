@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@aas-core-works/aas-core3.0-typescript@1.0.5':
+    hash: 4c4c61e841d0e0fc00d53c8f8d55e0576d53f4582283add568d5ce6ac318ab1a
+    path: patches/@aas-core-works__aas-core3.0-typescript@1.0.5.patch
+
 importers:
 
   .:
@@ -35,9 +40,21 @@ importers:
 
   packages/core:
     dependencies:
+      '@aas-core-works/aas-core3.0-typescript':
+        specifier: 1.0.5
+        version: 1.0.5(patch_hash=4c4c61e841d0e0fc00d53c8f8d55e0576d53f4582283add568d5ce6ac318ab1a)
       '@passwerk/rules':
         specifier: workspace:*
         version: link:../rules
+      decimal.js:
+        specifier: 10.6.0
+        version: 10.6.0
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
+      zod:
+        specifier: 4.5.4
+        version: 4.5.4
 
   packages/rules:
     devDependencies:
@@ -58,6 +75,9 @@ importers:
         version: link:../rules
 
 packages:
+
+  '@aas-core-works/aas-core3.0-typescript@1.0.5':
+    resolution: {integrity: sha512-VdcnQ5p06tuKEr4zldUASu7vXGziLBDXnbHKh8sY0M6EvGOI2vFl1wHkgAH974iF2dD6JJBYz7Nv7o46FqOzrQ==}
 
   '@biomejs/biome@2.5.11':
     resolution: {integrity: sha512-Tj0dnkLPdW0ASjHfj2D/ZkkvPU2wrFmnE1jWTD2xzV1ycapV1DutbYXk4NDnR3rYTi1ZCbNFD4G2gRMEY65WaA==}
@@ -440,6 +460,9 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
+  decimal.js@10.6.0:
+    resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
+
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
@@ -470,6 +493,9 @@ packages:
 
   fflate@0.7.5:
     resolution: {integrity: sha512-QieYf//cis6ywHNi5qW1+PXPQ4bC+XVJAtS4AXIML8P76GroEiOxm/oQtn1f02UkJY1+KsXMJcC+R2v/Eg4G3g==}
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -739,7 +765,12 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+
 snapshots:
+
+  '@aas-core-works/aas-core3.0-typescript@1.0.5(patch_hash=4c4c61e841d0e0fc00d53c8f8d55e0576d53f4582283add568d5ce6ac318ab1a)': {}
 
   '@biomejs/biome@2.5.11':
     optionalDependencies:
@@ -973,6 +1004,8 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
+  decimal.js@10.6.0: {}
+
   detect-libc@2.1.2: {}
 
   es-module-lexer@2.3.2: {}
@@ -1017,6 +1050,8 @@ snapshots:
       picomatch: 4.0.7
 
   fflate@0.7.5: {}
+
+  fflate@0.8.3: {}
 
   fsevents@2.3.3:
     optional: true
@@ -1210,3 +1245,5 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  zod@4.5.4: {}
