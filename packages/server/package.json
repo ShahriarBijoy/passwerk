@@ -1,0 +1,29 @@
+{
+  "name": "@passwerk/server",
+  "version": "0.0.0",
+  "description": "MCP server exposing passwerk tools, resources and prompts over stdio and Streamable HTTP",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@passwerk/core": "workspace:*",
+    "@passwerk/rules": "workspace:*"
+  }
+}

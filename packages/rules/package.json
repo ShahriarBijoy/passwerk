@@ -1,0 +1,25 @@
+{
+  "name": "@passwerk/rules",
+  "version": "0.0.0",
+  "description": "Bundled, checksummed, offline rule artefacts and knowledge base for EU Digital Battery Passports (IDTA 02035, AAS, DIN DKE SPEC 99100)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist"
+  }
+}

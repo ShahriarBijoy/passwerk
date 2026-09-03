@@ -1,0 +1,28 @@
+{
+  "name": "@passwerk/core",
+  "version": "0.0.0",
+  "description": "MCP-free core library: ingest, extract, map, validate, gap-report and emit EU Digital Battery Passports",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@passwerk/rules": "workspace:*"
+  }
+}

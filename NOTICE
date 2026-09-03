@@ -1,0 +1,11 @@
+passwerk
+Copyright 2026 the passwerk authors
+
+This product includes software developed as part of the passwerk project
+(https://github.com/shahriarbijoy/passwerk).
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+Bundled third-party artefacts (IDTA submodel templates, AAS schemas, EC data-point
+matrices) are documented with their sources, versions, checksums and licences in
+packages/rules/PROVENANCE.md.

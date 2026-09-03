@@ -1,5 +1,4 @@
-# Planning docs (local only for now)
-docs/PASSWERK_BUILD_PLAN.md
+# Local-only research notes (personal; the build plan itself is committed)
 docs/research-passwerk.md
 
 # Dependencies / build
@@ -7,6 +6,7 @@ node_modules/
 dist/
 build/
 coverage/
+*.tsbuildinfo
 
 # Env
 .env
