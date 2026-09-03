@@ -191,10 +191,14 @@ EmitResult<T> = { output: T, environment: Environment, verdict, findings: Findin
 - AAS JSON: aas-core `jsonization.toJsonable(environment)` printed by `canonical.ts`
   (recursively sorted keys, two-space indent, trailing newline).
 - AASX: an OPC zip with `[Content_Types].xml`, `_rels/.rels`, `aasx/aasx-origin`,
-  `aasx/_rels/aasx-origin.rels` and `aasx/passwerk/passwerk.aas.xml` (aas-core
-  `xmlization`). Entry order and timestamps are fixed (1980-01-01) so bytes are stable.
-- Both re-run L2 and L3 on their own output before returning. For AASX the XML part is parsed
-  back with aas-core `xmlization` first. `verdict` is never derived from the draft alone.
+  `aasx/_rels/aasx-origin.rels` and `aasx/passwerk/passwerk.aas.json` (the same canonical
+  JSON). Entry order and timestamps are fixed (1980-01-01) so bytes are stable.
+  Amendment after approval: the TypeScript AAS SDK ships no XML serialiser, and the official
+  test engine dispatches AASX parts by file extension and accepts `.json` parts, so the
+  package carries JSON. XML packaging would require an XML serialiser verified against the
+  AAS XSD, which is not bundled. Recorded in ADR D-011.
+- Both re-run L1, L2 and L3 on their own output before returning. For AASX the JSON part is
+  unzipped and parsed back first. `verdict` is never derived from the draft alone.
 
 ## 5. Validation
 
@@ -301,8 +305,12 @@ List children keep draft order.
 ## 8. Decisions to record (ADR)
 
 - D-010: attribute-keyed `PassportDraft` (KB grain) instead of hand-typed nested objects;
-  composites get explicit shapes; identifier scheme; AASX carries XML like the official
-  packages; numbers are decimal strings.
+  composites get explicit shapes; identifier scheme; numbers are decimal strings.
+- D-011: `@aas-core-works/aas-core3.0-typescript` as the AAS engine; AASX carries JSON (no
+  XML serialiser in the SDK); the SDK's ESM build has extensionless relative imports that
+  plain Node cannot resolve, fixed with a committed pnpm patch; instances never set idShort
+  on direct children of a SubmodelElementList (constraint AASd-120, which the official
+  templates themselves violate because they are templates).
 - Open question for the owner (not blocking): pin the ZVEI / IDTA Contact Information template
   in `@passwerk/rules` so `AddressInformation` children get official semanticIds. Until then
   they are emitted without semanticId and flagged `verify` in the emitter's source comment.
