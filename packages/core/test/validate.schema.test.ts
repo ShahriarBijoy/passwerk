@@ -74,15 +74,11 @@ describe('L1 validateSchema', () => {
     expect(ids(r)).toEqual(['PW-L1-IMPACT-UNASSIGNED']);
     expect(r.findings[0]?.severity).toBe('warning');
   });
-  it('warns PW-L1-COMPOSITE-UNMODELLED for composites without a shape', () => {
-    const id = attributes.find((a) => a.valueKind === 'composite' && !COMPOSITE_SCHEMAS[a.id])?.id;
-    expect(id).toBeDefined();
-    const r = validateSchema({
-      meta,
-      attributes: { [id as string]: { value: { anything: true }, status: 'present' } },
-    });
-    expect(ids(r)).toEqual(['PW-L1-COMPOSITE-UNMODELLED']);
-    expect(r.findings[0]?.severity).toBe('warning');
+  it('every composite attribute in the knowledge base has an explicit shape', () => {
+    const unmodelled = attributes
+      .filter((a) => a.valueKind === 'composite' && !COMPOSITE_SCHEMAS[a.id])
+      .map((a) => a.id);
+    expect(unmodelled).toEqual([]);
   });
 });
 

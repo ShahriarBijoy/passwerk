@@ -54,7 +54,50 @@ export const CarbonFootprintGeneralInformation = z.object({
 });
 export type CarbonFootprintGeneralInformation = z.infer<typeof CarbonFootprintGeneralInformation>;
 
-/** Explicit value shapes for composite attributes of the MVP submodels, keyed by attribute id. */
+/** Part 4: power (W) the battery can deliver at a state of charge (%). */
+export const OriginalPowerCapability = z
+  .array(z.object({ atSocPercent: PercentString, powerW: DecimalString }))
+  .min(1);
+export type OriginalPowerCapability = z.infer<typeof OriginalPowerCapability>;
+
+/** Part 4: internal resistance in ohms per level (module recommended, not required). */
+export const InitialInternalResistance = z.object({
+  cellOhm: DecimalString,
+  packOhm: DecimalString,
+  moduleOhm: DecimalString.optional(),
+});
+export type InitialInternalResistance = z.infer<typeof InitialInternalResistance>;
+
+/** Part 5: remaining power capability at a state of charge, as a percentage of the original. */
+export const RemainingPowerCapability = z.object({
+  atSocPercent: PercentString,
+  powerPercent: PercentString,
+});
+export type RemainingPowerCapability = z.infer<typeof RemainingPowerCapability>;
+
+export const SparePartComponent = z.object({
+  partName: z.string().min(1),
+  partNumber: z.string().min(1),
+});
+export type SparePartComponent = z.infer<typeof SparePartComponent>;
+
+/** Part 7: one source of spare parts with its contact details and component list. */
+export const SparePartSupplier = z.object({
+  name: MultilingualText,
+  address: z
+    .object({
+      nationalCode: z.string().min(1),
+      postalCode: z.string().min(1),
+      street: z.string().min(1),
+    })
+    .optional(),
+  email: z.string().min(1).optional(),
+  website: z.string().min(1).optional(),
+  components: z.array(SparePartComponent).min(1).optional(),
+});
+export type SparePartSupplier = z.infer<typeof SparePartSupplier>;
+
+/** Explicit value shapes for composite attributes, keyed by attribute id. */
 export const COMPOSITE_SCHEMAS: Record<string, z.ZodType> = {
   manufacturerInformation: ManufacturerInformation,
   batteryChemistry: BatteryChemistry,
@@ -62,4 +105,9 @@ export const COMPOSITE_SCHEMAS: Record<string, z.ZodType> = {
   electrodeAndElectrolyteMaterials: z.array(BatteryMaterial).min(1),
   hazardousSubstances: z.array(HazardousSubstance).min(1),
   carbonFootprintGeneralInformation: CarbonFootprintGeneralInformation,
+  originalPowerCapability: OriginalPowerCapability,
+  initialInternalResistance: InitialInternalResistance,
+  remainingPowerCapability: RemainingPowerCapability,
+  sparePartSources: z.array(SparePartSupplier).min(1),
+  componentPartNumbers: z.array(SparePartComponent).min(1),
 };

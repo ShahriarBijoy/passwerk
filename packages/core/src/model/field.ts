@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Provenance } from './provenance.js';
+import { IsoDateTime } from './values.js';
 
 export const FieldStatus = z.enum(['present', 'missing', 'conflict', 'not_applicable']);
 export type FieldStatus = z.infer<typeof FieldStatus>;
@@ -16,6 +17,8 @@ export const Field = <T extends z.ZodType>(inner: T) =>
       source: z.array(Provenance).default([]),
       confidence: z.number().min(0).max(1).optional(),
       status: FieldStatus.default('missing'),
+      /** When the value was measured or last updated (ISO-8601); feeds part 5 LastUpdate. */
+      recordedAt: IsoDateTime.optional(),
     })
     .superRefine((field, ctx) => {
       const hasValue = field.value !== undefined;
