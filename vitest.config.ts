@@ -14,7 +14,11 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['packages/*/test/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
+    include: [
+      'packages/*/test/**/*.test.ts',
+      'packages/*/src/**/*.test.ts',
+      'tools/*/test/**/*.test.ts',
+    ],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',

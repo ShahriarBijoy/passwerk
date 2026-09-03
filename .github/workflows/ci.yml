@@ -47,7 +47,49 @@ jobs:
       - run: pnpm build
       - run: pnpm test
 
-  # Phase 3 adds two more gates here:
-  #   sovereignty — runs the whole test suite in Docker with `--network none`
-  #   oracle      — replays every emitted golden passport through the official
-  #                 Python `aas-test-engines` and fails on any verdict mismatch
+  # Credibility gate 1 (ADR D-012): every emitted golden passport is replayed through the
+  # official Python aas-test-engines; the verdict must agree with passwerk's L2 verdict, and
+  # the committed report and badge must match the fresh run (only the Generated: line may differ).
+  oracle:
+    name: Oracle parity (aas-test-engines)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: uv sync --frozen
+        working-directory: tools/oracle
+      - run: pnpm oracle
+      - name: Committed report and badge must match the fresh run
+        run: |
+          git diff --exit-code -- docs/conformance-badge.json
+          git diff -I '^Generated: ' --exit-code -- docs/CONFORMANCE.md
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: oracle-parity
+          path: |
+            tools/oracle/out
+            docs/CONFORMANCE.md
+            docs/conformance-badge.json
+          retention-days: 30
+
+  # Credibility gate 2 (ADR D-013): the whole test suite runs inside a container with no
+  # network at all. The image build installs dependencies with the network on.
+  sovereignty:
+    name: Sovereignty (--network none)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f tools/sovereignty/Dockerfile -t passwerk-sovereignty .
+      - run: docker run --rm --network none passwerk-sovereignty

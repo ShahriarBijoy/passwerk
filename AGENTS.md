@@ -47,6 +47,7 @@ pnpm lint               # biome check
 pnpm lint:fix           # biome check --write
 pnpm typecheck          # tsc -b plus typecheck of test files
 pnpm check              # lint + typecheck + test. Run before every commit
+pnpm oracle             # emit golden passports and replay them through aas-test-engines (needs uv)
 ```
 
 Tests import workspace packages by name (`@passwerk/core`). Vitest aliases them to `src/`,
@@ -92,5 +93,10 @@ so no build is needed before `pnpm test`.
   (ADR D-010), AAS JSON and AASX emitters for IDTA 02035-1/-3/-6 driven by the template
   catalogue, L2 via aas-core verification, L3 template diff, six golden samples. See ADR D-011
   for the AAS engine choices (JSON inside the AASX, pnpm patch for the SDK's ESM build).
-- **Next: Phase 3.** Oracle parity in CI (`tools/oracle`, `aas-test-engines`) and
-  `sovereignty.test.ts`. Then the remaining four submodel emitters (parts 2, 4, 5, 7).
+- **Phase 3 (oracle parity + sovereignty): done.** `tools/oracle` (`@passwerk/oracle`, tsx plus
+  Python `aas-test-engines` 1.0.3 via uv) proves 12/12 L2 verdict parity on every CI run and
+  writes `docs/CONFORMANCE.md` plus the README badge JSON. `sovereignty.test.ts` guards every
+  network API over the whole public surface; CI also runs the suite in Docker with
+  `--network none`. See ADRs D-012 and D-013.
+- **Next: Phase 3b.** The remaining four submodel emitters (parts 2, 4, 5, 7), then Phase 4
+  ingest, extract and mapping.

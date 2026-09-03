@@ -19,7 +19,8 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "artefacts": "pnpm --filter @passwerk/rules run artefacts"
+    "artefacts": "pnpm --filter @passwerk/rules run artefacts",
+    "oracle": "pnpm --filter @passwerk/oracle run oracle"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.11",

@@ -152,3 +152,35 @@ part can be added later behind the same `emitAasx` if a consumer requires it, wh
 an XML serialiser verified against the AAS XSD. The nameplate's `AddressInformation` is a
 drop-in whose children (ZVEI Contact Information) are not bundled; they are emitted by
 idShort without semanticId until that template is pinned.
+
+## D-012: Oracle parity is L2 parity; the Python oracle is pinned through uv (2026-09-03)
+
+**Context.** `aas-test-engines` 1.0.3 checks the AAS 3.0 metamodel and its constraints and
+knows two ZVEI templates, none of the IDTA 02035 battery templates. It cannot see passwerk's
+L1 (draft rules) or L3 (template diff). The report must be committed and CI-verified, but a
+dated report is never byte-identical across runs.
+
+**Decision.** Parity per emitted file is `oracle.ok == (L2 errors == 0)`; a CRITICAL or
+missing oracle result never counts. All six golden samples, valid and broken, in both JSON
+and AASX, form the set (12 files), so agreement is proven in both directions. `tools/oracle`
+is a private workspace package: tsx emits the files with passwerk's verdicts, `oracle.py`
+(pinned `aas-test-engines==1.0.3` via `pyproject.toml` and `uv.lock`) runs the oracle and
+renders `docs/CONFORMANCE.md` and a shields.io endpoint `docs/conformance-badge.json`. CI
+regenerates both and fails on any difference except the `Generated:` line. The hand-kept
+"Manual oracle runs" section survives regeneration.
+
+**Consequences.** The README badge is backed by a file CI verifies on every run. The oracle
+runs on Linux in CI only; `pnpm test` does not need Python. When `aas-test-engines` learns
+the IDTA 02035 templates, parity can be widened to L3 in one place (`buildExpected`).
+
+## D-013: Sovereignty is proven twice: socket-level guards in-process, Docker offline in CI (2026-09-03)
+
+**Decision.** `packages/core/test/sovereignty.test.ts` patches `net.Socket.prototype.connect`,
+the `dns` resolvers, `tls.connect`, `http`/`https` request and get, and `globalThis.fetch`
+to record and throw, then dynamically imports `rules` and `core` and exercises every public
+accessor and entry point over every golden sample. A self-check asserts the guards bite.
+CI additionally builds `tools/sovereignty/Dockerfile` and runs `pnpm test` with
+`--network none`, which catches anything the guards cannot (child processes, native code).
+
+**Consequences.** Fast, cross-platform evidence on every `pnpm test`; a hard proof on every
+CI run. Phase 6 extends the exercised surface to every MCP tool, resource and prompt.
