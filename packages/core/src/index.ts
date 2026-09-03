@@ -11,3 +11,7 @@ export * from './model/field.js';
 export * from './model/passport.js';
 export * from './model/provenance.js';
 export * from './model/values.js';
+
+export * from './validate/finding.js';
+export { message as findingMessage, RULE_IDS } from './validate/messages.js';
+export * from './validate/schema.js';
