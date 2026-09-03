@@ -1,0 +1,837 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Performance and durability', part 2: lifetime, cycles, throughput, temperature, negative events (longlist rows 76-93). Authored; see kb/attributes/README.md. Static design values live in IDTA 02035-4 Technical Data; dynamic values come from the BMS and live in IDTA 02035-5 Product Condition with LastUpdate timestamps.",
+  "category": "Performance and durability",
+  "attributes": [
+    {
+      "id": "expectedLifetimeCalendarYears",
+      "din": { "no": 76, "chapter": "6.7.6.2" },
+      "ecDataPoints": [60],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/Lifetime/ExpectedLifetimeInCalendarYears"],
+      "name": {
+        "en": "Expected lifetime in calendar years",
+        "de": "Erwartete kalendarische Lebensdauer"
+      },
+      "synonyms": {
+        "en": [
+          "calendar life",
+          "expected lifetime",
+          "service life",
+          "design life",
+          "lifetime years",
+          "calendar ageing"
+        ],
+        "de": [
+          "kalendarische lebensdauer",
+          "erwartete lebensdauer",
+          "nutzungsdauer",
+          "auslegungslebensdauer",
+          "lebensdauer jahre",
+          "kalendarische alterung"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "years",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's design specification, supported by the cell manufacturer's calendar ageing data.",
+        "de": "Auslegungsspezifikation des Pack-Herstellers, gestützt auf kalendarische Alterungsdaten des Zellherstellers."
+      },
+      "explanation": {
+        "en": "Expected lifetime under the reference conditions the battery was designed for, in calendar years (Annex IV Part A (5), Annex XIII 4(a)). Mandatory for EV and LMT; applicable to industrial batteries where relevant.",
+        "de": "Erwartete Lebensdauer unter den Auslegungs-Referenzbedingungen in Kalenderjahren (Anhang IV Teil A (5), Anhang XIII 4(a)). Pflicht für EV und LMT; für Industriebatterien soweit zutreffend."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "expectedLifetimeCycles",
+      "din": { "no": 77, "chapter": "6.7.6.3" },
+      "ecDataPoints": [31, 59],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/Lifetime/ExpectedNumberOfCycles"],
+      "name": {
+        "en": "Expected lifetime in charge-discharge cycles",
+        "de": "Erwartete Lebensdauer in Lade-Entlade-Zyklen"
+      },
+      "synonyms": {
+        "en": [
+          "cycle life",
+          "expected cycles",
+          "number of cycles",
+          "cycles to eol",
+          "cycle lifetime",
+          "zyklen",
+          "cycles"
+        ],
+        "de": [
+          "zyklenlebensdauer",
+          "zyklenfestigkeit",
+          "erwartete zyklen",
+          "zyklenzahl",
+          "zyklen bis eol",
+          "lebensdauerzyklen",
+          "zyklen"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "cycles",
+      "range": { "min": 0, "max": 1000000 },
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's cycle-life test report; pack manufacturer's specification for the pack.",
+        "de": "Zyklentest-Bericht des Zellherstellers; Packspezifikation des Pack-Herstellers."
+      },
+      "explanation": {
+        "en": "Expected lifetime in cycles under reference conditions, except for non-cycle applications (Annex XIII 1(j) and 4(a)). Mandatory for EV and LMT; for industrial batteries only where lifetime can be expressed in cycles.",
+        "de": "Erwartete Lebensdauer in Zyklen unter Referenzbedingungen, außer bei nicht zyklischen Anwendungen (Anhang XIII 1(j) und 4(a)). Pflicht für EV und LMT; für Industriebatterien nur, wenn die Lebensdauer in Zyklen ausgedrückt werden kann."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "numberOfFullCycles",
+      "din": { "no": 78, "chapter": "6.7.6.4" },
+      "ecDataPoints": [68],
+      "part": 5,
+      "templatePaths": [
+        "5/NumberOfFullCycles/NumberOfFullCyclesValue",
+        "5/NumberOfFullCycles/LastUpdate"
+      ],
+      "name": {
+        "en": "Number of full charging and discharging cycles",
+        "de": "Anzahl der Vollzyklen"
+      },
+      "synonyms": {
+        "en": [
+          "full cycles",
+          "cycle count",
+          "equivalent full cycles",
+          "efc",
+          "cycles completed",
+          "charge cycles"
+        ],
+        "de": [
+          "vollzyklen",
+          "zyklenzähler",
+          "äquivalente vollzyklen",
+          "efc",
+          "absolvierte zyklen",
+          "ladezyklen"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "cycles",
+      "range": { "min": 0, "max": 1000000 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) cycle counter.",
+        "de": "Zyklenzähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Number of full charge-discharge cycles the battery has completed (Annex XIII 4(d), Annex VII Part B (5)). Applicable where relevant for all three categories; dynamic, from the BMS with a timestamp.",
+        "de": "Anzahl der von der Batterie absolvierten Vollzyklen (Anhang XIII 4(d), Anhang VII Teil B (5)). Für alle drei Kategorien soweit zutreffend; dynamisch, aus dem BMS mit Zeitstempel."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "cycleLifeReferenceTest",
+      "din": { "no": 79, "chapter": "6.7.6.5" },
+      "ecDataPoints": [32],
+      "part": null,
+      "templatePaths": [],
+      "name": { "en": "Cycle-life reference test", "de": "Referenztest für die Zyklenlebensdauer" },
+      "synonyms": {
+        "en": [
+          "reference test",
+          "cycle life test",
+          "test standard",
+          "test procedure",
+          "iec 62660",
+          "test conditions",
+          "test method"
+        ],
+        "de": [
+          "referenztest",
+          "zyklentest",
+          "prüfnorm",
+          "prüfverfahren",
+          "iec 62660",
+          "prüfbedingungen",
+          "testmethode"
+        ]
+      },
+      "valueKind": "text",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Cell or pack manufacturer's test laboratory; named in the cycle-life test report.",
+        "de": "Prüflabor des Zell- oder Pack-Herstellers; im Zyklentest-Bericht genannt."
+      },
+      "explanation": {
+        "en": "The reference test (standard, procedure and conditions) used to determine the expected cycle life (Annex XIII 1(j)). IDTA 02035-4 v1.0.1 has no dedicated element for the test description, so the value currently has no template home; record it in the passport draft and flag it for the template maintainers.",
+        "de": "Der Referenztest (Norm, Verfahren, Bedingungen) zur Bestimmung der erwarteten Zyklenlebensdauer (Anhang XIII 1(j)). IDTA 02035-4 v1.0.1 hat kein eigenes Element für die Testbeschreibung; der Wert hat daher noch keinen Template-Platz. Im Entwurf erfassen und den Template-Pflegern melden."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "cRateOfCycleLifeTest",
+      "din": { "no": 80, "chapter": "6.7.6.6" },
+      "ecDataPoints": [39],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/Lifetime/CRateOfRelevantCycleLifeTest"],
+      "name": {
+        "en": "C-rate of the relevant cycle-life test",
+        "de": "C-Rate des Zyklenlebensdauertests"
+      },
+      "synonyms": {
+        "en": [
+          "c-rate",
+          "c rate",
+          "charge rate",
+          "discharge rate",
+          "1c",
+          "0.5c",
+          "test c-rate",
+          "a/ah"
+        ],
+        "de": [
+          "c-rate",
+          "c-rate test",
+          "laderate",
+          "entladerate",
+          "1c",
+          "0,5c",
+          "prüf-c-rate",
+          "a/ah"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "C",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell or pack manufacturer's cycle-life test report.",
+        "de": "Zyklentest-Bericht des Zell- oder Pack-Herstellers."
+      },
+      "explanation": {
+        "en": "Charge and discharge rate relative to rated capacity applied in the cycle-life reference test (Annex XIII 1(p)). Mandatory for EV and LMT; applicable only to some industrial batteries.",
+        "de": "Lade- und Entladerate bezogen auf die Nennkapazität im Zyklen-Referenztest (Anhang XIII 1(p)). Pflicht für EV und LMT; nur für manche Industriebatterien."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "energyThroughput",
+      "din": { "no": 81, "chapter": "6.7.6.7" },
+      "ecDataPoints": [],
+      "part": 5,
+      "templatePaths": [
+        "5/EnergyThroughput/EnergyThroughputValue",
+        "5/EnergyThroughput/LastUpdate"
+      ],
+      "name": { "en": "Energy throughput", "de": "Energiedurchsatz" },
+      "synonyms": {
+        "en": [
+          "energy throughput",
+          "cumulative energy",
+          "total kwh",
+          "lifetime energy",
+          "kwh throughput",
+          "energy delivered"
+        ],
+        "de": [
+          "energiedurchsatz",
+          "kumulierte energie",
+          "gesamt-kwh",
+          "lebensdauerenergie",
+          "kwh-durchsatz",
+          "abgegebene energie"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "kWh",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) energy counter.",
+        "de": "Energiezähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Cumulative energy throughput over the battery's life to date (Annex VII Part B (2)). Listed by DIN DKE SPEC 99100 for LMT and stationary batteries; not one of the Commission's 71 data points. Dynamic, with a timestamp.",
+        "de": "Kumulierter Energiedurchsatz über die bisherige Lebensdauer (Anhang VII Teil B (2)). In DIN DKE SPEC 99100 für LMT und stationäre Batterien; keiner der 71 Datenpunkte der Kommission. Dynamisch, mit Zeitstempel."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "not_displayed",
+          "text": "Not listed for EV batteries in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "conditional",
+          "text": "Listed as mandatory for LMT in the Battery Pass longlist (Annex VII Part B (2)); not among the Commission's 71 data points, so treat as recommended."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "conditional",
+          "text": "Listed for stationary battery energy storage in the Battery Pass longlist (Annex VII Part B (2)); not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 81 (x = LMT, Stationary); Reg. (EU) 2023/1542 Annex VII Part B (2)"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "capacityThroughput",
+      "din": { "no": 82, "chapter": "6.7.6.8" },
+      "ecDataPoints": [],
+      "part": 5,
+      "templatePaths": [
+        "5/CapacityThroughput/CapacityThroughputValue",
+        "5/CapacityThroughput/LastUpdate"
+      ],
+      "name": { "en": "Capacity throughput", "de": "Kapazitätsdurchsatz" },
+      "synonyms": {
+        "en": [
+          "capacity throughput",
+          "cumulative ah",
+          "total ampere hours",
+          "ah throughput",
+          "charge throughput",
+          "lifetime ah"
+        ],
+        "de": [
+          "kapazitätsdurchsatz",
+          "kumulierte ah",
+          "gesamt-amperestunden",
+          "ah-durchsatz",
+          "ladungsdurchsatz",
+          "lebensdauer-ah"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "Ah",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) charge counter.",
+        "de": "Ladungszähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Cumulative capacity throughput over the battery's life to date (Annex VII Part B (3)). Listed by DIN DKE SPEC 99100 for LMT and stationary batteries; not one of the Commission's 71 data points. Dynamic, with a timestamp.",
+        "de": "Kumulierter Kapazitätsdurchsatz über die bisherige Lebensdauer (Anhang VII Teil B (3)). In DIN DKE SPEC 99100 für LMT und stationäre Batterien; keiner der 71 Datenpunkte der Kommission. Dynamisch, mit Zeitstempel."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "not_displayed",
+          "text": "Not listed for EV batteries in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "conditional",
+          "text": "Listed as mandatory for LMT in the Battery Pass longlist (Annex VII Part B (3)); not among the Commission's 71 data points, so treat as recommended."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "conditional",
+          "text": "Listed for stationary battery energy storage in the Battery Pass longlist (Annex VII Part B (3)); not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 82 (x = LMT, Stationary); Reg. (EU) 2023/1542 Annex VII Part B (3)"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "capacityThresholdForExhaustion",
+      "din": { "no": 83, "chapter": "6.7.6.9" },
+      "ecDataPoints": [33],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/Lifetime/CapacityThresholdExhaustion"],
+      "name": {
+        "en": "Capacity threshold for exhaustion",
+        "de": "Kapazitätsschwelle für Erschöpfung"
+      },
+      "synonyms": {
+        "en": [
+          "exhaustion threshold",
+          "end of life threshold",
+          "eol threshold",
+          "soce threshold",
+          "minimum soh",
+          "capacity threshold"
+        ],
+        "de": [
+          "erschöpfungsschwelle",
+          "end-of-life-schwelle",
+          "eol-schwelle",
+          "soce-schwelle",
+          "mindest-soh",
+          "kapazitätsschwelle"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Vehicle manufacturer or pack manufacturer as the economic operator; part of the design specification.",
+        "de": "Fahrzeughersteller oder Pack-Hersteller als Wirtschaftsakteur; Teil der Auslegungsspezifikation."
+      },
+      "explanation": {
+        "en": "The SOCE percentage above which the battery is still considered operational as an EV battery in its current life (Annex XIII 1(k)). Mandatory for EV; not displayed for LMT and industrial batteries.",
+        "de": "Der SOCE-Prozentwert, oberhalb dessen die Batterie in ihrem aktuellen Leben noch als EV-Batterie betriebsfähig gilt (Anhang XIII 1(k)). Pflicht für EV; für LMT und Industriebatterien nicht anzuzeigen."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "temperatureInformation",
+      "din": { "no": 84, "chapter": "6.7.7.2" },
+      "ecDataPoints": [70],
+      "part": 5,
+      "templatePaths": [
+        "5/TemperatureInformation",
+        "5/TemperatureInformation/MeasuredTemp",
+        "5/TemperatureInformation/LastUpdate"
+      ],
+      "name": {
+        "en": "Temperature information (operating conditions)",
+        "de": "Temperaturinformation (Betriebsbedingungen)"
+      },
+      "synonyms": {
+        "en": [
+          "temperature",
+          "measured temperature",
+          "cell temperature",
+          "operating temperature",
+          "temperature log",
+          "battery temperature"
+        ],
+        "de": [
+          "temperatur",
+          "gemessene temperatur",
+          "zelltemperatur",
+          "betriebstemperatur",
+          "temperaturprotokoll",
+          "batterietemperatur"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "degC",
+      "range": { "min": -100, "max": 200 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) temperature sensors; logged by the operator.",
+        "de": "Temperatursensoren des Batteriemanagementsystems (BMS); protokolliert vom Betreiber."
+      },
+      "explanation": {
+        "en": "Periodically recorded information on operating environmental conditions including temperature (Annex XIII 4(d)). Applicable where relevant for all three categories; dynamic, with a timestamp. The extreme-temperature durations are separate attributes in the same collection.",
+        "de": "Periodisch aufgezeichnete Informationen zu den Betriebsbedingungen inklusive Temperatur (Anhang XIII 4(d)). Für alle drei Kategorien soweit zutreffend; dynamisch, mit Zeitstempel. Die Zeiten in Extremtemperaturen sind eigene Attribute in derselben Collection."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "temperatureRangeIdleLowerBoundary",
+      "din": { "no": 85, "chapter": "6.7.7.3" },
+      "ecDataPoints": [34],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/Temperature/TemperatureRangeIdleState_LowerBoundary"
+      ],
+      "name": {
+        "en": "Idle temperature range, lower boundary",
+        "de": "Temperaturbereich im Ruhezustand, untere Grenze"
+      },
+      "synonyms": {
+        "en": [
+          "storage temperature min",
+          "minimum storage temperature",
+          "idle temperature lower",
+          "lowest storage temperature",
+          "temperature range lower",
+          "t min storage"
+        ],
+        "de": [
+          "lagertemperatur min",
+          "minimale lagertemperatur",
+          "untere lagertemperatur",
+          "ruhetemperatur untere grenze",
+          "temperaturbereich untere grenze",
+          "t min lagerung"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "degC",
+      "range": { "min": -100, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell and pack data sheet (storage conditions).",
+        "de": "Zell- und Packdatenblatt (Lagerbedingungen)."
+      },
+      "explanation": {
+        "en": "Lower boundary of the temperature range the battery can withstand when not in use, from the reference test (Annex XIII 1(l)). Mandatory for all three categories.",
+        "de": "Untere Grenze des Temperaturbereichs, den die Batterie im Ruhezustand aushält, aus dem Referenztest (Anhang XIII 1(l)). Pflicht für alle drei Kategorien."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "temperatureRangeIdleUpperBoundary",
+      "din": { "no": 86, "chapter": "6.7.7.4" },
+      "ecDataPoints": [34],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/Temperature/TemperatureRangeIdleState_UpperBoundary"
+      ],
+      "name": {
+        "en": "Idle temperature range, upper boundary",
+        "de": "Temperaturbereich im Ruhezustand, obere Grenze"
+      },
+      "synonyms": {
+        "en": [
+          "storage temperature max",
+          "maximum storage temperature",
+          "idle temperature upper",
+          "highest storage temperature",
+          "temperature range upper",
+          "t max storage"
+        ],
+        "de": [
+          "lagertemperatur max",
+          "maximale lagertemperatur",
+          "obere lagertemperatur",
+          "ruhetemperatur obere grenze",
+          "temperaturbereich obere grenze",
+          "t max lagerung"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "degC",
+      "range": { "min": -100, "max": 150 },
+      "whoTypicallyHasIt": {
+        "en": "Cell and pack data sheet (storage conditions).",
+        "de": "Zell- und Packdatenblatt (Lagerbedingungen)."
+      },
+      "explanation": {
+        "en": "Upper boundary of the temperature range the battery can withstand when not in use, from the reference test (Annex XIII 1(l)). Mandatory for all three categories.",
+        "de": "Obere Grenze des Temperaturbereichs, den die Batterie im Ruhezustand aushält, aus dem Referenztest (Anhang XIII 1(l)). Pflicht für alle drei Kategorien."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "timeInExtremeHighTemperature",
+      "din": { "no": 87, "chapter": "6.7.7.5" },
+      "ecDataPoints": [70],
+      "part": 5,
+      "templatePaths": [
+        "5/TemperatureInformation/TimeExtremeHighTemp",
+        "5/TemperatureInformation/LastUpdate"
+      ],
+      "name": {
+        "en": "Time spent above the upper temperature boundary",
+        "de": "Zeit oberhalb der oberen Temperaturgrenze"
+      },
+      "synonyms": {
+        "en": [
+          "time at high temperature",
+          "overtemperature time",
+          "time above limit",
+          "hot exposure minutes",
+          "high temperature duration",
+          "extreme heat time"
+        ],
+        "de": [
+          "zeit bei hoher temperatur",
+          "übertemperaturzeit",
+          "zeit über grenzwert",
+          "hitzeexposition minuten",
+          "dauer hohe temperatur",
+          "zeit extreme hitze"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "min",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) counters.",
+        "de": "Zähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Aggregated minutes in which the temperature exceeded the upper boundary of the idle temperature range (Annex VII Part B (4)). DIN DKE SPEC 99100 lists it for LMT and industrial batteries; the Commission's data point 70 (periodically recorded operating conditions) is taken as its legal hook.",
+        "de": "Aufsummierte Minuten, in denen die Temperatur die obere Grenze des Ruhetemperaturbereichs überschritten hat (Anhang VII Teil B (4)). DIN DKE SPEC 99100 führt es für LMT und Industriebatterien; Datenpunkt 70 der Kommission (periodisch aufgezeichnete Betriebsbedingungen) dient als rechtlicher Anker."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "timeInExtremeLowTemperature",
+      "din": { "no": 88, "chapter": "6.7.7.6" },
+      "ecDataPoints": [70],
+      "part": 5,
+      "templatePaths": [
+        "5/TemperatureInformation/TimeExtremeLowTemp",
+        "5/TemperatureInformation/LastUpdate"
+      ],
+      "name": {
+        "en": "Time spent below the lower temperature boundary",
+        "de": "Zeit unterhalb der unteren Temperaturgrenze"
+      },
+      "synonyms": {
+        "en": [
+          "time at low temperature",
+          "undertemperature time",
+          "time below limit",
+          "cold exposure minutes",
+          "low temperature duration",
+          "extreme cold time"
+        ],
+        "de": [
+          "zeit bei niedriger temperatur",
+          "untertemperaturzeit",
+          "zeit unter grenzwert",
+          "kälteexposition minuten",
+          "dauer niedrige temperatur",
+          "zeit extreme kälte"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "min",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) counters.",
+        "de": "Zähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Aggregated minutes in which the temperature fell below the lower boundary of the idle temperature range (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.",
+        "de": "Aufsummierte Minuten, in denen die Temperatur die untere Grenze des Ruhetemperaturbereichs unterschritten hat (Anhang VII Teil B (4)). Für LMT und Industriebatterien; an Datenpunkt 70 der Kommission angebunden."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "timeChargingInExtremeHighTemperature",
+      "din": { "no": 89, "chapter": "6.7.7.7" },
+      "ecDataPoints": [70],
+      "part": 5,
+      "templatePaths": [
+        "5/TemperatureInformation/TimeExtremeHighTempCharging",
+        "5/TemperatureInformation/LastUpdate"
+      ],
+      "name": {
+        "en": "Time spent charging above the upper temperature boundary",
+        "de": "Ladezeit oberhalb der oberen Temperaturgrenze"
+      },
+      "synonyms": {
+        "en": [
+          "charging at high temperature",
+          "hot charging time",
+          "charging over limit",
+          "charging minutes high temp",
+          "charge overtemperature",
+          "hot charge duration"
+        ],
+        "de": [
+          "laden bei hoher temperatur",
+          "heißladezeit",
+          "laden über grenzwert",
+          "lademinuten hohe temperatur",
+          "ladeübertemperatur",
+          "dauer heißladen"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "min",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) counters.",
+        "de": "Zähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Aggregated minutes of charging while the temperature exceeded the upper boundary (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.",
+        "de": "Aufsummierte Lademinuten bei Temperaturen oberhalb der oberen Grenze (Anhang VII Teil B (4)). Für LMT und Industriebatterien; an Datenpunkt 70 der Kommission angebunden."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "timeChargingInExtremeLowTemperature",
+      "din": { "no": 90, "chapter": "6.7.7.8" },
+      "ecDataPoints": [70],
+      "part": 5,
+      "templatePaths": [
+        "5/TemperatureInformation/TimeExtremeLowTempCharging",
+        "5/TemperatureInformation/LastUpdate"
+      ],
+      "name": {
+        "en": "Time spent charging below the lower temperature boundary",
+        "de": "Ladezeit unterhalb der unteren Temperaturgrenze"
+      },
+      "synonyms": {
+        "en": [
+          "charging at low temperature",
+          "cold charging time",
+          "charging under limit",
+          "charging minutes low temp",
+          "charge undertemperature",
+          "cold charge duration"
+        ],
+        "de": [
+          "laden bei niedriger temperatur",
+          "kaltladezeit",
+          "laden unter grenzwert",
+          "lademinuten niedrige temperatur",
+          "ladeuntertemperatur",
+          "dauer kaltladen"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": "min",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) counters.",
+        "de": "Zähler des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Aggregated minutes of charging while the temperature was below the lower boundary (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.",
+        "de": "Aufsummierte Lademinuten bei Temperaturen unterhalb der unteren Grenze (Anhang VII Teil B (4)). Für LMT und Industriebatterien; an Datenpunkt 70 der Kommission angebunden."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "deepDischargeEvents",
+      "din": { "no": 91, "chapter": "6.7.8.2" },
+      "ecDataPoints": [69],
+      "part": 5,
+      "templatePaths": [
+        "5/NegativeEvents",
+        "5/NegativeEvents/NegativeEvent/NegativeEventValue",
+        "5/NegativeEvents/NegativeEvent/LastUpdate"
+      ],
+      "name": { "en": "Number of deep discharge events", "de": "Anzahl der Tiefentladungen" },
+      "synonyms": {
+        "en": [
+          "deep discharge",
+          "deep discharge events",
+          "undervoltage events",
+          "over-discharge count",
+          "low voltage events",
+          "discharge below limit"
+        ],
+        "de": [
+          "tiefentladung",
+          "tiefentladungen",
+          "unterspannungsereignisse",
+          "tiefentladungszähler",
+          "unterspannung",
+          "entladung unter grenzwert"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": null,
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) event log.",
+        "de": "Ereignisprotokoll des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Number of occasions on which the voltage dropped below the lower operational limit stated in the passport (Annex VII Part B (4)). Recorded as negative events (Annex XIII 4(d)), applicable where relevant; mandatory for LMT and stationary batteries per DIN DKE SPEC 99100.",
+        "de": "Anzahl der Fälle, in denen die Spannung unter die im Pass genannte untere Betriebsgrenze fiel (Anhang VII Teil B (4)). Als negatives Ereignis erfasst (Anhang XIII 4(d)), soweit zutreffend; nach DIN DKE SPEC 99100 Pflicht für LMT und stationäre Batterien."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "overchargeEvents",
+      "din": { "no": 92, "chapter": "6.7.8.3" },
+      "ecDataPoints": [69],
+      "part": 5,
+      "templatePaths": [
+        "5/NegativeEvents",
+        "5/NegativeEvents/NegativeEvent/NegativeEventValue",
+        "5/NegativeEvents/NegativeEvent/LastUpdate"
+      ],
+      "name": { "en": "Number of overcharge events", "de": "Anzahl der Überladungen" },
+      "synonyms": {
+        "en": [
+          "overcharge",
+          "overcharge events",
+          "overvoltage events",
+          "overcharge count",
+          "high voltage events",
+          "charge above limit"
+        ],
+        "de": [
+          "überladung",
+          "überladungen",
+          "überspannungsereignisse",
+          "überladungszähler",
+          "überspannung",
+          "ladung über grenzwert"
+        ]
+      },
+      "valueKind": "integer",
+      "unit": null,
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) event log.",
+        "de": "Ereignisprotokoll des Batteriemanagementsystems (BMS)."
+      },
+      "explanation": {
+        "en": "Number of occasions on which the voltage rose above the upper operational limit stated in the passport. Voluntary in DIN DKE SPEC 99100; recorded as a negative event under the Commission's data point 69 where relevant.",
+        "de": "Anzahl der Fälle, in denen die Spannung über die im Pass genannte obere Betriebsgrenze stieg. In DIN DKE SPEC 99100 freiwillig; als negatives Ereignis unter Datenpunkt 69 der Kommission erfasst, soweit zutreffend."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "informationOnAccidents",
+      "din": { "no": 93, "chapter": "6.7.8.4" },
+      "ecDataPoints": [69],
+      "part": 5,
+      "templatePaths": ["5/InformationOnAccidents", "5/InformationOnAccidents/DocumentIdentifier"],
+      "name": { "en": "Information on accidents", "de": "Informationen zu Unfällen" },
+      "synonyms": {
+        "en": [
+          "accident",
+          "accident report",
+          "crash",
+          "damage report",
+          "incident",
+          "negative event",
+          "thermal event"
+        ],
+        "de": [
+          "unfall",
+          "unfallbericht",
+          "crash",
+          "schadensbericht",
+          "vorfall",
+          "negatives ereignis",
+          "thermisches ereignis"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Operator, fleet manager, insurer or workshop; documented after the event and attached to the passport.",
+        "de": "Betreiber, Flottenmanager, Versicherer oder Werkstatt; nach dem Ereignis dokumentiert und dem Pass beigefügt."
+      },
+      "explanation": {
+        "en": "Documentation of negative events such as accidents that may have affected the battery (Annex XIII 4(d)). Applicable where relevant for all three categories; referenced by document identifier, files in Part 2.",
+        "de": "Dokumentation negativer Ereignisse wie Unfälle, die die Batterie beeinträchtigt haben könnten (Anhang XIII 4(d)). Für alle drei Kategorien soweit zutreffend; Verweis per Dokumentkennung, Dateien in Teil 2."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

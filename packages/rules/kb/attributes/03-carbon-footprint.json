@@ -1,0 +1,421 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Battery carbon footprint' (longlist rows 19-27). Authored; see kb/attributes/README.md. All carbon footprint data points are deferred by the Commission's v2.0 guidance (not to be filled/displayed as of February 2027) until the implementing act on the declaration format is in force; values should still be collected and carried with provenance.",
+  "category": "Battery carbon footprint",
+  "attributes": [
+    {
+      "id": "carbonFootprintPerFunctionalUnit",
+      "din": { "no": 19, "chapter": "6.3.2" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/PcfCO2eq",
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/PcfCalculationMethods/PcfCalculationMethod",
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/ReferenceImpactUnitForCalculation",
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/QuantityOfMeasureForCalculation"
+      ],
+      "name": {
+        "en": "Battery carbon footprint per functional unit",
+        "de": "CO2-Fußabdruck der Batterie je funktioneller Einheit"
+      },
+      "synonyms": {
+        "en": [
+          "carbon footprint",
+          "pcf",
+          "product carbon footprint",
+          "co2 footprint",
+          "kg co2e/kwh",
+          "ghg emissions",
+          "climate change total",
+          "cfb"
+        ],
+        "de": [
+          "co2-fußabdruck",
+          "pcf",
+          "produkt-co2-fußabdruck",
+          "treibhausgasemissionen",
+          "kg co2e/kwh",
+          "klimabilanz",
+          "carbon footprint",
+          "ökobilanz"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "kgCO2e/kWh",
+      "range": { "min": 0, "max": 1000 },
+      "whoTypicallyHasIt": {
+        "en": "The manufacturer's sustainability or LCA team, usually with an external LCA consultant; upstream inputs come from the cell and cathode material suppliers.",
+        "de": "Nachhaltigkeits- oder Ökobilanz-Team des Herstellers, meist mit externem LCA-Berater; Vorketten-Daten kommen von Zell- und Kathodenmaterial-Lieferanten."
+      },
+      "explanation": {
+        "en": "The declared carbon footprint in kg CO2 equivalent per kWh of total energy delivered over the expected service life (Article 7, Annex II). The template also records the calculation method and the reference unit. The Commission's v2.0 guidance defers the declaration until the implementing act on its format is adopted; collect the value now and carry it with its source.",
+        "de": "Der deklarierte CO2-Fußabdruck in kg CO2-Äquivalent je kWh der über die erwartete Lebensdauer gelieferten Gesamtenergie (Artikel 7, Anhang II). Das Template erfasst auch Berechnungsmethode und Bezugseinheit. Die Kommission stellt die Deklaration in der Leitlinie v2.0 bis zum Durchführungsrechtsakt zum Format zurück; den Wert jetzt erheben und mit Quelle mitführen."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintShareRawMaterials",
+      "din": { "no": 20, "chapter": "6.3.3" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase"
+      ],
+      "name": {
+        "en": "Carbon footprint share: raw material acquisition and pre-processing",
+        "de": "CO2-Anteil: Rohstoffgewinnung und Vorverarbeitung"
+      },
+      "synonyms": {
+        "en": [
+          "raw material stage",
+          "upstream emissions",
+          "mining and refining share",
+          "a1 stage",
+          "cradle to gate share",
+          "pre-processing"
+        ],
+        "de": [
+          "rohstoffphase",
+          "vorkette",
+          "rohstoffgewinnung",
+          "vorverarbeitung",
+          "upstream-emissionen",
+          "anteil rohstoffe"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "LCA team; the split by life-cycle stage is part of the carbon footprint study required by Annex II.",
+        "de": "Ökobilanz-Team; die Aufteilung nach Lebenszyklusphasen ist Teil der nach Anhang II geforderten CO2-Studie."
+      },
+      "explanation": {
+        "en": "Share of the total carbon footprint caused by raw material acquisition and pre-processing. The IDTA 02035-3 template only lists the life-cycle phases covered (LifeCyclePhase), not a percentage per phase; the share value therefore has no dedicated element yet.",
+        "de": "Anteil des gesamten CO2-Fußabdrucks aus Rohstoffgewinnung und Vorverarbeitung. Das Template IDTA 02035-3 listet nur die abgedeckten Lebenszyklusphasen (LifeCyclePhase), keinen Prozentwert je Phase; der Anteilswert hat daher noch kein eigenes Element."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintShareManufacturing",
+      "din": { "no": 21, "chapter": "6.3.4" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase"
+      ],
+      "name": {
+        "en": "Carbon footprint share: main product production",
+        "de": "CO2-Anteil: Hauptproduktion und Fertigung"
+      },
+      "synonyms": {
+        "en": [
+          "manufacturing stage",
+          "production emissions",
+          "cell production share",
+          "assembly emissions",
+          "a3 stage",
+          "factory emissions"
+        ],
+        "de": [
+          "produktionsphase",
+          "fertigungsemissionen",
+          "zellfertigung",
+          "montage",
+          "anteil produktion",
+          "werksemissionen"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "LCA team, fed by the plant's energy bills and production data (this is where a supplier's own electricity mix enters).",
+        "de": "Ökobilanz-Team, gespeist aus Energierechnungen und Produktionsdaten des Werks (hier geht der eigene Strommix des Lieferanten ein)."
+      },
+      "explanation": {
+        "en": "Share of the total carbon footprint caused by cell and pack manufacturing. Same template limitation as the raw material share: phases are listed, percentages are not modelled.",
+        "de": "Anteil des gesamten CO2-Fußabdrucks aus Zell- und Packfertigung. Gleiche Template-Einschränkung wie beim Rohstoffanteil: Phasen werden gelistet, Prozentwerte nicht modelliert."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintShareDistribution",
+      "din": { "no": 22, "chapter": "6.3.5" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase"
+      ],
+      "name": { "en": "Carbon footprint share: distribution", "de": "CO2-Anteil: Distribution" },
+      "synonyms": {
+        "en": [
+          "distribution stage",
+          "transport emissions",
+          "logistics share",
+          "a4 stage",
+          "shipping emissions",
+          "delivery"
+        ],
+        "de": [
+          "distributionsphase",
+          "transportemissionen",
+          "logistikanteil",
+          "versand",
+          "lieferung",
+          "anteil transport"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "LCA team, using logistics data (transport modes and distances) from the supply chain or logistics department.",
+        "de": "Ökobilanz-Team, mit Logistikdaten (Verkehrsträger, Distanzen) aus Supply Chain oder Logistik."
+      },
+      "explanation": {
+        "en": "Share of the total carbon footprint caused by distribution to the point of sale or installation. Phases are listed in the template; the percentage has no dedicated element.",
+        "de": "Anteil des gesamten CO2-Fußabdrucks aus der Distribution bis zum Verkaufs- oder Installationsort. Phasen sind im Template gelistet; der Prozentwert hat kein eigenes Element."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintShareEndOfLife",
+      "din": { "no": 23, "chapter": "6.3.6" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase"
+      ],
+      "name": {
+        "en": "Carbon footprint share: end of life and recycling",
+        "de": "CO2-Anteil: Entsorgung und Recycling"
+      },
+      "synonyms": {
+        "en": [
+          "end of life stage",
+          "recycling emissions",
+          "eol share",
+          "c stage",
+          "disposal emissions",
+          "recycling credit"
+        ],
+        "de": [
+          "end-of-life-phase",
+          "recyclingemissionen",
+          "entsorgungsphase",
+          "eol-anteil",
+          "recyclinggutschrift",
+          "anteil recycling"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": -100, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "LCA team, using recycling scenarios and recycler data; may be negative when recycling credits are applied.",
+        "de": "Ökobilanz-Team, mit Recyclingszenarien und Recycler-Daten; kann durch Gutschriften negativ sein."
+      },
+      "explanation": {
+        "en": "Share of the total carbon footprint attributed to end-of-life treatment and recycling. Phases are listed in the template; the percentage has no dedicated element.",
+        "de": "Anteil des gesamten CO2-Fußabdrucks aus Entsorgung und Recycling. Phasen sind im Template gelistet; der Prozentwert hat kein eigenes Element."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintPerformanceClass",
+      "din": { "no": 24, "chapter": "6.3.7" },
+      "ecDataPoints": [18, 17],
+      "part": 3,
+      "templatePaths": ["3/ProductCarbonFootprints/ProductCarbonFootprint/PerformanceClass"],
+      "name": {
+        "en": "Carbon footprint performance class",
+        "de": "Leistungsklasse des CO2-Fußabdrucks"
+      },
+      "synonyms": {
+        "en": [
+          "performance class",
+          "carbon class",
+          "co2 class",
+          "class a",
+          "footprint category",
+          "cf performance class"
+        ],
+        "de": [
+          "leistungsklasse",
+          "co2-klasse",
+          "carbon-footprint-klasse",
+          "klasse a",
+          "effizienzklasse co2",
+          "einstufung"
+        ]
+      },
+      "valueKind": "enum",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Determined by the manufacturer from the declared footprint once the Commission's delegated act defines the class boundaries.",
+        "de": "Vom Hersteller aus dem deklarierten Fußabdruck abgeleitet, sobald der delegierte Rechtsakt der Kommission die Klassengrenzen festlegt."
+      },
+      "explanation": {
+        "en": "The performance class (Article 7(2)) into which the declared footprint falls. Not yet applicable: the delegated act defining the classes is pending, and the Commission's v2.0 guidance defers the label. The corresponding graphic is the carbon footprint label attribute.",
+        "de": "Die Leistungsklasse (Artikel 7(2)), in die der deklarierte Fußabdruck fällt. Noch nicht anwendbar: der delegierte Rechtsakt zu den Klassen steht aus, und die Kommission stellt das Label in der Leitlinie v2.0 zurück. Die zugehörige Grafik ist das Attribut CO2-Fußabdruck-Label."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintStudyLink",
+      "din": { "no": 25, "chapter": "6.3.8" },
+      "ecDataPoints": [17],
+      "part": 3,
+      "templatePaths": [
+        "3/ProductCarbonFootprints/ProductCarbonFootprint/WebLinkToPublicCarbonFootprintStudy/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "Web link to the public carbon footprint study",
+        "de": "Weblink zur öffentlichen CO2-Fußabdruck-Studie"
+      },
+      "synonyms": {
+        "en": [
+          "carbon footprint study",
+          "lca report",
+          "pcf study",
+          "footprint report link",
+          "public study",
+          "lca study url"
+        ],
+        "de": [
+          "co2-studie",
+          "ökobilanzbericht",
+          "pcf-studie",
+          "lca-bericht",
+          "link zur studie",
+          "fußabdruck-studie"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Sustainability team; the study must be published on the internet under Article 7(1)(g).",
+        "de": "Nachhaltigkeitsteam; die Studie muss nach Artikel 7(1)(g) im Internet veröffentlicht werden."
+      },
+      "explanation": {
+        "en": "Link to the publicly available study supporting the carbon footprint declaration. Referenced by a document identifier that points to a document in Part 2 Handover Documentation, which in turn holds the URL.",
+        "de": "Link zur öffentlich zugänglichen Studie, die die CO2-Deklaration belegt. Verweis per Dokumentkennung auf ein Dokument in Teil 2 Handover Documentation, das die URL enthält."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintGeneralInformation",
+      "din": { "no": 26, "chapter": "6.3.9" },
+      "ecDataPoints": [17],
+      "part": null,
+      "templatePaths": [],
+      "name": {
+        "en": "Carbon footprint declaration: general battery and manufacturer information",
+        "de": "CO2-Deklaration: allgemeine Batterie- und Herstellerangaben"
+      },
+      "synonyms": {
+        "en": [
+          "declaration header",
+          "manufacturer information",
+          "battery model information",
+          "administrative information",
+          "declaration metadata"
+        ],
+        "de": [
+          "deklarationskopf",
+          "herstellerangaben",
+          "modellangaben",
+          "administrative angaben",
+          "allgemeine angaben"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Same as the identification attributes: manufacturer master data and the battery model identification.",
+        "de": "Wie die Identifikationsattribute: Herstellerstammdaten und Modellbezeichnung der Batterie."
+      },
+      "explanation": {
+        "en": "Article 7(1) requires the carbon footprint declaration to repeat administrative information about the manufacturer and battery model. DIN DKE SPEC 99100 treats this as a cross-reference to chapters 6.1 and 6.2, so there is no separate template element; the data is taken from the Nameplate attributes.",
+        "de": "Artikel 7(1) verlangt, dass die CO2-Deklaration administrative Angaben zu Hersteller und Batteriemodell wiederholt. DIN DKE SPEC 99100 behandelt dies als Querverweis auf die Kapitel 6.1 und 6.2, daher gibt es kein eigenes Template-Element; die Daten stammen aus den Nameplate-Attributen."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "absoluteCarbonFootprint",
+      "din": { "no": 27, "chapter": "6.3.10" },
+      "ecDataPoints": [],
+      "part": null,
+      "templatePaths": [],
+      "name": {
+        "en": "Absolute battery carbon footprint",
+        "de": "Absoluter CO2-Fußabdruck der Batterie"
+      },
+      "synonyms": {
+        "en": [
+          "absolute footprint",
+          "total co2e",
+          "tco2e",
+          "absolute emissions",
+          "total carbon footprint",
+          "footprint per battery"
+        ],
+        "de": [
+          "absoluter fußabdruck",
+          "gesamtemissionen",
+          "tco2e",
+          "gesamt-co2e",
+          "absolute emissionen",
+          "fußabdruck je batterie"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "tCO2e",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "LCA team; derived from the per-kWh footprint and the lifetime energy throughput.",
+        "de": "Ökobilanz-Team; abgeleitet aus dem Fußabdruck je kWh und dem Energiedurchsatz über die Lebensdauer."
+      },
+      "explanation": {
+        "en": "Total carbon footprint of the individual battery in tonnes CO2 equivalent. Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points; the IDTA templates have no element for it.",
+        "de": "Gesamter CO2-Fußabdruck der einzelnen Batterie in Tonnen CO2-Äquivalent. In DIN DKE SPEC 99100 freiwillig und keiner der 71 Datenpunkte der Kommission; die IDTA-Templates haben kein Element dafür."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 27 (o for all categories); no regulation reference"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

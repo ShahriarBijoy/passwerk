@@ -1,0 +1,350 @@
+{
+  "$comment": "passwerk plausibility rules (validation layer L4, see docs/BUILD_PLAN.md 2.4). Data only: the rule engine in @passwerk/core implements one check per id. Rules never override the AAS metamodel (L2) or template conformance (L3) verdicts. Severity 'error' makes the verdict invalid; 'warning' yields valid_with_warnings. 'attributes' lists the attribute ids (kb/attributes) a rule reads. Legal references are informational and come from kb/ec-datapoints.json or the cited article.",
+  "lastVerified": "2026-09-03",
+  "rules": [
+    {
+      "id": "PW-PLAUS-001",
+      "severity": "error",
+      "title": {
+        "en": "Percentage values must lie between 0 and 100",
+        "de": "Prozentwerte müssen zwischen 0 und 100 liegen"
+      },
+      "message": {
+        "en": "{attribute} is {value} %, outside 0..100.",
+        "de": "{attribute} beträgt {value} %, außerhalb von 0..100."
+      },
+      "fixHint": {
+        "en": "Check whether the source gives a fraction (0.12) instead of a percentage (12 %), or a promille value.",
+        "de": "Prüfen, ob die Quelle einen Bruch (0,12) statt Prozent (12 %) oder Promille angibt."
+      },
+      "attributes": [
+        "capacityFade",
+        "powerFade",
+        "initialRoundTripEnergyEfficiency",
+        "roundTripEnergyEfficiencyAt50PercentCycleLife",
+        "remainingRoundTripEnergyEfficiency",
+        "energyRoundTripEfficiencyFade",
+        "stateOfCharge",
+        "stateOfCertifiedEnergy",
+        "capacityThresholdForExhaustion",
+        "renewableContentShare",
+        "recycledNickelPreConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLeadPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPostConsumer",
+        "carbonFootprintShareRawMaterials",
+        "carbonFootprintShareManufacturing",
+        "carbonFootprintShareDistribution"
+      ],
+      "legalRef": null
+    },
+    {
+      "id": "PW-PLAUS-002",
+      "severity": "error",
+      "title": {
+        "en": "Voltage limits must be ordered: minimum <= nominal <= maximum",
+        "de": "Spannungsgrenzen müssen geordnet sein: minimal <= nominal <= maximal"
+      },
+      "message": {
+        "en": "Minimum {min} V, nominal {nom} V and maximum {max} V are not in ascending order.",
+        "de": "Minimal {min} V, nominal {nom} V und maximal {max} V sind nicht aufsteigend geordnet."
+      },
+      "fixHint": {
+        "en": "Cell-level and pack-level voltages are often mixed up in data sheets; use pack-level values throughout.",
+        "de": "Zell- und Packspannungen werden in Datenblättern oft vermischt; durchgehend Packwerte verwenden."
+      },
+      "attributes": ["minimumVoltage", "nominalVoltage", "maximumVoltage"],
+      "legalRef": "BR Annex XIII 1(h)"
+    },
+    {
+      "id": "PW-PLAUS-003",
+      "severity": "error",
+      "title": {
+        "en": "Manufacturing date must be plausible and precede the date of putting into service",
+        "de": "Herstellungsdatum muss plausibel sein und vor der Inbetriebnahme liegen"
+      },
+      "message": {
+        "en": "Manufacturing date {manufacturingDate} is in the future, before 2000, or after the date of putting into service {dateOfPuttingIntoService}.",
+        "de": "Herstellungsdatum {manufacturingDate} liegt in der Zukunft, vor 2000 oder nach der Inbetriebnahme {dateOfPuttingIntoService}."
+      },
+      "fixHint": {
+        "en": "Check day/month order (DD.MM.YYYY vs MM/DD/YYYY) and two-digit years in the source document.",
+        "de": "Tag/Monat-Reihenfolge (TT.MM.JJJJ vs MM/TT/JJJJ) und zweistellige Jahreszahlen im Quelldokument prüfen."
+      },
+      "attributes": ["manufacturingDate", "dateOfPuttingIntoService"],
+      "legalRef": "BR Annex VI Part A (4)"
+    },
+    {
+      "id": "PW-PLAUS-004",
+      "severity": "warning",
+      "title": {
+        "en": "Battery mass should be plausible for the battery category",
+        "de": "Batteriemasse sollte zur Batteriekategorie passen"
+      },
+      "message": {
+        "en": "A mass of {value} kg is unusual for a {category} battery (typical: LMT 1-50 kg, EV 100-1500 kg, industrial >2 kWh 10-50000 kg).",
+        "de": "Eine Masse von {value} kg ist für eine {category}-Batterie ungewöhnlich (typisch: LMT 1-50 kg, EV 100-1500 kg, Industrie >2 kWh 10-50000 kg)."
+      },
+      "fixHint": {
+        "en": "Check the unit: grams and tonnes must be converted to kilograms; cell mass is not pack mass.",
+        "de": "Einheit prüfen: Gramm und Tonnen in Kilogramm umrechnen; Zellmasse ist nicht Packmasse."
+      },
+      "attributes": ["batteryMass", "batteryCategory"],
+      "legalRef": "BR Annex VI Part A (5)"
+    },
+    {
+      "id": "PW-PLAUS-005",
+      "severity": "error",
+      "title": {
+        "en": "Industrial batteries in passport scope must have more than 2 kWh",
+        "de": "Industriebatterien im Passumfang müssen mehr als 2 kWh haben"
+      },
+      "message": {
+        "en": "Category is industrial but rated capacity {capacity} Ah x nominal voltage {voltage} V = {energy} kWh is not above 2 kWh.",
+        "de": "Kategorie ist Industrie, aber Nennkapazität {capacity} Ah x Nennspannung {voltage} V = {energy} kWh liegt nicht über 2 kWh."
+      },
+      "fixHint": {
+        "en": "Industrial batteries of 2 kWh or less need no passport (Article 77(1)); check capacity unit (Ah vs mAh) and voltage level.",
+        "de": "Industriebatterien bis 2 kWh brauchen keinen Pass (Artikel 77(1)); Kapazitätseinheit (Ah vs. mAh) und Spannungsebene prüfen."
+      },
+      "attributes": ["batteryCategory", "ratedCapacity", "nominalVoltage"],
+      "legalRef": "BR Article 77(1)"
+    },
+    {
+      "id": "PW-PLAUS-006",
+      "severity": "error",
+      "title": {
+        "en": "Battery status must be one of the five defined values",
+        "de": "Batteriestatus muss einer der fünf definierten Werte sein"
+      },
+      "message": {
+        "en": "Status '{value}' is not one of original, repurposed, re-used, remanufactured, waste.",
+        "de": "Status '{value}' ist keiner der Werte original, repurposed, re-used, remanufactured, waste."
+      },
+      "fixHint": {
+        "en": "Map free text ('new', 'neu', 'second life') to the closest defined value; new batteries are 'original'.",
+        "de": "Freitext ('neu', 'new', 'second life') auf den passenden Wert abbilden; Neubatterien sind 'original'."
+      },
+      "attributes": ["batteryStatus"],
+      "legalRef": "BR Annex XIII 4(c)"
+    },
+    {
+      "id": "PW-PLAUS-007",
+      "severity": "error",
+      "title": {
+        "en": "Battery category in the passport must match the declared category of the draft",
+        "de": "Batteriekategorie im Pass muss der deklarierten Kategorie des Entwurfs entsprechen"
+      },
+      "message": {
+        "en": "The draft is being validated as {draftCategory} but the battery category attribute says {value}.",
+        "de": "Der Entwurf wird als {draftCategory} geprüft, das Attribut Batteriekategorie sagt aber {value}."
+      },
+      "fixHint": {
+        "en": "The category decides which data points are mandatory; fix it first, then re-validate.",
+        "de": "Die Kategorie entscheidet über die Pflichtdatenpunkte; zuerst korrigieren, dann erneut prüfen."
+      },
+      "attributes": ["batteryCategory"],
+      "legalRef": "BR Annex VI Part A (2), Article 3"
+    },
+    {
+      "id": "PW-PLAUS-008",
+      "severity": "error",
+      "title": {
+        "en": "Battery passport identifier must be an absolute https URI",
+        "de": "Batteriepass-Kennung muss eine absolute https-URI sein"
+      },
+      "message": {
+        "en": "'{value}' is not an absolute https URI that a QR code can resolve.",
+        "de": "'{value}' ist keine absolute https-URI, die ein QR-Code auflösen kann."
+      },
+      "fixHint": {
+        "en": "Use the resolver URL of the passport, e.g. a GS1 Digital Link (https://id.example.com/01/.../21/...), not the bare serial number.",
+        "de": "Die Resolver-URL des Passes verwenden, z. B. einen GS1 Digital Link (https://id.example.com/01/.../21/...), nicht die reine Seriennummer."
+      },
+      "attributes": ["batteryPassportIdentifier"],
+      "legalRef": "BR Article 77(3), ISO/IEC 15459"
+    },
+    {
+      "id": "PW-PLAUS-009",
+      "severity": "warning",
+      "title": {
+        "en": "Material identifiers should be valid CAS registry numbers",
+        "de": "Materialkennungen sollten gültige CAS-Nummern sein"
+      },
+      "message": {
+        "en": "'{value}' does not look like a CAS number (NN-NN-N with a valid check digit).",
+        "de": "'{value}' sieht nicht wie eine CAS-Nummer aus (NN-NN-N mit gültiger Prüfziffer)."
+      },
+      "fixHint": {
+        "en": "Take the CAS number from the safety data sheet, section 3; do not use trade names as identifiers.",
+        "de": "CAS-Nummer aus dem Sicherheitsdatenblatt, Abschnitt 3, übernehmen; keine Handelsnamen als Kennung verwenden."
+      },
+      "attributes": [
+        "criticalRawMaterials",
+        "electrodeAndElectrolyteMaterials",
+        "hazardousSubstances"
+      ],
+      "legalRef": "BR Annex VI Part A (8) and (10)"
+    },
+    {
+      "id": "PW-PLAUS-010",
+      "severity": "error",
+      "title": {
+        "en": "Pre-consumer and post-consumer recycled shares of one material must not exceed 100 % together",
+        "de": "Pre-Consumer- und Post-Consumer-Rezyklatanteil eines Materials dürfen zusammen 100 % nicht überschreiten"
+      },
+      "message": {
+        "en": "{material}: pre-consumer {pre} % + post-consumer {post} % = {sum} % exceeds 100 %.",
+        "de": "{material}: Pre-Consumer {pre} % + Post-Consumer {post} % = {sum} % überschreitet 100 %."
+      },
+      "fixHint": {
+        "en": "Both shares refer to the same total material mass; check whether one value is already the combined share.",
+        "de": "Beide Anteile beziehen sich auf dieselbe Gesamtmasse; prüfen, ob ein Wert bereits der Gesamtanteil ist."
+      },
+      "attributes": [
+        "recycledNickelPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPreConsumer",
+        "recycledLeadPostConsumer"
+      ],
+      "legalRef": "BR Article 8, Annex XIII 1(e)"
+    },
+    {
+      "id": "PW-PLAUS-011",
+      "severity": "error",
+      "title": {
+        "en": "Dynamic values need a LastUpdate timestamp that is not in the future",
+        "de": "Dynamische Werte brauchen einen LastUpdate-Zeitstempel, der nicht in der Zukunft liegt"
+      },
+      "message": {
+        "en": "{attribute} has a value but its LastUpdate is missing or in the future ({timestamp}).",
+        "de": "{attribute} hat einen Wert, aber LastUpdate fehlt oder liegt in der Zukunft ({timestamp})."
+      },
+      "fixHint": {
+        "en": "Take the timestamp from the BMS read-out; use ISO 8601 with time zone.",
+        "de": "Zeitstempel aus dem BMS-Auslesen übernehmen; ISO 8601 mit Zeitzone verwenden."
+      },
+      "attributes": [
+        "remainingCapacity",
+        "remainingUsableBatteryEnergy",
+        "stateOfCertifiedEnergy",
+        "stateOfCharge",
+        "remainingPowerCapability",
+        "remainingRoundTripEnergyEfficiency",
+        "currentSelfDischargeRate",
+        "evolutionOfSelfDischarge",
+        "numberOfFullCycles",
+        "energyThroughput",
+        "capacityThroughput",
+        "temperatureInformation",
+        "timeInExtremeHighTemperature",
+        "timeInExtremeLowTemperature",
+        "timeChargingInExtremeHighTemperature",
+        "timeChargingInExtremeLowTemperature",
+        "deepDischargeEvents",
+        "overchargeEvents"
+      ],
+      "legalRef": "BR Article 77(4)"
+    },
+    {
+      "id": "PW-PLAUS-012",
+      "severity": "warning",
+      "title": {
+        "en": "Data points not to be displayed for the battery category should be left empty",
+        "de": "Für die Batteriekategorie nicht anzuzeigende Datenpunkte sollten leer bleiben"
+      },
+      "message": {
+        "en": "{attribute} is filled although the Commission's guidance marks it 'not to be filled/displayed' for {category}.",
+        "de": "{attribute} ist befüllt, obwohl die Leitlinie der Kommission es für {category} als 'nicht auszufüllen/anzuzeigen' einstuft."
+      },
+      "fixHint": {
+        "en": "Keep the value in your records but omit it from the emitted passport, or document why it is shown.",
+        "de": "Wert intern behalten, im ausgegebenen Pass aber weglassen oder begründen, warum er angezeigt wird."
+      },
+      "attributes": [
+        "stateOfCertifiedEnergy",
+        "capacityThresholdForExhaustion",
+        "remainingCapacity",
+        "remainingPowerCapability",
+        "remainingRoundTripEnergyEfficiency",
+        "evolutionOfSelfDischarge"
+      ],
+      "legalRef": "EC guidance v2.0, data points 33 and 61-66"
+    },
+    {
+      "id": "PW-PLAUS-013",
+      "severity": "warning",
+      "title": {
+        "en": "Deferred data points are informational until their enabling act applies",
+        "de": "Zurückgestellte Datenpunkte sind bis zum Geltungsbeginn ihres Rechtsakts informativ"
+      },
+      "message": {
+        "en": "{attribute} is missing; this is not a gap as of February 2027 because the Commission marks it 'not yet applicable' ({reason}).",
+        "de": "{attribute} fehlt; das ist ab Februar 2027 keine Lücke, weil die Kommission es als 'noch nicht anwendbar' einstuft ({reason})."
+      },
+      "fixHint": {
+        "en": "Collect the value anyway if available; the obligation will start once the delegated or implementing act is in force.",
+        "de": "Wert trotzdem erheben, falls verfügbar; die Pflicht beginnt mit Inkrafttreten des delegierten oder Durchführungsrechtsakts."
+      },
+      "attributes": [
+        "carbonFootprintPerFunctionalUnit",
+        "carbonFootprintLabel",
+        "carbonFootprintPerformanceClass",
+        "dueDiligenceReport",
+        "recycledNickelPreConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLeadPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPostConsumer"
+      ],
+      "legalRef": "EC guidance v2.0, data points 17-23 and 44"
+    },
+    {
+      "id": "PW-PLAUS-014",
+      "severity": "warning",
+      "title": {
+        "en": "Internal resistance values should be in ohms, not milliohms",
+        "de": "Innenwiderstände sollten in Ohm, nicht in Milliohm angegeben sein"
+      },
+      "message": {
+        "en": "Internal resistance {value} Ohm is implausibly high for a battery; the source probably states milliohms.",
+        "de": "Innenwiderstand {value} Ohm ist für eine Batterie unplausibel hoch; die Quelle nennt vermutlich Milliohm."
+      },
+      "fixHint": {
+        "en": "Divide milliohm values by 1000. Cell values are typically 0.0005-0.1 Ohm, pack values below 1 Ohm.",
+        "de": "Milliohm-Werte durch 1000 teilen. Zellwerte liegen typisch bei 0,0005-0,1 Ohm, Packwerte unter 1 Ohm."
+      },
+      "attributes": ["initialInternalResistance"],
+      "legalRef": "BR Annex XIII 1(o)"
+    },
+    {
+      "id": "PW-PLAUS-015",
+      "severity": "error",
+      "title": {
+        "en": "Idle temperature range must have lower boundary below upper boundary",
+        "de": "Ruhetemperaturbereich: untere Grenze muss unter der oberen liegen"
+      },
+      "message": {
+        "en": "Lower boundary {lower} degC is not below upper boundary {upper} degC.",
+        "de": "Untere Grenze {lower} °C liegt nicht unter der oberen Grenze {upper} °C."
+      },
+      "fixHint": {
+        "en": "Check for a lost minus sign in the lower boundary.",
+        "de": "Auf ein verlorenes Minuszeichen bei der unteren Grenze prüfen."
+      },
+      "attributes": ["temperatureRangeIdleLowerBoundary", "temperatureRangeIdleUpperBoundary"],
+      "legalRef": "BR Annex XIII 1(l)"
+    }
+  ]
+}

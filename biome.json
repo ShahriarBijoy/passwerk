@@ -6,7 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/coverage", "!pnpm-lock.yaml", "!packages/rules/artefacts"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/coverage",
+      "!pnpm-lock.yaml",
+      "!packages/rules/artefacts",
+      "!packages/rules/kb/generated"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -18,7 +25,10 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "complexity": {
+        "useLiteralKeys": "off"
+      }
     }
   },
   "javascript": {

@@ -1,0 +1,758 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Circularity and resource efficiency' (longlist rows 36-51). Authored; see kb/attributes/README.md. All values live in IDTA 02035-7 Circularity. Recycled content shares (rows 40-47) are deferred by the Commission's v2.0 guidance until the Article 8 delegated act applies; minimum shares start 18 August 2031 (cobalt 16 %, lead 85 %, lithium 6 %, nickel 6 %) and rise on 18 August 2036 (cobalt 26 %, lead 85 %, lithium 12 %, nickel 15 %), Article 8(2) and (3).",
+  "category": "Circularity and resource efficiency",
+  "attributes": [
+    {
+      "id": "dismantlingInformation",
+      "din": { "no": 36, "chapter": "6.6.1.2" },
+      "ecDataPoints": [48],
+      "part": 7,
+      "templatePaths": [
+        "7/DismantlingAndRemovalInformation",
+        "7/DismantlingAndRemovalInformation/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "Dismantling and removal information",
+        "de": "Demontage- und Ausbauinformationen"
+      },
+      "synonyms": {
+        "en": [
+          "dismantling manual",
+          "disassembly instructions",
+          "removal instructions",
+          "exploded diagram",
+          "disassembly sequence",
+          "service manual",
+          "repair manual"
+        ],
+        "de": [
+          "demontageanleitung",
+          "zerlegeanleitung",
+          "ausbauanleitung",
+          "explosionszeichnung",
+          "demontagereihenfolge",
+          "servicehandbuch",
+          "reparaturanleitung"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's engineering and technical documentation team (service manuals, exploded drawings).",
+        "de": "Entwicklung und technische Dokumentation des Pack-Herstellers (Servicehandbücher, Explosionszeichnungen)."
+      },
+      "explanation": {
+        "en": "Documents for the removal and disassembly of the battery pack: exploded diagrams with cell locations, disassembly sequences, fastening techniques, tools, warnings, and cell count and layout (Annex XIII 2(c)). Accessible to persons with a legitimate interest, not the public. Referenced by document identifier; files live in Part 2.",
+        "de": "Dokumente zum Ausbau und zur Zerlegung des Batteriepacks: Explosionszeichnungen mit Zellpositionen, Demontagereihenfolge, Verbindungstechniken, Werkzeuge, Warnhinweise sowie Zellanzahl und -anordnung (Anhang XIII 2(c)). Für Personen mit berechtigtem Interesse, nicht öffentlich. Verweis per Dokumentkennung; Dateien in Teil 2."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "componentPartNumbers",
+      "din": { "no": 37, "chapter": "6.6.1.3" },
+      "ecDataPoints": [46],
+      "part": 7,
+      "templatePaths": [
+        "7/SparePartSources/SparePartSupplier/Components",
+        "7/SparePartSources/SparePartSupplier/Components/Component/PartName",
+        "7/SparePartSources/SparePartSupplier/Components/Component/PartNumber"
+      ],
+      "name": { "en": "Part numbers for components", "de": "Teilenummern der Komponenten" },
+      "synonyms": {
+        "en": [
+          "part number",
+          "part no.",
+          "component number",
+          "spare part number",
+          "article number",
+          "item number",
+          "p/n"
+        ],
+        "de": [
+          "teilenummer",
+          "teile-nr.",
+          "artikelnummer",
+          "sachnummer",
+          "ersatzteilnummer",
+          "bauteilnummer",
+          "materialnummer"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's bill of materials (ERP/PLM); replaceable components such as modules, BMS, fuses, connectors.",
+        "de": "Stückliste des Pack-Herstellers (ERP/PLM); austauschbare Komponenten wie Module, BMS, Sicherungen, Stecker."
+      },
+      "explanation": {
+        "en": "Part numbers of the components that can be replaced, listed per spare part supplier together with the part name (Annex XIII 2(b)). Accessible to persons with a legitimate interest.",
+        "de": "Teilenummern der austauschbaren Komponenten, je Ersatzteillieferant mit Teilename gelistet (Anhang XIII 2(b)). Für Personen mit berechtigtem Interesse."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "sparePartSources",
+      "din": { "no": 38, "chapter": "6.6.1.4" },
+      "ecDataPoints": [47],
+      "part": 7,
+      "templatePaths": [
+        "7/SparePartSources",
+        "7/SparePartSources/SparePartSupplier/NameOfSupplier",
+        "7/SparePartSources/SparePartSupplier/AddressOfSupplier/NationalCode",
+        "7/SparePartSources/SparePartSupplier/AddressOfSupplier/PostalCode",
+        "7/SparePartSources/SparePartSupplier/AddressOfSupplier/Street",
+        "7/SparePartSources/SparePartSupplier/EmailAddressOfSupplier/EmailAddress",
+        "7/SparePartSources/SparePartSupplier/SupplierWebAddress"
+      ],
+      "name": {
+        "en": "Sources for replacement spare parts",
+        "de": "Bezugsquellen für Ersatzteile"
+      },
+      "synonyms": {
+        "en": [
+          "spare part supplier",
+          "spare parts source",
+          "replacement parts",
+          "service partner",
+          "parts contact",
+          "supplier address",
+          "aftersales contact"
+        ],
+        "de": [
+          "ersatzteillieferant",
+          "ersatzteilquelle",
+          "ersatzteilbezug",
+          "servicepartner",
+          "ersatzteilkontakt",
+          "lieferantenadresse",
+          "after-sales-kontakt"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "After-sales or service department of the pack manufacturer; often the manufacturer itself plus authorised service partners.",
+        "de": "After-Sales- oder Serviceabteilung des Pack-Herstellers; oft der Hersteller selbst plus autorisierte Servicepartner."
+      },
+      "explanation": {
+        "en": "Contact details (name, address, e-mail, web address) of the sources from which spare parts can be obtained (Annex XIII 2(b)). One SparePartSupplier entry per source, each with its component list.",
+        "de": "Kontaktdaten (Name, Anschrift, E-Mail, Webadresse) der Bezugsquellen für Ersatzteile (Anhang XIII 2(b)). Je Quelle ein SparePartSupplier-Eintrag mit zugehöriger Komponentenliste."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "safetyMeasures",
+      "din": { "no": 39, "chapter": "6.6.1.5" },
+      "ecDataPoints": [49],
+      "part": 7,
+      "templatePaths": [
+        "7/SafetyMeasures",
+        "7/SafetyMeasures/SafetyInstructions/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "Safety measures and instructions",
+        "de": "Sicherheitsmaßnahmen und -hinweise"
+      },
+      "synonyms": {
+        "en": [
+          "safety measures",
+          "safety instructions",
+          "safety manual",
+          "handling instructions",
+          "safety precautions",
+          "warnings",
+          "safety data"
+        ],
+        "de": [
+          "sicherheitsmaßnahmen",
+          "sicherheitshinweise",
+          "sicherheitsanleitung",
+          "handhabungshinweise",
+          "vorsichtsmaßnahmen",
+          "warnhinweise",
+          "schutzmaßnahmen"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "EHS department together with technical documentation; also derived from the cell safety data sheet.",
+        "de": "EHS-Abteilung zusammen mit technischer Dokumentation; auch aus dem Zell-Sicherheitsdatenblatt abgeleitet."
+      },
+      "explanation": {
+        "en": "Safety measures to be taken when handling, dismantling or storing the battery (Annex XIII 2(d), Article 74(2)). Provided as safety instruction documents referenced by identifier; the extinguishing agents are a separate attribute in the same collection.",
+        "de": "Sicherheitsmaßnahmen bei Handhabung, Demontage oder Lagerung der Batterie (Anhang XIII 2(d), Artikel 74(2)). Als Sicherheitsdokumente per Kennung referenziert; die Löschmittel sind ein eigenes Attribut in derselben Collection."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledNickelPreConsumer",
+      "din": { "no": 40, "chapter": "6.6.2.3" },
+      "ecDataPoints": [22],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PreConsumerShare"
+      ],
+      "name": {
+        "en": "Pre-consumer recycled nickel share",
+        "de": "Anteil recyceltes Nickel aus Produktionsabfall (pre-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "recycled nickel",
+          "pre-consumer nickel",
+          "nickel from manufacturing waste",
+          "ni recycled content",
+          "secondary nickel",
+          "recycled ni share"
+        ],
+        "de": [
+          "rezyklatanteil nickel",
+          "recyclinganteil nickel",
+          "pre-consumer nickel",
+          "nickel aus produktionsabfall",
+          "sekundärnickel",
+          "ni-rezyklat"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material supplier or cell manufacturer, with mass-balance documentation; the pack manufacturer rarely has it and must request it.",
+        "de": "Lieferant des Kathodenaktivmaterials oder Zellhersteller, mit Massenbilanz-Nachweis; der Pack-Hersteller hat es selten und muss es anfragen."
+      },
+      "explanation": {
+        "en": "Share of nickel in active materials recovered from battery manufacturing waste (Article 8, Annex XIII 1(e)). Deferred by the Commission's v2.0 guidance until the delegated act on the calculation method applies; minimum shares only start in 2031. Modelled as a RecycledContent entry with material 'nickel' and the pre-consumer share.",
+        "de": "Anteil des Nickels in Aktivmaterialien, das aus Batterieproduktionsabfall zurückgewonnen wurde (Artikel 8, Anhang XIII 1(e)). Von der Kommission in der Leitlinie v2.0 bis zum delegierten Rechtsakt zur Berechnungsmethode zurückgestellt; Mindestanteile gelten erst ab 2031. Als RecycledContent-Eintrag mit Material 'nickel' und Pre-Consumer-Anteil modelliert."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledCobaltPreConsumer",
+      "din": { "no": 41, "chapter": "6.6.2.4" },
+      "ecDataPoints": [20],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PreConsumerShare"
+      ],
+      "name": {
+        "en": "Pre-consumer recycled cobalt share",
+        "de": "Anteil recyceltes Kobalt aus Produktionsabfall (pre-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "recycled cobalt",
+          "pre-consumer cobalt",
+          "cobalt from manufacturing waste",
+          "co recycled content",
+          "secondary cobalt",
+          "recycled co share"
+        ],
+        "de": [
+          "rezyklatanteil kobalt",
+          "recyclinganteil kobalt",
+          "kobalt rec.",
+          "pre-consumer kobalt",
+          "sekundärkobalt",
+          "co-rezyklat",
+          "recyceltes cobalt"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material supplier or cell manufacturer, with mass-balance documentation.",
+        "de": "Lieferant des Kathodenaktivmaterials oder Zellhersteller, mit Massenbilanz-Nachweis."
+      },
+      "explanation": {
+        "en": "Share of cobalt in active materials recovered from battery manufacturing waste (Article 8). Deferred until the delegated act applies; the first minimum share (16 %) starts 18 August 2031.",
+        "de": "Anteil des Kobalts in Aktivmaterialien aus Batterieproduktionsabfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt; der erste Mindestanteil (16 %) gilt ab 18. August 2031."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledLithiumPreConsumer",
+      "din": { "no": 42, "chapter": "6.6.2.5" },
+      "ecDataPoints": [21],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PreConsumerShare"
+      ],
+      "name": {
+        "en": "Pre-consumer recycled lithium share",
+        "de": "Anteil recyceltes Lithium aus Produktionsabfall (pre-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "recycled lithium",
+          "pre-consumer lithium",
+          "lithium from manufacturing waste",
+          "li recycled content",
+          "secondary lithium",
+          "recycled li share"
+        ],
+        "de": [
+          "rezyklatanteil lithium",
+          "recyclinganteil lithium",
+          "pre-consumer lithium",
+          "lithium aus produktionsabfall",
+          "sekundärlithium",
+          "li-rezyklat"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material or electrolyte supplier, or cell manufacturer, with mass-balance documentation.",
+        "de": "Lieferant von Kathodenaktivmaterial oder Elektrolyt, oder Zellhersteller, mit Massenbilanz-Nachweis."
+      },
+      "explanation": {
+        "en": "Share of lithium in active materials recovered from battery manufacturing waste (Article 8). Deferred until the delegated act applies; the first minimum share (6 %) starts 18 August 2031.",
+        "de": "Anteil des Lithiums in Aktivmaterialien aus Batterieproduktionsabfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt; der erste Mindestanteil (6 %) gilt ab 18. August 2031."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledLeadPreConsumer",
+      "din": { "no": 43, "chapter": "6.6.2.6" },
+      "ecDataPoints": [23],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PreConsumerShare"
+      ],
+      "name": {
+        "en": "Pre-consumer recycled lead share",
+        "de": "Anteil recyceltes Blei aus Produktionsabfall (pre-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "recycled lead",
+          "pre-consumer lead",
+          "lead from manufacturing waste",
+          "pb recycled content",
+          "secondary lead",
+          "recycled pb share"
+        ],
+        "de": [
+          "rezyklatanteil blei",
+          "recyclinganteil blei",
+          "pre-consumer blei",
+          "blei aus produktionsabfall",
+          "sekundärblei",
+          "pb-rezyklat"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Lead supplier or cell manufacturer (relevant for lead-acid industrial batteries), with mass-balance documentation.",
+        "de": "Bleilieferant oder Zellhersteller (relevant für Blei-Säure-Industriebatterien), mit Massenbilanz-Nachweis."
+      },
+      "explanation": {
+        "en": "Share of lead in the battery recovered from battery manufacturing waste (Article 8). Deferred until the delegated act applies; the minimum share (85 %) starts 18 August 2031.",
+        "de": "Anteil des Bleis in der Batterie aus Batterieproduktionsabfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt; der Mindestanteil (85 %) gilt ab 18. August 2031."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledNickelPostConsumer",
+      "din": { "no": 44, "chapter": "6.6.2.7" },
+      "ecDataPoints": [22],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PostConsumerShare"
+      ],
+      "name": {
+        "en": "Post-consumer recycled nickel share",
+        "de": "Anteil recyceltes Nickel aus Altbatterien (post-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "post-consumer nickel",
+          "recycled nickel from waste",
+          "end-of-life nickel",
+          "ni post-consumer",
+          "recycled ni share",
+          "secondary nickel"
+        ],
+        "de": [
+          "post-consumer nickel",
+          "nickel aus altbatterien",
+          "recyclinganteil nickel",
+          "rezyklatanteil nickel",
+          "nickel aus abfall",
+          "sekundärnickel"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material supplier or cell manufacturer, backed by recycler certificates.",
+        "de": "Lieferant des Kathodenaktivmaterials oder Zellhersteller, belegt durch Recycler-Zertifikate."
+      },
+      "explanation": {
+        "en": "Share of nickel in active materials recovered from post-consumer waste (Article 8). Deferred until the delegated act applies. Same RecycledContent entry as the pre-consumer share, different field.",
+        "de": "Anteil des Nickels in Aktivmaterialien aus Post-Consumer-Abfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt. Gleicher RecycledContent-Eintrag wie der Pre-Consumer-Anteil, anderes Feld."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledCobaltPostConsumer",
+      "din": { "no": 45, "chapter": "6.6.2.8" },
+      "ecDataPoints": [20],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PostConsumerShare"
+      ],
+      "name": {
+        "en": "Post-consumer recycled cobalt share",
+        "de": "Anteil recyceltes Kobalt aus Altbatterien (post-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "post-consumer cobalt",
+          "recycled cobalt from waste",
+          "end-of-life cobalt",
+          "co post-consumer",
+          "recycled co share",
+          "secondary cobalt"
+        ],
+        "de": [
+          "post-consumer kobalt",
+          "kobalt aus altbatterien",
+          "recyclinganteil kobalt",
+          "rezyklatanteil kobalt",
+          "kobalt aus abfall",
+          "sekundärkobalt"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material supplier or cell manufacturer, backed by recycler certificates.",
+        "de": "Lieferant des Kathodenaktivmaterials oder Zellhersteller, belegt durch Recycler-Zertifikate."
+      },
+      "explanation": {
+        "en": "Share of cobalt in active materials recovered from post-consumer waste (Article 8). Deferred until the delegated act applies.",
+        "de": "Anteil des Kobalts in Aktivmaterialien aus Post-Consumer-Abfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledLithiumPostConsumer",
+      "din": { "no": 46, "chapter": "6.6.2.9" },
+      "ecDataPoints": [21],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PostConsumerShare"
+      ],
+      "name": {
+        "en": "Post-consumer recycled lithium share",
+        "de": "Anteil recyceltes Lithium aus Altbatterien (post-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "post-consumer lithium",
+          "recycled lithium from waste",
+          "end-of-life lithium",
+          "li post-consumer",
+          "recycled li share",
+          "secondary lithium"
+        ],
+        "de": [
+          "post-consumer lithium",
+          "lithium aus altbatterien",
+          "recyclinganteil lithium",
+          "rezyklatanteil lithium",
+          "lithium aus abfall",
+          "sekundärlithium"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cathode active material or electrolyte supplier, or cell manufacturer, backed by recycler certificates.",
+        "de": "Lieferant von Kathodenaktivmaterial oder Elektrolyt, oder Zellhersteller, belegt durch Recycler-Zertifikate."
+      },
+      "explanation": {
+        "en": "Share of lithium in active materials recovered from post-consumer waste (Article 8). Deferred until the delegated act applies.",
+        "de": "Anteil des Lithiums in Aktivmaterialien aus Post-Consumer-Abfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "recycledLeadPostConsumer",
+      "din": { "no": 47, "chapter": "6.6.2.10" },
+      "ecDataPoints": [23],
+      "part": 7,
+      "templatePaths": [
+        "7/RecycledContentInformation",
+        "7/RecycledContentInformation/RecycledContent/RecycledMaterial",
+        "7/RecycledContentInformation/RecycledContent/PostConsumerShare"
+      ],
+      "name": {
+        "en": "Post-consumer recycled lead share",
+        "de": "Anteil recyceltes Blei aus Altbatterien (post-consumer)"
+      },
+      "synonyms": {
+        "en": [
+          "post-consumer lead",
+          "recycled lead from waste",
+          "end-of-life lead",
+          "pb post-consumer",
+          "recycled pb share",
+          "secondary lead"
+        ],
+        "de": [
+          "post-consumer blei",
+          "blei aus altbatterien",
+          "recyclinganteil blei",
+          "rezyklatanteil blei",
+          "blei aus abfall",
+          "sekundärblei"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Lead supplier or cell manufacturer, backed by recycler certificates.",
+        "de": "Bleilieferant oder Zellhersteller, belegt durch Recycler-Zertifikate."
+      },
+      "explanation": {
+        "en": "Share of lead in the battery recovered from post-consumer waste (Article 8). Deferred until the delegated act applies.",
+        "de": "Anteil des Bleis in der Batterie aus Post-Consumer-Abfall (Artikel 8). Zurückgestellt bis zum delegierten Rechtsakt."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "renewableContentShare",
+      "din": { "no": 48, "chapter": "6.6.2.11" },
+      "ecDataPoints": [24],
+      "part": 7,
+      "templatePaths": ["7/RenewableContent"],
+      "name": { "en": "Renewable content share", "de": "Anteil erneuerbarer Materialien" },
+      "synonyms": {
+        "en": [
+          "renewable content",
+          "renewable materials",
+          "bio-based content",
+          "renewable share",
+          "biogenic material",
+          "renewable raw materials"
+        ],
+        "de": [
+          "erneuerbarer anteil",
+          "erneuerbare materialien",
+          "biobasierter anteil",
+          "nachwachsende rohstoffe",
+          "biogener anteil",
+          "renewable content"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's materials engineering, based on supplier declarations for housings, separators and binders.",
+        "de": "Werkstofftechnik des Pack-Herstellers, auf Basis von Lieferantenerklärungen für Gehäuse, Separatoren und Binder."
+      },
+      "explanation": {
+        "en": "Share of renewable (bio-based) content in the battery (Annex XIII 1(f)). Mandatory for all three categories from February 2027; the regulation does not yet define a calculation method, so state the basis used.",
+        "de": "Anteil erneuerbarer (biobasierter) Materialien in der Batterie (Anhang XIII 1(f)). Ab Februar 2027 für alle drei Kategorien Pflicht; die Verordnung definiert noch keine Berechnungsmethode, daher die verwendete Basis angeben."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "endUserInfoWastePrevention",
+      "din": { "no": 49, "chapter": "6.6.3.2" },
+      "ecDataPoints": [43],
+      "part": 7,
+      "templatePaths": [
+        "7/EndOfLifeInformation",
+        "7/EndOfLifeInformation/WastePrevention/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "End-user information on waste prevention",
+        "de": "Endnutzerinformation zur Abfallvermeidung"
+      },
+      "synonyms": {
+        "en": [
+          "waste prevention",
+          "prolonging battery life",
+          "user information",
+          "end-user role",
+          "prevention information",
+          "care instructions"
+        ],
+        "de": [
+          "abfallvermeidung",
+          "lebensdauer verlängern",
+          "endnutzerinformation",
+          "nutzerhinweise",
+          "vermeidungsinformation",
+          "pflegehinweise"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Product compliance or marketing communications; often already part of the user manual and the producer's take-back information.",
+        "de": "Produkt-Compliance oder Marketingkommunikation; oft schon Teil der Bedienungsanleitung und der Rücknahmeinformation des Herstellers."
+      },
+      "explanation": {
+        "en": "Information on the role of end-users in contributing to waste prevention, including good practice for extending the battery's life (Article 74(1)(a)). Referenced by document identifier.",
+        "de": "Information über die Rolle der Endnutzer bei der Abfallvermeidung, einschließlich Hinweisen zur Verlängerung der Lebensdauer (Artikel 74(1)(a)). Verweis per Dokumentkennung."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "endUserInfoSeparateCollection",
+      "din": { "no": 50, "chapter": "6.6.3.3" },
+      "ecDataPoints": [43],
+      "part": 7,
+      "templatePaths": [
+        "7/EndOfLifeInformation",
+        "7/EndOfLifeInformation/SeparateCollection/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "End-user information on separate collection",
+        "de": "Endnutzerinformation zur getrennten Sammlung"
+      },
+      "synonyms": {
+        "en": [
+          "separate collection",
+          "return of waste batteries",
+          "collection points",
+          "take-back",
+          "disposal information",
+          "do not dispose in household waste"
+        ],
+        "de": [
+          "getrennte sammlung",
+          "rückgabe altbatterien",
+          "sammelstellen",
+          "rücknahme",
+          "entsorgungshinweis",
+          "nicht in den hausmüll"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Product compliance; content aligned with the producer responsibility organisation's take-back scheme.",
+        "de": "Produkt-Compliance; Inhalt abgestimmt mit dem Rücknahmesystem der Herstellerverantwortungsorganisation."
+      },
+      "explanation": {
+        "en": "Information on the end-user's obligation to discard waste batteries separately and return them to designated collection points (Article 74(1)(b), Article 64). Referenced by document identifier.",
+        "de": "Information über die Pflicht der Endnutzer, Altbatterien getrennt zu entsorgen und an Sammelstellen zurückzugeben (Artikel 74(1)(b), Artikel 64). Verweis per Dokumentkennung."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "endUserInfoCollectionAndTreatment",
+      "din": { "no": 51, "chapter": "6.6.3.4" },
+      "ecDataPoints": [43],
+      "part": 7,
+      "templatePaths": [
+        "7/EndOfLifeInformation",
+        "7/EndOfLifeInformation/InformationOnCollection/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "Information on collection, second life and end-of-life treatment",
+        "de": "Information zu Sammlung, Zweitnutzung und Behandlung am Lebensende"
+      },
+      "synonyms": {
+        "en": [
+          "collection scheme",
+          "second life",
+          "repurposing information",
+          "recycling information",
+          "end-of-life treatment",
+          "take-back scheme",
+          "recycling process"
+        ],
+        "de": [
+          "sammelsystem",
+          "second life",
+          "zweitnutzung",
+          "recyclinginformation",
+          "behandlung am lebensende",
+          "rücknahmesystem",
+          "recyclingverfahren"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Product compliance together with the producer responsibility organisation or contracted recycler.",
+        "de": "Produkt-Compliance zusammen mit der Herstellerverantwortungsorganisation oder dem beauftragten Recycler."
+      },
+      "explanation": {
+        "en": "Information on the available collection, preparation for re-use or repurposing, and treatment options for waste batteries (Article 74(1)(c)). Referenced by document identifier.",
+        "de": "Information über verfügbare Sammlung, Vorbereitung zur Wiederverwendung oder Umwidmung und Behandlungsoptionen für Altbatterien (Artikel 74(1)(c)). Verweis per Dokumentkennung."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

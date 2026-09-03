@@ -1,0 +1,319 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Symbols, labels and documentation of conformity' (longlist rows 12-18). Authored; see kb/attributes/README.md.",
+  "category": "Symbols, labels and documentation of conformity",
+  "attributes": [
+    {
+      "id": "separateCollectionSymbol",
+      "din": { "no": 12, "chapter": "6.2.2" },
+      "ecDataPoints": [40],
+      "part": 1,
+      "templatePaths": [
+        "1/Markings",
+        "1/Markings/Markings__00__/MarkingName",
+        "1/Markings/Markings__00__/MarkingFile"
+      ],
+      "name": {
+        "en": "Separate collection symbol (crossed-out wheeled bin)",
+        "de": "Symbol für die getrennte Sammlung (durchgestrichene Mülltonne)"
+      },
+      "synonyms": {
+        "en": [
+          "crossed-out wheeled bin",
+          "separate collection",
+          "weee symbol",
+          "do not dispose",
+          "collection symbol",
+          "marking"
+        ],
+        "de": [
+          "durchgestrichene mülltonne",
+          "getrennte sammlung",
+          "mülltonnensymbol",
+          "kennzeichnung",
+          "nicht in den hausmüll",
+          "sammelsymbol"
+        ]
+      },
+      "valueKind": "graphic",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The manufacturer's labelling or product compliance team; the artwork is on the label drawing and in the technical documentation.",
+        "de": "Kennzeichnungs- oder Produkt-Compliance-Team des Herstellers; die Grafik steht in der Etikettenzeichnung und der technischen Dokumentation."
+      },
+      "explanation": {
+        "en": "The symbol for separate collection required by Article 13(4) and Annex VI Part B. In the passport it is one entry of the Markings list: the marking name (an ECLASS/IEC code) plus, optionally, the image file.",
+        "de": "Das nach Artikel 13(4) und Anhang VI Teil B vorgeschriebene Symbol für die getrennte Sammlung. Im Pass ist es ein Eintrag der Markings-Liste: Kennzeichnungsname (ECLASS/IEC-Code) plus optional die Bilddatei."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "cadmiumLeadSymbols",
+      "din": { "no": 13, "chapter": "6.2.3" },
+      "ecDataPoints": [41],
+      "part": 1,
+      "templatePaths": [
+        "1/Markings",
+        "1/Markings/Markings__00__/MarkingName",
+        "1/Markings/Markings__00__/MarkingFile"
+      ],
+      "name": { "en": "Cadmium and lead symbols", "de": "Symbole für Cadmium und Blei" },
+      "synonyms": {
+        "en": [
+          "cd symbol",
+          "pb symbol",
+          "cadmium marking",
+          "lead marking",
+          "heavy metal symbol",
+          "cd",
+          "pb"
+        ],
+        "de": [
+          "cd-symbol",
+          "pb-symbol",
+          "cadmium-kennzeichnung",
+          "blei-kennzeichnung",
+          "schwermetallsymbol",
+          "cd",
+          "pb"
+        ]
+      },
+      "valueKind": "graphic",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Product compliance team, based on the material declaration from the cell manufacturer (cadmium above 0.002 % or lead above 0.004 % by weight).",
+        "de": "Produkt-Compliance-Team, auf Basis der Materialdeklaration des Zellherstellers (Cadmium über 0,002 % oder Blei über 0,004 % Gewichtsanteil)."
+      },
+      "explanation": {
+        "en": "Chemical symbols Cd and Pb under Article 13(5), required only when the battery contains more cadmium or lead than the thresholds in that article. Add the marking entry only if applicable; otherwise the attribute is not applicable, not missing.",
+        "de": "Chemische Symbole Cd und Pb nach Artikel 13(5), nur erforderlich, wenn die Batterie mehr Cadmium oder Blei als die dort genannten Schwellen enthält. Marking-Eintrag nur bei Zutreffen anlegen; sonst ist das Attribut nicht anwendbar, nicht fehlend."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "carbonFootprintLabel",
+      "din": { "no": 14, "chapter": "6.2.4" },
+      "ecDataPoints": [18],
+      "part": 3,
+      "templatePaths": ["3/ProductCarbonFootprints/ProductCarbonFootprint/PerformanceClass"],
+      "name": {
+        "en": "Carbon footprint label (performance class)",
+        "de": "CO2-Fußabdruck-Label (Leistungsklasse)"
+      },
+      "synonyms": {
+        "en": [
+          "carbon footprint label",
+          "cf label",
+          "performance class label",
+          "co2 class",
+          "carbon class",
+          "pcf label"
+        ],
+        "de": [
+          "co2-label",
+          "co2-fußabdruck-label",
+          "leistungsklasse",
+          "co2-klasse",
+          "carbon footprint klasse",
+          "pcf-label"
+        ]
+      },
+      "valueKind": "graphic",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Sustainability or LCA team of the manufacturer, once the Commission's delegated act defines the performance classes.",
+        "de": "Nachhaltigkeits- oder Ökobilanz-Team des Herstellers, sobald der delegierte Rechtsakt der Kommission die Leistungsklassen festlegt."
+      },
+      "explanation": {
+        "en": "The label showing the carbon footprint performance class (Article 7(2)). The Commission's v2.0 guidance marks it 'not to be filled/displayed as of February 2027' because the implementing act on the format is pending; DIN DKE SPEC 99100 lists it as voluntary. The class value itself is carried in the Carbon Footprint submodel.",
+        "de": "Das Label mit der Leistungsklasse des CO2-Fußabdrucks (Artikel 7(2)). Die Kommission stuft es in der Leitlinie v2.0 als 'ab Februar 2027 nicht auszufüllen/anzuzeigen' ein, weil der Durchführungsrechtsakt zum Format fehlt; DIN DKE SPEC 99100 führt es als freiwillig. Der Klassenwert selbst steht im Teilmodell Carbon Footprint."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "extinguishingAgent",
+      "din": { "no": 15, "chapter": "6.2.5" },
+      "ecDataPoints": [14],
+      "part": 7,
+      "templatePaths": ["7/SafetyMeasures/ExtinguishingAgents/ExtinguishingAgent"],
+      "name": { "en": "Usable extinguishing agent", "de": "Geeignetes Löschmittel" },
+      "synonyms": {
+        "en": [
+          "extinguishing agent",
+          "fire extinguisher",
+          "extinguishing medium",
+          "fire class",
+          "water",
+          "abc powder",
+          "co2 extinguisher"
+        ],
+        "de": [
+          "löschmittel",
+          "feuerlöscher",
+          "löschmedium",
+          "brandklasse",
+          "wasser",
+          "abc-pulver",
+          "co2-löscher",
+          "löschhinweis"
+        ]
+      },
+      "valueKind": "text",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "EHS department or the cell manufacturer's safety data sheet (section 5, firefighting measures).",
+        "de": "EHS-Abteilung oder das Sicherheitsdatenblatt des Zellherstellers (Abschnitt 5, Maßnahmen zur Brandbekämpfung)."
+      },
+      "explanation": {
+        "en": "Which extinguishing agents can be used on this battery (Annex VI Part A (9)). Provide one list entry per agent, e.g. 'water in large quantities' or 'Class D powder'.",
+        "de": "Welche Löschmittel bei dieser Batterie eingesetzt werden können (Anhang VI Teil A (9)). Je Löschmittel ein Listeneintrag, z. B. 'Wasser in großen Mengen' oder 'Metallbrandpulver Klasse D'."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "meaningOfLabelsAndSymbols",
+      "din": { "no": 16, "chapter": "6.2.6" },
+      "ecDataPoints": [43],
+      "part": 1,
+      "templatePaths": ["1/Markings/Markings__00__/MarkingAdditionalText"],
+      "name": {
+        "en": "Meaning of labels and symbols",
+        "de": "Bedeutung der Kennzeichnungen und Symbole"
+      },
+      "synonyms": {
+        "en": [
+          "label meaning",
+          "symbol explanation",
+          "marking text",
+          "legend",
+          "explanation of symbols",
+          "label description"
+        ],
+        "de": [
+          "bedeutung der symbole",
+          "symbolerklärung",
+          "zeichenerklärung",
+          "legende",
+          "kennzeichnungstext",
+          "erläuterung"
+        ]
+      },
+      "valueKind": "text",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Technical documentation or labelling team of the manufacturer; usually already written for the user manual.",
+        "de": "Technische Dokumentation oder Kennzeichnungsteam des Herstellers; meist bereits für die Bedienungsanleitung formuliert."
+      },
+      "explanation": {
+        "en": "Plain-language explanation of every label and symbol on the battery, as end-user information under Article 74(1)(e). In the template it is the additional text attached to each Markings entry.",
+        "de": "Allgemein verständliche Erklärung jeder Kennzeichnung und jedes Symbols auf der Batterie als Endnutzerinformation nach Artikel 74(1)(e). Im Template ist es der Zusatztext an jedem Markings-Eintrag."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "euDeclarationOfConformity",
+      "din": { "no": 17, "chapter": "6.2.7" },
+      "ecDataPoints": [42],
+      "part": 1,
+      "templatePaths": [
+        "1/EUDeclarationOfConformity",
+        "1/EUDeclarationOfConformity/DocumentIdentifier"
+      ],
+      "name": { "en": "EU declaration of conformity", "de": "EU-Konformitätserklärung" },
+      "synonyms": {
+        "en": [
+          "declaration of conformity",
+          "doc",
+          "eu doc",
+          "ce declaration",
+          "conformity declaration",
+          "ce certificate"
+        ],
+        "de": [
+          "konformitätserklärung",
+          "eu-konformitätserklärung",
+          "ce-erklärung",
+          "ce-konformität",
+          "doc",
+          "konformitätsbescheinigung"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The manufacturer's regulatory affairs or quality department issues it (Article 18, Annex IX); importers keep a copy.",
+        "de": "Regulatory-Affairs- oder Qualitätsabteilung des Herstellers stellt sie aus (Artikel 18, Anhang IX); Importeure halten eine Kopie vor."
+      },
+      "explanation": {
+        "en": "The EU declaration of conformity for the battery model. The passport carries one or more document identifiers that point to the PDF stored in the Handover Documentation submodel (Part 2).",
+        "de": "Die EU-Konformitätserklärung für das Batteriemodell. Der Pass enthält eine oder mehrere Dokumentkennungen, die auf das PDF im Teilmodell Handover Documentation (Teil 2) verweisen."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "testReportsProvingCompliance",
+      "din": { "no": 18, "chapter": "6.2.8" },
+      "ecDataPoints": [50],
+      "part": 1,
+      "templatePaths": [
+        "1/ResultsOfTestReportsProvingCompliance",
+        "1/ResultsOfTestReportsProvingCompliance/DocumentIdentifier"
+      ],
+      "name": {
+        "en": "Results of test reports proving compliance",
+        "de": "Ergebnisse der Prüfberichte zum Konformitätsnachweis"
+      },
+      "synonyms": {
+        "en": [
+          "test report",
+          "test results",
+          "compliance test",
+          "type test",
+          "certification report",
+          "test certificate",
+          "lab report"
+        ],
+        "de": [
+          "prüfbericht",
+          "prüfergebnisse",
+          "testbericht",
+          "typprüfung",
+          "zertifizierungsbericht",
+          "prüfzeugnis",
+          "laborbericht"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Quality department or the notified body / test laboratory that performed the tests; part of the technical documentation (Annex VIII).",
+        "de": "Qualitätsabteilung oder die notifizierte Stelle bzw. das Prüflabor; Teil der technischen Dokumentation (Anhang VIII)."
+      },
+      "explanation": {
+        "en": "Test reports showing that the battery meets the requirements of the Regulation and its delegated or implementing acts (Annex XIII point 3). Accessible only to notified bodies, market surveillance authorities and the Commission, not to the public. Referenced by document identifier; the files live in Part 2.",
+        "de": "Prüfberichte, die belegen, dass die Batterie die Anforderungen der Verordnung und ihrer Rechtsakte erfüllt (Anhang XIII Nummer 3). Nur für notifizierte Stellen, Marktüberwachung und Kommission zugänglich, nicht öffentlich. Verweis per Dokumentkennung; die Dateien liegen in Teil 2."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

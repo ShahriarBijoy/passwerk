@@ -1,0 +1,422 @@
+{
+  "$comment": "Legal timeline for the EU battery passport. Every date was read from the consolidated text of Regulation (EU) 2023/1542 (02023R1542-20250731, as amended by Regulations (EU) 2024/1781 and 2025/1561) or from the cited official document on 2026-09-03. 'dateRule' = 'fixed' means the date is in the regulation text; 'latest_of' means the regulation says 'from <date> or <n> months after entry into force of the delegated/implementing act, whichever is the latest', so the effective date moves if the act is late. Entries with verify: true were taken from secondary sources and must be confirmed against the primary act before being shown to users as fact.",
+  "lastVerified": "2026-09-03",
+  "sources": {
+    "BR": {
+      "title": "Regulation (EU) 2023/1542 of the European Parliament and of the Council of 12 July 2023 concerning batteries and waste batteries",
+      "consolidated": "02023R1542-20250731",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02023R1542-20250731",
+      "amendedBy": ["Regulation (EU) 2024/1781 (ESPR)", "Regulation (EU) 2025/1561"]
+    },
+    "AMEND-2025-1561": {
+      "title": "Regulation (EU) 2025/1561 of 18 July 2025 amending Regulation (EU) 2023/1542 as regards obligations of economic operators concerning battery due diligence policies",
+      "url": "http://data.europa.eu/eli/reg/2025/1561/oj",
+      "published": "2025-07-30"
+    },
+    "EC-GUIDANCE-V2": {
+      "title": "European Commission, Guidance Document: Digital Batteries Passport - data points by category, Version 2.0",
+      "date": "2026-08-15",
+      "reference": "Ares(2026)7968977"
+    },
+    "IDTA-02035": {
+      "title": "IDTA 02035-1 to -7 Digital Battery Passport submodel templates (IDTA / Catena-X)",
+      "url": "https://github.com/admin-shell-io/submodel-templates/tree/main/published/Digital%20Battery%20Passport"
+    }
+  },
+  "events": [
+    {
+      "id": "br-entry-into-force",
+      "date": "2023-08-17",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Batteries Regulation enters into force",
+        "de": "Batterieverordnung tritt in Kraft"
+      },
+      "legalRef": "BR Article 96(1) (twentieth day after publication in OJ L 191 of 28 July 2023)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": [],
+      "verify": false
+    },
+    {
+      "id": "br-application",
+      "date": "2024-02-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Batteries Regulation applies (general application date)",
+        "de": "Batterieverordnung gilt (allgemeiner Geltungsbeginn)"
+      },
+      "legalRef": "BR Article 96(2)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": [],
+      "verify": false
+    },
+    {
+      "id": "bms-state-of-health-data",
+      "date": "2024-08-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "State of health and expected lifetime data must be held in the battery management system",
+        "de": "Daten zu Gesundheitszustand und erwarteter Lebensdauer müssen im Batteriemanagementsystem vorliegen"
+      },
+      "legalRef": "BR Article 14(1), Annex VII",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": [
+        "remainingCapacity",
+        "stateOfCertifiedEnergy",
+        "remainingPowerCapability",
+        "remainingRoundTripEnergyEfficiency",
+        "evolutionOfSelfDischarge",
+        "numberOfFullCycles",
+        "energyThroughput",
+        "capacityThroughput",
+        "timeInExtremeHighTemperature",
+        "timeInExtremeLowTemperature",
+        "timeChargingInExtremeHighTemperature",
+        "timeChargingInExtremeLowTemperature",
+        "deepDischargeEvents",
+        "dateOfPuttingIntoService"
+      ],
+      "verify": false
+    },
+    {
+      "id": "cf-declaration-ev",
+      "date": "2025-02-18",
+      "dateRule": "latest_of",
+      "alternative": "12 months after the date of entry into force of the delegated act (calculation methodology) or the implementing act (declaration format), whichever is the latest",
+      "title": {
+        "en": "Carbon footprint declaration required for electric vehicle batteries",
+        "de": "CO2-Fußabdruck-Erklärung für Elektrofahrzeugbatterien erforderlich"
+      },
+      "legalRef": "BR Article 7(1)",
+      "appliesTo": ["EV"],
+      "status": "pending_act",
+      "note": {
+        "en": "The delegated act on the calculation methodology and the implementing act on the format were still pending as of the Commission's v2.0 guidance (15 August 2026), which marks the declaration as not to be filled/displayed as of February 2027.",
+        "de": "Der delegierte Rechtsakt zur Berechnungsmethode und der Durchführungsrechtsakt zum Format standen laut Leitlinie v2.0 der Kommission (15. August 2026) noch aus; sie stuft die Erklärung als ab Februar 2027 nicht auszufüllen/anzuzeigen ein."
+      },
+      "affectsAttributes": [
+        "carbonFootprintPerFunctionalUnit",
+        "carbonFootprintShareRawMaterials",
+        "carbonFootprintShareManufacturing",
+        "carbonFootprintShareDistribution",
+        "carbonFootprintShareEndOfLife",
+        "carbonFootprintStudyLink",
+        "carbonFootprintGeneralInformation"
+      ],
+      "verify": false
+    },
+    {
+      "id": "cf-declaration-industrial",
+      "date": "2026-02-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act or the implementing act, whichever is the latest",
+      "title": {
+        "en": "Carbon footprint declaration required for rechargeable industrial batteries (except those with exclusively external storage)",
+        "de": "CO2-Fußabdruck-Erklärung für wiederaufladbare Industriebatterien erforderlich (außer solche mit ausschließlich externem Speicher)"
+      },
+      "legalRef": "BR Article 7(1)",
+      "appliesTo": ["INDUSTRIAL_GT_2KWH"],
+      "status": "pending_act",
+      "affectsAttributes": ["carbonFootprintPerFunctionalUnit"],
+      "verify": false
+    },
+    {
+      "id": "cf-declaration-lmt",
+      "date": "2028-08-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act or the implementing act, whichever is the latest",
+      "title": {
+        "en": "Carbon footprint declaration required for LMT batteries",
+        "de": "CO2-Fußabdruck-Erklärung für LMT-Batterien erforderlich"
+      },
+      "legalRef": "BR Article 7(1)",
+      "appliesTo": ["LMT"],
+      "status": "scheduled",
+      "affectsAttributes": ["carbonFootprintPerFunctionalUnit"],
+      "verify": false
+    },
+    {
+      "id": "cf-declaration-external-storage",
+      "date": "2030-08-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act or the implementing act, whichever is the latest",
+      "title": {
+        "en": "Carbon footprint declaration required for industrial batteries with external storage",
+        "de": "CO2-Fußabdruck-Erklärung für Industriebatterien mit externem Speicher erforderlich"
+      },
+      "legalRef": "BR Article 7(1)",
+      "appliesTo": ["INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "affectsAttributes": ["carbonFootprintPerFunctionalUnit"],
+      "verify": false
+    },
+    {
+      "id": "cf-performance-class-ev",
+      "date": "2026-08-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act establishing the performance classes",
+      "title": {
+        "en": "Carbon footprint performance class label required for electric vehicle batteries",
+        "de": "Leistungsklassen-Label zum CO2-Fußabdruck für Elektrofahrzeugbatterien erforderlich"
+      },
+      "legalRef": "BR Article 7(2)",
+      "appliesTo": ["EV"],
+      "status": "pending_act",
+      "affectsAttributes": ["carbonFootprintPerformanceClass", "carbonFootprintLabel"],
+      "verify": false
+    },
+    {
+      "id": "cf-performance-class-industrial",
+      "date": "2027-08-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act establishing the performance classes",
+      "title": {
+        "en": "Carbon footprint performance class label required for rechargeable industrial batteries",
+        "de": "Leistungsklassen-Label zum CO2-Fußabdruck für wiederaufladbare Industriebatterien erforderlich"
+      },
+      "legalRef": "BR Article 7(2)",
+      "appliesTo": ["INDUSTRIAL_GT_2KWH"],
+      "status": "pending_act",
+      "affectsAttributes": ["carbonFootprintPerformanceClass", "carbonFootprintLabel"],
+      "verify": false
+    },
+    {
+      "id": "cf-performance-class-lmt",
+      "date": "2030-02-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act establishing the performance classes",
+      "title": {
+        "en": "Carbon footprint performance class label required for LMT batteries",
+        "de": "Leistungsklassen-Label zum CO2-Fußabdruck für LMT-Batterien erforderlich"
+      },
+      "legalRef": "BR Article 7(2)",
+      "appliesTo": ["LMT"],
+      "status": "scheduled",
+      "affectsAttributes": ["carbonFootprintPerformanceClass", "carbonFootprintLabel"],
+      "verify": false
+    },
+    {
+      "id": "cf-max-threshold-ev",
+      "date": "2028-02-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the delegated act establishing the maximum threshold",
+      "title": {
+        "en": "Maximum life-cycle carbon footprint threshold applies to electric vehicle batteries",
+        "de": "Höchstwert für den Lebenszyklus-CO2-Fußabdruck gilt für Elektrofahrzeugbatterien"
+      },
+      "legalRef": "BR Article 7(3)",
+      "appliesTo": ["EV"],
+      "status": "scheduled",
+      "affectsAttributes": ["carbonFootprintPerFunctionalUnit"],
+      "verify": false
+    },
+    {
+      "id": "recycled-content-documentation",
+      "date": "2028-08-18",
+      "dateRule": "latest_of",
+      "alternative": "24 months after the date of entry into force of the delegated act on the calculation and verification methodology, whichever is the latest",
+      "title": {
+        "en": "Documentation of recycled cobalt, lead, lithium and nickel content required",
+        "de": "Dokumentation des Rezyklatanteils von Kobalt, Blei, Lithium und Nickel erforderlich"
+      },
+      "legalRef": "BR Article 8(1)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "pending_act",
+      "note": {
+        "en": "Applies to industrial batteries above 2 kWh, EV batteries and SLI batteries containing these materials in active materials; the Commission's v2.0 guidance marks the passport data points as not to be filled/displayed as of February 2027.",
+        "de": "Gilt für Industriebatterien über 2 kWh, Elektrofahrzeug- und Starterbatterien mit diesen Materialien in Aktivmaterialien; die Leitlinie v2.0 der Kommission stuft die Passdatenpunkte als ab Februar 2027 nicht auszufüllen/anzuzeigen ein."
+      },
+      "affectsAttributes": [
+        "recycledNickelPreConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLeadPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPostConsumer"
+      ],
+      "verify": false
+    },
+    {
+      "id": "recycled-content-minimum-2031",
+      "date": "2031-08-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Minimum recycled content: cobalt 16 %, lead 85 %, lithium 6 %, nickel 6 %",
+        "de": "Mindest-Rezyklatanteil: Kobalt 16 %, Blei 85 %, Lithium 6 %, Nickel 6 %"
+      },
+      "legalRef": "BR Article 8(2)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "thresholds": { "cobalt": 16, "lead": 85, "lithium": 6, "nickel": 6 },
+      "affectsAttributes": [
+        "recycledNickelPreConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLeadPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPostConsumer"
+      ],
+      "verify": false
+    },
+    {
+      "id": "recycled-content-minimum-2036",
+      "date": "2036-08-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Minimum recycled content: cobalt 26 %, lead 85 %, lithium 12 %, nickel 15 %",
+        "de": "Mindest-Rezyklatanteil: Kobalt 26 %, Blei 85 %, Lithium 12 %, Nickel 15 %"
+      },
+      "legalRef": "BR Article 8(3)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "thresholds": { "cobalt": 26, "lead": 85, "lithium": 12, "nickel": 15 },
+      "affectsAttributes": [
+        "recycledNickelPreConsumer",
+        "recycledCobaltPreConsumer",
+        "recycledLithiumPreConsumer",
+        "recycledLeadPreConsumer",
+        "recycledNickelPostConsumer",
+        "recycledCobaltPostConsumer",
+        "recycledLithiumPostConsumer",
+        "recycledLeadPostConsumer"
+      ],
+      "verify": false
+    },
+    {
+      "id": "separate-collection-symbol",
+      "date": "2025-08-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Separate collection symbol (crossed-out wheeled bin) required on all batteries",
+        "de": "Symbol für die getrennte Sammlung (durchgestrichene Mülltonne) auf allen Batterien erforderlich"
+      },
+      "legalRef": "BR Article 13(4), Annex VI Part B",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": ["separateCollectionSymbol"],
+      "verify": false
+    },
+    {
+      "id": "general-labelling",
+      "date": "2026-08-18",
+      "dateRule": "latest_of",
+      "alternative": "18 months after the date of entry into force of the implementing act on labelling specifications",
+      "title": {
+        "en": "General labelling requirements (Annex VI Part A information) apply",
+        "de": "Allgemeine Kennzeichnungspflichten (Angaben nach Anhang VI Teil A) gelten"
+      },
+      "legalRef": "BR Article 13(1)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "pending_act",
+      "affectsAttributes": [
+        "manufacturerInformation",
+        "batteryCategory",
+        "batteryIdentifier",
+        "manufacturingPlace",
+        "manufacturingDate",
+        "batteryMass",
+        "ratedCapacity",
+        "batteryChemistry",
+        "hazardousSubstances",
+        "extinguishingAgent",
+        "criticalRawMaterials"
+      ],
+      "verify": false
+    },
+    {
+      "id": "qr-code",
+      "date": "2027-02-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "QR code linking to the battery passport required on all batteries",
+        "de": "QR-Code mit Verknüpfung zum Batteriepass auf allen Batterien erforderlich"
+      },
+      "legalRef": "BR Article 13(6), Article 77(3)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "affectsAttributes": ["batteryPassportIdentifier"],
+      "verify": false
+    },
+    {
+      "id": "battery-passport",
+      "date": "2027-02-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Battery passport required for every LMT battery, industrial battery above 2 kWh and electric vehicle battery placed on the market or put into service",
+        "de": "Batteriepass für jede LMT-Batterie, Industriebatterie über 2 kWh und Elektrofahrzeugbatterie erforderlich, die in Verkehr gebracht oder in Betrieb genommen wird"
+      },
+      "legalRef": "BR Article 77(1), Annex XIII",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "affectsAttributes": [],
+      "verify": false
+    },
+    {
+      "id": "due-diligence-obligations",
+      "date": "2027-08-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Battery due diligence obligations apply (postponed by two years)",
+        "de": "Sorgfaltspflichten in der Batterie-Lieferkette gelten (um zwei Jahre verschoben)"
+      },
+      "legalRef": "BR Article 48(1) as amended by Regulation (EU) 2025/1561 Article 1(a) ('18 August 2025' replaced by '18 August 2027')",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "scheduled",
+      "note": {
+        "en": "Recital 4 of Regulation (EU) 2025/1561: postponed to allow time for the notification of conformity assessment bodies and for economic operators to comply. The due diligence report (Article 52(3)) is therefore not expected in passports as of February 2027.",
+        "de": "Erwägungsgrund 4 der Verordnung (EU) 2025/1561: verschoben, um Zeit für die Notifizierung von Konformitätsbewertungsstellen und die Umsetzung durch Wirtschaftsakteure zu geben. Der Sorgfaltspflichtbericht (Artikel 52(3)) wird daher ab Februar 2027 noch nicht im Pass erwartet."
+      },
+      "affectsAttributes": ["dueDiligenceReport", "thirdPartyAssurances", "supplyChainIndices"],
+      "verify": false
+    },
+    {
+      "id": "idta-02035-published",
+      "date": "2026-02-18",
+      "dateRule": "fixed",
+      "title": {
+        "en": "IDTA 02035-1 to -7 Digital Battery Passport submodel templates published (IDTA and Catena-X)",
+        "de": "IDTA 02035-1 bis -7 Teilmodell-Templates Digital Battery Passport veröffentlicht (IDTA und Catena-X)"
+      },
+      "legalRef": "not a legal act; IDTA specification, conformant to DIN DKE SPEC 99100",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": [],
+      "verify": true
+    },
+    {
+      "id": "ec-guidance-v2",
+      "date": "2026-08-15",
+      "dateRule": "fixed",
+      "title": {
+        "en": "Commission guidance 'Digital Batteries Passport - data points by category' version 2.0 published",
+        "de": "Leitlinie der Kommission 'Digital Batteries Passport - data points by category' Version 2.0 veröffentlicht"
+      },
+      "legalRef": "not a legal act; Ares(2026)7968977, does not extend the obligations of the Regulation",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": [],
+      "verify": false
+    },
+    {
+      "id": "dpp-registry-operational",
+      "date": "2026-07-20",
+      "dateRule": "fixed",
+      "title": {
+        "en": "EU Digital Product Passport registry operational",
+        "de": "EU-Register für digitale Produktpässe in Betrieb"
+      },
+      "legalRef": "Commission Implementing Regulation (EU) 2026/1778 (reported; primary act not yet checked)",
+      "appliesTo": ["EV", "LMT", "INDUSTRIAL_GT_2KWH"],
+      "status": "in_force",
+      "affectsAttributes": ["batteryPassportIdentifier"],
+      "verify": true
+    }
+  ]
+}

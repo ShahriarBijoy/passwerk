@@ -1,0 +1,163 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Supply chain due diligence' (longlist rows 28-30). Authored; see kb/attributes/README.md. Regulation (EU) 2025/1561 postponed the battery due diligence obligations of Article 48(1) from 18 August 2025 to 18 August 2027; the Commission's v2.0 guidance therefore marks data point 19 as not to be filled/displayed as of February 2027. None of the seven IDTA 02035 templates has a dedicated due-diligence element (catalogue searched for due, diligence, sourcing, assurance); reports would be carried as documents in Part 2 Handover Documentation.",
+  "category": "Supply chain due diligence",
+  "attributes": [
+    {
+      "id": "dueDiligenceReport",
+      "din": { "no": 28, "chapter": "6.4.2" },
+      "ecDataPoints": [19],
+      "part": null,
+      "templatePaths": [],
+      "name": {
+        "en": "Battery due diligence report",
+        "de": "Bericht zur Sorgfaltspflicht in der Batterie-Lieferkette"
+      },
+      "synonyms": {
+        "en": [
+          "due diligence report",
+          "responsible sourcing",
+          "supply chain due diligence",
+          "due diligence policy",
+          "conflict minerals report",
+          "oecd due diligence"
+        ],
+        "de": [
+          "sorgfaltspflichtbericht",
+          "due-diligence-bericht",
+          "lieferkettensorgfalt",
+          "lksg-bericht",
+          "verantwortungsvolle beschaffung",
+          "konfliktmineralien",
+          "sorgfaltspflichten"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Compliance or procurement department of the economic operator placing the battery on the market; the report is verified by a notified body and published annually.",
+        "de": "Compliance- oder Einkaufsabteilung des Wirtschaftsakteurs, der die Batterie in Verkehr bringt; der Bericht wird von einer notifizierten Stelle geprüft und jährlich veröffentlicht."
+      },
+      "explanation": {
+        "en": "The public report on the battery due diligence policy under Article 52(3), covering the risk management plan and a summary of the third-party verification. Deferred: Regulation (EU) 2025/1561 moved the obligation to 18 August 2027, so the Commission does not expect it in passports as of February 2027. No template element exists yet; carry it as a document.",
+        "de": "Der öffentliche Bericht zur Sorgfaltspflicht nach Artikel 52(3) mit Risikomanagementplan und Zusammenfassung der Drittprüfung. Zurückgestellt: Verordnung (EU) 2025/1561 verschiebt die Pflicht auf den 18. August 2027, die Kommission erwartet ihn ab Februar 2027 daher nicht im Pass. Noch kein Template-Element; als Dokument mitführen."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "thirdPartyAssurances",
+      "din": { "no": 29, "chapter": "6.4.3" },
+      "ecDataPoints": [],
+      "part": null,
+      "templatePaths": [],
+      "name": {
+        "en": "Third-party assurances of recognised due diligence schemes",
+        "de": "Drittbestätigungen anerkannter Sorgfaltspflicht-Systeme"
+      },
+      "synonyms": {
+        "en": [
+          "third party assurance",
+          "recognised scheme",
+          "rmi audit",
+          "irma certification",
+          "scheme certificate",
+          "audit certificate",
+          "assurance statement"
+        ],
+        "de": [
+          "drittbestätigung",
+          "anerkanntes system",
+          "zertifikat",
+          "audit-nachweis",
+          "rmi-audit",
+          "irma-zertifizierung",
+          "bestätigung dritter"
+        ]
+      },
+      "valueKind": "document",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Compliance department, collected from refiners and material suppliers who participate in Commission-recognised schemes (Article 53).",
+        "de": "Compliance-Abteilung, eingeholt von Raffinerien und Materiallieferanten, die an von der Kommission anerkannten Systemen teilnehmen (Artikel 53)."
+      },
+      "explanation": {
+        "en": "Certificates or statements from recognised due diligence schemes that the operator relies on under Article 49(d). Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points; no template element.",
+        "de": "Zertifikate oder Bestätigungen anerkannter Sorgfaltspflicht-Systeme, auf die sich der Akteur nach Artikel 49(d) stützt. In DIN DKE SPEC 99100 freiwillig und keiner der 71 Datenpunkte der Kommission; kein Template-Element."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 29 (o for all categories); Reg. (EU) 2023/1542 Art. 49(d)"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "supplyChainIndices",
+      "din": { "no": 30, "chapter": "6.4.4" },
+      "ecDataPoints": [],
+      "part": null,
+      "templatePaths": [],
+      "name": { "en": "Supply chain indices", "de": "Lieferketten-Indizes" },
+      "synonyms": {
+        "en": [
+          "supply chain index",
+          "sustainability index",
+          "esg score",
+          "supplier rating",
+          "responsible sourcing score",
+          "supply chain kpi"
+        ],
+        "de": [
+          "lieferkettenindex",
+          "nachhaltigkeitsindex",
+          "esg-score",
+          "lieferantenbewertung",
+          "s-rating",
+          "lieferketten-kennzahl"
+        ]
+      },
+      "valueKind": "text",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Sustainability or procurement department; often taken from rating platforms used by OEM customers.",
+        "de": "Nachhaltigkeits- oder Einkaufsabteilung; oft aus Bewertungsplattformen, die OEM-Kunden nutzen."
+      },
+      "explanation": {
+        "en": "Optional indices or scores describing the sustainability performance of the supply chain. Voluntary in DIN DKE SPEC 99100 with no regulation reference and no Commission data point; no template element.",
+        "de": "Optionale Indizes oder Scores zur Nachhaltigkeitsleistung der Lieferkette. In DIN DKE SPEC 99100 freiwillig, ohne Verordnungsbezug und ohne Datenpunkt der Kommission; kein Template-Element."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; no regulation reference; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; no regulation reference; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; no regulation reference; not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 30 (o for all categories); no regulation reference"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

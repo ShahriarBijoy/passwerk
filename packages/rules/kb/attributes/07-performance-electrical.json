@@ -1,0 +1,1118 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Performance and durability', part 1: capacity, energy, voltage, power, efficiency, self-discharge, resistance (longlist rows 52-75). Authored; see kb/attributes/README.md. Static design values live in IDTA 02035-4 Technical Data; dynamic state-of-health values come from the BMS and live in IDTA 02035-5 Product Condition, each with a LastUpdate timestamp.",
+  "category": "Performance and durability",
+  "attributes": [
+    {
+      "id": "ratedCapacity",
+      "din": { "no": 52, "chapter": "6.7.2.2" },
+      "ecDataPoints": [11, 51],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/CapacityEnergyVoltage/RatedCapacity"],
+      "name": { "en": "Rated capacity", "de": "Nennkapazität" },
+      "synonyms": {
+        "en": [
+          "rated capacity",
+          "capacity",
+          "nominal capacity",
+          "ah",
+          "ampere hours",
+          "c nom",
+          "typical capacity"
+        ],
+        "de": [
+          "nennkapazität",
+          "kapazität",
+          "nominalkapazität",
+          "ah",
+          "amperestunden",
+          "c nenn",
+          "typische kapazität"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "Ah",
+      "range": { "min": 0, "max": 100000 },
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's data sheet; the pack manufacturer states the pack value in its specification.",
+        "de": "Datenblatt des Zellherstellers; der Pack-Hersteller nennt den Packwert in seiner Spezifikation."
+      },
+      "explanation": {
+        "en": "Total ampere-hours that can be withdrawn from a fully charged battery under reference conditions (Annex IV Part A (1)). The Commission treats data points 11 and 51 as the same value, the latter as a dynamic, updated figure.",
+        "de": "Gesamte Amperestunden, die einer vollgeladenen Batterie unter Referenzbedingungen entnommen werden können (Anhang IV Teil A (1)). Die Kommission behandelt Datenpunkt 11 und 51 als denselben Wert, letzteren als dynamische, aktualisierte Größe."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "remainingCapacity",
+      "din": { "no": 53, "chapter": "6.7.2.3" },
+      "ecDataPoints": [62],
+      "part": 5,
+      "templatePaths": [
+        "5/RemainingCapacity/RemainingCapacityValue",
+        "5/RemainingCapacity/LastUpdate"
+      ],
+      "name": { "en": "Remaining capacity", "de": "Restkapazität" },
+      "synonyms": {
+        "en": [
+          "remaining capacity",
+          "current capacity",
+          "actual capacity",
+          "soh capacity",
+          "usable capacity",
+          "capacity now"
+        ],
+        "de": [
+          "restkapazität",
+          "aktuelle kapazität",
+          "verbleibende kapazität",
+          "soh-kapazität",
+          "nutzbare kapazität",
+          "ist-kapazität"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "Ah",
+      "range": { "min": 0, "max": 100000 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS); read out by the operator, fleet manager or workshop.",
+        "de": "Batteriemanagementsystem (BMS); ausgelesen von Betreiber, Flottenmanager oder Werkstatt."
+      },
+      "explanation": {
+        "en": "In-use counterpart of the rated capacity: the capacity the battery can currently deliver (Annex VII Part A (1)). Mandatory for LMT, applicable to industrial batteries where relevant, not displayed for EV (which use SOCE instead). Comes from the BMS with a timestamp.",
+        "de": "Betriebsgegenstück zur Nennkapazität: die aktuell lieferbare Kapazität (Anhang VII Teil A (1)). Pflicht für LMT, für Industriebatterien soweit relevant, für EV nicht anzuzeigen (dort gilt SOCE). Kommt aus dem BMS mit Zeitstempel."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "capacityFade",
+      "din": { "no": 54, "chapter": "6.7.2.4" },
+      "ecDataPoints": [52],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/CapacityEnergyVoltage/CapacityFade"],
+      "name": { "en": "Capacity fade", "de": "Kapazitätsverlust" },
+      "synonyms": {
+        "en": [
+          "capacity fade",
+          "capacity loss",
+          "capacity degradation",
+          "ageing capacity",
+          "capacity retention",
+          "fade"
+        ],
+        "de": [
+          "kapazitätsverlust",
+          "kapazitätsabnahme",
+          "kapazitätsdegradation",
+          "alterung kapazität",
+          "kapazitätserhalt",
+          "fade"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's cycle-life test report; declared by the pack manufacturer for the reference conditions.",
+        "de": "Zyklentest-Bericht des Zellherstellers; vom Pack-Hersteller für die Referenzbedingungen deklariert."
+      },
+      "explanation": {
+        "en": "Decrease over time and use of the charge the battery can deliver at rated voltage, relative to the original rated capacity (Annex IV Part A (2)), as declared by the manufacturer.",
+        "de": "Abnahme der bei Nennspannung lieferbaren Ladung über Zeit und Nutzung, bezogen auf die ursprüngliche Nennkapazität (Anhang IV Teil A (2)), wie vom Hersteller deklariert."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "certifiedUsableBatteryEnergy",
+      "din": { "no": 55, "chapter": "6.7.2.5" },
+      "ecDataPoints": [],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/CapacityEnergyVoltage/CertifiedUsableBatteryEnergy"
+      ],
+      "name": {
+        "en": "Certified usable battery energy (UBE)",
+        "de": "Zertifizierte nutzbare Batterieenergie (UBE)"
+      },
+      "synonyms": {
+        "en": [
+          "usable battery energy",
+          "ube",
+          "certified energy",
+          "usable energy",
+          "gtr 22 energy",
+          "net energy"
+        ],
+        "de": [
+          "nutzbare batterieenergie",
+          "ube",
+          "zertifizierte energie",
+          "nutzenergie",
+          "gtr-22-energie",
+          "nettoenergie"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "kWh",
+      "range": { "min": 0, "max": 10000 },
+      "whoTypicallyHasIt": {
+        "en": "Vehicle manufacturer (OEM) from the type-approval test under UN GTR No 22; the battery supplier usually receives it from the OEM.",
+        "de": "Fahrzeughersteller (OEM) aus der Typgenehmigungsprüfung nach UN GTR Nr. 22; der Batterielieferant erhält den Wert meist vom OEM."
+      },
+      "explanation": {
+        "en": "Usable battery energy determined during vehicle certification per UN GTR No 22. Voluntary for EV batteries in DIN DKE SPEC 99100, not applicable to other categories, not one of the Commission's 71 data points. It is the reference for the state of certified energy.",
+        "de": "Nutzbare Batterieenergie aus der Fahrzeugzertifizierung nach UN GTR Nr. 22. In DIN DKE SPEC 99100 für EV freiwillig, für andere Kategorien nicht anwendbar, keiner der 71 Datenpunkte der Kommission. Bezugsgröße für den State of Certified Energy."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') for EV in the Battery Pass longlist; reference value for SOCE; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "not_displayed",
+          "text": "Not listed for LMT batteries in the Battery Pass longlist."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "not_displayed",
+          "text": "Not listed for industrial or stationary batteries in the Battery Pass longlist."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 55 (o = EV only); UN GTR No 22"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "remainingUsableBatteryEnergy",
+      "din": { "no": 56, "chapter": "6.7.2.6" },
+      "ecDataPoints": [],
+      "part": 5,
+      "templatePaths": ["5/RemainingEnergy/RemainingEnergyValue", "5/RemainingEnergy/LastUpdate"],
+      "name": {
+        "en": "Remaining usable battery energy",
+        "de": "Verbleibende nutzbare Batterieenergie"
+      },
+      "synonyms": {
+        "en": [
+          "remaining energy",
+          "remaining usable energy",
+          "current ube",
+          "usable energy now",
+          "remaining kwh",
+          "energy soh"
+        ],
+        "de": [
+          "restenergie",
+          "verbleibende energie",
+          "aktuelle ube",
+          "nutzbare energie aktuell",
+          "verbleibende kwh",
+          "energie-soh"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "kWh",
+      "range": { "min": 0, "max": 10000 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) of the vehicle; provided by the OEM or read out in the workshop.",
+        "de": "Batteriemanagementsystem (BMS) des Fahrzeugs; vom OEM bereitgestellt oder in der Werkstatt ausgelesen."
+      },
+      "explanation": {
+        "en": "The usable battery energy at the present point in the battery's life per UN GTR No 22. Voluntary for EV, dynamic, from the BMS with a timestamp; not one of the Commission's 71 data points.",
+        "de": "Die nutzbare Batterieenergie zum aktuellen Zeitpunkt der Lebensdauer nach UN GTR Nr. 22. Für EV freiwillig, dynamisch, aus dem BMS mit Zeitstempel; keiner der 71 Datenpunkte der Kommission."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') for EV in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "not_displayed",
+          "text": "Not listed for LMT batteries in the Battery Pass longlist."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "not_displayed",
+          "text": "Not listed for industrial or stationary batteries in the Battery Pass longlist."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 56 (o = EV only); UN GTR No 22"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "stateOfCertifiedEnergy",
+      "din": { "no": 57, "chapter": "6.7.2.7" },
+      "ecDataPoints": [61],
+      "part": 5,
+      "templatePaths": [
+        "5/StateOfCertifiedEnergy/StateOfCertifiedEnergyValue",
+        "5/StateOfCertifiedEnergy/LastUpdate"
+      ],
+      "name": {
+        "en": "State of certified energy (SOCE)",
+        "de": "State of Certified Energy (SOCE)"
+      },
+      "synonyms": {
+        "en": [
+          "soce",
+          "state of certified energy",
+          "state of health",
+          "soh",
+          "energy soh",
+          "battery health"
+        ],
+        "de": [
+          "soce",
+          "state of certified energy",
+          "gesundheitszustand",
+          "soh",
+          "energie-soh",
+          "batteriegesundheit"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Vehicle BMS per UN GTR No 22; provided by the OEM or read out via the vehicle interface.",
+        "de": "Fahrzeug-BMS nach UN GTR Nr. 22; vom OEM bereitgestellt oder über die Fahrzeugschnittstelle ausgelesen."
+      },
+      "explanation": {
+        "en": "Current usable battery energy as a percentage of the certified usable battery energy (Annex VII Part A, Article 14). Mandatory state-of-health value for EV batteries; not displayed for LMT and industrial batteries, which use remaining capacity and the other Article 14 parameters instead.",
+        "de": "Aktuelle nutzbare Batterieenergie in Prozent der zertifizierten nutzbaren Energie (Anhang VII Teil A, Artikel 14). Pflicht-SoH-Wert für EV-Batterien; für LMT und Industriebatterien nicht anzuzeigen, dort gelten Restkapazität und die übrigen Artikel-14-Parameter."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "stateOfCharge",
+      "din": { "no": 58, "chapter": "6.7.2.8" },
+      "ecDataPoints": [71],
+      "part": 5,
+      "templatePaths": ["5/StateOfCharge/StateOfChargeValue", "5/StateOfCharge/LastUpdate"],
+      "name": { "en": "State of charge (SoC)", "de": "Ladezustand (SoC)" },
+      "synonyms": {
+        "en": [
+          "soc",
+          "state of charge",
+          "charge level",
+          "charge state",
+          "battery level",
+          "percent charged"
+        ],
+        "de": ["soc", "ladezustand", "ladestand", "füllstand", "ladung in prozent", "akkustand"]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS); recorded periodically by the operator.",
+        "de": "Batteriemanagementsystem (BMS); periodisch vom Betreiber aufgezeichnet."
+      },
+      "explanation": {
+        "en": "Available charge as a percentage of rated capacity (Article 3(1)(27)). The passport carries periodically recorded SoC information (Annex XIII 4(d)), applicable where relevant, with a timestamp.",
+        "de": "Verfügbare Ladung in Prozent der Nennkapazität (Artikel 3(1)(27)). Der Pass enthält periodisch aufgezeichnete SoC-Informationen (Anhang XIII 4(d)), soweit zutreffend, mit Zeitstempel."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "minimumVoltage",
+      "din": { "no": 59, "chapter": "6.7.2.9" },
+      "ecDataPoints": [26],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/CapacityEnergyVoltage/MinVoltage"],
+      "name": { "en": "Minimum voltage", "de": "Minimalspannung" },
+      "synonyms": {
+        "en": [
+          "minimum voltage",
+          "min voltage",
+          "cut-off voltage",
+          "discharge cut-off",
+          "lower voltage limit",
+          "v min",
+          "end-of-discharge voltage"
+        ],
+        "de": [
+          "minimalspannung",
+          "mindestspannung",
+          "entladeschlussspannung",
+          "untere spannungsgrenze",
+          "u min",
+          "abschaltspannung",
+          "entladeschluss"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "V",
+      "range": { "min": 0, "max": 1500 },
+      "whoTypicallyHasIt": {
+        "en": "Cell and pack data sheet; set in the BMS configuration.",
+        "de": "Zell- und Packdatenblatt; in der BMS-Konfiguration hinterlegt."
+      },
+      "explanation": {
+        "en": "Lower voltage limit for safe operation of the battery, with the temperature range where relevant (Annex XIII 1(h)).",
+        "de": "Untere Spannungsgrenze für den sicheren Betrieb der Batterie, ggf. mit Temperaturbereich (Anhang XIII 1(h))."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "maximumVoltage",
+      "din": { "no": 60, "chapter": "6.7.2.10" },
+      "ecDataPoints": [28],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/CapacityEnergyVoltage/MaxVoltage"],
+      "name": { "en": "Maximum voltage", "de": "Maximalspannung" },
+      "synonyms": {
+        "en": [
+          "maximum voltage",
+          "max voltage",
+          "charge cut-off voltage",
+          "end-of-charge voltage",
+          "upper voltage limit",
+          "v max"
+        ],
+        "de": [
+          "maximalspannung",
+          "höchstspannung",
+          "ladeschlussspannung",
+          "obere spannungsgrenze",
+          "u max",
+          "ladeschluss"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "V",
+      "range": { "min": 0, "max": 1500 },
+      "whoTypicallyHasIt": {
+        "en": "Cell and pack data sheet; set in the BMS configuration.",
+        "de": "Zell- und Packdatenblatt; in der BMS-Konfiguration hinterlegt."
+      },
+      "explanation": {
+        "en": "Upper voltage limit for safe operation of the battery, with the temperature range where relevant (Annex XIII 1(h)).",
+        "de": "Obere Spannungsgrenze für den sicheren Betrieb der Batterie, ggf. mit Temperaturbereich (Anhang XIII 1(h))."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "nominalVoltage",
+      "din": { "no": 61, "chapter": "6.7.2.11" },
+      "ecDataPoints": [27],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/CapacityEnergyVoltage/NominalVoltage"],
+      "name": { "en": "Nominal voltage", "de": "Nennspannung" },
+      "synonyms": {
+        "en": ["nominal voltage", "rated voltage", "v nom", "system voltage", "voltage", "u nom"],
+        "de": [
+          "nennspannung",
+          "nominalspannung",
+          "u nenn",
+          "systemspannung",
+          "spannung",
+          "betriebsspannung"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "V",
+      "range": { "min": 0, "max": 1500 },
+      "whoTypicallyHasIt": {
+        "en": "Cell and pack data sheet; printed on the nameplate.",
+        "de": "Zell- und Packdatenblatt; steht auf dem Typenschild."
+      },
+      "explanation": {
+        "en": "Approximate voltage value used to designate the battery, with the temperature range where relevant (Annex XIII 1(h)).",
+        "de": "Näherungswert der Spannung zur Bezeichnung der Batterie, ggf. mit Temperaturbereich (Anhang XIII 1(h))."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "originalPowerCapability",
+      "din": { "no": 62, "chapter": "6.7.3.2" },
+      "ecDataPoints": [29, 53],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/PowerCapability/OriginalPowerCapability",
+        "4/TechnicalPropertyAreas/PowerCapability/OriginalPowerCapability/PowerCapabilityAt/atSoc",
+        "4/TechnicalPropertyAreas/PowerCapability/OriginalPowerCapability/PowerCapabilityAt/powerCapabilityAt"
+      ],
+      "name": { "en": "Original power capability", "de": "Ursprüngliche Leistungsfähigkeit" },
+      "synonyms": {
+        "en": [
+          "power capability",
+          "rated power",
+          "nominal power",
+          "peak power",
+          "continuous power",
+          "discharge power",
+          "kw",
+          "power at 80 % soc"
+        ],
+        "de": [
+          "leistungsfähigkeit",
+          "nennleistung",
+          "dauerleistung",
+          "spitzenleistung",
+          "entladeleistung",
+          "kw",
+          "leistung bei 80 % soc",
+          "maximalleistung"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": "W",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's data sheet and test report; measured per Annex IV Part B at a reference state of charge.",
+        "de": "Datenblatt und Prüfbericht des Pack-Herstellers; gemessen nach Anhang IV Teil B bei einem Referenz-Ladezustand."
+      },
+      "explanation": {
+        "en": "Power the battery can deliver under reference conditions (Annex IV Part A (3), Annex XIII 1(i)). The template records one or more measurements, each with the state of charge (%) at which the power (W) was measured. Data point 53 is the dynamic counterpart.",
+        "de": "Leistung, die die Batterie unter Referenzbedingungen liefern kann (Anhang IV Teil A (3), Anhang XIII 1(i)). Das Template erfasst eine oder mehrere Messungen, jeweils mit dem Ladezustand (%) und der gemessenen Leistung (W). Datenpunkt 53 ist das dynamische Gegenstück."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "remainingPowerCapability",
+      "din": { "no": 63, "chapter": "6.7.3.3" },
+      "ecDataPoints": [63],
+      "part": 5,
+      "templatePaths": [
+        "5/RemainingPowerCapability/RemainingPowerCapabilityDynamicAt/AtSoC",
+        "5/RemainingPowerCapability/RemainingPowerCapabilityDynamicAt/PowerCapabilityAt",
+        "5/RemainingPowerCapability/RemainingPowerCapabilityDynamicAt/RPCLastUpdated",
+        "5/RemainingPowerCapability/LastUpdate"
+      ],
+      "name": { "en": "Remaining power capability", "de": "Verbleibende Leistungsfähigkeit" },
+      "synonyms": {
+        "en": [
+          "remaining power",
+          "current power capability",
+          "available power",
+          "power soh",
+          "power now",
+          "remaining peak power"
+        ],
+        "de": [
+          "restleistung",
+          "verbleibende leistung",
+          "aktuelle leistungsfähigkeit",
+          "verfügbare leistung",
+          "leistungs-soh",
+          "ist-leistung"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS); read out by the operator or workshop.",
+        "de": "Batteriemanagementsystem (BMS); ausgelesen von Betreiber oder Werkstatt."
+      },
+      "explanation": {
+        "en": "In-use power capability where possible (Annex VII Part A (2), Article 14). The template stores the remaining power capability at a given state of charge as a percentage of the original value, with timestamps. Mandatory for LMT, applicable to industrial batteries where relevant, not displayed for EV.",
+        "de": "Leistungsfähigkeit im Betrieb, soweit möglich (Anhang VII Teil A (2), Artikel 14). Das Template speichert die verbleibende Leistung bei einem Ladezustand in Prozent des Ursprungswerts, mit Zeitstempeln. Pflicht für LMT, für Industriebatterien soweit relevant, für EV nicht anzuzeigen."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "powerFade",
+      "din": { "no": 64, "chapter": "6.7.3.4" },
+      "ecDataPoints": [54],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/PowerCapability/PowerFade"],
+      "name": { "en": "Power fade", "de": "Leistungsverlust" },
+      "synonyms": {
+        "en": [
+          "power fade",
+          "power loss",
+          "power degradation",
+          "power decrease",
+          "ageing power",
+          "fade"
+        ],
+        "de": [
+          "leistungsverlust",
+          "leistungsabnahme",
+          "leistungsdegradation",
+          "leistungsrückgang",
+          "alterung leistung",
+          "fade"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's ageing test report under reference conditions.",
+        "de": "Alterungstest-Bericht des Pack-Herstellers unter Referenzbedingungen."
+      },
+      "explanation": {
+        "en": "Decrease over time and use of the power the battery can deliver at rated voltage (Annex IV Part A (4)), as declared by the manufacturer.",
+        "de": "Abnahme der bei Nennspannung lieferbaren Leistung über Zeit und Nutzung (Anhang IV Teil A (4)), wie vom Hersteller deklariert."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "maximumPermittedBatteryPower",
+      "din": { "no": 65, "chapter": "6.7.3.5" },
+      "ecDataPoints": [30],
+      "part": 4,
+      "templatePaths": ["4/TechnicalPropertyAreas/PowerCapability/MaximumPermittedBatteryPower"],
+      "name": {
+        "en": "Maximum permitted battery power (power limits)",
+        "de": "Maximal zulässige Batterieleistung (Leistungsgrenzen)"
+      },
+      "synonyms": {
+        "en": [
+          "power limit",
+          "maximum power",
+          "max permitted power",
+          "peak power limit",
+          "power limits",
+          "max discharge power",
+          "max charge power"
+        ],
+        "de": [
+          "leistungsgrenze",
+          "maximalleistung",
+          "maximal zulässige leistung",
+          "spitzenleistungsgrenze",
+          "leistungsgrenzen",
+          "max. entladeleistung",
+          "max. ladeleistung"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "W",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's data sheet; enforced by the BMS.",
+        "de": "Datenblatt des Pack-Herstellers; vom BMS überwacht."
+      },
+      "explanation": {
+        "en": "The power limits the battery is rated for, with the temperature range where relevant (Annex XIII 1(i)). The template carries the maximum permitted power in watts.",
+        "de": "Die Leistungsgrenzen, für die die Batterie ausgelegt ist, ggf. mit Temperaturbereich (Anhang XIII 1(i)). Das Template führt die maximal zulässige Leistung in Watt."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "powerToEnergyRatio",
+      "din": { "no": 66, "chapter": "6.7.3.6" },
+      "ecDataPoints": [],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/PowerCapability/RatioNorminalBatteryPowerAndBatteryEnergy"
+      ],
+      "name": {
+        "en": "Ratio of nominal power to battery energy",
+        "de": "Verhältnis Nennleistung zu Batterieenergie"
+      },
+      "synonyms": {
+        "en": [
+          "power to energy ratio",
+          "p/e ratio",
+          "w/wh",
+          "c-rate equivalent",
+          "power energy ratio",
+          "e/p ratio"
+        ],
+        "de": [
+          "leistungs-energie-verhältnis",
+          "p/e-verhältnis",
+          "w/wh",
+          "leistung zu energie",
+          "e/p-verhältnis",
+          "verhältnis leistung energie"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "W/Wh",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Derived by the pack manufacturer from nominal power and energy on the data sheet.",
+        "de": "Vom Pack-Hersteller aus Nennleistung und Energie im Datenblatt abgeleitet."
+      },
+      "explanation": {
+        "en": "Nominal battery power divided by battery energy (Annex IV Part B (2)). Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points. The template idShort contains the typo 'Norminal' as published.",
+        "de": "Nennleistung der Batterie geteilt durch die Batterieenergie (Anhang IV Teil B (2)). In DIN DKE SPEC 99100 freiwillig und keiner der 71 Datenpunkte der Kommission. Der idShort im Template enthält den Tippfehler 'Norminal' wie veröffentlicht."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 66 (o for all categories); Reg. (EU) 2023/1542 Annex IV Part B (2)"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "initialRoundTripEnergyEfficiency",
+      "din": { "no": 67, "chapter": "6.7.4.2" },
+      "ecDataPoints": [36, 57],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/RoundTripEnergyEfficiency/InitialRoundTripEnergyEfficiency"
+      ],
+      "name": {
+        "en": "Initial round trip energy efficiency",
+        "de": "Anfänglicher Round-Trip-Wirkungsgrad"
+      },
+      "synonyms": {
+        "en": [
+          "round trip efficiency",
+          "rte",
+          "energy efficiency",
+          "charge-discharge efficiency",
+          "coulombic efficiency",
+          "efficiency"
+        ],
+        "de": [
+          "round-trip-wirkungsgrad",
+          "rte",
+          "energiewirkungsgrad",
+          "lade-entlade-wirkungsgrad",
+          "zykluswirkungsgrad",
+          "wirkungsgrad"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell or pack manufacturer's test report under reference conditions.",
+        "de": "Prüfbericht des Zell- oder Pack-Herstellers unter Referenzbedingungen."
+      },
+      "explanation": {
+        "en": "Ratio of net energy delivered during discharge to the energy needed to restore the initial state of charge (Annex IV Part A (6), Annex XIII 1(n)). Mandatory for EV and LMT; applicable only to some industrial batteries. Data point 57 is the dynamic counterpart.",
+        "de": "Verhältnis der beim Entladen gelieferten Nettoenergie zur Energie, die zum Wiederherstellen des Anfangsladezustands nötig ist (Anhang IV Teil A (6), Anhang XIII 1(n)). Pflicht für EV und LMT; nur für manche Industriebatterien. Datenpunkt 57 ist das dynamische Gegenstück."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "roundTripEnergyEfficiencyAt50PercentCycleLife",
+      "din": { "no": 68, "chapter": "6.7.4.3" },
+      "ecDataPoints": [37],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/RoundTripEnergyEfficiency/RoundTripEnergyEfficiencyAt50PercentOfCycleLife"
+      ],
+      "name": {
+        "en": "Round trip energy efficiency at 50 % of cycle life",
+        "de": "Round-Trip-Wirkungsgrad bei 50 % der Zyklenlebensdauer"
+      },
+      "synonyms": {
+        "en": [
+          "rte at 50 %",
+          "efficiency at mid-life",
+          "round trip efficiency 50 %",
+          "aged efficiency",
+          "efficiency after cycling",
+          "mid-life rte"
+        ],
+        "de": [
+          "rte bei 50 %",
+          "wirkungsgrad halbe lebensdauer",
+          "round-trip-wirkungsgrad 50 %",
+          "gealterter wirkungsgrad",
+          "wirkungsgrad nach zyklen",
+          "wirkungsgrad mitte lebensdauer"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell or pack manufacturer's cycle-life test report.",
+        "de": "Zyklentest-Bericht des Zell- oder Pack-Herstellers."
+      },
+      "explanation": {
+        "en": "Round trip energy efficiency measured when the battery has reached half of its expected cycle life (Annex XIII 1(n)). Mandatory for EV and LMT; applicable only to some industrial batteries.",
+        "de": "Round-Trip-Wirkungsgrad bei Erreichen der halben erwarteten Zyklenlebensdauer (Anhang XIII 1(n)). Pflicht für EV und LMT; nur für manche Industriebatterien."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "remainingRoundTripEnergyEfficiency",
+      "din": { "no": 69, "chapter": "6.7.4.4" },
+      "ecDataPoints": [64],
+      "part": 5,
+      "templatePaths": [
+        "5/RemainingRoundTripEnergyEfficiency/RemainingRoundTripEnergyEfficiencyValue",
+        "5/RemainingRoundTripEnergyEfficiency/LastUpdate"
+      ],
+      "name": {
+        "en": "Remaining round trip energy efficiency",
+        "de": "Verbleibender Round-Trip-Wirkungsgrad"
+      },
+      "synonyms": {
+        "en": [
+          "remaining rte",
+          "current efficiency",
+          "efficiency now",
+          "in-use round trip efficiency",
+          "actual efficiency",
+          "efficiency soh"
+        ],
+        "de": [
+          "verbleibender rte",
+          "aktueller wirkungsgrad",
+          "ist-wirkungsgrad",
+          "wirkungsgrad im betrieb",
+          "aktueller round-trip-wirkungsgrad",
+          "wirkungsgrad-soh"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS), where the BMS can determine it.",
+        "de": "Batteriemanagementsystem (BMS), sofern das BMS den Wert bestimmen kann."
+      },
+      "explanation": {
+        "en": "In-use round trip efficiency where possible (Annex VII Part A, Article 14). Mandatory for LMT, applicable to industrial batteries where relevant, not displayed for EV. From the BMS with a timestamp.",
+        "de": "Round-Trip-Wirkungsgrad im Betrieb, soweit möglich (Anhang VII Teil A, Artikel 14). Pflicht für LMT, für Industriebatterien soweit relevant, für EV nicht anzuzeigen. Aus dem BMS mit Zeitstempel."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "energyRoundTripEfficiencyFade",
+      "din": { "no": 70, "chapter": "6.7.4.5" },
+      "ecDataPoints": [58],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/RoundTripEnergyEfficiency/EnergyRoundTripEfficiencyFade"
+      ],
+      "name": {
+        "en": "Energy round trip efficiency fade",
+        "de": "Abnahme des Round-Trip-Wirkungsgrads"
+      },
+      "synonyms": {
+        "en": [
+          "efficiency fade",
+          "rte fade",
+          "efficiency loss",
+          "efficiency degradation",
+          "round trip fade",
+          "efficiency decrease"
+        ],
+        "de": [
+          "wirkungsgradverlust",
+          "rte-abnahme",
+          "wirkungsgradabnahme",
+          "wirkungsgraddegradation",
+          "round-trip-fade",
+          "wirkungsgradrückgang"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell or pack manufacturer's ageing test report.",
+        "de": "Alterungstest-Bericht des Zell- oder Pack-Herstellers."
+      },
+      "explanation": {
+        "en": "Decrease of the round trip energy efficiency over time and use, in percent (Annex IV Part A (4), Annex XIII 4(a)). Applicable where relevant for all three categories.",
+        "de": "Abnahme des Round-Trip-Wirkungsgrads über Zeit und Nutzung in Prozent (Anhang IV Teil A (4), Anhang XIII 4(a)). Für alle drei Kategorien, soweit zutreffend."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "initialSelfDischargeRate",
+      "din": { "no": 71, "chapter": "6.7.4.6" },
+      "ecDataPoints": [],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/RoundTripEnergyEfficiency/InitialSelfDischargingRate"
+      ],
+      "name": { "en": "Initial self-discharge rate", "de": "Anfängliche Selbstentladungsrate" },
+      "synonyms": {
+        "en": [
+          "self-discharge",
+          "self discharge rate",
+          "%/month",
+          "storage loss",
+          "idle discharge",
+          "self-discharge per month"
+        ],
+        "de": [
+          "selbstentladung",
+          "selbstentladungsrate",
+          "%/monat",
+          "lagerverlust",
+          "ruheentladung",
+          "selbstentladung pro monat"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "%/month",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's data sheet (storage test at reference temperature).",
+        "de": "Datenblatt des Zellherstellers (Lagertest bei Referenztemperatur)."
+      },
+      "explanation": {
+        "en": "Self-discharge rate in idle state under reference conditions at beginning of life. Voluntary for LMT and stationary batteries in DIN DKE SPEC 99100; not one of the Commission's 71 data points.",
+        "de": "Selbstentladungsrate im Ruhezustand unter Referenzbedingungen zu Lebensbeginn. In DIN DKE SPEC 99100 für LMT und stationäre Batterien freiwillig; keiner der 71 Datenpunkte der Kommission."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "not_displayed",
+          "text": "Not listed for EV batteries in the Battery Pass longlist."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') for LMT in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') for stationary battery energy storage in the Battery Pass longlist; not listed for other industrial batteries."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 71 (o = LMT, Stationary); no regulation reference"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "currentSelfDischargeRate",
+      "din": { "no": 72, "chapter": "6.7.4.7" },
+      "ecDataPoints": [],
+      "part": 5,
+      "templatePaths": [
+        "5/CurrentSelfDischargingRate/CurrentSelfDischargingRateValue",
+        "5/CurrentSelfDischargingRate/LastUpdate"
+      ],
+      "name": { "en": "Current self-discharge rate", "de": "Aktuelle Selbstentladungsrate" },
+      "synonyms": {
+        "en": [
+          "current self-discharge",
+          "self-discharge now",
+          "aged self-discharge",
+          "in-use self-discharge",
+          "self discharge rate current",
+          "%/month now"
+        ],
+        "de": [
+          "aktuelle selbstentladung",
+          "ist-selbstentladung",
+          "gealterte selbstentladung",
+          "selbstentladung im betrieb",
+          "selbstentladungsrate aktuell",
+          "%/monat aktuell"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "%/month",
+      "range": { "min": 0, "max": 100 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) or periodic storage measurement by the operator.",
+        "de": "Batteriemanagementsystem (BMS) oder periodische Lagermessung durch den Betreiber."
+      },
+      "explanation": {
+        "en": "Self-discharge rate in idle state at the current point of ageing. Voluntary for LMT and stationary batteries in DIN DKE SPEC 99100, dynamic, with a timestamp. Together with the initial rate it yields the Commission's 'evolution of self-discharging rates' (data point 65), which is a separate attribute.",
+        "de": "Selbstentladungsrate im Ruhezustand zum aktuellen Alterungszustand. In DIN DKE SPEC 99100 für LMT und stationäre Batterien freiwillig, dynamisch, mit Zeitstempel. Zusammen mit dem Anfangswert ergibt sich die 'Entwicklung der Selbstentladung' der Kommission (Datenpunkt 65), ein eigenes Attribut."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "not_displayed",
+          "text": "Not listed for EV batteries in the Battery Pass longlist."
+        },
+        "LMT": {
+          "status": "optional",
+          "text": "Voluntary ('o') for LMT in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "optional",
+          "text": "Voluntary ('o') for stationary battery energy storage in the Battery Pass longlist; not listed for other industrial batteries."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 72 (o = LMT, Stationary); no regulation reference"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "evolutionOfSelfDischarge",
+      "din": { "no": 73, "chapter": "6.7.4.8" },
+      "ecDataPoints": [65],
+      "part": 5,
+      "templatePaths": [
+        "5/EvolutionOfSelfDischarge/EvolutionOfSelfDischargeValue",
+        "5/EvolutionOfSelfDischarge/LastUpdate"
+      ],
+      "name": {
+        "en": "Evolution of self-discharge rates",
+        "de": "Entwicklung der Selbstentladungsrate"
+      },
+      "synonyms": {
+        "en": [
+          "self-discharge evolution",
+          "self-discharge change",
+          "self-discharge increase",
+          "self-discharge trend",
+          "self-discharge development",
+          "self-discharge over time"
+        ],
+        "de": [
+          "entwicklung selbstentladung",
+          "änderung selbstentladung",
+          "zunahme selbstentladung",
+          "selbstentladungstrend",
+          "selbstentladung über zeit",
+          "selbstentladungsentwicklung"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": -100, "max": 1000 },
+      "whoTypicallyHasIt": {
+        "en": "Battery management system (BMS) or the operator's periodic measurements.",
+        "de": "Batteriemanagementsystem (BMS) oder periodische Messungen des Betreibers."
+      },
+      "explanation": {
+        "en": "Change of self-discharge over time and use, as a percentage calculated from the initial and current self-discharge rates (Annex VII Part A (4), Article 14). Mandatory for LMT, applicable to industrial batteries where relevant, not displayed for EV.",
+        "de": "Änderung der Selbstentladung über Zeit und Nutzung in Prozent, berechnet aus anfänglicher und aktueller Selbstentladungsrate (Anhang VII Teil A (4), Artikel 14). Pflicht für LMT, für Industriebatterien soweit relevant, für EV nicht anzuzeigen."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "initialInternalResistance",
+      "din": { "no": 74, "chapter": "6.7.5.2" },
+      "ecDataPoints": [38, 55, 66],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/Resistance/InitialInternalResistanceOnBatteryCellLevel",
+        "4/TechnicalPropertyAreas/Resistance/InitialInternalResistanceOnBatteryPackLevel",
+        "4/TechnicalPropertyAreas/Resistance/InitialInternalResistanceOnBatteryModuleLevel"
+      ],
+      "name": {
+        "en": "Initial internal resistance (cell, module, pack)",
+        "de": "Anfänglicher Innenwiderstand (Zelle, Modul, Pack)"
+      },
+      "synonyms": {
+        "en": [
+          "internal resistance",
+          "dc resistance",
+          "dcir",
+          "ac impedance",
+          "acir",
+          "ohmic resistance",
+          "cell resistance",
+          "pack resistance",
+          "mohm"
+        ],
+        "de": [
+          "innenwiderstand",
+          "dc-widerstand",
+          "dcir",
+          "impedanz",
+          "acir",
+          "ohmscher widerstand",
+          "zellwiderstand",
+          "packwiderstand",
+          "mohm"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": "Ohm",
+      "range": { "min": 0, "max": null },
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's data sheet for the cell value; pack manufacturer's end-of-line test for module and pack values.",
+        "de": "Zelldatenblatt für den Zellwert; Bandende-Prüfung des Pack-Herstellers für Modul- und Packwerte."
+      },
+      "explanation": {
+        "en": "Internal resistance at cell and pack level (module recommended), Annex XIII 1(o) and Annex IV Part A (3). Values must be in ohms; data sheets often give milliohms. Data points 55 (dynamic internal resistance) and 66 (ohmic resistance for LMT state of health) are the in-use counterparts.",
+        "de": "Innenwiderstand auf Zell- und Packebene (Modul empfohlen), Anhang XIII 1(o) und Anhang IV Teil A (3). Werte in Ohm; Datenblätter geben oft Milliohm an. Datenpunkte 55 (dynamischer Innenwiderstand) und 66 (ohmscher Widerstand für LMT-SoH) sind die Betriebsgegenstücke."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "internalResistanceIncrease",
+      "din": { "no": 75, "chapter": "6.7.5.3" },
+      "ecDataPoints": [56],
+      "part": 4,
+      "templatePaths": [
+        "4/TechnicalPropertyAreas/Resistance/InternalResistanceIncreaseOfBatteryPackLevel",
+        "4/TechnicalPropertyAreas/Resistance/InternalResistanceIncreaseOfBatteryCellLevel",
+        "4/TechnicalPropertyAreas/Resistance/InternalResistanceIncreaseOfBatteryModuleLevel"
+      ],
+      "name": {
+        "en": "Internal resistance increase (pack, cell, module)",
+        "de": "Zunahme des Innenwiderstands (Pack, Zelle, Modul)"
+      },
+      "synonyms": {
+        "en": [
+          "resistance increase",
+          "resistance growth",
+          "impedance rise",
+          "dcir increase",
+          "resistance ageing",
+          "resistance fade"
+        ],
+        "de": [
+          "widerstandszunahme",
+          "widerstandsanstieg",
+          "impedanzanstieg",
+          "dcir-zunahme",
+          "widerstandsalterung",
+          "innenwiderstandszunahme"
+        ]
+      },
+      "valueKind": "percentage",
+      "unit": "%",
+      "range": { "min": 0, "max": 1000 },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's ageing test report (pack level mandatory, cell and module recommended).",
+        "de": "Alterungstest-Bericht des Pack-Herstellers (Packebene Pflicht, Zelle und Modul empfohlen)."
+      },
+      "explanation": {
+        "en": "Increase of internal resistance over time and use, in percent (Annex IV Part A (3), Annex XIII 4(a)). Mandatory for EV and LMT; applicable to industrial batteries where relevant.",
+        "de": "Zunahme des Innenwiderstands über Zeit und Nutzung in Prozent (Anhang IV Teil A (3), Anhang XIII 4(a)). Pflicht für EV und LMT; für Industriebatterien soweit zutreffend."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

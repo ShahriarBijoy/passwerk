@@ -14,7 +14,14 @@
       "@passwerk/core": ["packages/core/src/index.ts"],
       "@passwerk/server": ["packages/server/src/index.ts"],
       "@passwerk/cli": ["packages/cli/src/index.ts"]
-    }
+    },
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
-  "include": ["packages/*/test/**/*.ts", "packages/*/src/**/*.ts", "vitest.config.ts"]
+  "include": [
+    "packages/*/test/**/*.ts",
+    "packages/*/src/**/*.ts",
+    "packages/*/scripts/**/*.ts",
+    "vitest.config.ts"
+  ]
 }

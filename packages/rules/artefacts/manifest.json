@@ -1,0 +1,347 @@
+{
+  "$comment": "Pinned third-party artefacts bundled in @passwerk/rules. Regenerate/verify with `pnpm artefacts` (dev only). Runtime never downloads. Entries with path=null are recorded for provenance (checksum) but not bundled.",
+  "retrievedAt": "2026-09-03",
+  "sources": {
+    "idta-smt": {
+      "name": "IDTA Submodel Templates (admin-shell-io/submodel-templates)",
+      "repository": "https://github.com/admin-shell-io/submodel-templates",
+      "ref": "a9664731a903b29ac5f45e23ab3a25c581f3d92f",
+      "refDate": "2026-08-24",
+      "license": "CC-BY-4.0",
+      "publisher": "Industrial Digital Twin Association e.V., jointly with Catena-X"
+    },
+    "aas-specs": {
+      "name": "AAS Specifications (admin-shell-io/aas-specs)",
+      "repository": "https://github.com/admin-shell-io/aas-specs",
+      "ref": "tags IDTA-01001-3-0-1_schemasV3.0.9 and v3.1.2",
+      "license": "CC-BY-4.0",
+      "publisher": "Industrial Digital Twin Association e.V."
+    },
+    "ec": {
+      "name": "European Commission, DG GROW, Unit G2",
+      "repository": "https://single-market-economy.ec.europa.eu/news/guidance-support-preparations-digital-batteries-passport-2026-08-21_en",
+      "license": "CC-BY-4.0",
+      "publisher": "European Union, 2026. Reuse under Commission Decision 2011/833/EU. Not an authoritative interpretation of the legislation."
+    },
+    "batterypass": {
+      "name": "Battery Pass Data Model (batterypass/BatteryPassDataModel)",
+      "repository": "https://github.com/batterypass/BatteryPassDataModel",
+      "ref": "8722af2d15c981c63552e50b9cd71a39b213b9fc",
+      "license": "CC-BY-4.0 (stated in repository README; no LICENSE file present)",
+      "publisher": "Battery Pass consortium, funded by BMWK",
+      "refDate": "2025-11-17"
+    }
+  },
+  "artefacts": [
+    {
+      "id": "idta-02035-1/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-1 Digital Battery Passport Part 1: Digital Nameplate 1.0 (JSON, with example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/1_Digital%20Nameplate/1/0/IDTA%2002035-1_DBP-Part-1_Digital%20Nameplate.json",
+      "path": "idta/02035-1/1.0/template.json",
+      "sha256": "0eec79b05fde3d62a287248d6dd8d17643bfa2b0bb8e2e4cecad04a28b90ccfe",
+      "bytes": 74219
+    },
+    {
+      "id": "idta-02035-1/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-1 Part 1: Digital Nameplate 1.0 (JSON, without example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/1_Digital%20Nameplate/1/0/IDTA%2002035-1_DBP-Part-1_Digital%20Nameplate_without_examplevalues.json",
+      "path": "idta/02035-1/1.0/template.noexamples.json",
+      "sha256": "5b08e7323dceeec9aef4d7978bfd3618ed7b9c31c5f4c2f7d03d5b6b9371a352",
+      "bytes": 73717
+    },
+    {
+      "id": "idta-02035-1/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-1 Part 1: Digital Nameplate 1.0 (AASX package)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/1_Digital%20Nameplate/1/0/IDTA%2002035-1_DBP-Part-1_Digital%20Nameplate.aasx",
+      "path": "idta/02035-1/1.0/template.aasx",
+      "sha256": "bdd3418a6f94092a8ed986daefc66390cd0dfe1ab83e847421a6fd8d5635a2d1",
+      "bytes": 121207
+    },
+    {
+      "id": "idta-02035-1/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-1 Part 1: Digital Nameplate 1.0 (specification PDF, not bundled)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/1_Digital%20Nameplate/1/0/IDTA%2002035-1_DBP-Part-1_Digital%20Nameplate.pdf",
+      "path": null,
+      "sha256": "875937c54892feec43b86f9ebafea3c3e4a2a136830365f44f52ac6eaf515ccf",
+      "bytes": 297898
+    },
+    {
+      "id": "idta-02035-2/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-2 Digital Battery Passport Part 2: Handover Documentation 1.0 (JSON, with example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/2_Handover%20Documentation/1/0/IDTA%2002035-2_DBP-Part-2_HandoverDocumentation.json",
+      "path": "idta/02035-2/1.0/template.json",
+      "sha256": "c7124116bd1011be696e0848c17001fe77026ec0d35266bc958feaca0d2336e5",
+      "bytes": 107616
+    },
+    {
+      "id": "idta-02035-2/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-2 Part 2: Handover Documentation 1.0 (JSON, without example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/2_Handover%20Documentation/1/0/IDTA%2002035-2_DBP-Part-2_HandoverDocumentation_without_examplevalues.json",
+      "path": "idta/02035-2/1.0/template.noexamples.json",
+      "sha256": "4f84d5dce1af9e0371e82ff18abf50b02f86dbd475db4fd7f9ca328ad777e982",
+      "bytes": 107570
+    },
+    {
+      "id": "idta-02035-2/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-2 Part 2: Handover Documentation 1.0 (AASX package)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/2_Handover%20Documentation/1/0/IDTA%2002035-2_DBP-Part-2_HandoverDocumentation.aasx",
+      "path": "idta/02035-2/1.0/template.aasx",
+      "sha256": "84f16731b2fe8aa2f8185fd9137018616ce43aa0359912a0fc9c27e7391c7b3b",
+      "bytes": 124887
+    },
+    {
+      "id": "idta-02035-2/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-2 Part 2: Handover Documentation 1.0 (specification PDF, not bundled)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/2_Handover%20Documentation/1/0/IDTA%2002035-2_DBP-Part-2_HandoverDocumentation.pdf",
+      "path": null,
+      "sha256": "f659292b916309dea39801a80255a768155979ad9c1ab3d181277465427db8fc",
+      "bytes": 293195
+    },
+    {
+      "id": "idta-02035-3/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-3 Digital Battery Passport Part 3: Product Carbon Footprint 1.0 (JSON, with example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/3_Product%20Carbon%20Footprint/1/0/IDTA%2002035-3_DBP-Part-3_ProductCarbonFootprint.json",
+      "path": "idta/02035-3/1.0/template.json",
+      "sha256": "1555443c771bf427a459081b57106b4d3426176a074d1864c04f646f33154b85",
+      "bytes": 56305
+    },
+    {
+      "id": "idta-02035-3/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-3 Part 3: Product Carbon Footprint 1.0 (JSON, without example values)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/3_Product%20Carbon%20Footprint/1/0/IDTA%2002035-3_DBP-Part-3_ProductCarbonFootprint_without_examplevalues.json",
+      "path": "idta/02035-3/1.0/template.noexamples.json",
+      "sha256": "d8e11f4500ca3158ebf3dc8f12c890543f0b86ed90810d9c2b8091445831b7fc",
+      "bytes": 56261
+    },
+    {
+      "id": "idta-02035-3/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-3 Part 3: Product Carbon Footprint 1.0 (AASX package)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/3_Product%20Carbon%20Footprint/1/0/IDTA%2002035-3_DBP-Part-3_ProductCarbonFootprint.aasx",
+      "path": "idta/02035-3/1.0/template.aasx",
+      "sha256": "b73c220073287656659163c509c9575e1bbe79a4b6027b4133c21a96978c4dc7",
+      "bytes": 123971
+    },
+    {
+      "id": "idta-02035-3/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-3 Part 3: Product Carbon Footprint 1.0 (specification PDF, not bundled)",
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/3_Product%20Carbon%20Footprint/1/0/IDTA%2002035-3_DBP-Part-3_ProductCarbonFootprint.pdf",
+      "path": null,
+      "sha256": "4b6ca28704f13997557da64695209359269df2dfb2a83e2a54b8341bd9d89bc7",
+      "bytes": 242446
+    },
+    {
+      "id": "idta-02035-4/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-4 Digital Battery Passport Part 4: Technical Data 1.0.1 (JSON, with example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/4_Technical%20Data/1/0/1/IDTA%2002035-4_DBP-Part-4_TechnicalData.json",
+      "path": "idta/02035-4/1.0.1/template.json",
+      "sha256": "a90774b959c766efe596243c39934df266ee34ce1132ba85f4b382efff842cb0",
+      "bytes": 144142
+    },
+    {
+      "id": "idta-02035-4/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-4 Part 4: Technical Data 1.0.1 (JSON, without example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/4_Technical%20Data/1/0/1/IDTA%2002035-4_DBP-Part-4_TechnicalData_without_examplevalues.json",
+      "path": "idta/02035-4/1.0.1/template.noexamples.json",
+      "sha256": "c4d74650e9266c17b24b712d8dfec9dc68a86421b0e018d675da3df5fc04f63b",
+      "bytes": 143231
+    },
+    {
+      "id": "idta-02035-4/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-4 Part 4: Technical Data 1.0.1 (AASX package)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/4_Technical%20Data/1/0/1/IDTA%2002035-4_DBP-Part-4_TechnicalData.aasx",
+      "path": "idta/02035-4/1.0.1/template.aasx",
+      "sha256": "e193e00f3b17eabec0f8f2386ca6d27e0c6b6a9fd749cb9037e429c5ffe88dd7",
+      "bytes": 11280
+    },
+    {
+      "id": "idta-02035-4/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-4 Part 4: Technical Data 1.0.1 (specification PDF, not bundled)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/4_Technical%20Data/1/0/1/IDTA%2002035-4_DBP-Part-4_TechnicalData.pdf",
+      "path": null,
+      "sha256": "8861391154128f577df02646b5be4fb725118a4be5bf264fd474e0acd419baa5",
+      "bytes": 634710
+    },
+    {
+      "id": "idta-02035-5/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-5 Digital Battery Passport Part 5: Product Condition 1.0.2 (JSON, with example values)",
+      "version": "1.0.2",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/5_Product%20Condition/1/0/2/IDTA%2002035-5_DBP-Part-5_ProductCondition_V1.0.2.json",
+      "path": "idta/02035-5/1.0.2/template.json",
+      "sha256": "fc3c81609ca4f923b77ca14d21c8dcf5202e385c94b5090b65148fcec870ab75",
+      "bytes": 138271
+    },
+    {
+      "id": "idta-02035-5/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-5 Part 5: Product Condition 1.0.2 (AASX package)",
+      "version": "1.0.2",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/5_Product%20Condition/1/0/2/IDTA%2002035-5_DBP-Part-5_ProductCondition.aasx",
+      "path": "idta/02035-5/1.0.2/template.aasx",
+      "sha256": "151e12104547d7bb405f6818e8f54b2adf0d71d8a873e154fc7fab08f7c9532c",
+      "bytes": 8866
+    },
+    {
+      "id": "idta-02035-5/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-5 Part 5: Product Condition 1.0.2 (specification PDF, not bundled)",
+      "version": "1.0.2",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/5_Product%20Condition/1/0/2/IDTA%2002035-5_DBP-Part-5_ProductCondition.pdf",
+      "path": null,
+      "sha256": "e0c5464c38dcd55bdf80c16d9451bd30feb1b487c37b170b70df0aeb69cfe732",
+      "bytes": 833675
+    },
+    {
+      "id": "idta-02035-6/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-6 Digital Battery Passport Part 6: Material Composition 1.0.1 (JSON, with example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/6_Material%20Composition/1/0/1/IDTA%2002035-6_DBP-Part-6_MaterialComposition.json",
+      "path": "idta/02035-6/1.0.1/template.json",
+      "sha256": "e9197b3a2a3e7231d8943609a46359119a0dbd92bd7dd5e5b32c34c02f8aac10",
+      "bytes": 74680
+    },
+    {
+      "id": "idta-02035-6/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-6 Part 6: Material Composition 1.0.1 (JSON, without example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/6_Material%20Composition/1/0/1/IDTA%2002035-6_DBP-Part-6_MaterialComposition_without_examplevalues.json",
+      "path": "idta/02035-6/1.0.1/template.noexamples.json",
+      "sha256": "83c9d46e753e5689870cf84b6570ae7d2ebb1dd7f85ad1244442f2d6debcc1b6",
+      "bytes": 74470
+    },
+    {
+      "id": "idta-02035-6/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-6 Part 6: Material Composition 1.0.1 (AASX package)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/6_Material%20Composition/1/0/1/IDTA%2002035-6_DBP-Part-6_MaterialComposition.aasx",
+      "path": "idta/02035-6/1.0.1/template.aasx",
+      "sha256": "1214d2ffad2c26f68be92a051d13f8399dd7e05f45e40ed542e33299567a3e32",
+      "bytes": 6398
+    },
+    {
+      "id": "idta-02035-6/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-6 Part 6: Material Composition 1.0.1 (specification PDF, not bundled)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/6_Material%20Composition/1/0/1/IDTA%2002035-6_DBP-Part-6_MaterialComposition.pdf",
+      "path": null,
+      "sha256": "245a3fdb20478b7b8bca263d599cb8f70f84194d62f97010dca621611e1459f3",
+      "bytes": 725324
+    },
+    {
+      "id": "idta-02035-7/template.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-7 Digital Battery Passport Part 7: Circularity 1.0.1 (JSON, with example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/7_Circularity/1/0/1/IDTA%2002035-7_DBP-Part-7_Circularity.json",
+      "path": "idta/02035-7/1.0.1/template.json",
+      "sha256": "f3dd40ec1b8fa8ccc061cb82e93f8554d228eb49e04484d511407481d1b79cf1",
+      "bytes": 112078
+    },
+    {
+      "id": "idta-02035-7/template.noexamples.json",
+      "source": "idta-smt",
+      "title": "IDTA 02035-7 Part 7: Circularity 1.0.1 (JSON, without example values)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/7_Circularity/1/0/1/IDTA%2002035-7_DBP-Part-7_Circularity_without_examplevalues.json",
+      "path": "idta/02035-7/1.0.1/template.noexamples.json",
+      "sha256": "49e4697d8ed42f5156115ef76889c2d6b52a34630e0fc1d0279df66a1264da09",
+      "bytes": 112151
+    },
+    {
+      "id": "idta-02035-7/template.aasx",
+      "source": "idta-smt",
+      "title": "IDTA 02035-7 Part 7: Circularity 1.0.1 (AASX package)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/7_Circularity/1/0/1/IDTA%2002035-7_DBP-Part-7_Circularity.aasx",
+      "path": "idta/02035-7/1.0.1/template.aasx",
+      "sha256": "e1339f0d7eca08a038881ff34ba199266e964061c5ce47b9b826f535f316f54e",
+      "bytes": 9360
+    },
+    {
+      "id": "idta-02035-7/specification.pdf",
+      "source": "idta-smt",
+      "title": "IDTA 02035-7 Part 7: Circularity 1.0.1 (specification PDF, not bundled)",
+      "version": "1.0.1",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/submodel-templates/a9664731a903b29ac5f45e23ab3a25c581f3d92f/published/Digital%20Battery%20Passport/7_Circularity/1/0/1/IDTA%2002035-7_DBP-Part-7_Circularity.pdf",
+      "path": null,
+      "sha256": "33719c52800d6815b8f3814c3b18a02add10aa4f4dc1722c765d5d141d639006",
+      "bytes": 845593
+    },
+    {
+      "id": "aas-json-schema/3.0.9",
+      "source": "aas-specs",
+      "title": "AAS metamodel JSON Schema 3.0.9 (IDTA-01001)",
+      "version": "3.0.9",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/aas-specs/IDTA-01001-3-0-1_schemasV3.0.9/schemas/json/aas.json",
+      "path": "aas/3.0.9/aas.json",
+      "sha256": "eb566d47316c99093805bf03545ca4d5439ec4568c218742b7640e39b1548349",
+      "bytes": 40005
+    },
+    {
+      "id": "aas-json-schema/3.1.2",
+      "source": "aas-specs",
+      "title": "AAS metamodel JSON Schema 3.1.2 (IDTA-01001)",
+      "version": "3.1.2",
+      "url": "https://raw.githubusercontent.com/admin-shell-io/aas-specs/v3.1.2/schemas/json/aas.json",
+      "path": "aas/3.1.2/aas.json",
+      "sha256": "9a8a005e303634f5041b9a2eac2e19c5cca05b9dd54c4bd20afbc7ab809d411e",
+      "bytes": 52421
+    },
+    {
+      "id": "ec/data-points-by-category",
+      "source": "ec",
+      "title": "European Commission, Guidance Document: Digital Batteries Passport - data points by category, Version 2.0, 15 August 2026, Ref. Ares(2026)7968977",
+      "version": "2.0",
+      "url": "https://single-market-economy.ec.europa.eu/document/download/cd1e5e6c-4a4a-4b99-995a-49eb6916187e_en?filename=Digital+Batteries+Passport+-+data+point+by+category.pdf",
+      "path": "ec/2026-08-15_data-points-by-category_v2.0.pdf",
+      "sha256": "e045a7668015520f4c353e72fb57a89bdd62baaf0a98e6f4aefc7f5f42819eb7",
+      "bytes": 585577
+    },
+    {
+      "id": "batterypass/data-attribute-longlist",
+      "source": "batterypass",
+      "title": "Battery Pass consortium, Battery Passport Data Attribute Longlist, Version 1.2, January 2025 (xlsx)",
+      "version": "1.2",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/docs/1.2/2025_Battery_Passport_Data_Attributes_V1.2.xlsx",
+      "path": "batterypass/2025_Battery_Passport_Data_Attributes_V1.2.xlsx",
+      "sha256": "51ecbc9ee2851ec43f400736bd1583b3262d1d8a28ad4245d997bcd6edc564c4",
+      "bytes": 202443
+    }
+  ]
+}

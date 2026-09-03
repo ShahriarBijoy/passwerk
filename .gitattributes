@@ -4,3 +4,6 @@
 *.png binary
 *.xlsx binary
 *.docx binary
+
+# Bundled third-party artefacts are checksummed: never normalise them
+packages/rules/artefacts/** -text
