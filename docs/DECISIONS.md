@@ -87,3 +87,32 @@ input as bytes, filesystem access only behind an injected adapter used by `cli` 
 **Decision.** `docs/BUILD_PLAN.md` is versioned so every agent session and contributor reads
 the same source of truth. `docs/research-passwerk.md` contains personal career context and
 stays in `.gitignore`.
+
+## D-008: Knowledge base grain and source of truth per field (2026-09-03)
+
+**Context.** Three official sources describe the passport content at different grains: the
+Commission's 71 data points (legal applicability per category, v2.0 guidance of 15 August 2026),
+the 93 DIN DKE SPEC 99100 attributes (Battery Pass longlist v1.2), and 211 elements across the
+seven IDTA 02035 templates (semanticIds, cardinalities, value types).
+
+**Decision.** The attribute knowledge base uses the **DIN grain (93 attributes)** because the
+IDTA templates are built to it. Each attribute is authored once (DE/EN names, synonyms,
+who-has-it, explanation) and *references* the other two sources: `ecDataPoints` (the first entry
+is primary and decides applicability) and `templatePaths` into the generated catalogue. Legal
+references, applicability, semanticIds, cardinalities and units are never typed by hand; they
+are joined at runtime. Attributes that exist in DIN but not in the Commission matrix carry an
+explicit `applicabilityOverride` and `verify: true`. Applicability has five states; the
+Commission's "not to be filled/displayed as of February 2027" becomes `not_yet_applicable` and
+must not be reported as a gap.
+
+**Consequences.** `test/attributes.test.ts` enforces full coverage of the 93 rows and of the
+Commission data points (except the three that have no attribute: 16 and 25 are repetitions, 44
+is a document). Domain experts review JSON, not code. A template update changes the generated
+catalogue and is caught by the parity test.
+
+## D-009: Generated data is committed and re-derived in CI (2026-09-03)
+
+**Decision.** `kb/generated/*.json` and `PROVENANCE.md` are committed for reviewability, and a
+test rebuilds them from the bundled artefacts in-process and asserts byte equality. The
+generators (`scripts/lib/*.ts`) are pure functions with no I/O so the tests can call them
+directly. Dev-only scripts may use Node APIs; `src/` may not.

@@ -7,12 +7,15 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
     }
   },
   "files": [
     "dist",
+    "artefacts",
+    "kb",
+    "PROVENANCE.md",
     "README.md"
   ],
   "engines": {
@@ -20,6 +23,14 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "artefacts": "tsx scripts/fetch.ts",
+    "artefacts:write": "tsx scripts/fetch.ts --write",
+    "artefacts:verify": "tsx scripts/fetch.ts --verify",
+    "generate": "tsx scripts/generate.ts"
+  },
+  "devDependencies": {
+    "fflate": "0.7.5",
+    "tsx": "4.23.13"
   }
 }

@@ -1,0 +1,483 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Identifiers and product data' (longlist rows 1-11). Authored; see kb/attributes/README.md for the schema and the runtime joins.",
+  "category": "Identifiers and product data",
+  "attributes": [
+    {
+      "id": "batteryPassportIdentifier",
+      "din": { "no": 1, "chapter": "6.1.2.1" },
+      "ecDataPoints": [1],
+      "part": 1,
+      "templatePaths": ["1/URIOfTheProduct"],
+      "name": { "en": "Battery passport identifier", "de": "Batteriepass-Kennung" },
+      "synonyms": {
+        "en": [
+          "passport id",
+          "unique identifier",
+          "unique product identifier",
+          "dpp id",
+          "passport url",
+          "qr link"
+        ],
+        "de": [
+          "batteriepass-id",
+          "eindeutige kennung",
+          "produktkennung",
+          "passport-link",
+          "qr-link",
+          "dpp-kennung"
+        ]
+      },
+      "valueKind": "uri",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The economic operator placing the battery on the market (usually the pack manufacturer or importer) assigns it when the passport is created.",
+        "de": "Der Wirtschaftsakteur, der die Batterie in Verkehr bringt (meist Pack-Hersteller oder Importeur), vergibt sie beim Anlegen des Passes."
+      },
+      "explanation": {
+        "en": "A globally unique identifier for this individual battery's passport. In the AAS template it is the URI behind the QR code (data carrier) that resolves to the passport.",
+        "de": "Eine weltweit eindeutige Kennung für den Pass dieser einzelnen Batterie. Im AAS-Template ist es die URI hinter dem QR-Code (Datenträger), die zum Pass führt."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "batteryIdentifier",
+      "din": { "no": 2, "chapter": "6.1.2.2" },
+      "ecDataPoints": [7],
+      "part": 1,
+      "templatePaths": ["1/SerialNumber"],
+      "name": {
+        "en": "Battery identifier (serial number)",
+        "de": "Batteriekennung (Seriennummer)"
+      },
+      "synonyms": {
+        "en": [
+          "serial number",
+          "serial no.",
+          "s/n",
+          "battery id",
+          "pack serial",
+          "unit id",
+          "model identification"
+        ],
+        "de": [
+          "seriennummer",
+          "serien-nr.",
+          "sn",
+          "batterie-id",
+          "pack-seriennummer",
+          "gerätenummer",
+          "typ/serie"
+        ]
+      },
+      "valueKind": "identifier",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer or final assembler; printed on the nameplate and stored in the ERP/MES.",
+        "de": "Pack-Hersteller bzw. Endmontage; steht auf dem Typenschild und im ERP/MES."
+      },
+      "explanation": {
+        "en": "The serialised identifier of the individual battery, together with the model identification. Every passport is per battery, so this must be unique per unit, not per model.",
+        "de": "Die serialisierte Kennung der einzelnen Batterie zusammen mit der Modellbezeichnung. Der Pass gilt je Batterie, daher muss die Kennung je Einheit eindeutig sein, nicht je Modell."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "operatorIdentifier",
+      "din": { "no": 3, "chapter": "6.1.2.3" },
+      "ecDataPoints": [2],
+      "part": 1,
+      "templatePaths": ["1/OperatorIdentifier"],
+      "name": { "en": "Responsible economic operator", "de": "Verantwortlicher Wirtschaftsakteur" },
+      "synonyms": {
+        "en": [
+          "operator id",
+          "responsible operator",
+          "economic operator",
+          "passport issuer",
+          "registrant",
+          "eori"
+        ],
+        "de": [
+          "betreiber-id",
+          "verantwortlicher",
+          "wirtschaftsakteur",
+          "inverkehrbringer",
+          "passaussteller",
+          "eori-nummer"
+        ]
+      },
+      "valueKind": "identifier",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The company placing the battery on the EU market (manufacturer, importer or distributor acting as operator); its registration or EORI number is in the commercial/customs records.",
+        "de": "Das Unternehmen, das die Batterie in der EU in Verkehr bringt (Hersteller, Importeur oder Vertreiber als Wirtschaftsakteur); Handelsregister- oder EORI-Nummer liegen in Vertrieb/Zoll vor."
+      },
+      "explanation": {
+        "en": "Identifies who registers and is responsible for the battery passport. The Commission lists this as mandatory (data point 2); DIN DKE SPEC 99100 marks the operator identifier as voluntary, so the template element is optional. Treat it as required for the passport to be complete.",
+        "de": "Benennt, wer den Batteriepass anlegt und dafür verantwortlich ist. Die Kommission führt dies als Pflichtangabe (Datenpunkt 2); DIN DKE SPEC 99100 stuft die Betreiberkennung als freiwillig ein, daher ist das Template-Element optional. Für einen vollständigen Pass als Pflicht behandeln."
+      },
+      "applicabilityOverride": null,
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "manufacturerInformation",
+      "din": { "no": 4, "chapter": "6.1.2.4" },
+      "ecDataPoints": [3, 4, 5],
+      "part": 1,
+      "templatePaths": ["1/ManufacturerName", "1/ManufacturerIdentifier", "1/AddressInformation"],
+      "name": {
+        "en": "Manufacturer name, identifier and address",
+        "de": "Hersteller: Name, Kennung und Anschrift"
+      },
+      "synonyms": {
+        "en": [
+          "manufacturer",
+          "producer",
+          "brand",
+          "trade name",
+          "trademark",
+          "manufacturer address",
+          "contact point",
+          "manufacturer id",
+          "supplier"
+        ],
+        "de": [
+          "hersteller",
+          "herstellername",
+          "marke",
+          "handelsname",
+          "firma",
+          "anschrift",
+          "adresse",
+          "kontaktstelle",
+          "hersteller-id",
+          "lieferant"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The battery manufacturer's own master data (legal entity name, registered address, single contact point, web and e-mail address).",
+        "de": "Stammdaten des Batterieherstellers selbst (Firmierung, eingetragene Anschrift, eine Kontaktstelle, Web- und E-Mail-Adresse)."
+      },
+      "explanation": {
+        "en": "Name, registered trade name or trademark of the manufacturer, its postal address with a single contact point, and where available web and e-mail address. Name and address are mandatory; web and e-mail are optional.",
+        "de": "Name, eingetragener Handelsname oder Marke des Herstellers, Postanschrift mit einer Kontaktstelle sowie, falls vorhanden, Web- und E-Mail-Adresse. Name und Anschrift sind Pflicht, Web und E-Mail optional."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "manufacturingPlace",
+      "din": { "no": 5, "chapter": "6.1.3.1" },
+      "ecDataPoints": [8],
+      "part": 1,
+      "templatePaths": ["1/UniqueFacilityIdentifier"],
+      "name": { "en": "Manufacturing place", "de": "Herstellungsort" },
+      "synonyms": {
+        "en": [
+          "place of manufacture",
+          "production site",
+          "plant",
+          "factory",
+          "facility id",
+          "country of origin",
+          "made in"
+        ],
+        "de": [
+          "herstellungsort",
+          "produktionsstandort",
+          "werk",
+          "fertigungsstätte",
+          "standort",
+          "ursprungsland",
+          "hergestellt in"
+        ]
+      },
+      "valueKind": "identifier",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's production planning or quality department; the facility identifier is often the plant code in the ERP.",
+        "de": "Produktionsplanung oder Qualitätsabteilung des Pack-Herstellers; die Standortkennung ist oft der Werkscode im ERP."
+      },
+      "explanation": {
+        "en": "Geographical location of the plant where the battery was manufactured, expressed as a unique facility identifier so that it is unambiguous.",
+        "de": "Geografischer Standort des Werks, in dem die Batterie hergestellt wurde, als eindeutige Standortkennung, damit er unverwechselbar ist."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "manufacturingDate",
+      "din": { "no": 6, "chapter": "6.1.3.2" },
+      "ecDataPoints": [9],
+      "part": 1,
+      "templatePaths": ["1/DateOfManufacture"],
+      "name": { "en": "Manufacturing date", "de": "Herstellungsdatum" },
+      "synonyms": {
+        "en": [
+          "date of manufacture",
+          "production date",
+          "mfg date",
+          "manufactured",
+          "build date",
+          "date code"
+        ],
+        "de": [
+          "herstellungsdatum",
+          "produktionsdatum",
+          "fertigungsdatum",
+          "herstelldatum",
+          "baujahr",
+          "datumscode"
+        ]
+      },
+      "valueKind": "date",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's production records (MES); often encoded in the serial number.",
+        "de": "Produktionsaufzeichnungen des Pack-Herstellers (MES); oft in der Seriennummer kodiert."
+      },
+      "explanation": {
+        "en": "Month and year in which this individual battery was manufactured. The AAS template uses an xs:date, so provide a full date; the day may be the first of the month if only month and year are known.",
+        "de": "Monat und Jahr der Herstellung dieser einzelnen Batterie. Das AAS-Template verwendet xs:date; ist nur Monat und Jahr bekannt, kann der Erste des Monats eingetragen werden."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "dateOfPuttingIntoService",
+      "din": { "no": 7, "chapter": "6.1.3.3" },
+      "ecDataPoints": [],
+      "part": 1,
+      "templatePaths": ["1/DateOfPuttingIntoService"],
+      "name": { "en": "Date of putting into service", "de": "Datum der Inbetriebnahme" },
+      "synonyms": {
+        "en": [
+          "commissioning date",
+          "in-service date",
+          "installation date",
+          "first use",
+          "start of operation"
+        ],
+        "de": [
+          "inbetriebnahmedatum",
+          "inbetriebnahme",
+          "installationsdatum",
+          "erstinbetriebnahme",
+          "betriebsbeginn"
+        ]
+      },
+      "valueKind": "date",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "The installer or operator of the battery (e-bike dealer, ESS installer, fleet operator), not the manufacturer; it is written into the passport after sale.",
+        "de": "Installateur oder Betreiber der Batterie (Fahrradhändler, Speicher-Installateur, Flottenbetreiber), nicht der Hersteller; wird nach dem Verkauf nachgetragen."
+      },
+      "explanation": {
+        "en": "Date on which the battery was first put into service. It is a state-of-health parameter (Annex VII Part B) that DIN DKE SPEC 99100 lists for LMT and stationary batteries; it is not one of the Commission's 71 passport data points.",
+        "de": "Datum der ersten Inbetriebnahme der Batterie. Ein Parameter zum Gesundheitszustand (Anhang VII Teil B), den DIN DKE SPEC 99100 für LMT- und stationäre Batterien vorsieht; keiner der 71 Datenpunkte der Kommission."
+      },
+      "applicabilityOverride": {
+        "EV": {
+          "status": "not_displayed",
+          "text": "Not listed for EV batteries in the Battery Pass longlist; not among the Commission's 71 data points."
+        },
+        "LMT": {
+          "status": "conditional",
+          "text": "Listed as mandatory for LMT batteries in the Battery Pass longlist (Annex VII Part B (1)); not among the Commission's 71 data points, so treat as recommended."
+        },
+        "INDUSTRIAL_GT_2KWH": {
+          "status": "conditional",
+          "text": "Listed for stationary battery energy storage only in the Battery Pass longlist (Annex VII Part B (1)); not among the Commission's 71 data points."
+        },
+        "source": "Battery Pass Data Attribute Longlist v1.2, row 7 (x = LMT, Stationary); Reg. (EU) 2023/1542 Annex VII Part B (1)"
+      },
+      "verify": true,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "warrantyPeriod",
+      "din": { "no": 8, "chapter": "6.1.3.4" },
+      "ecDataPoints": [35],
+      "part": 4,
+      "templatePaths": ["4/GeneralInformation/WarrantyInformation/WarrantyPeriod"],
+      "name": { "en": "Commercial warranty period", "de": "Gewährleistungs-/Garantiezeitraum" },
+      "synonyms": {
+        "en": [
+          "warranty",
+          "warranty period",
+          "guarantee",
+          "warranty months",
+          "warranty years",
+          "calendar life warranty"
+        ],
+        "de": [
+          "garantie",
+          "garantiezeit",
+          "garantiedauer",
+          "gewährleistung",
+          "garantie monate",
+          "garantie jahre",
+          "herstellergarantie"
+        ]
+      },
+      "valueKind": "text",
+      "unit": "months",
+      "range": { "min": 0, "max": 600 },
+      "whoTypicallyHasIt": {
+        "en": "Sales or legal department of the manufacturer; stated in the warranty terms or data sheet.",
+        "de": "Vertrieb oder Rechtsabteilung des Herstellers; steht in den Garantiebedingungen oder im Datenblatt."
+      },
+      "explanation": {
+        "en": "Period for which the commercial warranty for the calendar life applies, only if a commercial warranty is offered. The template stores it as an ISO 8601 duration such as P96M (96 months).",
+        "de": "Zeitraum der gewerblichen Garantie für die kalendarische Lebensdauer, nur wenn eine Garantie gewährt wird. Das Template speichert eine ISO-8601-Dauer wie P96M (96 Monate)."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "batteryCategory",
+      "din": { "no": 9, "chapter": "6.1.3.5" },
+      "ecDataPoints": [6],
+      "part": 4,
+      "templatePaths": ["4/GeneralInformation/BatteryCategory"],
+      "name": { "en": "Battery category", "de": "Batteriekategorie" },
+      "synonyms": {
+        "en": [
+          "category",
+          "battery type",
+          "application",
+          "ev battery",
+          "lmt battery",
+          "industrial battery",
+          "traction battery",
+          "stationary storage"
+        ],
+        "de": [
+          "kategorie",
+          "batterietyp",
+          "anwendung",
+          "ev-batterie",
+          "traktionsbatterie",
+          "lmt-batterie",
+          "industriebatterie",
+          "stationärer speicher",
+          "e-bike-akku"
+        ]
+      },
+      "valueKind": "enum",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Determined by the manufacturer from the intended use (Article 3 definitions); usually obvious from the product data sheet.",
+        "de": "Vom Hersteller anhand des Verwendungszwecks bestimmt (Definitionen in Artikel 3); meist aus dem Produktdatenblatt ersichtlich."
+      },
+      "explanation": {
+        "en": "Which regulatory category the battery belongs to: electric vehicle (EV), light means of transport (LMT) or industrial battery with a capacity above 2 kWh. The category decides which other data points are mandatory.",
+        "de": "Regulatorische Kategorie der Batterie: Elektrofahrzeug (EV), leichtes Verkehrsmittel (LMT) oder Industriebatterie über 2 kWh. Die Kategorie entscheidet, welche weiteren Datenpunkte Pflicht sind."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "batteryMass",
+      "din": { "no": 10, "chapter": "6.1.3.6" },
+      "ecDataPoints": [10],
+      "part": 4,
+      "templatePaths": ["4/GeneralInformation/BatteryMass"],
+      "name": { "en": "Battery mass", "de": "Batteriemasse" },
+      "synonyms": {
+        "en": ["weight", "mass", "net weight", "pack weight", "total weight", "kg"],
+        "de": [
+          "gewicht",
+          "masse",
+          "nettogewicht",
+          "gesamtgewicht",
+          "pack-gewicht",
+          "eigengewicht",
+          "kg"
+        ]
+      },
+      "valueKind": "decimal",
+      "unit": "kg",
+      "range": { "min": 0, "max": 10000 },
+      "whoTypicallyHasIt": {
+        "en": "Pack manufacturer's data sheet or weighing record at end of line; also on shipping documents.",
+        "de": "Datenblatt des Pack-Herstellers oder Wiegeprotokoll am Bandende; auch auf Versandpapieren."
+      },
+      "explanation": {
+        "en": "Weight of the battery in kilograms as placed on the market. Values given in grams or tonnes must be converted.",
+        "de": "Gewicht der Batterie in Kilogramm, wie in Verkehr gebracht. Angaben in Gramm oder Tonnen müssen umgerechnet werden."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "batteryStatus",
+      "din": { "no": 11, "chapter": "6.1.3.7" },
+      "ecDataPoints": [67],
+      "part": 1,
+      "templatePaths": ["1/LifeCycleStage"],
+      "name": {
+        "en": "Battery status (life cycle stage)",
+        "de": "Batteriestatus (Lebenszyklusphase)"
+      },
+      "synonyms": {
+        "en": [
+          "status",
+          "life cycle stage",
+          "lifecycle status",
+          "original",
+          "repurposed",
+          "re-used",
+          "remanufactured",
+          "waste"
+        ],
+        "de": [
+          "status",
+          "lebenszyklusphase",
+          "zustand",
+          "original",
+          "umgewidmet",
+          "wiederverwendet",
+          "wiederaufgearbeitet",
+          "abfall",
+          "second life"
+        ]
+      },
+      "valueKind": "enum",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Set to 'original' by the manufacturer; later changed by the remanufacturer, repurposer or waste operator who takes over the passport.",
+        "de": "Vom Hersteller auf 'original' gesetzt; später vom Wiederaufarbeiter, Umwidmer oder Entsorger geändert, der den Pass übernimmt."
+      },
+      "explanation": {
+        "en": "Current status of the battery: 'original', 'repurposed', 're-used', 'remanufactured' or 'waste'. It is dynamic and must be updated when the status changes.",
+        "de": "Aktueller Status der Batterie: 'original', 'repurposed' (umgewidmet), 're-used' (wiederverwendet), 'remanufactured' (wiederaufgearbeitet) oder 'waste' (Abfall). Dynamisch, muss bei Statuswechsel aktualisiert werden."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

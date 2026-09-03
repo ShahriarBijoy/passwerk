@@ -1,0 +1,264 @@
+{
+  "$comment": "DIN DKE SPEC 99100 category 'Battery materials and composition' (longlist rows 31-35). Authored; see kb/attributes/README.md. All values live in IDTA 02035-6 Material Composition.",
+  "category": "Battery materials and composition",
+  "attributes": [
+    {
+      "id": "batteryChemistry",
+      "din": { "no": 31, "chapter": "6.5.2" },
+      "ecDataPoints": [12],
+      "part": 6,
+      "templatePaths": ["6/BatteryChemistry/ShortName", "6/BatteryChemistry/ClearName"],
+      "name": { "en": "Battery chemistry", "de": "Batteriechemie" },
+      "synonyms": {
+        "en": [
+          "chemistry",
+          "cell chemistry",
+          "nmc",
+          "lfp",
+          "nca",
+          "lto",
+          "lithium-ion",
+          "lead-acid",
+          "cathode chemistry",
+          "cell type"
+        ],
+        "de": [
+          "chemie",
+          "zellchemie",
+          "nmc",
+          "lfp",
+          "nca",
+          "lto",
+          "lithium-ionen",
+          "blei-säure",
+          "kathodenchemie",
+          "zelltyp"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer's data sheet; the pack manufacturer repeats it in its own specification.",
+        "de": "Datenblatt des Zellherstellers; der Pack-Hersteller übernimmt sie in seine Spezifikation."
+      },
+      "explanation": {
+        "en": "The electrochemical system of the battery, given as a short name (e.g. NMC, LFP) and a clear name (e.g. lithium nickel manganese cobalt oxide). Required by Annex VI Part A (7).",
+        "de": "Das elektrochemische System der Batterie als Kurzname (z. B. NMC, LFP) und Klarname (z. B. Lithium-Nickel-Mangan-Cobalt-Oxid). Gefordert nach Anhang VI Teil A (7)."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "criticalRawMaterials",
+      "din": { "no": 32, "chapter": "6.5.3" },
+      "ecDataPoints": [15],
+      "part": 6,
+      "templatePaths": [
+        "6/BatteryMaterials",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialName",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialIdentifier",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialMass",
+        "6/BatteryMaterials/BatteryMaterial/IsCriticalRawMaterial"
+      ],
+      "name": {
+        "en": "Critical raw materials (above 0.1 % by weight)",
+        "de": "Kritische Rohstoffe (über 0,1 Gewichtsprozent)"
+      },
+      "synonyms": {
+        "en": [
+          "critical raw materials",
+          "crm",
+          "lithium",
+          "cobalt",
+          "nickel",
+          "natural graphite",
+          "manganese",
+          "raw material content",
+          "material declaration"
+        ],
+        "de": [
+          "kritische rohstoffe",
+          "crm",
+          "lithium",
+          "kobalt",
+          "cobalt",
+          "nickel",
+          "naturgraphit",
+          "mangan",
+          "rohstoffgehalt",
+          "materialdeklaration"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": "kg",
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer and cathode/anode active material suppliers; often available through IMDS/CDX material declarations.",
+        "de": "Zellhersteller und Lieferanten der Kathoden-/Anodenaktivmaterialien; oft über IMDS/CDX-Materialdeklarationen verfügbar."
+      },
+      "explanation": {
+        "en": "Every critical raw material (per the EU critical raw materials list) present above 0.1 % weight by weight, Annex VI Part A (10). In the template each material is a BatteryMaterial entry with name, CAS identifier, optional mass and the IsCriticalRawMaterial flag set to true.",
+        "de": "Jeder kritische Rohstoff (gemäß EU-Liste kritischer Rohstoffe) mit mehr als 0,1 Gewichtsprozent, Anhang VI Teil A (10). Im Template ist jedes Material ein BatteryMaterial-Eintrag mit Name, CAS-Nummer, optionaler Masse und dem Kennzeichen IsCriticalRawMaterial = true."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "electrodeAndElectrolyteMaterials",
+      "din": { "no": 33, "chapter": "6.5.4" },
+      "ecDataPoints": [45],
+      "part": 6,
+      "templatePaths": [
+        "6/BatteryMaterials",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialName",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialIdentifier",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialLocation/ComponentName",
+        "6/BatteryMaterials/BatteryMaterial/BatteryMaterialLocation/ComponentId"
+      ],
+      "name": {
+        "en": "Materials used in cathode, anode and electrolyte",
+        "de": "Materialien in Kathode, Anode und Elektrolyt"
+      },
+      "synonyms": {
+        "en": [
+          "cathode material",
+          "anode material",
+          "electrolyte",
+          "active material",
+          "detailed composition",
+          "separator",
+          "graphite anode",
+          "bill of materials"
+        ],
+        "de": [
+          "kathodenmaterial",
+          "anodenmaterial",
+          "elektrolyt",
+          "aktivmaterial",
+          "detaillierte zusammensetzung",
+          "separator",
+          "graphitanode",
+          "stückliste"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "Cell manufacturer (cell-level bill of materials); the pack manufacturer usually only holds the cell data sheet and must request this.",
+        "de": "Zellhersteller (Zell-Stückliste); der Pack-Hersteller hat meist nur das Zelldatenblatt und muss dies anfragen."
+      },
+      "explanation": {
+        "en": "Detailed composition including the materials of cathode, anode and electrolyte (Annex XIII 2(a)). Accessible only to persons with a legitimate interest and the Commission, not to the public. Each material is a BatteryMaterial entry whose location names the component (anode, cathode, electrolyte).",
+        "de": "Detaillierte Zusammensetzung inklusive der Materialien von Kathode, Anode und Elektrolyt (Anhang XIII 2(a)). Nur für Personen mit berechtigtem Interesse und die Kommission zugänglich, nicht öffentlich. Jedes Material ist ein BatteryMaterial-Eintrag, dessen Location die Komponente benennt (Anode, Kathode, Elektrolyt)."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "hazardousSubstances",
+      "din": { "no": 34, "chapter": "6.5.5" },
+      "ecDataPoints": [13],
+      "part": 6,
+      "templatePaths": [
+        "6/HazardousSubstances",
+        "6/HazardousSubstances/HazardousSubstance/HazardousSubstanceName",
+        "6/HazardousSubstances/HazardousSubstance/HazardousSubstanceIdentifier",
+        "6/HazardousSubstances/HazardousSubstance/HazardousSubstanceClass",
+        "6/HazardousSubstances/HazardousSubstance/HazardousSubstanceConcentration",
+        "6/HazardousSubstances/HazardousSubstance/HazardousSubstanceLocation/ComponentName"
+      ],
+      "name": {
+        "en": "Hazardous substances (other than mercury, cadmium, lead)",
+        "de": "Gefährliche Stoffe (außer Quecksilber, Cadmium, Blei)"
+      },
+      "synonyms": {
+        "en": [
+          "hazardous substances",
+          "hazardous materials",
+          "svhc",
+          "clp classification",
+          "safety data sheet",
+          "sds",
+          "reach substances",
+          "dangerous substances"
+        ],
+        "de": [
+          "gefährliche stoffe",
+          "gefahrstoffe",
+          "svhc",
+          "clp-einstufung",
+          "sicherheitsdatenblatt",
+          "sdb",
+          "reach-stoffe",
+          "gefahrenklasse"
+        ]
+      },
+      "valueKind": "composite",
+      "unit": "%",
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "EHS department, from the cell manufacturer's safety data sheet (sections 2 and 3) and the material declaration.",
+        "de": "EHS-Abteilung, aus dem Sicherheitsdatenblatt des Zellherstellers (Abschnitte 2 und 3) und der Materialdeklaration."
+      },
+      "explanation": {
+        "en": "Substances classified as hazardous under the CLP Regulation that are present in the battery, other than mercury, cadmium or lead (Annex VI Part A (8)). Each is a HazardousSubstance entry with name, identifier (CAS/EC), hazard class, concentration and location.",
+        "de": "Nach CLP-Verordnung als gefährlich eingestufte Stoffe in der Batterie, außer Quecksilber, Cadmium und Blei (Anhang VI Teil A (8)). Je Stoff ein HazardousSubstance-Eintrag mit Name, Kennung (CAS/EG), Gefahrenklasse, Konzentration und Einbauort."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    },
+    {
+      "id": "substanceImpacts",
+      "din": { "no": 35, "chapter": "6.5.6" },
+      "ecDataPoints": [43],
+      "part": 6,
+      "templatePaths": ["6/HazardousSubstances/HazardousSubstance/HazardousSubstanceImpact/Impact"],
+      "name": {
+        "en": "Impact of substances on environment, health and safety",
+        "de": "Auswirkungen der Stoffe auf Umwelt, Gesundheit und Sicherheit"
+      },
+      "synonyms": {
+        "en": [
+          "hazard statements",
+          "h-statements",
+          "h302",
+          "health impact",
+          "environmental impact",
+          "safety impact",
+          "hazard information",
+          "risk phrases"
+        ],
+        "de": [
+          "gefahrenhinweise",
+          "h-sätze",
+          "h302",
+          "gesundheitsgefahr",
+          "umweltgefahr",
+          "sicherheitsrisiko",
+          "gefahreninformation",
+          "wirkung auf mensch und umwelt"
+        ]
+      },
+      "valueKind": "text",
+      "unit": null,
+      "range": null,
+      "whoTypicallyHasIt": {
+        "en": "EHS department; the hazard statements are in the safety data sheet, section 2.",
+        "de": "EHS-Abteilung; die Gefahrenhinweise stehen im Sicherheitsdatenblatt, Abschnitt 2."
+      },
+      "explanation": {
+        "en": "End-user information under Article 74(1)(f) on the impact of the substances in the battery on the environment, human health and safety. Modelled per hazardous substance as a list of impacts, typically the CLP hazard statements (e.g. 'H302 Harmful if swallowed').",
+        "de": "Endnutzerinformation nach Artikel 74(1)(f) zu den Auswirkungen der in der Batterie enthaltenen Stoffe auf Umwelt, Gesundheit und Sicherheit. Je gefährlichem Stoff als Liste von Auswirkungen, typischerweise die CLP-Gefahrenhinweise (z. B. 'H302 Gesundheitsschädlich bei Verschlucken')."
+      },
+      "applicabilityOverride": null,
+      "verify": false,
+      "lastVerified": "2026-09-03"
+    }
+  ]
+}

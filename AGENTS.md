@@ -83,8 +83,13 @@ so no build is needed before `pnpm test`.
 
 ## Status
 
-- **Phase 0 (bootstrap): done.** Monorepo, configs, CI skeleton, ADRs D-001 to D-007.
-- **Next: Phase 1.** `@passwerk/rules`: fetch and pin all seven IDTA 02035 templates, the
-  AAS schema and the EC data-point matrix; author `attributes.json`, `timeline.json` and
-  `rules.json`. Start by listing the artefacts with source URLs and asking the owner to
-  confirm each one before downloading.
+- **Phase 0 (bootstrap): done.**
+- **Phase 1 (`@passwerk/rules`): done.** 31 artefacts pinned (24 bundled), EC v2.0 matrix
+  transcribed (71 data points), template catalogue (211 elements) and DIN longlist (93 rows)
+  generated, 93 attributes authored DE/EN (25 flagged `verify: true` for human review), 15
+  plausibility rules, 22 timeline events, typed accessors. See ADRs D-008 and D-009.
+- **Next: Phase 2.** `@passwerk/core`: `PassportDraft` model (Zod 4, `Field<T>` with provenance),
+  emit AAS JSON + AASX for the three MVP submodels first (Nameplate, Material Composition,
+  Carbon Footprint), L2 via `@aas-core-works/aas-core3.0-typescript`, L3 template diff against
+  the catalogue, golden samples. Use `templates[].environment` and `templateCatalogue` from
+  `@passwerk/rules` as the only source of semanticIds.
