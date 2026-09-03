@@ -5,12 +5,16 @@
  */
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
+export * from './emit/canonical.js';
+export * from './emit/elements.js';
+export * from './emit/ids.js';
 export * from './model/attributeIds.js';
 export * from './model/composites.js';
 export * from './model/field.js';
 export * from './model/passport.js';
 export * from './model/provenance.js';
 export * from './model/values.js';
+
 export * from './samples/index.js';
 export * from './validate/finding.js';
 export { message as findingMessage, RULE_IDS } from './validate/messages.js';
