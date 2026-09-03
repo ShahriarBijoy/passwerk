@@ -1,0 +1,23 @@
+# Planning docs (local only for now)
+docs/PASSWERK_BUILD_PLAN.md
+docs/research-passwerk.md
+
+# Dependencies / build
+node_modules/
+dist/
+build/
+coverage/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
