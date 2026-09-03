@@ -1,5 +1,6 @@
 packages:
   - packages/*
+  - tools/*
 
 patchedDependencies:
   '@aas-core-works/aas-core3.0-typescript@1.0.5': patches/@aas-core-works__aas-core3.0-typescript@1.0.5.patch

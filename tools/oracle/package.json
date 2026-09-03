@@ -1,0 +1,17 @@
+{
+  "name": "@passwerk/oracle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CI oracle: replays emitted golden passports through the official aas-test-engines and checks verdict parity",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "emit": "tsx src/emit-golden.ts",
+    "check": "uv run --frozen oracle.py",
+    "oracle": "pnpm run emit && pnpm run check"
+  },
+  "devDependencies": {
+    "@passwerk/core": "workspace:*",
+    "tsx": "4.23.13"
+  }
+}
