@@ -130,7 +130,7 @@ validate and emitters can print them unchanged.
 
 | attributeId | shape |
 |---|---|
-| manufacturerInformation | `{ name: {[lang]: string}, identifier: string, address: { street?, zipCode?, cityTown?, nationalCode?, ... } }` matching the ZVEI AddressInformation SMC elements present in the template |
+| manufacturerInformation | `{ name: {[lang]: string}, identifier: string, address?: { street?, zipCode?, cityTown?, nationalCode?, email?, phone?, website? } }`. `AddressInformation` in the IDTA template is a drop-in collection (`smt-dropin-use`) with no children defined; the children belong to the ZVEI Contact Information template, which is not bundled. Address children are therefore emitted by idShort only, without semanticId, until that template is pinned (owner decision, see section 8). |
 | batteryChemistry | `{ shortName: string, clearName: string }` |
 | criticalRawMaterials | `{ name: string, identifier: string, massKg?: decimalString, location?: { componentName?, componentId? } }[]`; `isCriticalRawMaterial` is emitted as `true` |
 | electrodeAndElectrolyteMaterials | same element shape; emitted with `isCriticalRawMaterial: false` unless the same identifier is also listed under critical raw materials |
@@ -252,7 +252,9 @@ text is a fixed prefix plus the original message.
    - `PW-L3-LIST-TYPE` list `typeValueListElement`/`valueTypeListElement` differ (error);
    - `PW-L3-UNKNOWN-ELEMENT` instance idShort not in the template (warning);
    - `PW-L3-SUBMODEL-ID-SHORT` submodel idShort differs from the template (warning).
-   Cardinalities with `raw === null` are treated as `ZeroToMany`.
+   Cardinalities with `raw === null` are treated as `ZeroToMany`. Collections whose template
+   element carries the `smt-dropin-use` supplemental semanticId are opaque: their children are
+   not checked and raise no `PW-L3-UNKNOWN-ELEMENT`.
 4. Category applicability is not an L3 concern (it belongs to L4 and the gap report).
 
 ### 5.5 Orchestrator
@@ -301,3 +303,6 @@ List children keep draft order.
 - D-010: attribute-keyed `PassportDraft` (KB grain) instead of hand-typed nested objects;
   composites get explicit shapes; identifier scheme; AASX carries XML like the official
   packages; numbers are decimal strings.
+- Open question for the owner (not blocking): pin the ZVEI / IDTA Contact Information template
+  in `@passwerk/rules` so `AddressInformation` children get official semanticIds. Until then
+  they are emitted without semanticId and flagged `verify` in the emitter's source comment.
