@@ -1,0 +1,133 @@
+{
+  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Light means of transport battery without a carbon footprint submodel.",
+  "meta": {
+    "schemaVersion": "1.0",
+    "category": "LMT",
+    "createdAt": "2026-09-03T12:00:00Z",
+    "passportId": "https://passport.musterwerk.example/battery/MW-LMT-2026-000042"
+  },
+  "attributes": {
+    "batteryPassportIdentifier": {
+      "value": "https://passport.musterwerk.example/battery/MW-LMT-2026-000042",
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B2" }]
+    },
+    "batteryIdentifier": {
+      "value": "MW-LMT-2026-000042",
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B3" }]
+    },
+    "manufacturerInformation": {
+      "value": {
+        "name": {
+          "de": "Musterwerk Batteriesysteme GmbH",
+          "en": "Musterwerk Battery Systems GmbH"
+        },
+        "identifier": "DE-MW-0001",
+        "address": {
+          "street": "Werkstrasse 1",
+          "zipCode": "28199",
+          "cityTown": "Bremen",
+          "nationalCode": "DE"
+        }
+      },
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B5" }]
+    },
+    "manufacturingPlace": {
+      "value": "DE-MW-0001-PLANT-BRE",
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B6" }]
+    },
+    "manufacturingDate": {
+      "value": "2026-04-20",
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B7" }]
+    },
+    "batteryStatus": {
+      "value": "Original",
+      "status": "present",
+      "source": [{ "file": "lmt-stammdaten.xlsx", "cell": "B8" }]
+    },
+    "separateCollectionSymbol": {
+      "value": {
+        "fileName": "separate-collection.png",
+        "contentType": "image/png",
+        "uri": "https://passport.musterwerk.example/files/separate-collection.png"
+      },
+      "status": "present",
+      "source": [{ "file": "lmt-kennzeichnung.pdf", "page": 1 }]
+    },
+    "meaningOfLabelsAndSymbols": {
+      "value": "Durchgestrichene Muelltonne: getrennte Sammlung von Altbatterien.",
+      "status": "present",
+      "source": [{ "file": "lmt-kennzeichnung.pdf", "page": 1 }]
+    },
+    "euDeclarationOfConformity": {
+      "value": [
+        {
+          "id": "DoC-MW-LMT-2026-03",
+          "uri": "https://passport.musterwerk.example/docs/DoC-MW-LMT-2026-03.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [{ "file": "lmt-konformitaet.pdf", "page": 1 }]
+    },
+    "testReportsProvingCompliance": {
+      "value": [{ "id": "TR-2026-0512" }],
+      "status": "present",
+      "source": [{ "file": "lmt-pruefbericht.pdf", "page": 1 }]
+    },
+    "batteryChemistry": {
+      "value": { "shortName": "LFP", "clearName": "Lithium iron phosphate" },
+      "status": "present",
+      "source": [{ "file": "lmt-bom.xlsx", "cell": "C2" }]
+    },
+    "criticalRawMaterials": {
+      "value": [
+        {
+          "name": "Lithium",
+          "identifier": "7439-93-2",
+          "massKg": "0.35",
+          "location": { "componentName": "Cathode" }
+        },
+        {
+          "name": "Natural graphite",
+          "identifier": "7782-42-5",
+          "massKg": "2.10",
+          "location": { "componentName": "Anode" }
+        }
+      ],
+      "unit": "kg",
+      "status": "present",
+      "source": [{ "file": "lmt-bom.xlsx", "cell": "D4:D5" }]
+    },
+    "electrodeAndElectrolyteMaterials": {
+      "value": [
+        { "name": "Copper", "identifier": "7440-50-8", "location": { "componentName": "Anode" } },
+        {
+          "name": "Aluminium",
+          "identifier": "7429-90-5",
+          "location": { "componentName": "Cathode" }
+        }
+      ],
+      "status": "present",
+      "source": [{ "file": "lmt-bom.xlsx", "cell": "D7:D8" }]
+    },
+    "hazardousSubstances": {
+      "value": [
+        {
+          "name": "Lithium hexafluorophosphate",
+          "identifier": "21324-40-3",
+          "class": "AcuteToxicity",
+          "concentrationPercent": "0.9",
+          "location": { "componentName": "Electrolyte" },
+          "impacts": ["H301 Toxic if swallowed", "H314 Causes severe skin burns and eye damage"]
+        }
+      ],
+      "unit": "%",
+      "status": "present",
+      "source": [{ "file": "lmt-sdb.pdf", "page": 3 }]
+    }
+  }
+}

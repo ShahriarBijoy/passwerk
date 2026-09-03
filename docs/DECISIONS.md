@@ -116,3 +116,39 @@ catalogue and is caught by the parity test.
 test rebuilds them from the bundled artefacts in-process and asserts byte equality. The
 generators (`scripts/lib/*.ts`) are pure functions with no I/O so the tests can call them
 directly. Dev-only scripts may use Node APIs; `src/` may not.
+
+## D-010: Attribute-keyed PassportDraft on the knowledge-base grain (2026-09-03)
+
+**Context.** The build plan sketched hand-typed nested objects per submodel. The knowledge
+base (D-008) already defines 93 attributes with value kinds and template paths.
+
+**Decision.** `PassportDraft = { meta, attributes: { [attributeId]: Field } }`. Value shapes
+come from the attribute's `valueKind`; composite attributes get explicit Zod shapes in
+`model/composites.ts`. Quantities are decimal strings (decimal.js), never JS numbers.
+AAS identifiers derive from `meta.passportId`: shell `${id}/aas`, asset `${id}`, submodel
+`${id}/submodels/${templateIdShort}`, all overridable through `EmitOptions.ids`.
+
+**Consequences.** All seven submodels are modelled from day one; emitters and L3 cover
+three in Phase 2. Gap report, mapping and the KB address the same ids. The literal id union
+is not expressible in TypeScript because ids come from data; `AttributeIdSchema` checks at
+runtime.
+
+## D-011: aas-core3.0-typescript as the AAS engine, JSON inside the AASX (2026-09-03)
+
+**Context.** The SDK verifies the metamodel and serialises JSON but has no XML serialiser.
+The official IDTA packages carry XML. The official test engine dispatches AASX parts by file
+extension and accepts `.json` parts.
+
+**Decision.** AASX packages carry the canonical JSON as `aasx/passwerk/passwerk.aas.json`.
+The SDK's ESM build has extensionless relative imports that plain Node cannot resolve; a
+committed pnpm patch (`patches/`) adds the `.js` extensions. Instances never set `idShort`
+on direct children of a `SubmodelElementList` (AASd-120); the templates do, because they
+are templates. L3 does not cap the number of list items from the item template's cardinality,
+because the IDTA templates qualify list items inconsistently ("One" on
+`3/.../LifeCyclePhase`, "OneToMany" on `1/Markings/Markings__00__`).
+
+**Consequences.** One serialiser, byte-stable output, oracle-checkable in Phase 3. An XML
+part can be added later behind the same `emitAasx` if a consumer requires it, which needs
+an XML serialiser verified against the AAS XSD. The nameplate's `AddressInformation` is a
+drop-in whose children (ZVEI Contact Information) are not bundled; they are emitted by
+idShort without semanticId until that template is pinned.

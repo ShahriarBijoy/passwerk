@@ -88,8 +88,9 @@ so no build is needed before `pnpm test`.
   transcribed (71 data points), template catalogue (211 elements) and DIN longlist (93 rows)
   generated, 93 attributes authored DE/EN (25 flagged `verify: true` for human review), 15
   plausibility rules, 22 timeline events, typed accessors. See ADRs D-008 and D-009.
-- **Next: Phase 2.** `@passwerk/core`: `PassportDraft` model (Zod 4, `Field<T>` with provenance),
-  emit AAS JSON + AASX for the three MVP submodels first (Nameplate, Material Composition,
-  Carbon Footprint), L2 via `@aas-core-works/aas-core3.0-typescript`, L3 template diff against
-  the catalogue, golden samples. Use `templates[].environment` and `templateCatalogue` from
-  `@passwerk/rules` as the only source of semanticIds.
+- **Phase 2 (`@passwerk/core` model + emit + L1-L3): done.** Attribute-keyed `PassportDraft`
+  (ADR D-010), AAS JSON and AASX emitters for IDTA 02035-1/-3/-6 driven by the template
+  catalogue, L2 via aas-core verification, L3 template diff, six golden samples. See ADR D-011
+  for the AAS engine choices (JSON inside the AASX, pnpm patch for the SDK's ESM build).
+- **Next: Phase 3.** Oracle parity in CI (`tools/oracle`, `aas-test-engines`) and
+  `sovereignty.test.ts`. Then the remaining four submodel emitters (parts 2, 4, 5, 7).

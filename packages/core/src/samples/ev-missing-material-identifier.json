@@ -1,0 +1,326 @@
+{
+  "$comment": "Broken golden sample derived from ev-valid (fictional values). Defect: the first critical raw material has no identifier, so L1 rejects the composite and the emitted BatteryMaterialIdentifier is missing (PW-L1-VALUE, PW-L3-MISSING).",
+  "meta": {
+    "schemaVersion": "1.0",
+    "category": "EV",
+    "createdAt": "2026-09-03T12:00:00Z",
+    "passportId": "https://passport.musterwerk.example/battery/MW-EV-2026-000123"
+  },
+  "attributes": {
+    "batteryPassportIdentifier": {
+      "value": "https://passport.musterwerk.example/battery/MW-EV-2026-000123",
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B2"
+        }
+      ]
+    },
+    "batteryIdentifier": {
+      "value": "MW-EV-2026-000123",
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B3"
+        }
+      ]
+    },
+    "manufacturerInformation": {
+      "value": {
+        "name": {
+          "de": "Musterwerk Batteriesysteme GmbH",
+          "en": "Musterwerk Battery Systems GmbH"
+        },
+        "identifier": "DE-MW-0001",
+        "address": {
+          "street": "Werkstrasse 1",
+          "zipCode": "28199",
+          "cityTown": "Bremen",
+          "nationalCode": "DE",
+          "email": "passport@musterwerk.example"
+        }
+      },
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B5"
+        }
+      ]
+    },
+    "manufacturingPlace": {
+      "value": "DE-MW-0001-PLANT-BRE",
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B6"
+        }
+      ]
+    },
+    "manufacturingDate": {
+      "value": "2026-03-01",
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B7"
+        }
+      ]
+    },
+    "batteryStatus": {
+      "value": "Original",
+      "status": "present",
+      "source": [
+        {
+          "file": "stammdaten.xlsx",
+          "cell": "B8"
+        }
+      ]
+    },
+    "separateCollectionSymbol": {
+      "value": {
+        "fileName": "separate-collection.png",
+        "contentType": "image/png",
+        "uri": "https://passport.musterwerk.example/files/separate-collection.png"
+      },
+      "status": "present",
+      "source": [
+        {
+          "file": "kennzeichnung.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "meaningOfLabelsAndSymbols": {
+      "value": "Durchgestrichene Muelltonne: getrennte Sammlung von Altbatterien.",
+      "status": "present",
+      "source": [
+        {
+          "file": "kennzeichnung.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "euDeclarationOfConformity": {
+      "value": [
+        {
+          "id": "DoC-MW-EV-2026-01",
+          "uri": "https://passport.musterwerk.example/docs/DoC-MW-EV-2026-01.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "konformitaet.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "testReportsProvingCompliance": {
+      "value": [
+        {
+          "id": "TR-2026-0457"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "pruefbericht.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "batteryChemistry": {
+      "value": {
+        "shortName": "NMC",
+        "clearName": "Lithium nickel manganese cobalt oxide"
+      },
+      "status": "present",
+      "source": [
+        {
+          "file": "bom.xlsx",
+          "cell": "C2"
+        }
+      ]
+    },
+    "criticalRawMaterials": {
+      "value": [
+        {
+          "name": "Lithium",
+          "massKg": "6.40",
+          "location": {
+            "componentName": "Cathode"
+          }
+        },
+        {
+          "name": "Cobalt",
+          "identifier": "7440-48-4",
+          "massKg": "4.10",
+          "location": {
+            "componentName": "Cathode"
+          }
+        },
+        {
+          "name": "Natural graphite",
+          "identifier": "7782-42-5",
+          "massKg": "38.00",
+          "location": {
+            "componentName": "Anode"
+          }
+        }
+      ],
+      "unit": "kg",
+      "status": "present",
+      "source": [
+        {
+          "file": "bom.xlsx",
+          "cell": "D4:D6"
+        }
+      ]
+    },
+    "electrodeAndElectrolyteMaterials": {
+      "value": [
+        {
+          "name": "Lithium hexafluorophosphate",
+          "identifier": "21324-40-3",
+          "location": {
+            "componentName": "Electrolyte"
+          }
+        },
+        {
+          "name": "Copper",
+          "identifier": "7440-50-8",
+          "location": {
+            "componentName": "Anode"
+          }
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "bom.xlsx",
+          "cell": "D8:D9"
+        }
+      ]
+    },
+    "hazardousSubstances": {
+      "value": [
+        {
+          "name": "Lithium hexafluorophosphate",
+          "identifier": "21324-40-3",
+          "class": "AcuteToxicity",
+          "concentrationPercent": "1.2",
+          "location": {
+            "componentName": "Electrolyte"
+          },
+          "impacts": ["H301 Toxic if swallowed", "H314 Causes severe skin burns and eye damage"]
+        }
+      ],
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "sicherheitsdatenblatt.pdf",
+          "page": 3
+        }
+      ]
+    },
+    "carbonFootprintGeneralInformation": {
+      "value": {
+        "calculationMethods": ["ISO 14067:2018"],
+        "referenceImpactUnit": "kWh",
+        "quantityOfMeasure": "1"
+      },
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "carbonFootprintPerFunctionalUnit": {
+      "value": "61.2",
+      "unit": "kgCO2e/kWh",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 2
+        }
+      ]
+    },
+    "carbonFootprintShareRawMaterials": {
+      "value": "58.0",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 4
+        }
+      ]
+    },
+    "carbonFootprintShareManufacturing": {
+      "value": "34.5",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 4
+        }
+      ]
+    },
+    "carbonFootprintShareDistribution": {
+      "value": "2.5",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 4
+        }
+      ]
+    },
+    "carbonFootprintShareEndOfLife": {
+      "value": "5.0",
+      "unit": "%",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 4
+        }
+      ]
+    },
+    "carbonFootprintPerformanceClass": {
+      "value": "B",
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 1
+        }
+      ]
+    },
+    "carbonFootprintStudyLink": {
+      "value": [
+        {
+          "id": "PCF-MW-EV-2026",
+          "uri": "https://passport.musterwerk.example/pcf/MW-EV-2026.pdf"
+        }
+      ],
+      "status": "present",
+      "source": [
+        {
+          "file": "pcf-bericht.pdf",
+          "page": 1
+        }
+      ]
+    }
+  }
+}
