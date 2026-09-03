@@ -36,11 +36,13 @@ export const brokenSamples: Record<BrokenSampleName, BrokenSample> = {
   },
   'lmt-wrong-date-format': {
     draft: lmtWrongDate as unknown as PassportDraftInput,
-    expectedFindings: ['PW-L1-VALUE'],
+    // L1 rejects the date; the emitted xs:date Property also fails aas-core verification.
+    expectedFindings: ['PW-L1-VALUE', 'PW-L2-AAS-CORE'],
   },
   'industrial-bad-decimal': {
     draft: industrialBadDecimal as unknown as PassportDraftInput,
-    expectedFindings: ['PW-L1-VALUE'],
+    // L1 rejects the decimal comma; the emitted xs:decimal Property also fails aas-core.
+    expectedFindings: ['PW-L1-VALUE', 'PW-L2-AAS-CORE'],
   },
 };
 
