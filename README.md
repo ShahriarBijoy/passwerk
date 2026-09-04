@@ -26,13 +26,14 @@ Conformance is proven, not claimed: every emitted passport is replayed through t
 
 ## Status
 
-**Phase 3b of 8 done: six of seven submodel emitters.** `@passwerk/rules` (artefacts and
-knowledge base) and `@passwerk/core` (model, AAS JSON and AASX emitters for IDTA 02035-1, -3,
--4, -5, -6 and -7, validation L1 to L3) are implemented. Every emitted golden passport is
-replayed through the official `aas-test-engines` on every CI run with 14/14 verdict parity
-(`docs/CONFORMANCE.md`), and a sovereignty test plus a `--network none` Docker job prove zero
-network calls. Next: ingest, extraction and mapping. See `docs/BUILD_PLAN.md` and
-`docs/DECISIONS.md`.
+**Phase 4 of 8 done: ingest, extract, mapping and all seven submodel emitters.**
+`@passwerk/rules` (artefacts and knowledge base) and `@passwerk/core` (model, AAS JSON and
+AASX emitters for all seven IDTA 02035 parts, validation L1 to L3, readers for PDF, XLSX, CSV,
+DOCX and TXT, fact extraction and confidence-scored mapping suggestions) are implemented.
+Every emitted golden passport is replayed through the official `aas-test-engines` on every CI
+run with 16/16 verdict parity (`docs/CONFORMANCE.md`), and a sovereignty test plus a
+`--network none` Docker job prove zero network calls. Next: the gap report, obligations,
+`explain` and L4 plausibility. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 

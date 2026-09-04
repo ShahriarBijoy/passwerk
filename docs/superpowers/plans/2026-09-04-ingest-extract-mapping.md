@@ -1,6 +1,6 @@
 # Phase 4: ingest, extract, mapping and the part 2 emitter — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** `@passwerk/core` turns supplier files (PDF, XLSX, CSV, DOCX, TXT) into a `DocumentBundle` with provenance, a `FactSet` of normalised facts and confidence-scored `MappingProposal[]` that `applyMappings` folds into a `PassportDraft`; Handover Documentation (IDTA 02035-2) is emitted from explicitly classified documents.
 
@@ -73,7 +73,7 @@
 **Interfaces:**
 - Produces: `InputFile`, `Lang`, `Format`, `Cell`, `Table`, `Line`, `Page`, `IngestedDocument`, `DocumentBundle` (Zod + types); `class IngestFailure extends Error { code }`; `decodeText(bytes: Uint8Array): string`; `detectLang(text: string): Lang`; `a1(row: number, col: number): string` (1-based, `a1(1,1) === 'A1'`); `rcRef(row, col)` -> `R1C1`; `tableRef(table, row, col)` -> `T1:R1C1`.
 
-- [ ] **Step 1: Add dependencies**
+- [x] **Step 1: Add dependencies**
 
 ```powershell
 pnpm --filter @passwerk/core add pdfjs-dist@6.3.289 fast-xml-parser@5.11.1
@@ -92,7 +92,7 @@ Append to `.gitattributes`:
 packages/core/test/fixtures/** -text
 ```
 
-- [ ] **Step 2: Write the failing type and helper tests**
+- [x] **Step 2: Write the failing type and helper tests**
 
 `packages/core/test/ingest.types.test.ts`:
 
@@ -177,12 +177,12 @@ describe('cell refs', () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/core/test/ingest.types.test.ts packages/core/test/ingest.text.test.ts`
 Expected: FAIL, the names are not exported from `@passwerk/core`.
 
-- [ ] **Step 4: Implement `ingest/types.ts`**
+- [x] **Step 4: Implement `ingest/types.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -269,7 +269,7 @@ export class IngestFailure extends Error {
 }
 ```
 
-- [ ] **Step 5: Implement `ingest/text.ts`, `ingest/lang.ts`, `ingest/refs.ts`**
+- [x] **Step 5: Implement `ingest/text.ts`, `ingest/lang.ts`, `ingest/refs.ts`**
 
 `text.ts`:
 
@@ -354,12 +354,12 @@ export * from './ingest/text.js';
 export * from './ingest/types.js';
 ```
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run: `pnpm vitest run packages/core/test/ingest.types.test.ts packages/core/test/ingest.text.test.ts`
 Expected: PASS (9 tests).
 
-- [ ] **Step 7: Lint, typecheck, commit**
+- [x] **Step 7: Lint, typecheck, commit**
 
 ```powershell
 pnpm lint:fix; pnpm typecheck; pnpm vitest run packages/core
@@ -397,7 +397,7 @@ type Expected = {
 };
 ```
 
-- [ ] **Step 1: Package skeleton**
+- [x] **Step 1: Package skeleton**
 
 `tools/fixtures/package.json`:
 
@@ -424,7 +424,7 @@ type Expected = {
 
 Run `pnpm install`.
 
-- [ ] **Step 2: Fixture content (`src/content.ts`)**
+- [x] **Step 2: Fixture content (`src/content.ts`)**
 
 All values fictional. One module holds the data so the generator and `expected.json` cannot drift.
 
@@ -514,7 +514,7 @@ export const HANDOVER_TABLE: string[][] = [
 ];
 ```
 
-- [ ] **Step 3: Writers**
+- [x] **Step 3: Writers**
 
 `writers/pdf.ts` (pdf-lib; Helvetica; deterministic metadata):
 
@@ -654,7 +654,7 @@ export function writeCsv1252(rows: string[][]): Uint8Array {
 }
 ```
 
-- [ ] **Step 4: `src/generate.ts`**
+- [x] **Step 4: `src/generate.ts`**
 
 ```ts
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -696,7 +696,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
 
 Note: pdf-lib's Helvetica (WinAnsi) covers ä ö ü ß and the en dash; do not use other characters in PDF content.
 
-- [ ] **Step 5: Write `expected.json` by hand**
+- [x] **Step 5: Write `expected.json` by hand**
 
 `packages/core/test/fixtures/musterwerk/expected.json`. Every row is a value that exists in `content.ts`; provenance follows the spec's cell conventions. Line numbers for the declaration PDF: the title is line 1 and kv pairs start at line 2 in `content.ts` order. Table cells of the PDF: `T1:R<row>C<col>` with the header as row 1.
 
@@ -754,7 +754,7 @@ Note: pdf-lib's Helvetica (WinAnsi) covers ä ö ü ß and the en dash; do not u
 
 The `Leistung` sheet has a three-column shape (label, value, unit) that the extractor must treat as a sheet-pair whose unit comes from column 3 (Task 7 handles it). The `Stückliste` BOM rows are extracted as a `TableFact` and as header-cell facts but no expectation is listed for them (out of scope per spec section 1).
 
-- [ ] **Step 6: Regeneration test**
+- [x] **Step 6: Regeneration test**
 
 `tools/fixtures/test/regenerate.test.ts`:
 
@@ -784,7 +784,7 @@ describe('committed fixtures are exactly what the generator produces (ADR D-009 
 });
 ```
 
-- [ ] **Step 7: Generate, run, hand-check**
+- [x] **Step 7: Generate, run, hand-check**
 
 ```powershell
 pnpm --filter @passwerk/fixtures run generate
@@ -795,7 +795,7 @@ Expected: both tests PASS. If the determinism test fails for a PDF, pdf-lib is e
 
 Open `stueckliste.xlsx` and `handover-notes.docx` once in Excel and Word to confirm they open without repair prompts (hand check, not automated).
 
-- [ ] **Step 8: Edge fixtures (hand-written)**
+- [x] **Step 8: Edge fixtures (hand-written)**
 
 `packages/core/test/fixtures/edge/not-a-pdf.pdf`: the text `this is not a pdf` (17 bytes).
 `packages/core/test/fixtures/edge/truncated.xlsx`: the first 100 bytes of `stueckliste.xlsx` (write with `[IO.File]::WriteAllBytes` from the first 100 bytes).
@@ -807,7 +807,7 @@ uv run --with pypdf python -c "from pypdf import PdfWriter; w=PdfWriter(); w.add
 
 (uv is available locally; this is a one-off dev step, the file is committed.)
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```powershell
 pnpm lint:fix; pnpm typecheck; pnpm vitest run tools/fixtures
@@ -826,7 +826,7 @@ git commit -m "chore(fixtures): deterministic Musterwerk supplier documents and 
 - Consumes: `decodeText`, `detectLang`, `rcRef`, types from Task 1.
 - Produces: `readCsv(file: InputFile): Page[]`, `readTxt(file: InputFile): Page[]`, `parseCsv(text: string, delimiter: string): string[][]`, `sniffDelimiter(text: string): ';' | ',' | '\t'`.
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
 
 `packages/core/test/ingest.csv.test.ts`:
 
@@ -894,12 +894,12 @@ describe('txt reader', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `pnpm vitest run packages/core/test/ingest.csv.test.ts packages/core/test/ingest.txt.test.ts`
 Expected: FAIL, missing exports.
 
-- [ ] **Step 3: Implement `csv.ts`**
+- [x] **Step 3: Implement `csv.ts`**
 
 ```ts
 import { detectLang } from './lang.js';
@@ -979,7 +979,7 @@ export function readCsv(file: InputFile): Page[] {
 }
 ```
 
-- [ ] **Step 4: Implement `txt.ts`**
+- [x] **Step 4: Implement `txt.ts`**
 
 ```ts
 import { detectLang } from './lang.js';
@@ -1005,7 +1005,7 @@ export function readTxt(file: InputFile): Page[] {
 
 Export both modules from `index.ts`.
 
-- [ ] **Step 5: Run tests, lint, commit**
+- [x] **Step 5: Run tests, lint, commit**
 
 Run: `pnpm vitest run packages/core/test/ingest.csv.test.ts packages/core/test/ingest.txt.test.ts` → PASS.
 
@@ -1025,7 +1025,7 @@ git add -A; git commit -m "feat(core): CSV and TXT readers with cell provenance"
 **Interfaces:**
 - Produces: `readXlsx(file: InputFile): Page[]`; `unzipOoxml(bytes): Record<string, string>` (path -> XML text, throws `IngestFailure('corrupt')`); `xmlParser(): XMLParser` configured once.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -1065,9 +1065,9 @@ describe('xlsx reader', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure** — `pnpm vitest run packages/core/test/ingest.xlsx.test.ts` → FAIL.
+- [x] **Step 2: Run to verify failure** — `pnpm vitest run packages/core/test/ingest.xlsx.test.ts` → FAIL.
 
-- [ ] **Step 3: Implement `ooxml.ts`**
+- [x] **Step 3: Implement `ooxml.ts`**
 
 ```ts
 import { XMLParser } from 'fast-xml-parser';
@@ -1124,7 +1124,7 @@ export function textOf(node: unknown): string {
 
 Check with context7 that `fast-xml-parser` 5.x still accepts `isArray`, `parseTagValue` and `textNodeName` in `XMLParser` options before writing this file.
 
-- [ ] **Step 4: Implement `xlsx.ts`**
+- [x] **Step 4: Implement `xlsx.ts`**
 
 ```ts
 import { detectLang } from './lang.js';
@@ -1250,7 +1250,7 @@ export function readXlsx(file: InputFile): Page[] {
 
 Simplify the shared-strings line while implementing: parse `sst` once into a local and iterate `si`.
 
-- [ ] **Step 5: Run tests, lint, commit**
+- [x] **Step 5: Run tests, lint, commit**
 
 `pnpm vitest run packages/core/test/ingest.xlsx.test.ts` → PASS.
 
@@ -1269,7 +1269,7 @@ git add -A; git commit -m "feat(core): XLSX reader over fflate and fast-xml-pars
 
 **Interfaces:** `readDocx(file: InputFile): Page[]`.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -1300,9 +1300,9 @@ describe('docx reader', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `docx.ts`** using `preserveOrder: true` so paragraphs and tables keep document order:
+- [x] **Step 3: Implement `docx.ts`** using `preserveOrder: true` so paragraphs and tables keep document order:
 
 ```ts
 import { XMLParser } from 'fast-xml-parser';
@@ -1370,7 +1370,7 @@ export function readDocx(file: InputFile): Page[] {
 }
 ```
 
-- [ ] **Step 4: Run tests, lint, commit** — `git commit -m "feat(core): DOCX reader with paragraph lines and table cells"`.
+- [x] **Step 4: Run tests, lint, commit** — `git commit -m "feat(core): DOCX reader with paragraph lines and table cells"`.
 
 ---
 
@@ -1383,7 +1383,7 @@ export function readDocx(file: InputFile): Page[] {
 **Interfaces:**
 - Produces: `readPdf(file: InputFile): Promise<Page[]>`; pure layout helpers `linesFromItems(items: TextItem[]): LayoutLine[]`, `tablesFromLines(lines: LayoutLine[]): { start: number; end: number; columns: number[] }[]` where `TextItem = { str: string; x: number; y: number; width: number; height: number }`, `LayoutLine = { y: number; segments: { text: string; x0: number; x1: number }[] }`.
 
-- [ ] **Step 1: Failing layout tests (pure, no PDF)**
+- [x] **Step 1: Failing layout tests (pure, no PDF)**
 
 ```ts
 import { linesFromItems, tablesFromLines } from '@passwerk/core';
@@ -1446,9 +1446,9 @@ describe('pdf reader', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `layout.ts`**
+- [x] **Step 3: Implement `layout.ts`**
 
 ```ts
 export interface TextItem { str: string; x: number; y: number; width: number; height: number }
@@ -1534,7 +1534,7 @@ export function rowCells(line: LayoutLine, columns: number[]): string[] {
 }
 ```
 
-- [ ] **Step 4: Implement `pdf.ts`**
+- [x] **Step 4: Implement `pdf.ts`**
 
 ```ts
 import { detectLang } from './lang.js';
@@ -1615,7 +1615,7 @@ declare module 'pdfjs-dist/legacy/build/pdf.mjs' {
 
 and make sure `tsconfig.json` `include` already covers `src/**/*.ts` (it does). If the package's `types/src/pdf.d.ts` needs DOM lib types, `skipLibCheck` is already on; do not add `"dom"` to `lib`.
 
-- [ ] **Step 5: Run tests, lint, commit**
+- [x] **Step 5: Run tests, lint, commit**
 
 `pnpm vitest run packages/core/test/ingest.layout.test.ts packages/core/test/ingest.pdf.test.ts` → PASS. Also `pnpm vitest run packages/core/test/browser-safety.test.ts` → PASS.
 
@@ -1631,7 +1631,7 @@ and make sure `tsconfig.json` `include` already covers `src/**/*.ts` (it does). 
 
 **Interfaces:** `ingest(files: InputFile[]): Promise<DocumentBundle>`, `detectFormat(file): { format: Format; contentType: string }`, `sha256Hex(bytes): Promise<string>`, `documentRefFromIngest(doc: IngestedDocument): DocumentRef` (needs the Task 12 `DocumentRef` fields; until then return `{ id, title, uri? }` plus the new optional fields typed loosely, and tighten in Task 12).
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -1683,9 +1683,9 @@ describe('ingest', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `ingest/index.ts`**
+- [x] **Step 3: Implement `ingest/index.ts`**
 
 ```ts
 import type { DocumentRef } from '../model/values.js';
@@ -1781,7 +1781,7 @@ export * from './ingest/types.js';
 export * from './ingest/xlsx.js';
 ```
 
-- [ ] **Step 4: Run, lint, commit** — `pnpm vitest run packages/core/test/ingest.test.ts` → PASS; `git commit -m "feat(core): ingest() dispatch with format detection, sha256 and DocumentRef seeds"`.
+- [x] **Step 4: Run, lint, commit** — `pnpm vitest run packages/core/test/ingest.test.ts` → PASS; `git commit -m "feat(core): ingest() dispatch with format detection, sha256 and DocumentRef seeds"`.
 
 ---
 
@@ -1797,7 +1797,7 @@ export * from './ingest/xlsx.js';
 - `splitValueUnit(raw: string): { number: string; unitRaw?: string; rest: string }`; `canonicalUnit(raw: string): { unit: string; factor?: string } | undefined`; `convertUnit(value: string, factor: string): string`; `unitFromLabel(label: string): string | undefined`; `compatibleUnits(a: string, b: string): boolean` (equal after canonicalisation)
 - `parseDate(raw: string): string | undefined`
 
-- [ ] **Step 1: Failing table-driven tests**
+- [x] **Step 1: Failing table-driven tests**
 
 `extract.normalize.test.ts`:
 
@@ -1952,9 +1952,9 @@ describe('parseDate', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `normalize.ts`**
+- [x] **Step 3: Implement `normalize.ts`**
 
 ```ts
 const STOP = new Set(['der', 'die', 'das', 'des', 'dem', 'den', 'ein', 'eine', 'the', 'a', 'an', 'of', 'in', 'von', 'im', 'and', 'und', 'für', 'fuer', 'for', 'pro', 'per']);
@@ -1978,7 +1978,7 @@ export function tokens(key: string): string[] {
 
 Note the `%` handling: a trailing `%` in a label (`Kobalt rec. %`) is a unit hint, removed here and read by `unitFromLabel`.
 
-- [ ] **Step 4: Implement `numbers.ts`**
+- [x] **Step 4: Implement `numbers.ts`**
 
 ```ts
 import type { Lang } from '../ingest/types.js';
@@ -2014,7 +2014,7 @@ export function parseNumber(raw: string, lang: Lang): { value: string; kind: 'de
 }
 ```
 
-- [ ] **Step 5: Implement `units.ts`**
+- [x] **Step 5: Implement `units.ts`**
 
 ```ts
 import { Decimal } from 'decimal.js';
@@ -2080,7 +2080,7 @@ export function unitFromLabel(label: string): string | undefined {
 
 `splitValueUnit` on `'13.746,43 EUR'` yields unitRaw `EUR`, which `canonicalUnit` rejects: the extractor then keeps `rawUnit` without `unit`.
 
-- [ ] **Step 6: Implement `dates.ts`**
+- [x] **Step 6: Implement `dates.ts`**
 
 ```ts
 const MONTHS: Record<string, number> = {
@@ -2117,7 +2117,7 @@ export function parseDate(raw: string): string | undefined {
 }
 ```
 
-- [ ] **Step 7: Export from `index.ts`, run all four test files, lint, commit**
+- [x] **Step 7: Export from `index.ts`, run all four test files, lint, commit**
 
 ```ts
 export * from './extract/dates.js';
@@ -2138,7 +2138,7 @@ export * from './extract/units.js';
 **Interfaces:**
 - Produces: Zod `Fact`, `TableFact`, `DocumentSummary`, `FactSet` (spec 3.3, plus `Cell.kind` awareness) and `extractFacts(bundle: DocumentBundle): FactSet`.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -2209,9 +2209,9 @@ describe('extractFacts', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `extract/types.ts`**
+- [x] **Step 3: Implement `extract/types.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -2256,7 +2256,7 @@ export const FactSet = z.object({ facts: z.array(Fact), tables: z.array(TableFac
 export type FactSet = z.infer<typeof FactSet>;
 ```
 
-- [ ] **Step 4: Implement `extract/facts.ts`**
+- [x] **Step 4: Implement `extract/facts.ts`**
 
 ```ts
 import type { Cell, DocumentBundle, IngestedDocument, Lang, Page, Table } from '../ingest/types.js';
@@ -2376,7 +2376,7 @@ While implementing, replace the garbled `pairLike` condition above with this rul
 
 `kv` deduplication with `sheet-pair`: the PDF's key-value block forms a two-column table too; the `seen` key (labelKey, raw, rowLabel) drops the second occurrence, and since lines are processed before tables the `kv` fact wins.
 
-- [ ] **Step 5: Export, run, lint, commit**
+- [x] **Step 5: Export, run, lint, commit**
 
 ```ts
 export * from './extract/facts.js';
@@ -2399,7 +2399,7 @@ export * from './extract/types.js';
 - `dice(a: string[], b: string[]): number`, `labelScore(labelKey: string, entry: IndexEntry): number` (already multiplied by weight), `unitFactor(attributeUnit: string | null, fact: Fact): { factor: number; check: 'match' | 'converted' | 'missing' | 'mismatch' | 'n/a' }`, `kindFactor(valueKind: ValueKind, fact: Fact): { factor: number; check: 'ok' | 'mismatch' | 'n/a' }`, `explain(checks, lang): string`
 - Zod `MappingProposal`, `MappingDecision`, `ApplyResult` per spec 3.4.
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
 
 `mapping.index.test.ts`:
 
@@ -2471,9 +2471,9 @@ describe('scorer', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `mapping/types.ts`**
+- [x] **Step 3: Implement `mapping/types.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -2521,7 +2521,7 @@ export const ApplyResult = z.object({ draft: PassportDraft, applied: z.number().
 export type ApplyResult = z.infer<typeof ApplyResult>;
 ```
 
-- [ ] **Step 4: Implement `mapping/synonymIndex.ts`**
+- [x] **Step 4: Implement `mapping/synonymIndex.ts`**
 
 ```ts
 import { attributes, getTemplateElement } from '@passwerk/rules';
@@ -2582,7 +2582,7 @@ export function entriesFor(attributeId: string): IndexEntry[] {
 
 The `mapping.index.test.ts` expectation "some entry has origin name and weight 1" fails if an attribute's name key coincides with a synonym key at a higher weight; the dedupe keeps the higher weight (`name`), so the assertion holds. The `id` assertion can fail if the split id equals the English name (then the `name` entry wins); if that happens for some attribute, change the test to accept `origin in ['id','name']` for that check.
 
-- [ ] **Step 5: Implement `mapping/scorer.ts`**
+- [x] **Step 5: Implement `mapping/scorer.ts`**
 
 ```ts
 import type { ValueKind } from '@passwerk/rules';
@@ -2656,7 +2656,7 @@ export function explain(label: string, checks: MappingChecks, lang: 'de' | 'en')
 }
 ```
 
-- [ ] **Step 6: Export, run, lint, commit**
+- [x] **Step 6: Export, run, lint, commit**
 
 ```ts
 export * from './mapping/scorer.js';
@@ -2676,7 +2676,7 @@ export * from './mapping/types.js';
 
 **Interfaces:** `suggestMappings(facts: FactSet, options?: { category?: BatteryCategory; minConfidence?: number }): MappingProposal[]`. Composite entry points table `COMPOSITE_ENTRY: Record<string, (fact) => { path: string; value: unknown }>` with `manufacturerInformation` -> `name.<lang>` and `batteryChemistry` -> `shortName`.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { type FactSet, suggestMappings } from '@passwerk/core';
@@ -2743,9 +2743,9 @@ describe('suggestMappings', () => {
 
 (Make the last test `async` for the dynamic import.)
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `propose.ts`**
+- [x] **Step 3: Implement `propose.ts`**
 
 ```ts
 import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rules';
@@ -2815,7 +2815,7 @@ export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): M
 
 Note: `checks.label` stores the weighted label score (spec: "best label similarity"). Keep the weighted value so `confidence = label x unit x kind` is verifiable from `checks`.
 
-- [ ] **Step 4: Export, run, lint, commit** — `export * from './mapping/propose.js';` then `git commit -m "feat(core): suggestMappings over the synonym index with unit and kind checks"`.
+- [x] **Step 4: Export, run, lint, commit** — `export * from './mapping/propose.js';` then `git commit -m "feat(core): suggestMappings over the synonym index with unit and kind checks"`.
 
 ---
 
@@ -2827,7 +2827,7 @@ Note: `checks.label` stores the weighted label score (spec: "best label similari
 
 **Interfaces:** `newDraft(meta: PassportMeta): PassportDraft`; `applyMappings(draft: PassportDraft, decisions: MappingDecision[]): ApplyResult`; `setPath(obj, path, value)` helper.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```ts
 import { applyMappings, newDraft, type PassportMeta, validateSchema } from '@passwerk/core';
@@ -2885,9 +2885,9 @@ describe('applyMappings', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `apply.ts`**
+- [x] **Step 3: Implement `apply.ts`**
 
 ```ts
 import { getAttribute } from '@passwerk/rules';
@@ -2966,7 +2966,7 @@ export function applyMappings(draft: PassportDraft, decisions: MappingDecision[]
 
 `path` decisions always merge (a composite is built incrementally) and never conflict; a `path` decision that changes an already-set sub-field overwrites it. Document this in the JSDoc.
 
-- [ ] **Step 4: Export, run, lint, commit** — `export * from './mapping/apply.js';` then `git commit -m "feat(core): newDraft and applyMappings with conflict detection"`.
+- [x] **Step 4: Export, run, lint, commit** — `export * from './mapping/apply.js';` then `git commit -m "feat(core): newDraft and applyMappings with conflict detection"`.
 
 ---
 
@@ -2976,7 +2976,7 @@ export function applyMappings(draft: PassportDraft, decisions: MappingDecision[]
 - Test: `packages/core/test/mapping.recall.test.ts`
 - Modify (data only, if needed): `packages/rules/kb/attributes/*.json` synonyms
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -3017,7 +3017,7 @@ describe('Phase 4 definition of done', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and read the misses**
+- [x] **Step 2: Run it and read the misses**
 
 Run: `pnpm vitest run packages/core/test/mapping.recall.test.ts`
 
@@ -3025,11 +3025,11 @@ For each miss, decide: (a) the label is a legitimate supplier wording missing fr
 
 For each confident wrong proposal: usually a synonym that is too generic (`"masse"` alone matching several attributes); tighten the KB synonym or accept that two attributes share a label and rely on unit/kind (an `ambiguous` result is fine as long as the confidence stays below 0.9).
 
-- [ ] **Step 3: Run the rules tests after any KB change**
+- [x] **Step 3: Run the rules tests after any KB change**
 
 Run: `pnpm vitest run packages/rules` (the attribute tests enforce DE and EN, lower-case, at least two synonyms).
 
-- [ ] **Step 4: Commit** — `git commit -m "test(core): Phase 4 recall gate on the Musterwerk fixtures"` (and `chore(rules): synonyms ...` for KB edits, separately).
+- [x] **Step 4: Commit** — `git commit -m "test(core): Phase 4 recall gate on the Musterwerk fixtures"` (and `chore(rules): synonyms ...` for KB edits, separately).
 
 ---
 
@@ -3042,7 +3042,7 @@ Run: `pnpm vitest run packages/rules` (the attribute tests enforce DE and EN, lo
 
 **Interfaces:** `emitHandoverDocumentation(draft: PassportDraft, ids: EmitIds): aas.types.Submodel | null`; `DOCUMENT_ATTRIBUTES: readonly string[]` (every KB attribute with `valueKind === 'document'`, KB order).
 
-- [ ] **Step 1: Extend `DocumentRef`**
+- [x] **Step 1: Extend `DocumentRef`**
 
 ```ts
 export const DocumentClassification = z.object({
@@ -3067,7 +3067,7 @@ export const DocumentRef = z.object({
 
 Remove the temporary cast in `documentRefFromIngest`.
 
-- [ ] **Step 2: Failing emitter test**
+- [x] **Step 2: Failing emitter test**
 
 ```ts
 import { emitAasJson, emitHandoverDocumentation, getSample, resolveIds, validate, type PassportDraft, PassportDraft as Draft } from '@passwerk/core';
@@ -3105,7 +3105,7 @@ describe('emitHandoverDocumentation (IDTA 02035-2)', () => {
 });
 ```
 
-- [ ] **Step 3: Implement the emitter**
+- [x] **Step 3: Implement the emitter**
 
 ```ts
 import type * as aas from '@aas-core-works/aas-core3.0-typescript';
@@ -3166,7 +3166,7 @@ export function emitHandoverDocumentation(draft: PassportDraft, ids: EmitIds): a
 
 Check `getTemplateElement('2/Documents/Document/DocumentVersions/DocumentVersion/Language/[0]')` resolves (the catalogue path uses `[0]`); if the catalogue stores a different placeholder, use exactly the stored path. Wire into `buildEnvironment` after `emitNameplate`. Check that `submodelFromTemplate(2, ...)` finds the template's `idShort` `HandoverDocumentation`.
 
-- [ ] **Step 4: L1 warning for unclassified documents**
+- [x] **Step 4: L1 warning for unclassified documents**
 
 `messages.ts`:
 
@@ -3199,7 +3199,7 @@ it('warns for documents without classification (PW-L1-DOCUMENT-UNCLASSIFIED)', (
 });
 ```
 
-- [ ] **Step 5: Classify every document in the three valid samples; add the broken sample**
+- [x] **Step 5: Classify every document in the three valid samples; add the broken sample**
 
 In `ev-valid.json`, `lmt-valid.json`, `industrial-valid.json`, every `DocumentRef` gets:
 
@@ -3223,7 +3223,7 @@ and the sample `$comment` gains: "Document classifications use the example the I
 
 Add a `golden.test.ts` assertion that this sample's verdict is `valid_with_warnings`.
 
-- [ ] **Step 6: Run everything, update snapshots, oracle**
+- [x] **Step 6: Run everything, update snapshots, oracle**
 
 ```powershell
 pnpm vitest run packages/core -u
@@ -3233,7 +3233,7 @@ pnpm oracle
 
 `pnpm oracle` needs uv; if it does not run on Windows, note it and rely on CI (ADR D-012). Expected: 16/16 parity (8 samples x 2 formats). Commit `docs/CONFORMANCE.md` and the badge only if regenerated locally.
 
-- [ ] **Step 7: Commit** — `git commit -m "feat(core): IDTA 02035-2 Handover Documentation from classified DocumentRefs; L1 warning for unclassified documents"`.
+- [x] **Step 7: Commit** — `git commit -m "feat(core): IDTA 02035-2 Handover Documentation from classified DocumentRefs; L1 warning for unclassified documents"`.
 
 ---
 
@@ -3242,7 +3242,7 @@ pnpm oracle
 **Files:**
 - Modify: `packages/core/test/sovereignty.test.ts`, `docs/DECISIONS.md` (D-016, D-017), `AGENTS.md` (status), `packages/core/src/index.ts` header comment, `README.md` (tools table if it lists phases), `docs/superpowers/plans/2026-09-04-ingest-extract-mapping.md` (tick boxes)
 
-- [ ] **Step 1: Extend the sovereignty test**
+- [x] **Step 1: Extend the sovereignty test**
 
 Inside the existing `it('loading and exercising the whole public surface ...')`, after the samples loop:
 
@@ -3263,7 +3263,7 @@ for (const doc of bundle.documents) core.documentRefFromIngest(doc);
 
 Run `pnpm vitest run packages/core/test/sovereignty.test.ts` → PASS with `attempts` still `[]`. pdfjs must not fetch fonts or worker scripts: if an attempt is recorded, pass `standardFontDataUrl` pointing nowhere is not the fix; find which API was called and disable it through `getDocument` options (`useWorkerFetch: false`, `disableRange: true`, `disableStream: true`).
 
-- [ ] **Step 2: ADRs**
+- [x] **Step 2: ADRs**
 
 Append to `docs/DECISIONS.md`:
 
@@ -3300,11 +3300,11 @@ and content type from ingest; `DocumentDomainId` defaults to the passport id.
 bundled later as data with default classes per document attribute without changing code.
 ```
 
-- [ ] **Step 3: Status in `AGENTS.md`**
+- [x] **Step 3: Status in `AGENTS.md`**
 
 Replace the "Next: Phase 4" bullet with a "Phase 4 (ingest, extract, mapping, part 2): done." bullet summarising: readers for five formats, `extractFacts`, `suggestMappings` with the KB synonym index, `applyMappings`, Musterwerk fixtures with the recall gate, part 2 emitter (ADRs D-016, D-017), oracle set 16 files. Add "Next: Phase 5" (gap report, obligations, explain, L4).
 
-- [ ] **Step 4: Final verification and PR**
+- [x] **Step 4: Final verification and PR**
 
 ```powershell
 pnpm check

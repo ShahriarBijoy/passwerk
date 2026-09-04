@@ -1,7 +1,10 @@
 /**
  * @passwerk/core: MCP-free library for EU Digital Battery Passports.
  * Phase 2: PassportDraft model (L1), AAS JSON + AASX emitters for IDTA 02035-1/-3/-6,
- * L2 (aas-core verification) and L3 (template conformance). Browser-safe (ADR D-006).
+ * L2 (aas-core verification) and L3 (template conformance).
+ * Phase 3b: emitters for parts 4, 5 and 7.
+ * Phase 4: ingest (PDF, XLSX, CSV, DOCX, TXT), extract and mapping, and the part 2
+ * (Handover Documentation) emitter. Browser-safe (ADR D-006).
  */
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
