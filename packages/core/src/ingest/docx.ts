@@ -47,13 +47,18 @@ export function readDocx(file: InputFile): Page[] {
   for (const node of children) {
     const t = tag(node);
     if (t === 'w:p') {
-      const text = paragraphText(node['w:p'] as Ordered[]).trim();
-      if (text.length === 0) continue;
-      lines.push({
-        text,
-        segments: segmentsOf(text),
-        source: { file: file.name, page: 1, note: `line ${lines.length + 1}` },
-      });
+      // A `w:br` line break inside a paragraph starts a new Line (Line.text never contains a
+      // newline); a table cell's paragraphs are still joined with '\n', unaffected by this.
+      const text = paragraphText(node['w:p'] as Ordered[]);
+      for (const part of text.split('\n')) {
+        const trimmed = part.trim();
+        if (trimmed.length === 0) continue;
+        lines.push({
+          text: trimmed,
+          segments: segmentsOf(trimmed),
+          source: { file: file.name, page: 1, note: `line ${lines.length + 1}` },
+        });
+      }
     } else if (t === 'w:tbl') {
       const index = tables.length + 1;
       const rows: Cell[][] = [];

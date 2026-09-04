@@ -29,6 +29,12 @@ describe('detectLang', () => {
   it('defaults to German on a tie', () => {
     expect(detectLang('94,5 Ah')).toBe('de');
   });
+  it('detects English technical vocabulary without stop words', () => {
+    expect(detectLang('Rated capacity 94.5 Ah; Nominal voltage 355.2 V')).toBe('en');
+  });
+  it('detects German technical vocabulary without stop words', () => {
+    expect(detectLang('Nennkapazität 94,5 Ah; Batteriemasse 412,7 kg')).toBe('de');
+  });
 });
 
 describe('cell refs', () => {

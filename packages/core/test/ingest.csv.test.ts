@@ -23,11 +23,7 @@ describe('csv reader', () => {
     const pages = readCsv(file('datasheet-en.csv'));
     expect(pages).toHaveLength(1);
     const page = pages[0]!;
-    // The fixture's content has zero DE and zero EN stop-word hits (all header/unit tokens,
-    // e.g. "Parameter", "Ah", "kg"), so detectLang's documented tie-break to 'de' applies
-    // (see ingest.text.test.ts "defaults to German on a tie"). Deviation from the brief's
-    // expected 'en', which does not match the fixture's actual content.
-    expect(page.lang).toBe('de');
+    expect(page.lang).toBe('en');
     expect(page.textless).toBe(false);
     const table = page.tables[0]!;
     expect(table.rows[0]!.map((c) => c.text)).toEqual(['Parameter', 'Value', 'Unit']);
@@ -46,5 +42,22 @@ describe('csv reader', () => {
   it('an empty file yields one textless page', () => {
     const pages = readCsv({ name: 'empty.csv', bytes: new Uint8Array() });
     expect(pages[0]).toMatchObject({ textless: true, lines: [], tables: [] });
+  });
+  it('keeps ragged rows, short or long, with correct cell provenance', () => {
+    expect(parseCsv('a;b;c\n1;2', ';')).toEqual([
+      ['a', 'b', 'c'],
+      ['1', '2'],
+    ]);
+    const pages = readCsv({ name: 'ragged.csv', bytes: new TextEncoder().encode('a;b;c\n1;2') });
+    const table = pages[0]!.tables[0]!;
+    expect(table.rows).toHaveLength(2);
+    expect(table.rows[0]!.map((c) => c.text)).toEqual(['a', 'b', 'c']);
+    expect(table.rows[1]!).toHaveLength(2);
+    expect(table.rows[1]!.map((c) => c.text)).toEqual(['1', '2']);
+    expect(table.rows[1]![1]).toMatchObject({
+      text: '2',
+      ref: 'R2C2',
+      source: { file: 'ragged.csv', page: 1, cell: 'R2C2' },
+    });
   });
 });
