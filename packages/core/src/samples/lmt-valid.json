@@ -1,5 +1,5 @@
 {
-  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Light means of transport battery without a carbon footprint submodel. Document classifications use the example the IDTA 02035-2 template documents (02-04, VDI2770:2020); real passports need the class matching each document (ADR D-017, verify).",
+  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Light means of transport battery without a carbon footprint submodel. Document classifications use the example the IDTA 02035-2 template documents (02-04, VDI2770:2020); real passports need the class matching each document (ADR D-017, verify). className.en (\"Certificates, declarations\") is the template's own example value; className.de (\"Zertifikate, Erklärungen\") is our translation of it, not a value the template or VDI 2770 documents (verify).",
   "meta": {
     "schemaVersion": "1.0",
     "category": "LMT",
