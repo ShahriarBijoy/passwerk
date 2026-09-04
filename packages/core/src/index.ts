@@ -25,8 +25,10 @@ export {
 } from './emit/submodels/shared.js';
 export * from './emit/submodels/technicalData.js';
 export * from './extract/dates.js';
+export * from './extract/facts.js';
 export * from './extract/normalize.js';
 export * from './extract/numbers.js';
+export * from './extract/types.js';
 export * from './extract/units.js';
 export * from './ingest/csv.js';
 export * from './ingest/docx.js';
