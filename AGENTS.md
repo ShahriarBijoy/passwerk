@@ -40,7 +40,7 @@ Never import upward.
 ## Commands
 
 ```sh
-pnpm install            # Node >= 20 (see .nvmrc), pnpm 10
+pnpm install            # Node >= 22.13 (see .nvmrc), pnpm 10
 pnpm build              # tsc -b across all packages
 pnpm test               # vitest, all packages
 pnpm lint               # biome check

@@ -260,3 +260,16 @@ and content type from ingest; `DocumentDomainId` defaults to the passport id.
 
 **Consequences.** Seven of seven submodels are emitted. A verified VDI 2770 table can be
 bundled later as data with default classes per document attribute without changing code.
+
+## D-018: Node 22.13 is the floor (2026-09-04)
+
+**Context.** pdfjs-dist 6.x declares `engines: node >=22.13.0 || >=24` and uses
+`Promise.withResolvers`, which Node 20 lacks; the Phase 4 CI run failed on every Node 20
+job. Node 20 reached end of life on 30 April 2026.
+
+**Decision.** Every package declares `engines.node >=22.13`, `.nvmrc` stays at 22, and CI
+tests Node 22 and 24 on Linux, macOS and Windows. No polyfill is added to `core`.
+
+**Consequences.** The build plan's "Node 20 & 22" portability row becomes "22 & 24".
+Browsers older than the `Promise.withResolvers` baseline (Chrome 119, Safari 17.4,
+Firefox 121) cannot run the PDF reader; the Phase 7a web app states that requirement.

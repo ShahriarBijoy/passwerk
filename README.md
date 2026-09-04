@@ -46,7 +46,7 @@ run with 16/16 verdict parity (`docs/CONFORMANCE.md`), and a sovereignty test pl
 
 ## Development
 
-Requires Node 20 or newer and pnpm 10.
+Requires Node 22.13 or newer and pnpm 10.
 
 ```sh
 pnpm install

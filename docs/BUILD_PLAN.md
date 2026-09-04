@@ -64,7 +64,7 @@ The blueprint is `kontor-mcp` (e-invoicing): same monorepo shape, same sovereign
 | Conformance | 100 % of golden passports pass `aas-test-engines`; 0 diff against IDTA 02035 template structure |
 | Determinism | Same input → byte-identical output (stable key ordering, fixed timestamps in tests) |
 | Privacy | Nothing stored, nothing logged by default (`PASSWERK_LOG_PAYLOADS=off`) |
-| Portability | Linux, macOS, Windows CI; Node 20 & 22 |
+| Portability | Linux, macOS, Windows CI; Node 22 & 24 (Node 20 is EOL, ADR D-018) |
 | Agent-agnostic | Works in Claude Code, Codex CLI, OpenCode, Cursor, Claude Desktop, MCP Inspector |
 
 ---
