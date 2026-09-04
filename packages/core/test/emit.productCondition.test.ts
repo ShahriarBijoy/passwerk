@@ -79,7 +79,10 @@ describe('emitProductCondition', () => {
     ]);
     expect(val(child(t, 'MeasuredTemp'))).toBe('23.5');
     expect(val(child(t, 'TimeExtremeLowTemp'))).toBe('3');
-    expect(val(child(t, 'LastUpdate'))).toBe('2026-08-31T06:00:00Z');
+    // TimeExtremeHighTemp (not the last field in declaration order) carries the latest
+    // recordedAt of the block, so this proves the fold sorts rather than taking the last
+    // declared field or only temperatureInformation's own stamp.
+    expect(val(child(t, 'LastUpdate'))).toBe('2026-09-02T21:45:00Z');
   });
 
   it('maps remaining power capability to the dynamic block plus LastUpdate', () => {

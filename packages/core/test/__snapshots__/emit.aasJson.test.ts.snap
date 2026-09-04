@@ -9162,7 +9162,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-08-31T06:00:00Z",
+              "value": "2026-09-02T21:45:00Z",
               "valueType": "xs:dateTime"
             }
           ]
