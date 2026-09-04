@@ -230,12 +230,17 @@ or idShort is typed by hand. The oracle set grows to 14 files.
 **Context.** Core must run in the browser (D-006) and offline (D-013). SheetJS is unmaintained
 on npm, exceljs needs Node streams, and every OCR engine ships models or fetches them.
 
-**Decision.** `ingest(files)` takes `{ name, bytes }` only; `cli` and `server` read paths.
-PDF text and glyph positions come from the pdfjs-dist legacy build, loaded lazily, with
-rendering, eval, font faces and worker fetches disabled; lines and tables are reconstructed
-from positions. XLSX and DOCX are read by hand from the OOXML parts with fflate and
-fast-xml-parser. CSV sniffs `;`, `,` and tab and falls back to windows-1252. A page without a
-text layer is reported as `textless`; there is no OCR.
+**Decision.** `ingest(files, options?)` takes `{ name, bytes }` only; `cli` and `server` read
+paths. PDF text and glyph positions come from the pdfjs-dist legacy build, loaded lazily,
+with `verbosity: 0`, `disableFontFace: true`, `useSystemFonts: false` and `useWorkerFetch:
+false`; no cMap, standard-font or wasm URL is set, so pdfjs's binary-data factory throws
+before any transport is attempted. (`isEvalSupported` no longer exists in pdfjs-dist 6.x.)
+Lines and tables are reconstructed from glyph positions. XLSX and DOCX are read by hand from
+the OOXML parts with fflate and fast-xml-parser. CSV sniffs `;`, `,` and tab and falls back to
+windows-1252. A page without a text layer is reported as `textless`; there is no OCR. Outside
+Node, pdfjs also needs `GlobalWorkerOptions.workerSrc`; `readPdf(file, { pdf: { workerSrc } })`
+and `ingest(files, { pdf: { workerSrc } })` set it when given, Node ignores it, and a browser
+caller must supply it (Phase 7a).
 
 **Consequences.** One dependency of a few megabytes (pdfjs) and one small XML parser; no
 native modules. Provenance is exact: sheet cell, table cell or line number per fact.
