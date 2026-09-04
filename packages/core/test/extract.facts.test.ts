@@ -154,18 +154,61 @@ describe('extractFacts', () => {
     });
   });
   it('header-cell facts without a row label use the row number to avoid a dedupe collision', () => {
-    // Both material names contain a digit (NMC811, LFP-1), so neither row gets a row label;
-    // without folding the row number into the dedupe key, the two identical
-    // ('kobalt rec', '0', '') keys would collapse to a single fact.
+    // Both first cells are pure numbers ('1', '2'), which is never a row label (unlike a
+    // digit-bearing material name such as "NMC811" -- see the isLabelCell tests below), so
+    // neither row gets a row label; without folding the row number into the dedupe key, the two
+    // identical ('kobalt rec', '0', '') keys would collapse to a single fact.
     const table = mkTable(1, [
-      ['Material', 'Kobalt rec. %'],
-      ['NMC811', '0'],
-      ['LFP-1', '0'],
+      ['Position', 'Kobalt rec. %'],
+      ['1', '0'],
+      ['2', '0'],
     ]);
     const { facts } = extractFacts(mkBundle([table]));
     const kobalt = facts.filter((f) => f.label === 'Kobalt rec. %');
     expect(kobalt).toHaveLength(2);
     expect(kobalt.every((f) => f.rowLabel === undefined)).toBe(true);
+  });
+  it('a row label may contain a digit: a chemistry/part name folds into the header-cell labelKey', () => {
+    const table = mkTable(
+      1,
+      [
+        ['Material', 'Masse [kg]'],
+        ['Kathodenaktivmaterial NMC811', '118.4'],
+      ],
+      [
+        [undefined, undefined],
+        [undefined, 'number'],
+      ],
+    );
+    const { facts } = extractFacts(mkBundle([table]));
+    const masse = facts.find((f) => f.label === 'Masse [kg]');
+    expect(masse).toMatchObject({
+      shape: 'header-cell',
+      rowLabel: 'Kathodenaktivmaterial NMC811',
+      labelKey: 'kathodenaktivmaterial nmc811 masse',
+      value: '118.4',
+      unit: 'kg',
+    });
+  });
+  it('a digit-bearing label still yields sheet-pair facts in a genuine pair-like table', () => {
+    const table = mkTable(1, [
+      ['NMC811', '94.5'],
+      ['LiPF6', '22.1'],
+    ]);
+    const { facts } = extractFacts(mkBundle([table]));
+    expect(facts.filter((f) => f.shape === 'sheet-pair')).toHaveLength(2);
+    expect(find(facts, 'NMC811')).toMatchObject({ shape: 'sheet-pair', value: '94.5' });
+    expect(find(facts, 'LiPF6')).toMatchObject({ shape: 'sheet-pair', value: '22.1' });
+  });
+  it('a numeric first column still has no row labels', () => {
+    const table = mkTable(1, [
+      ['Nr', 'Wert'],
+      ['1', '94,5'],
+      ['2', '12'],
+    ]);
+    const { facts } = extractFacts(mkBundle([table]));
+    expect(facts.length).toBeGreaterThan(0);
+    expect(facts.every((f) => f.rowLabel === undefined)).toBe(true);
   });
   it('a text header row with no data rows yields no facts', () => {
     const table = mkTable(1, [['Kenngröße', 'Wert', 'Einheit']]);
@@ -204,14 +247,23 @@ describe('extractFacts', () => {
     // BOM sheet has Material in column A. Corrected accordingly (see task-9-report.md).
     const bom = tables.find((t) => t.headers[0] === 'Material')!;
     expect(bom.rows[0]).toEqual(['Kathodenaktivmaterial NMC811', '-', '118.4', '12.5']);
+    // "Kathodenaktivmaterial NMC811" contains a digit but is not a number, so it IS a row label
+    // (isLabelCell tests a cell's content, not whether it merely contains a digit); the
+    // header-cell fact's labelKey folds it in, so this per-component cobalt share doesn't
+    // collide, under a bare "kobalt rec" labelKey, with the pack-level recycled-content
+    // attributes' synonyms.
     expect(
       facts.find(
         (f) =>
           f.label === 'Kobalt rec. %' &&
-          f.rowLabel === undefined &&
+          f.rowLabel === 'Kathodenaktivmaterial NMC811' &&
           f.source.cell === 'Stückliste!D2',
       ),
-    ).toMatchObject({ value: '12.5', unit: '%' });
+    ).toMatchObject({
+      value: '12.5',
+      unit: '%',
+      labelKey: 'kathodenaktivmaterial nmc811 kobalt rec',
+    });
   });
   it('CSV in English: thousands and decimal handled per page language', () => {
     const { facts } = extractFacts(bundle);

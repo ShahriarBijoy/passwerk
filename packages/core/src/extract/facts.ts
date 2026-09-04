@@ -79,19 +79,36 @@ export function interpretValue(
   return out;
 }
 
-/** A non-empty, non-numeric cell: usable as a row label or as a pair-like table's first column. */
-function isLabelCell(c: Cell | undefined): c is Cell {
-  return !!c && c.text.length > 0 && !hasDigit(c.text) && c.kind !== 'number';
+/** A non-empty cell that isn't a number or a date: usable as a row label or as a pair-like
+ * table's first column. A digit alone doesn't disqualify a cell: chemistry/part names like
+ * "NMC811", "LiPF6" or "CAS 7782-42-5" are labels, not numbers, so the test is whether the
+ * cell parses as a number (or is typed as one), not whether it merely contains a digit. */
+function isLabelCell(c: Cell | undefined, lang: Lang): c is Cell {
+  return (
+    !!c &&
+    c.text.length > 0 &&
+    c.kind !== 'number' &&
+    c.kind !== 'date' &&
+    parseNumber(c.text, lang) === undefined
+  );
+}
+
+/** A stricter "this is not a value" test than `isLabelCell`, used only to decide whether a row
+ * is a text header row: on top of `isLabelCell`'s number/date exclusion, a cell that is itself a
+ * date written as text (e.g. an XLSX mirror line) or a URI (e.g. a passport link) is a value,
+ * not a header label -- unlike a bare digit, neither is ambiguous with a label like "NMC811". */
+function looksLikeHeaderCell(c: Cell, lang: Lang): boolean {
+  return (
+    c.text.length === 0 ||
+    (isLabelCell(c, lang) && parseDate(c.text) === undefined && !isUri(c.text))
+  );
 }
 
 /** The first row is all-text with at least two populated cells (candidate column headers). No
  * width floor: a width-2 table can be a header table too (e.g. a "Nr | Wert" table). */
-function isTextHeaderRow(header: Cell[]): boolean {
+function isTextHeaderRow(header: Cell[], lang: Lang): boolean {
   const populated = header.filter((c) => c.text.length > 0);
-  return (
-    header.every((c) => c.text.length === 0 || (!hasDigit(c.text) && c.kind !== 'number')) &&
-    populated.length >= 2
-  );
+  return header.every((c) => looksLikeHeaderCell(c, lang)) && populated.length >= 2;
 }
 
 function tableDrafts(
@@ -105,14 +122,21 @@ function tableDrafts(
   if (rows.length === 0) return out;
   const width = Math.max(...rows.map((r) => r.filter((c) => c.text.length > 0).length));
   const header = rows[0] as Cell[];
-  const headerIsText = isTextHeaderRow(header);
+  const headerIsText = isTextHeaderRow(header, page.lang);
   const dataRows = headerIsText ? rows.slice(1) : rows;
   // A text header row with nothing beneath it (just a header, no data) yields no facts at all.
   if (headerIsText && dataRows.length === 0) return out;
 
   const pairLike =
     (width === 2 || width === 3) &&
-    rows.every((r) => isLabelCell(r[0])) &&
+    rows.every((r) => isLabelCell(r[0], page.lang)) &&
+    // A width-2 table with a genuine text header (e.g. "Material | Masse [kg]") describes real
+    // columns applying to every row below it, so a single non-numeric-labelled data row must
+    // not be mistaken for a one-off label:value pair -- that would fold the whole table into one
+    // fact and lose the column name. Width 3's extra unit-column check below already guards the
+    // equivalent case (Leistung, the CSV) by requiring dataRows' third column to be a real unit,
+    // so headerIsText and pairLike may coexist there; width 2 has no such extra signal.
+    (width !== 2 || !headerIsText) &&
     (width !== 3 ||
       dataRows.every((r) => {
         const unitCell = r[2];
@@ -159,7 +183,7 @@ function tableDrafts(
     // facts too would just duplicate them under worse labels.
     if (!pairLike) {
       dataRows.forEach((r, ri) => {
-        const rowLabel = isLabelCell(r[0]) ? r[0]?.text : undefined;
+        const rowLabel = isLabelCell(r[0], page.lang) ? r[0]?.text : undefined;
         const rowNumber = ri + 1;
         r.forEach((cell, ci) => {
           const columnHeader = headers[ci];
