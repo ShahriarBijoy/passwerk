@@ -1,6 +1,7 @@
 import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rules';
 import { integral } from '../emit/submodels/shared.js';
 import type { Fact, FactSet } from '../extract/types.js';
+import { valueSchemaFor } from '../model/values.js';
 import { explain, kindFactor, labelScore, unitFactor } from './scorer.js';
 import { type IndexEntry, synonymIndex } from './synonymIndex.js';
 import type { MappingChecks, MappingProposal } from './types.js';
@@ -16,7 +17,14 @@ export const COMPOSITE_ENTRY: Record<string, (fact: Fact) => { path: string; val
   batteryChemistry: (f) => ({ path: 'shortName', value: f.value }),
 };
 
-function proposalValue(
+/**
+ * Shapes a fact's raw text into the value a proposal would carry, or `undefined` when the
+ * shaped value fails the attribute's own value schema (`applyMappings` would otherwise throw
+ * on acceptance) or, for `boolean`, when the fact was not itself extracted as a boolean.
+ * Exported for direct unit testing of value shapes the knowledge base does not yet exercise
+ * end to end (no attribute is currently `boolean`).
+ */
+export function proposalValue(
   attribute: Attribute,
   fact: Fact,
 ): { value: unknown; path?: string } | undefined {
@@ -31,13 +39,17 @@ function proposalValue(
     case 'graphic':
       return undefined;
     case 'boolean':
-      return { value: v === 'true' };
-    case 'integer':
-      return { value: integral(v) };
-    case 'multilingualText':
-      return { value: { [fact.lang]: v } };
+      return fact.kind === 'boolean' ? { value: v === 'true' } : undefined;
+    case 'integer': {
+      const value = integral(v);
+      return valueSchemaFor('integer').safeParse(value).success ? { value } : undefined;
+    }
+    case 'multilingualText': {
+      const value = { [fact.lang]: v };
+      return valueSchemaFor('multilingualText').safeParse(value).success ? { value } : undefined;
+    }
     default:
-      return { value: v };
+      return valueSchemaFor(attribute.valueKind).safeParse(v).success ? { value: v } : undefined;
   }
 }
 

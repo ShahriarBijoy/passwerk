@@ -1,4 +1,5 @@
-import { type FactSet, suggestMappings } from '@passwerk/core';
+import { type FactSet, proposalValue, suggestMappings } from '@passwerk/core';
+import type { Attribute } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
 const facts = (list: Partial<FactSet['facts'][number]>[]): FactSet => ({
@@ -207,5 +208,44 @@ describe('suggestMappings', () => {
     expect(filtered.some((p) => p.attributeId === 'stateOfCharge')).toBe(
       soc.applicability.INDUSTRIAL_GT_2KWH.status !== 'not_displayed',
     );
+  });
+  it('never proposes a value the attribute schema would reject', () => {
+    const cases: { label: string; labelKey: string; raw: string; attributeId: string }[] = [
+      {
+        label: 'Batteriemasse',
+        labelKey: 'batteriemasse',
+        raw: 'unbekannt',
+        attributeId: 'batteryMass',
+      },
+      {
+        label: 'Nennkapazität',
+        labelKey: 'nennkapazitaet',
+        raw: 'siehe Anhang',
+        attributeId: 'ratedCapacity',
+      },
+      {
+        label: 'Herstellungsdatum',
+        labelKey: 'herstellungsdatum',
+        raw: 'offen',
+        attributeId: 'manufacturingDate',
+      },
+    ];
+    for (const c of cases) {
+      const list = suggestMappings(
+        facts([{ label: c.label, labelKey: c.labelKey, raw: c.raw, value: c.raw, kind: 'text' }]),
+        { minConfidence: 0 },
+      );
+      expect(
+        list.find((p) => p.attributeId === c.attributeId),
+        `${c.attributeId} from "${c.raw}"`,
+      ).toBeUndefined();
+    }
+  });
+  it('proposalValue rejects a boolean shape unless the fact was extracted as a boolean', () => {
+    const booleanAttribute = { id: 'testBoolean', valueKind: 'boolean' } as unknown as Attribute;
+    const fact = (kind: FactSet['facts'][number]['kind'], value: string) =>
+      facts([{ label: 'x', labelKey: 'x', raw: value, value, kind }]).facts[0]!;
+    expect(proposalValue(booleanAttribute, fact('text', 'vielleicht'))).toBeUndefined();
+    expect(proposalValue(booleanAttribute, fact('boolean', 'true'))).toEqual({ value: true });
   });
 });
