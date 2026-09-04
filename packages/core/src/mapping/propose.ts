@@ -43,6 +43,15 @@ function proposalValue(
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/**
+ * Plain code-point comparison, not `localeCompare`: collation depends on the runtime's Intl
+ * data and can differ between Node builds and browsers, which would break the deterministic,
+ * byte-identical output this browser-safe package promises (AGENTS.md).
+ */
+function byCodePoint(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): MappingProposal[] {
   const min = options.minConfidence ?? 0.3;
   const byId = new Map(attributes.map((a) => [a.id, a]));
@@ -94,7 +103,7 @@ export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): M
   return out.sort(
     (a, b) =>
       b.confidence - a.confidence ||
-      a.attributeId.localeCompare(b.attributeId) ||
-      a.factId.localeCompare(b.factId),
+      byCodePoint(a.attributeId, b.attributeId) ||
+      byCodePoint(a.factId, b.factId),
   );
 }

@@ -75,6 +75,62 @@ describe('suggestMappings', () => {
     }
     expect(list.every((p) => p.confidence >= 0.3)).toBe(true);
   });
+  it('sort tie-breaks are plain code-point order, not locale collation', () => {
+    // Same attribute, equal confidence: factId tie-break must sort 'f#1:1' before 'f#1:2'
+    // even though the facts are given with id 'f#1:2' first.
+    const sameAttribute = suggestMappings(
+      facts([
+        {
+          id: 'f#1:2',
+          label: 'Masse',
+          labelKey: 'masse',
+          value: '412.7',
+          kind: 'decimal',
+          unit: 'kg',
+        },
+        {
+          id: 'f#1:1',
+          label: 'Masse',
+          labelKey: 'masse',
+          value: '412.7',
+          kind: 'decimal',
+          unit: 'kg',
+        },
+      ]),
+    );
+    const mass = sameAttribute.filter((p) => p.attributeId === 'batteryMass');
+    expect(mass).toHaveLength(2);
+    expect(mass[0]!.confidence).toBe(mass[1]!.confidence);
+    expect(mass[0]!.factId).toBe('f#1:1');
+    expect(mass[1]!.factId).toBe('f#1:2');
+
+    // Different attributes, equal confidence: attributeId tie-break sorts ascending
+    // ('manufacturingDate' before 'ratedCapacity').
+    const differentAttributes = suggestMappings(
+      facts([
+        {
+          label: 'Nennkapazität',
+          labelKey: 'nennkapazitaet',
+          value: '94.5',
+          kind: 'decimal',
+          unit: 'Ah',
+        },
+        {
+          label: 'Herstellungsdatum',
+          labelKey: 'herstellungsdatum',
+          value: '2026-02-10',
+          kind: 'date',
+        },
+      ]),
+    );
+    const capacityIndex = differentAttributes.findIndex((p) => p.attributeId === 'ratedCapacity');
+    const dateIndex = differentAttributes.findIndex((p) => p.attributeId === 'manufacturingDate');
+    expect(capacityIndex).toBeGreaterThanOrEqual(0);
+    expect(dateIndex).toBeGreaterThanOrEqual(0);
+    expect(differentAttributes[capacityIndex]!.confidence).toBe(1);
+    expect(differentAttributes[dateIndex]!.confidence).toBe(1);
+    expect(dateIndex).toBeLessThan(capacityIndex);
+  });
   it('composites: manufacturer name lands in name.<lang>, chemistry in shortName', () => {
     const list = suggestMappings(
       facts([

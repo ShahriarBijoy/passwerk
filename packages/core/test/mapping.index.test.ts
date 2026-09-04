@@ -1,74 +1,49 @@
-import { entriesFor, synonymIndex } from '@passwerk/core';
-import { attributes } from '@passwerk/rules';
+import { entriesFor, normalizeLabel, synonymIndex } from '@passwerk/core';
+import { attributes, getTemplateElement } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
+
+/** The same camelCase split synonymIndex.ts uses for its 'id' entries. */
+function splitId(id: string): string {
+  return id.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+}
 
 describe('synonymIndex', () => {
   it('has name, synonym, concept and id entries for every attribute, normalised', () => {
     const index = synonymIndex();
-    // Ruling 2: for these attributes the split id coincides with the English name key (ids in
-    // this KB are largely camelCased English names), so dedupe keeps the higher-weight `name`
-    // entry and no separate `id` entry survives. Computed once via a scratch run; see the report.
-    const idNameCollision = new Set([
-      'batteryPassportIdentifier',
-      'batteryIdentifier',
-      'manufacturingPlace',
-      'manufacturingDate',
-      'dateOfPuttingIntoService',
-      'warrantyPeriod',
-      'batteryCategory',
-      'batteryMass',
-      'batteryStatus',
-      'separateCollectionSymbol',
-      'cadmiumLeadSymbols',
-      'carbonFootprintLabel',
-      'extinguishingAgent',
-      'meaningOfLabelsAndSymbols',
-      'euDeclarationOfConformity',
-      'carbonFootprintShareDistribution',
-      'carbonFootprintPerformanceClass',
-      'dueDiligenceReport',
-      'supplyChainIndices',
-      'batteryChemistry',
-      'criticalRawMaterials',
-      'hazardousSubstances',
-      'sparePartSources',
-      'safetyMeasures',
-      'renewableContentShare',
-      'ratedCapacity',
-      'remainingCapacity',
-      'capacityFade',
-      'certifiedUsableBatteryEnergy',
-      'remainingUsableBatteryEnergy',
-      'stateOfCertifiedEnergy',
-      'stateOfCharge',
-      'minimumVoltage',
-      'maximumVoltage',
-      'nominalVoltage',
-      'originalPowerCapability',
-      'remainingPowerCapability',
-      'powerFade',
-      'maximumPermittedBatteryPower',
-      'powerToEnergyRatio',
-      'initialRoundTripEnergyEfficiency',
-      'remainingRoundTripEnergyEfficiency',
-      'energyRoundTripEfficiencyFade',
-      'initialSelfDischargeRate',
-      'currentSelfDischargeRate',
-      'initialInternalResistance',
-      'internalResistanceIncrease',
-      'expectedLifetimeCalendarYears',
-      'numberOfFullCycles',
-      'cycleLifeReferenceTest',
-      'energyThroughput',
-      'capacityThroughput',
-      'capacityThresholdForExhaustion',
-      'temperatureInformation',
-      'timeInExtremeHighTemperature',
-      'timeInExtremeLowTemperature',
-      'deepDischargeEvents',
-      'overchargeEvents',
-      'informationOnAccidents',
-    ]);
+    // Ruling 2: for these attributes the split id coincides with a name, synonym or template
+    // concept key (ids in this KB are largely camelCased English names, some synonym lists spell
+    // that same phrase out too, e.g. warrantyPeriod / "warranty period", and some template
+    // concepts do, e.g. sparePartSources / "Spare part sources"), so dedupe keeps that
+    // higher-weight entry and no separate `id` entry survives. Derived from the same KB inputs
+    // synonymIndex.ts itself reads (not a hard-coded id list), so this self-adjusts when the KB
+    // changes; see the report for the computed set at the time of writing.
+    const idNameCollision = new Set(
+      attributes
+        .filter((a) => {
+          const idKey = normalizeLabel(splitId(a.id));
+          const conceptKeys = a.templatePaths.flatMap((path) => {
+            const concept = getTemplateElement(path)?.concept;
+            if (!concept) return [];
+            return [
+              concept.preferredName['de'],
+              concept.preferredName['en'],
+              concept.shortName['de'],
+              concept.shortName['en'],
+            ];
+          });
+          const otherKeys = [
+            a.name.en,
+            a.name.de,
+            ...a.synonyms.en,
+            ...a.synonyms.de,
+            ...conceptKeys,
+          ]
+            .filter((t): t is string => Boolean(t))
+            .map(normalizeLabel);
+          return otherKeys.includes(idKey);
+        })
+        .map((a) => a.id),
+    );
     for (const a of attributes) {
       const mine = entriesFor(a.id);
       expect(
