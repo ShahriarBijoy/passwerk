@@ -273,3 +273,32 @@ tests Node 22 and 24 on Linux, macOS and Windows. No polyfill is added to `core`
 **Consequences.** The build plan's "Node 20 & 22" portability row becomes "22 & 24".
 Browsers older than the `Promise.withResolvers` baseline (Chrome 119, Safari 17.4,
 Firefox 121) cannot run the PDF reader; the Phase 7a web app states that requirement.
+
+## D-019: The web app is the product; MCP is the AI interface; an MCP App joins the surfaces (2026-09-04)
+
+**Context.** D-001 named the MCP server the primary interface. The buyer (a Tier-2 quality
+or compliance manager) does not operate a terminal, and D-006 already added a client-side
+web app for them. Since January 2026 the MCP Apps extension (`io.modelcontextprotocol/ui`)
+lets a server ship a `ui://` HTML resource that Claude web, Claude Desktop, ChatGPT, Cursor
+and VS Code render inside the chat; Claude Code and Codex CLI do not render it. The
+extension has no file-attachment method, and ChatGPT's `window.openai` upload APIs are not
+portable. Local one-click packaging exists for Claude Desktop (MCPB, stdio, offline) and for
+ChatGPT and Codex (`.codex-plugin/plugin.json` bundling a skills directory and a stdio server).
+
+**Decision.** Surface hierarchy: `apps/web` is the product for suppliers; the MCP server plus
+skill is the AI interface for consultants and agent users; the CLI is the automation
+interface; `core` is the foundation. A **passwerk MCP App** is added as a surface: the same
+review, gap-report and export views as the web app, wrapped in an iframe shell that talks to
+the host over the MCP Apps bridge. Files enter through a plain file input inside the iframe
+and are passed to the server as inline bytes, or are ingested by `core` inside the iframe
+itself so documents never leave the browser. Build order: Phase 6 (server, skill, CLI),
+Phase 7 (carrier, HTML sheet, release), Phase 7a (web app), Phase 7b (MCP App reusing the
+web app components), Phase 7c (MCPB, Codex plugin, connector submission checklist). Core's
+input type stays `{ name, bytes }` (D-016); path resolution stays in the adapters.
+
+**Consequences.** Build plan §2.5, §5 and §7 are amended. The server gains a session store
+keyed by bundle or draft id so the app and the model see the same state. Two facts must be
+verified in Phase 7b before they are relied on: that Claude's iframe sandbox permits file
+inputs, and the host's message size limit for inline bytes. Directory listing on Claude
+requires a Team or Enterprise organisation, Streamable HTTP, production hosting and a privacy
+policy; the hosted connector is described as a convenience mode, never as offline.

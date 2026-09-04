@@ -19,7 +19,8 @@ proves zero network calls.
 
 1. `docs/BUILD_PLAN.md`: the single source of truth for scope, architecture, MCP contract,
    knowledge-base design and build phases. **State which phase you are in before you start.**
-2. `docs/DECISIONS.md`: the ADR log. D-005 (all 7 submodels) and D-006 (web app) amend the plan.
+2. `docs/DECISIONS.md`: the ADR log. D-005 (all 7 submodels), D-006 (web app) and D-019
+   (web app is the product, MCP App and packaging phases) amend the plan.
 3. `packages/rules/PROVENANCE.md` (from Phase 1): where every bundled artefact comes from.
 
 ## Repository map
@@ -30,7 +31,9 @@ proves zero network calls.
 | `packages/core` | `@passwerk/core` | MCP-free library: ingest, extract, map, validate, gap, emit, carrier |
 | `packages/server` | `@passwerk/server` | MCP server, stdio + Streamable HTTP. Adapter only, no domain logic |
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
-| `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview |
+| `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
+| `apps/mcp-app` (Phase 7b) | | MCP App: the web app's review, gap and export views served as a `ui://` resource |
+| `packaging` (Phase 7c) | | MCPB bundle, Codex plugin manifest, Claude connector submission checklist |
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
 
