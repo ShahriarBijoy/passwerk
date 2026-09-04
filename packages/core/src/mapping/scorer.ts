@@ -82,8 +82,19 @@ export function kindFactor(
     case 'uri':
       ok = fact.kind === 'uri';
       break;
-    default:
+    // Unreachable: 'document' and 'graphic' return above, the rest are in TEXTUAL. Listed
+    // explicitly (rather than falling into `default`) so a new ValueKind fails to compile.
+    case 'identifier':
+    case 'text':
+    case 'enum':
+    case 'multilingualText':
+    case 'composite':
       ok = false;
+      break;
+    default: {
+      const _exhaustive: never = valueKind;
+      throw new Error(`kindFactor: unhandled ValueKind ${String(_exhaustive)}`);
+    }
   }
   return ok ? { factor: 1, check: 'ok' } : { factor: 0.4, check: 'mismatch' };
 }
