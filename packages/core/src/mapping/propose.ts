@@ -2,7 +2,7 @@ import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rule
 import { integral } from '../emit/submodels/shared.js';
 import type { Fact, FactSet } from '../extract/types.js';
 import { valueSchemaForKind } from '../model/values.js';
-import { explain, kindFactor, labelScore, unitFactor } from './scorer.js';
+import { explainMatch, kindFactor, labelScore, unitFactor } from './scorer.js';
 import { type IndexEntry, synonymIndex } from './synonymIndex.js';
 import type { MappingChecks, MappingProposal } from './types.js';
 
@@ -111,7 +111,10 @@ export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): M
         source: [fact.source],
         confidence,
         factId: fact.id,
-        why: { de: explain(fact.label, checks, 'de'), en: explain(fact.label, checks, 'en') },
+        why: {
+          de: explainMatch(fact.label, checks, 'de'),
+          en: explainMatch(fact.label, checks, 'en'),
+        },
         checks,
       });
     }
