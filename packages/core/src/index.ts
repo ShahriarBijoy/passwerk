@@ -62,6 +62,8 @@ export * from './validate/aas.js';
 export * from './validate/finding.js';
 export * from './validate/index.js';
 export { message as findingMessage, RULE_IDS } from './validate/messages.js';
+export * from './validate/plausibility/checks.js';
+export * from './validate/plausibility/context.js';
 export * from './validate/plausibility.js';
 export * from './validate/schema.js';
 export * from './validate/template.js';
