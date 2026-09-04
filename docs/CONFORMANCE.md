@@ -1,18 +1,20 @@
 # AAS conformance
 
-Generated: 2026-09-03T23:08:31Z
+Generated: 2026-09-04T17:36:29Z
 Oracle: aas-test-engines 1.0.3
 passwerk: @passwerk/core 0.0.0
-Parity: 14/14
+Parity: 16/16
 
 | Sample | Format | passwerk L2 | Oracle | Parity | Oracle messages |
 |---|---|---|---|---|---|
+| ev-document-without-classification | json | 0 errors | ok | yes |  |
+| ev-document-without-classification | aasx | 0 errors | ok | yes |  |
 | ev-missing-material-identifier | json | 0 errors | ok | yes |  |
 | ev-missing-material-identifier | aasx | 0 errors | ok | yes |  |
 | ev-valid | json | 0 errors | ok | yes |  |
 | ev-valid | aasx | 0 errors | ok | yes |  |
-| industrial-bad-decimal | json | 1 error | ERROR | yes | Value '74,9' is not a 'xs:decimal' @ ProductCarbonFootprints.0.PcfCO2eq in Submodel CarbonFootprint[https://passport.musterwerk.example/battery/MW-IND-2026-000007/submodels/CarbonFootprint] @ /submodels/1/submodel_elements/0/value/0/value/1 |
-| industrial-bad-decimal | aasx | 1 error | ERROR | yes | Value '74,9' is not a 'xs:decimal' @ ProductCarbonFootprints.0.PcfCO2eq in Submodel CarbonFootprint[https://passport.musterwerk.example/battery/MW-IND-2026-000007/submodels/CarbonFootprint] @ /submodels/1/submodel_elements/0/value/0/value/1 |
+| industrial-bad-decimal | json | 1 error | ERROR | yes | Value '74,9' is not a 'xs:decimal' @ ProductCarbonFootprints.0.PcfCO2eq in Submodel CarbonFootprint[https://passport.musterwerk.example/battery/MW-IND-2026-000007/submodels/CarbonFootprint] @ /submodels/2/submodel_elements/0/value/0/value/1 |
+| industrial-bad-decimal | aasx | 1 error | ERROR | yes | Value '74,9' is not a 'xs:decimal' @ ProductCarbonFootprints.0.PcfCO2eq in Submodel CarbonFootprint[https://passport.musterwerk.example/battery/MW-IND-2026-000007/submodels/CarbonFootprint] @ /submodels/2/submodel_elements/0/value/0/value/1 |
 | industrial-valid | json | 0 errors | ok | yes |  |
 | industrial-valid | aasx | 0 errors | ok | yes |  |
 | lmt-missing-state-of-charge | json | 0 errors | ok | yes |  |
