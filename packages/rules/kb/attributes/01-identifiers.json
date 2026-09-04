@@ -406,15 +406,7 @@
       "name": { "en": "Battery mass", "de": "Batteriemasse" },
       "synonyms": {
         "en": ["weight", "mass", "net weight", "pack weight", "total weight", "kg"],
-        "de": [
-          "gewicht",
-          "masse",
-          "nettogewicht",
-          "gesamtgewicht",
-          "pack-gewicht",
-          "eigengewicht",
-          "kg"
-        ]
+        "de": ["gewicht", "nettogewicht", "gesamtgewicht", "pack-gewicht", "eigengewicht", "kg"]
       },
       "valueKind": "decimal",
       "unit": "kg",
