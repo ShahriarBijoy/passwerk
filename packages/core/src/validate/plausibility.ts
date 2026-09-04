@@ -1,4 +1,5 @@
 import { getRule, type PlausibilityRule } from '@passwerk/rules';
+import { byCodePoint } from '../mapping/propose.js';
 import type { PassportDraft } from '../model/passport.js';
 import type { Finding } from './finding.js';
 import { CHECKS, type RuleViolation } from './plausibility/checks.js';
@@ -11,11 +12,20 @@ export interface PlausibilityOptions {
   l1Findings?: readonly Finding[];
 }
 
-/** Replace the named placeholders a rule authored, e.g. "{min} V". */
-function interpolate(text: string, params: Record<string, string>): string {
+/**
+ * Replace the named placeholders a rule authored, e.g. "{min} V". A param may be a plain
+ * string (a number, an attribute id) or a `{ de, en }` pair (a translated noun), in which
+ * case the language being rendered decides which side is substituted.
+ */
+function interpolate(
+  text: string,
+  params: Record<string, string | { de: string; en: string }>,
+  lang: 'de' | 'en',
+): string {
   return text.replace(/\{(\w+)\}/g, (whole, key: string) => {
     const value = params[key];
-    return value === undefined ? whole : value;
+    if (value === undefined) return whole;
+    return typeof value === 'string' ? value : value[lang];
   });
 }
 
@@ -33,8 +43,8 @@ function assertResolved(ruleId: string, message: string): void {
 
 function toFinding(rule: PlausibilityRule, violation: RuleViolation): Finding {
   const params = violation.params ?? {};
-  const de = interpolate(rule.message.de, params);
-  const en = interpolate(rule.message.en, params);
+  const de = interpolate(rule.message.de, params, 'de');
+  const en = interpolate(rule.message.en, params, 'en');
   assertResolved(rule.id, de);
   assertResolved(rule.id, en);
   return {
@@ -69,9 +79,9 @@ export function validatePlausibility(
   }
   findings.sort(
     (a, b) =>
-      a.ruleId.localeCompare(b.ruleId) ||
-      a.path.localeCompare(b.path) ||
-      (a.attributeId ?? '').localeCompare(b.attributeId ?? ''),
+      byCodePoint(a.ruleId, b.ruleId) ||
+      byCodePoint(a.path, b.path) ||
+      byCodePoint(a.attributeId ?? '', b.attributeId ?? ''),
   );
   return { findings };
 }

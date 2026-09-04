@@ -6,8 +6,11 @@ export interface RuleViolation {
   /** Draft path. Defaults to `attributes.<attributeId>.value`. */
   path?: string;
   attributeId?: string;
-  /** Values for the named placeholders the rule's DE/EN message uses. */
-  params?: Record<string, string>;
+  /**
+   * Values for the named placeholders the rule's DE/EN message uses. A `{ de, en }` value is
+   * resolved per language, so a translated noun (a material name, say) reads correctly in both.
+   */
+  params?: Record<string, string | { de: string; en: string }>;
 }
 
 export type RuleCheck = (ctx: RuleContext) => RuleViolation[];
@@ -41,11 +44,31 @@ export function isCasNumber(value: string): boolean {
 }
 
 /** The four materials with a recycled-content obligation, with their attribute pair. */
-const RECYCLED_PAIRS: { material: string; pre: string; post: string }[] = [
-  { material: 'Nickel', pre: 'recycledNickelPreConsumer', post: 'recycledNickelPostConsumer' },
-  { material: 'Cobalt', pre: 'recycledCobaltPreConsumer', post: 'recycledCobaltPostConsumer' },
-  { material: 'Lithium', pre: 'recycledLithiumPreConsumer', post: 'recycledLithiumPostConsumer' },
-  { material: 'Lead', pre: 'recycledLeadPreConsumer', post: 'recycledLeadPostConsumer' },
+const RECYCLED_PAIRS: {
+  material: { de: string; en: string };
+  pre: string;
+  post: string;
+}[] = [
+  {
+    material: { de: 'Nickel', en: 'Nickel' },
+    pre: 'recycledNickelPreConsumer',
+    post: 'recycledNickelPostConsumer',
+  },
+  {
+    material: { de: 'Kobalt', en: 'Cobalt' },
+    pre: 'recycledCobaltPreConsumer',
+    post: 'recycledCobaltPostConsumer',
+  },
+  {
+    material: { de: 'Lithium', en: 'Lithium' },
+    pre: 'recycledLithiumPreConsumer',
+    post: 'recycledLithiumPostConsumer',
+  },
+  {
+    material: { de: 'Blei', en: 'Lead' },
+    pre: 'recycledLeadPreConsumer',
+    post: 'recycledLeadPostConsumer',
+  },
 ];
 
 /** Above this, an internal resistance in ohms is almost certainly stated in milliohms. */
@@ -122,6 +145,47 @@ export function daysBetween(fromIsoDate: string, toIsoDate: string): number {
     return era * 146097 + doe - 719468;
   };
   return toDays(toIsoDate) - toDays(fromIsoDate);
+}
+
+/** `IsoDateTime` shape: date, time (seconds and fraction optional), then Z or a ±HH:MM offset. */
+const ISO_DATETIME_PARTS =
+  /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|([+-])(\d{2}):(\d{2}))$/;
+
+/**
+ * UTC milliseconds for an `IsoDateTime`, or undefined when the string is not one. Timestamps
+ * must be compared as instants, never lexically: `IsoDateTime` admits offsets and a
+ * second-less form, so `2026-09-03T13:00:00+02:00` sorts after `2026-09-03T12:00:00Z` as a
+ * string while being an hour earlier as an instant. Built on `daysBetween`, so still no
+ * `Date` and no timezone of the host (core is browser-safe; ADR D-006).
+ */
+export function isoDateTimeToEpochMs(value: string): number | undefined {
+  const m = ISO_DATETIME_PARTS.exec(value);
+  if (!m) return undefined;
+  // The regex groups are fixed by the pattern above; noUncheckedIndexedAccess cannot see that.
+  const [, date, hh, mm, ss, frac, zone, sign, offHh, offMm] = m as unknown as [
+    string,
+    string,
+    string,
+    string,
+    string | undefined,
+    string | undefined,
+    string,
+    string | undefined,
+    string | undefined,
+    string | undefined,
+  ];
+  // Milliseconds: pad or truncate the authored fraction to exactly three digits.
+  const ms = frac === undefined ? 0 : Number(`${frac}000`.slice(0, 3));
+  const offsetMinutes =
+    zone === 'Z' ? 0 : (sign === '-' ? -1 : 1) * (Number(offHh) * 60 + Number(offMm));
+  return (
+    daysBetween('1970-01-01', date) * 86_400_000 +
+    Number(hh) * 3_600_000 +
+    Number(mm) * 60_000 +
+    Number(ss ?? 0) * 1000 +
+    ms -
+    offsetMinutes * 60_000
+  );
 }
 
 /** One check per PW-PLAUS rule id. Keys must match kb/rules.json exactly (see manifest test). */
@@ -267,7 +331,11 @@ export const CHECKS: Record<string, RuleCheck> = {
     for (const id of ruleAttributes('PW-PLAUS-011')) {
       if (ctx.value(id) === undefined) continue;
       const recordedAt = ctx.recordedAt(id);
-      if (recordedAt !== undefined && recordedAt <= ctx.asOf) continue;
+      // Compare instants, not strings. An unparseable stamp on either side is treated the
+      // same as a missing one: fire, rather than silently pass an unverifiable timestamp.
+      const recordedMs = recordedAt === undefined ? undefined : isoDateTimeToEpochMs(recordedAt);
+      const asOfMs = isoDateTimeToEpochMs(ctx.asOf);
+      if (recordedMs !== undefined && asOfMs !== undefined && recordedMs <= asOfMs) continue;
       out.push({ attributeId: id, params: { attribute: id, timestamp: recordedAt ?? '-' } });
     }
     return out;

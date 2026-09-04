@@ -1,4 +1,9 @@
-import { PassportDraft, validatePlausibility } from '@passwerk/core';
+import {
+  daysBetween,
+  isoDateTimeToEpochMs,
+  PassportDraft,
+  validatePlausibility,
+} from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 
 const META = {
@@ -224,6 +229,9 @@ describe('PW-PLAUS-010 recycled shares per material', () => {
     const f = validatePlausibility(draft).findings.find((x) => x.ruleId === 'PW-PLAUS-010');
     expect(f?.message.en).toContain('115');
     expect(f?.message.en).toContain('Cobalt');
+    // The material name is a translated noun, so each language gets its own.
+    expect(f?.message.de).toContain('Kobalt');
+    expect(f?.message.de).not.toContain('Cobalt');
   });
   it('is quiet at exactly 100 % and when one side is missing', () => {
     const at100 = draftWith({
@@ -252,6 +260,77 @@ describe('PW-PLAUS-011 LastUpdate on dynamic values', () => {
       numberOfFullCycles: { value: '412', recordedAt: '2026-08-30T18:30:00Z' },
     });
     expect(ruleIds(draft)).not.toContain('PW-PLAUS-011');
+  });
+  it('is quiet for an offset stamp that is in the past as an instant', () => {
+    // 13:00+02:00 is 11:00Z, an hour before asOf, but sorts after '2026-09-03T12:00:00Z'
+    // as a string: a lexical comparison would wrongly call it a future timestamp.
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2026-09-03T13:00:00+02:00' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-011');
+  });
+  it('is quiet for a second-less stamp exactly at asOf', () => {
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2026-09-03T12:00Z' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-011');
+  });
+  it('fires for a negative-offset stamp that is genuinely in the future', () => {
+    // 11:00-05:00 is 16:00Z, four hours after asOf, yet it sorts BEFORE
+    // '2026-09-03T12:00:00Z' as a string, so a lexical comparison missed it entirely.
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2026-09-03T11:00:00-05:00' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-011');
+  });
+});
+
+describe('date arithmetic helpers', () => {
+  it('daysBetween counts whole calendar days', () => {
+    const cases: [string, string, number][] = [
+      ['2026-08-31', '2026-09-03', 3],
+      ['2026-01-01', '2026-09-03', 245],
+      ['2024-02-28', '2024-03-01', 2], // 2024 is a leap year
+      ['2025-12-31', '2026-01-01', 1],
+      ['2100-02-28', '2100-03-01', 1], // 2100 is not a leap year
+      ['2026-09-03', '2026-09-03', 0],
+    ];
+    for (const [from, to, expected] of cases) {
+      expect(daysBetween(from, to), `${from} to ${to}`).toBe(expected);
+    }
+  });
+
+  it('isoDateTimeToEpochMs resolves offsets, optional seconds and fractions', () => {
+    const midnight = daysBetween('1970-01-01', '2026-09-03') * 86_400_000;
+    const cases: [string, number | undefined][] = [
+      ['2026-09-03T12:00:00Z', midnight + 12 * 3_600_000],
+      ['2026-09-03T12:00Z', midnight + 12 * 3_600_000],
+      ['2026-09-03T14:00:00+02:00', midnight + 12 * 3_600_000],
+      ['2026-09-03T06:30:00-05:30', midnight + 12 * 3_600_000],
+      ['2026-09-03T12:00:00.250Z', midnight + 12 * 3_600_000 + 250],
+      ['2026-09-03T12:00:00.5Z', midnight + 12 * 3_600_000 + 500],
+      ['2026-09-03', undefined], // a date alone is not an IsoDateTime
+      ['2026-09-03T12:00:00', undefined], // no zone
+      ['not a timestamp', undefined],
+      ['', undefined],
+    ];
+    for (const [value, expected] of cases) {
+      expect(isoDateTimeToEpochMs(value), value).toBe(expected);
+    }
+  });
+
+  it('isoDateTimeToEpochMs agrees with Date.parse on the epoch value', () => {
+    // The implementation must not use Date (core is browser-safe), but a test may, as an
+    // independent oracle for the arithmetic.
+    for (const value of [
+      '2026-09-03T12:00:00Z',
+      '2026-09-03T13:00:00+02:00',
+      '2026-09-03T12:30:00-01:00',
+      '1970-01-01T00:00:00Z',
+      '2100-03-01T23:59:59.999Z',
+    ]) {
+      expect(isoDateTimeToEpochMs(value), value).toBe(Date.parse(value));
+    }
   });
 });
 
