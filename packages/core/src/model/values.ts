@@ -1,4 +1,4 @@
-import type { ValueKind } from '@passwerk/rules';
+import type { Attribute, ValueKind } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
 import { z } from 'zod';
 
@@ -86,7 +86,45 @@ const BY_KIND: Record<ValueKind, z.ZodType> = {
   composite: z.unknown(),
 };
 
-/** The Zod schema for Field.value given the attribute's KB valueKind. */
-export function valueSchemaFor(kind: ValueKind): z.ZodType {
+/** The Zod schema for Field.value given only the value kind, with no numeric band applied. */
+export function valueSchemaForKind(kind: ValueKind): z.ZodType {
   return BY_KIND[kind];
+}
+
+function banded(
+  base: z.ZodType<string>,
+  range: { min: number | null; max: number | null } | null,
+  fallback: { min: number; max: number } | null,
+): z.ZodType {
+  const min = range?.min ?? fallback?.min ?? null;
+  const max = range?.max ?? fallback?.max ?? null;
+  if (min === null && max === null) return base;
+  const label = `expected a value between ${min ?? '-inf'} and ${max ?? 'inf'}`;
+  return base.refine((s: string) => {
+    // Zod runs every chained refine even after an earlier one in the chain fails, so guard
+    // against a string that already failed the base decimal/integer lexical check: report
+    // "true" here and let that earlier check's own issue surface instead of throwing out of
+    // `new Decimal`.
+    if (!isDecimalString(s)) return true;
+    const d = new Decimal(s);
+    return (min === null || d.gte(min)) && (max === null || d.lte(max));
+  }, label);
+}
+
+/**
+ * The Zod schema for Field.value given the resolved attribute. Numeric bands come from the
+ * knowledge base (ADR D-021), never from a hardcoded constant: `percentage` with no authored
+ * range keeps 0..100, everything else uses what the domain expert authored.
+ */
+export function valueSchemaFor(attribute: Attribute): z.ZodType {
+  switch (attribute.valueKind) {
+    case 'percentage':
+      return banded(DecimalString, attribute.range, { min: 0, max: 100 });
+    case 'decimal':
+      return banded(DecimalString, attribute.range, null);
+    case 'integer':
+      return banded(IntegerString, attribute.range, null);
+    default:
+      return BY_KIND[attribute.valueKind];
+  }
 }

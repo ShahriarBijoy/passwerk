@@ -1,7 +1,7 @@
 import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rules';
 import { integral } from '../emit/submodels/shared.js';
 import type { Fact, FactSet } from '../extract/types.js';
-import { valueSchemaFor } from '../model/values.js';
+import { valueSchemaForKind } from '../model/values.js';
 import { explain, kindFactor, labelScore, unitFactor } from './scorer.js';
 import { type IndexEntry, synonymIndex } from './synonymIndex.js';
 import type { MappingChecks, MappingProposal } from './types.js';
@@ -42,14 +42,18 @@ export function proposalValue(
       return fact.kind === 'boolean' ? { value: v === 'true' } : undefined;
     case 'integer': {
       const value = integral(v);
-      return valueSchemaFor('integer').safeParse(value).success ? { value } : undefined;
+      return valueSchemaForKind('integer').safeParse(value).success ? { value } : undefined;
     }
     case 'multilingualText': {
       const value = { [fact.lang]: v };
-      return valueSchemaFor('multilingualText').safeParse(value).success ? { value } : undefined;
+      return valueSchemaForKind('multilingualText').safeParse(value).success
+        ? { value }
+        : undefined;
     }
     default:
-      return valueSchemaFor(attribute.valueKind).safeParse(v).success ? { value: v } : undefined;
+      return valueSchemaForKind(attribute.valueKind).safeParse(v).success
+        ? { value: v }
+        : undefined;
   }
 }
 

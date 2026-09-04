@@ -1,8 +1,9 @@
-import { isDecimalString, valueSchemaFor } from '@passwerk/core';
+import { isDecimalString, valueSchemaFor, valueSchemaForKind } from '@passwerk/core';
+import { getAttribute } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
-const ok = (kind: Parameters<typeof valueSchemaFor>[0], v: unknown) =>
-  valueSchemaFor(kind).safeParse(v).success;
+const ok = (kind: Parameters<typeof valueSchemaForKind>[0], v: unknown) =>
+  valueSchemaForKind(kind).safeParse(v).success;
 
 describe('value schemas per valueKind', () => {
   it('decimal strings', () => {
@@ -52,5 +53,41 @@ describe('value schemas per valueKind', () => {
   });
   it('composite accepts unknown (checked separately)', () => {
     expect(ok('composite', { anything: 1 })).toBe(true);
+  });
+});
+
+describe('valueSchemaFor uses the knowledge-base range (D-021)', () => {
+  it('accepts the full authored band for the three wide percentage attributes', () => {
+    const cases: [string, string][] = [
+      ['evolutionOfSelfDischarge', '640'],
+      ['internalResistanceIncrease', '150'],
+      ['carbonFootprintShareEndOfLife', '-12.5'],
+    ];
+    for (const [id, value] of cases) {
+      const attribute = getAttribute(id);
+      expect(attribute, id).toBeDefined();
+      expect(valueSchemaFor(attribute!).safeParse(value).success, id).toBe(true);
+    }
+  });
+
+  it('still rejects a value past the authored band', () => {
+    const attribute = getAttribute('internalResistanceIncrease')!;
+    expect(valueSchemaFor(attribute).safeParse('1001').success).toBe(false);
+  });
+
+  it('keeps 0..100 for a percentage attribute with no authored range', () => {
+    const attribute = getAttribute('stateOfCharge')!;
+    expect(valueSchemaFor(attribute).safeParse('101').success).toBe(false);
+    expect(valueSchemaFor(attribute).safeParse('99.5').success).toBe(true);
+  });
+
+  it('applies the band to decimal attributes too', () => {
+    const attribute = getAttribute('batteryMass')!; // 0 .. 10000 kg
+    expect(valueSchemaFor(attribute).safeParse('10001').success).toBe(false);
+    expect(valueSchemaFor(attribute).safeParse('412.5').success).toBe(true);
+  });
+
+  it('valueSchemaForKind stays band-less for callers that hold only a kind', () => {
+    expect(valueSchemaForKind('decimal').safeParse('99999999').success).toBe(true);
   });
 });
