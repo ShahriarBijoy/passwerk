@@ -1,4 +1,4 @@
-import { CHECKS } from '@passwerk/core';
+import { CHECKS, PassportDraft, validatePlausibility } from '@passwerk/core';
 import { getAttribute, getRule, plausibilityRules } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
@@ -45,6 +45,32 @@ describe('plausibility manifest', () => {
         expect(finding.message.de, finding.ruleId).not.toMatch(/\{\w+\}/);
         expect(finding.message.en, finding.ruleId).not.toMatch(/\{\w+\}/);
       }
+    }
+  });
+
+  it('throws when a check leaves a rule message placeholder unresolved', () => {
+    // PW-PLAUS-002's message needs {min}, {nom} and {max}; a check that forgets one is a
+    // programming error (check and rule disagree), not a data problem, so it must throw
+    // rather than ship a literal "{max}" in a user-facing finding.
+    const original = CHECKS['PW-PLAUS-002'];
+    CHECKS['PW-PLAUS-002'] = () => [{ attributeId: 'nominalVoltage', params: { min: '1' } }];
+    try {
+      const draft = PassportDraft.parse({
+        meta: {
+          schemaVersion: '1.0',
+          category: 'EV',
+          createdAt: '2026-09-03T12:00:00Z',
+          passportId: 'https://example.org/bp/1',
+        },
+        attributes: {
+          minimumVoltage: { value: '400', status: 'present', source: [] },
+          nominalVoltage: { value: '300', status: 'present', source: [] },
+          maximumVoltage: { value: '450', status: 'present', source: [] },
+        },
+      });
+      expect(() => validatePlausibility(draft)).toThrow(/unresolved/);
+    } finally {
+      CHECKS['PW-PLAUS-002'] = original as (typeof CHECKS)['PW-PLAUS-002'];
     }
   });
 });

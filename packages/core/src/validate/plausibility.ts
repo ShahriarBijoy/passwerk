@@ -19,8 +19,24 @@ function interpolate(text: string, params: Record<string, string>): string {
   });
 }
 
+/**
+ * A check's `params` and its rule's message placeholders must agree. A leftover `{key}`
+ * means a check forgot a param or a rule's message names one the check never fills — a
+ * programming error, not a data problem, so it throws instead of shipping the placeholder.
+ */
+function assertResolved(ruleId: string, message: string): void {
+  const match = /\{(\w+)\}/.exec(message);
+  if (match) {
+    throw new Error(`@passwerk/core: rule ${ruleId} left placeholder {${match[1]}} unresolved`);
+  }
+}
+
 function toFinding(rule: PlausibilityRule, violation: RuleViolation): Finding {
   const params = violation.params ?? {};
+  const de = interpolate(rule.message.de, params);
+  const en = interpolate(rule.message.en, params);
+  assertResolved(rule.id, de);
+  assertResolved(rule.id, en);
   return {
     layer: 'L4',
     ruleId: rule.id,
@@ -29,10 +45,7 @@ function toFinding(rule: PlausibilityRule, violation: RuleViolation): Finding {
       violation.path ??
       (violation.attributeId ? `attributes.${violation.attributeId}.value` : 'attributes'),
     ...(violation.attributeId ? { attributeId: violation.attributeId } : {}),
-    message: {
-      de: interpolate(rule.message.de, params),
-      en: interpolate(rule.message.en, params),
-    },
+    message: { de, en },
     ...(rule.legalRef ? { legalRef: rule.legalRef } : {}),
     fixHint: rule.fixHint,
   };

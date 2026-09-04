@@ -29,13 +29,14 @@ describe('golden samples', () => {
     const all = [...Object.values(samples), ...Object.values(brokenSamples).map((b) => b.draft)];
     for (const s of all) expect((s as { $comment?: string }).$comment).toMatch(/fictional/i);
   });
-  it('broken samples produce the PW-PLAUS findings they declare', () => {
+  it('broken samples produce exactly the PW-PLAUS findings they declare, no more and no fewer', () => {
     for (const name of BROKEN_SAMPLE_NAMES) {
       const { draft, expectedFindings } = brokenSamples[name];
-      const produced = validate(draft).findings.map((f) => f.ruleId);
-      for (const id of expectedFindings.filter((e) => e.startsWith('PW-PLAUS-'))) {
-        expect(produced, name).toContain(id);
-      }
+      const produced = [...new Set(validate(draft).findings.map((f) => f.ruleId))]
+        .filter((id) => id.startsWith('PW-PLAUS-'))
+        .sort();
+      const declared = expectedFindings.filter((id) => id.startsWith('PW-PLAUS-')).sort();
+      expect(produced, name).toEqual(declared);
     }
   });
 });
