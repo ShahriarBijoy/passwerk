@@ -34,6 +34,8 @@ export * from './extract/normalize.js';
 export * from './extract/numbers.js';
 export * from './extract/types.js';
 export * from './extract/units.js';
+export * from './gap/action.js';
+export * from './gap/report.js';
 export * from './ingest/csv.js';
 export * from './ingest/docx.js';
 export * from './ingest/index.js';

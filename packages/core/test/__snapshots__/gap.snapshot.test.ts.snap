@@ -1,0 +1,155 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`gap report snapshots > is stable for ev-document-without-classification 1`] = `
+{
+  "buckets": {
+    "conditional": 13,
+    "deferred": 27,
+    "optional": 6,
+    "required": 47,
+  },
+  "category": "EV",
+  "completeness": {
+    "mandatory": {
+      "percent": "93.6",
+      "present": 44,
+      "total": 47,
+    },
+    "overall": {
+      "percent": "93.3",
+      "present": 56,
+      "total": 60,
+    },
+  },
+  "invalid": [],
+  "statuses": {
+    "missing": 10,
+    "present": 83,
+  },
+}
+`;
+
+exports[`gap report snapshots > is stable for ev-missing-material-identifier 1`] = `
+{
+  "buckets": {
+    "conditional": 13,
+    "deferred": 27,
+    "optional": 6,
+    "required": 47,
+  },
+  "category": "EV",
+  "completeness": {
+    "mandatory": {
+      "percent": "27.7",
+      "present": 13,
+      "total": 47,
+    },
+    "overall": {
+      "percent": "21.7",
+      "present": 13,
+      "total": 60,
+    },
+  },
+  "invalid": [
+    "criticalRawMaterials",
+  ],
+  "statuses": {
+    "invalid": 1,
+    "missing": 71,
+    "present": 21,
+  },
+}
+`;
+
+exports[`gap report snapshots > is stable for industrial-bad-decimal 1`] = `
+{
+  "buckets": {
+    "conditional": 29,
+    "deferred": 22,
+    "optional": 6,
+    "required": 36,
+  },
+  "category": "INDUSTRIAL_GT_2KWH",
+  "completeness": {
+    "mandatory": {
+      "percent": "41.7",
+      "present": 15,
+      "total": 36,
+    },
+    "overall": {
+      "percent": "26.2",
+      "present": 17,
+      "total": 65,
+    },
+  },
+  "invalid": [
+    "carbonFootprintPerFunctionalUnit",
+  ],
+  "statuses": {
+    "invalid": 1,
+    "missing": 68,
+    "present": 24,
+  },
+}
+`;
+
+exports[`gap report snapshots > is stable for lmt-missing-state-of-charge 1`] = `
+{
+  "buckets": {
+    "conditional": 16,
+    "deferred": 22,
+    "optional": 6,
+    "required": 49,
+  },
+  "category": "LMT",
+  "completeness": {
+    "mandatory": {
+      "percent": "79.6",
+      "present": 39,
+      "total": 49,
+    },
+    "overall": {
+      "percent": "63.1",
+      "present": 41,
+      "total": 65,
+    },
+  },
+  "invalid": [],
+  "statuses": {
+    "missing": 51,
+    "present": 42,
+  },
+}
+`;
+
+exports[`gap report snapshots > is stable for lmt-wrong-date-format 1`] = `
+{
+  "buckets": {
+    "conditional": 16,
+    "deferred": 22,
+    "optional": 6,
+    "required": 49,
+  },
+  "category": "LMT",
+  "completeness": {
+    "mandatory": {
+      "percent": "26.5",
+      "present": 13,
+      "total": 49,
+    },
+    "overall": {
+      "percent": "20.0",
+      "present": 13,
+      "total": 65,
+    },
+  },
+  "invalid": [
+    "manufacturingDate",
+  ],
+  "statuses": {
+    "invalid": 1,
+    "missing": 79,
+    "present": 13,
+  },
+}
+`;
