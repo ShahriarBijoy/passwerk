@@ -1,5 +1,5 @@
 import { zipSync } from 'fflate';
-import { CREATED } from '../content.js';
+import { ZIP_MTIME } from '../content.js';
 
 type CellValue = string | number | Date;
 export interface Sheet {
@@ -77,6 +77,6 @@ export function writeXlsx(sheets: Sheet[]): Uint8Array {
 
   const ordered: Record<string, [Uint8Array, { mtime: Date; level: 6 }]> = {};
   for (const key of Object.keys(files).sort())
-    ordered[key] = [files[key] as Uint8Array, { mtime: CREATED, level: 6 }];
+    ordered[key] = [files[key] as Uint8Array, { mtime: ZIP_MTIME, level: 6 }];
   return zipSync(ordered);
 }

@@ -1,5 +1,12 @@
 export const CREATED = new Date('2026-09-01T08:00:00Z');
 
+/**
+ * Zip entry mtime for the OOXML writers. fflate encodes the DOS date/time of an entry from
+ * local-time getters (getHours, ...), so an absolute instant would produce different bytes
+ * in every timezone. Local components make the fields identical everywhere.
+ */
+export const ZIP_MTIME = new Date(2026, 8, 1, 8, 0, 0);
+
 /** Lieferantenerklärung: key-value lines, then a two-column table of recycled shares. */
 export const DECLARATION_LINES: [string, string][] = [
   ['Hersteller:', 'Musterwerk Batteriesysteme GmbH'],

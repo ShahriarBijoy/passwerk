@@ -1,5 +1,5 @@
 import { zipSync } from 'fflate';
-import { CREATED } from '../content.js';
+import { ZIP_MTIME } from '../content.js';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const p = (text: string) => `<w:p><w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`;
@@ -21,6 +21,6 @@ export function writeDocx(paragraphs: string[], table: string[][]): Uint8Array {
   };
   const ordered: Record<string, [Uint8Array, { mtime: Date; level: 6 }]> = {};
   for (const key of Object.keys(files).sort())
-    ordered[key] = [files[key] as Uint8Array, { mtime: CREATED, level: 6 }];
+    ordered[key] = [files[key] as Uint8Array, { mtime: ZIP_MTIME, level: 6 }];
   return zipSync(ordered);
 }
