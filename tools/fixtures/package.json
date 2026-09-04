@@ -1,0 +1,16 @@
+{
+  "name": "@passwerk/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generates the deterministic fake supplier documents used by core's ingest and mapping tests",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "generate": "tsx src/generate.ts"
+  },
+  "devDependencies": {
+    "fflate": "0.8.3",
+    "pdf-lib": "1.17.1",
+    "tsx": "4.23.13"
+  }
+}
