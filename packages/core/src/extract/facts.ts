@@ -105,8 +105,14 @@ function looksLikeHeaderCell(c: Cell, lang: Lang): boolean {
 }
 
 /** The first row is all-text with at least two populated cells (candidate column headers). No
- * width floor: a width-2 table can be a header table too (e.g. a "Nr | Wert" table). */
+ * width floor: a width-2 table can be a header table too (e.g. a "Nr | Wert" table). A first
+ * cell ending in a colon is the same "label:" marker `KV_LINE` parses on a line -- e.g. a PDF's
+ * colon-terminated declaration lines ("Hersteller: | Musterwerk GmbH"), grouped into a table by
+ * the layout pass because they're column-aligned, are still a genuine label:value row, not a
+ * header describing the rows below it; no real column-header cell in any fixture ends in a
+ * colon, so this doesn't affect a genuine header row. */
 function isTextHeaderRow(header: Cell[], lang: Lang): boolean {
+  if (header[0]?.text.trim().endsWith(':')) return false;
   const populated = header.filter((c) => c.text.length > 0);
   return header.every((c) => looksLikeHeaderCell(c, lang)) && populated.length >= 2;
 }
@@ -130,13 +136,6 @@ function tableDrafts(
   const pairLike =
     (width === 2 || width === 3) &&
     rows.every((r) => isLabelCell(r[0], page.lang)) &&
-    // A width-2 table with a genuine text header (e.g. "Material | Masse [kg]") describes real
-    // columns applying to every row below it, so a single non-numeric-labelled data row must
-    // not be mistaken for a one-off label:value pair -- that would fold the whole table into one
-    // fact and lose the column name. Width 3's extra unit-column check below already guards the
-    // equivalent case (Leistung, the CSV) by requiring dataRows' third column to be a real unit,
-    // so headerIsText and pairLike may coexist there; width 2 has no such extra signal.
-    (width !== 2 || !headerIsText) &&
     (width !== 3 ||
       dataRows.every((r) => {
         const unitCell = r[2];

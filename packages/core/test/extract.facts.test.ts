@@ -169,15 +169,19 @@ describe('extractFacts', () => {
     expect(kobalt.every((f) => f.rowLabel === undefined)).toBe(true);
   });
   it('a row label may contain a digit: a chemistry/part name folds into the header-cell labelKey', () => {
+    // Width 3, not 2: the existing width-3 unit-column check ("Masse [kg]" -> '118.4' is not a
+    // canonical unit) is what keeps this a header table instead of pair-like, so this doesn't
+    // need (and mustn't need) a width-2-specific carve-out -- see the regression test below for
+    // why a width-2 table must stay pair-like unconditionally.
     const table = mkTable(
       1,
       [
-        ['Material', 'Masse [kg]'],
-        ['Kathodenaktivmaterial NMC811', '118.4'],
+        ['Material', 'CAS-Nr.', 'Masse [kg]'],
+        ['Kathodenaktivmaterial NMC811', '-', '118.4'],
       ],
       [
-        [undefined, undefined],
-        [undefined, 'number'],
+        [undefined, undefined, undefined],
+        [undefined, undefined, 'number'],
       ],
     );
     const { facts } = extractFacts(mkBundle([table]));
@@ -188,6 +192,24 @@ describe('extractFacts', () => {
       labelKey: 'kathodenaktivmaterial nmc811 masse',
       value: '118.4',
       unit: 'kg',
+    });
+  });
+  it('a width-2 table with a text header stays pair-like (no width-2 carve-out)', () => {
+    // Regression test: the PDF's mirrored key-value table is exactly this shape (a two-column
+    // "Feld: | Wert" table with several rows, each a colon-terminated label). A width-2 header
+    // table must fold into sheet-pair facts per row, never header-cell facts that fold the first
+    // data row's label into every other row's labelKey.
+    const table = mkTable(1, [
+      ['Hersteller:', 'Musterwerk GmbH'],
+      ['Herstellernummer:', 'DE-MW-0001'],
+      ['Zellchemie:', 'NMC811'],
+    ]);
+    const { facts } = extractFacts(mkBundle([table]));
+    expect(facts.filter((f) => f.shape === 'sheet-pair')).toHaveLength(3);
+    expect(facts.filter((f) => f.shape === 'header-cell')).toHaveLength(0);
+    expect(find(facts, 'Hersteller:')).toMatchObject({
+      shape: 'sheet-pair',
+      value: 'Musterwerk GmbH',
     });
   });
   it('a digit-bearing label still yields sheet-pair facts in a genuine pair-like table', () => {
@@ -289,5 +311,37 @@ describe('extractFacts', () => {
     expect(a.facts.map((f) => f.id)).toEqual(b.facts.map((f) => f.id));
     expect(new Set(a.facts.map((f) => f.id)).size).toBe(a.facts.length);
     expect(a.documents.map((d) => d.name)).toHaveLength(5);
+  });
+  it('the five fixtures yield exactly 59 facts, no junk header-cell facts from a mirrored kv table', () => {
+    const { facts } = extractFacts(bundle);
+    // 59, not the pre-extractor-fix baseline of 61: fixing isLabelCell so a digit-bearing
+    // material name (e.g. "Kathodenaktivmaterial NMC811") counts as a row label also suppresses
+    // the spurious extra fact that row used to produce under its OWN "Material" column -- when
+    // rowLabel was wrongly undefined, the BOM row's first cell wasn't skipped as the row label,
+    // so it got its own standalone header-cell fact ({ label: 'Material', value:
+    // 'Kathodenaktivmaterial NMC811' }), duplicating information already carried as the row's
+    // label. With rowLabel correctly detected, that column-0 cell is now (correctly) skipped
+    // per the `ci === 0 && rowLabel !== undefined` rule, for both affected BOM rows -- 2 fewer
+    // facts (61 - 2 = 59), not a loss of real data.
+    expect(facts).toHaveLength(59);
+    // The declaration PDF's colon-terminated lines are column-aligned and get grouped into a
+    // table by the layout pass; without the isTextHeaderRow colon guard, that mirrored table's
+    // own first row would misclassify as a header describing the rows below it, and (once a
+    // width-2 pair-like table was no longer unconditionally pair-like) generate junk header-cell
+    // facts that never dedupe against the real kv-line facts. The PDF's only legitimate
+    // header-cell facts are the six Post-/Pre-Consumer recycled-content rows.
+    expect(
+      facts.filter(
+        (f) => f.shape === 'header-cell' && f.source.file === 'lieferantenerklaerung.pdf',
+      ),
+    ).toEqual(
+      facts.filter(
+        (f) =>
+          f.shape === 'header-cell' &&
+          f.source.file === 'lieferantenerklaerung.pdf' &&
+          f.rowLabel !== undefined &&
+          ['Kobalt', 'Lithium', 'Nickel'].includes(f.rowLabel),
+      ),
+    );
   });
 });
