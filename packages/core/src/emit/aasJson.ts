@@ -39,7 +39,12 @@ export function emitAasJson(input: unknown, options: EmitOptions = {}): EmitResu
   const environment = buildEnvironment(l1.draft, options);
   const jsonable = environmentToJsonable(environment);
   const rest = validateEnvironmentJson(jsonable);
-  const report = buildReport([...l1.findings, ...rest.findings], { L1: true, L2: true, L3: true });
+  const report = buildReport([...l1.findings, ...rest.findings], {
+    L1: true,
+    L2: true,
+    L3: true,
+    L4: false,
+  });
   return {
     output: canonicalJson(jsonable),
     environment,
