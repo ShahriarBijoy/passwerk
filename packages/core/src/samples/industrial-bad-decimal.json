@@ -144,7 +144,14 @@
       "value": [
         {
           "id": "DoC-MW-IND-2026-02",
-          "uri": "https://passport.musterwerk.example/docs/DoC-MW-IND-2026-02.pdf"
+          "uri": "https://passport.musterwerk.example/docs/DoC-MW-IND-2026-02.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -158,10 +165,26 @@
     "testReportsProvingCompliance": {
       "value": [
         {
-          "id": "TR-2026-0388"
+          "id": "TR-2026-0388",
+          "fileName": "TR-2026-0388.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         },
         {
-          "id": "TR-2026-0391"
+          "id": "TR-2026-0391",
+          "fileName": "TR-2026-0391.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -368,7 +391,14 @@
       "value": [
         {
           "id": "PCF-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/pcf/MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/pcf/MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",

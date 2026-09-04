@@ -108,7 +108,14 @@
       "value": [
         {
           "id": "DoC-MW-EV-2026-01",
-          "uri": "https://passport.musterwerk.example/docs/DoC-MW-EV-2026-01.pdf"
+          "uri": "https://passport.musterwerk.example/docs/DoC-MW-EV-2026-01.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -122,7 +129,15 @@
     "testReportsProvingCompliance": {
       "value": [
         {
-          "id": "TR-2026-0457"
+          "id": "TR-2026-0457",
+          "fileName": "TR-2026-0457.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -311,7 +326,14 @@
       "value": [
         {
           "id": "PCF-MW-EV-2026",
-          "uri": "https://passport.musterwerk.example/pcf/MW-EV-2026.pdf"
+          "uri": "https://passport.musterwerk.example/pcf/MW-EV-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",

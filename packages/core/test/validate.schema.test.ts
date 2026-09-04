@@ -1,4 +1,10 @@
-import { COMPOSITE_SCHEMAS, computeVerdict, validateSchema } from '@passwerk/core';
+import {
+  COMPOSITE_SCHEMAS,
+  computeVerdict,
+  getSample,
+  type PassportDraftInput,
+  validateSchema,
+} from '@passwerk/core';
 import { attributes } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
@@ -73,6 +79,16 @@ describe('L1 validateSchema', () => {
     });
     expect(ids(r)).toEqual(['PW-L1-IMPACT-UNASSIGNED']);
     expect(r.findings[0]?.severity).toBe('warning');
+  });
+  it('warns for documents without classification (PW-L1-DOCUMENT-UNCLASSIFIED)', () => {
+    const draft = structuredClone(getSample('ev-valid')) as PassportDraftInput;
+    const attrs = draft.attributes as Record<string, { value: { classification?: unknown }[] }>;
+    const field = attrs['euDeclarationOfConformity'];
+    const doc = field?.value[0];
+    if (doc) doc.classification = undefined;
+    const r = validateSchema(draft);
+    expect(r.findings.map((f) => f.ruleId)).toContain('PW-L1-DOCUMENT-UNCLASSIFIED');
+    expect(r.findings.every((f) => f.severity === 'warning')).toBe(true);
   });
   it('every composite attribute in the knowledge base has an explicit shape', () => {
     const unmodelled = attributes

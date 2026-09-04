@@ -1,4 +1,7 @@
 import type { PassportDraftInput } from '../model/passport.js';
+import evDocumentWithoutClassification from './ev-document-without-classification.json' with {
+  type: 'json',
+};
 import evMissing from './ev-missing-material-identifier.json' with { type: 'json' };
 import evValid from './ev-valid.json' with { type: 'json' };
 import industrialBadDecimal from './industrial-bad-decimal.json' with { type: 'json' };
@@ -13,6 +16,7 @@ export const BROKEN_SAMPLE_NAMES = [
   'lmt-wrong-date-format',
   'lmt-missing-state-of-charge',
   'industrial-bad-decimal',
+  'ev-document-without-classification',
 ] as const;
 export type SampleName = (typeof VALID_SAMPLE_NAMES)[number];
 export type BrokenSampleName = (typeof BROKEN_SAMPLE_NAMES)[number];
@@ -50,6 +54,11 @@ export const brokenSamples: Record<BrokenSampleName, BrokenSample> = {
     draft: industrialBadDecimal as unknown as PassportDraftInput,
     // L1 rejects the decimal comma; the emitted xs:decimal Property also fails aas-core.
     expectedFindings: ['PW-L1-VALUE', 'PW-L2-AAS-CORE'],
+  },
+  'ev-document-without-classification': {
+    draft: evDocumentWithoutClassification as unknown as PassportDraftInput,
+    // L1 warns; the document is left out of part 2 (ADR D-017). Verdict: valid_with_warnings.
+    expectedFindings: ['PW-L1-DOCUMENT-UNCLASSIFIED'],
   },
 };
 

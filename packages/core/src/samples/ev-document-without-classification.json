@@ -1,5 +1,5 @@
 {
-  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Document classifications use the example the IDTA 02035-2 template documents (02-04, VDI2770:2020); real passports need the class matching each document (ADR D-017, verify).",
+  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Broken sample derived from ev-valid: the EU Declaration of Conformity carries no VDI 2770 classification, so PW-L1-DOCUMENT-UNCLASSIFIED warns and the document is left out of the IDTA 02035-2 Handover Documentation submodel (ADR D-017). All other documents are fully valid, so the verdict is valid_with_warnings, not invalid.",
   "meta": {
     "schemaVersion": "1.0",
     "category": "EV",
@@ -109,11 +109,6 @@
         {
           "id": "DoC-MW-EV-2026-01",
           "uri": "https://passport.musterwerk.example/docs/DoC-MW-EV-2026-01.pdf",
-          "classification": {
-            "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
-            "system": "VDI2770:2020"
-          },
           "languages": ["de"],
           "contentType": "application/pdf"
         }

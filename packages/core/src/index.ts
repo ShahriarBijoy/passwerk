@@ -13,6 +13,7 @@ export * from './emit/environment.js';
 export * from './emit/ids.js';
 export * from './emit/submodels/carbonFootprint.js';
 export * from './emit/submodels/circularity.js';
+export * from './emit/submodels/handoverDocumentation.js';
 export * from './emit/submodels/materialComposition.js';
 export * from './emit/submodels/nameplate.js';
 export * from './emit/submodels/productCondition.js';
