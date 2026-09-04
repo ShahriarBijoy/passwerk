@@ -42,6 +42,7 @@ export * from './ingest/text.js';
 export * from './ingest/txt.js';
 export * from './ingest/types.js';
 export * from './ingest/xlsx.js';
+export * from './mapping/apply.js';
 export * from './mapping/propose.js';
 export * from './mapping/scorer.js';
 export * from './mapping/synonymIndex.js';
