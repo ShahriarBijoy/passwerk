@@ -316,3 +316,116 @@ describe('PW-PLAUS-015 idle temperature range', () => {
     expect(ruleIds(draft)).not.toContain('PW-PLAUS-015');
   });
 });
+
+describe('PW-PLAUS-016 energy coherence', () => {
+  it('fires when the declared energy is off by more than 20 %', () => {
+    // 195 Ah x 400 V = 78 kWh; 7.5 kWh is a factor of ten out.
+    const draft = draftWith({
+      ratedCapacity: { value: '195' },
+      nominalVoltage: { value: '400' },
+      certifiedUsableBatteryEnergy: { value: '7.5' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-016');
+  });
+  it('accepts a realistic usable fraction', () => {
+    const draft = draftWith({
+      ratedCapacity: { value: '195' },
+      nominalVoltage: { value: '400' },
+      certifiedUsableBatteryEnergy: { value: '75' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-016');
+  });
+});
+
+describe('PW-PLAUS-017 carbon footprint shares', () => {
+  it('fires when the four shares do not add up to 100', () => {
+    const draft = draftWith({
+      carbonFootprintShareRawMaterials: { value: '40' },
+      carbonFootprintShareManufacturing: { value: '30' },
+      carbonFootprintShareDistribution: { value: '5' },
+      carbonFootprintShareEndOfLife: { value: '5' },
+    });
+    const f = validatePlausibility(draft).findings.find((x) => x.ruleId === 'PW-PLAUS-017');
+    expect(f?.message.en).toContain('80');
+    expect(f?.legalRef).toBeUndefined();
+  });
+  it('is quiet within a percentage point, and when fewer than three shares are present', () => {
+    const ok = draftWith({
+      carbonFootprintShareRawMaterials: { value: '54.5' },
+      carbonFootprintShareManufacturing: { value: '35' },
+      carbonFootprintShareDistribution: { value: '8' },
+      carbonFootprintShareEndOfLife: { value: '2.2' },
+    });
+    expect(ruleIds(ok)).not.toContain('PW-PLAUS-017');
+    const sparse = draftWith({
+      carbonFootprintShareRawMaterials: { value: '54.5' },
+      carbonFootprintShareManufacturing: { value: '35' },
+    });
+    expect(ruleIds(sparse)).not.toContain('PW-PLAUS-017');
+  });
+});
+
+describe('PW-PLAUS-018 material mass sum', () => {
+  it('fires when the materials outweigh the battery', () => {
+    const draft = draftWith({
+      batteryMass: { value: '10' },
+      criticalRawMaterials: { value: [{ name: 'Cobalt', identifier: '7440-48-4', massKg: '8' }] },
+      electrodeAndElectrolyteMaterials: {
+        value: [{ name: 'Graphite', identifier: '7782-42-5', massKg: '5' }],
+      },
+    });
+    const f = validatePlausibility(draft).findings.find((x) => x.ruleId === 'PW-PLAUS-018');
+    expect(f?.severity).toBe('error');
+    expect(f?.message.en).toContain('13');
+  });
+  it('is quiet when the materials fit', () => {
+    const draft = draftWith({
+      batteryMass: { value: '412.5' },
+      criticalRawMaterials: { value: [{ name: 'Cobalt', identifier: '7440-48-4', massKg: '12' }] },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-018');
+  });
+});
+
+describe('PW-PLAUS-019 hazardous substance concentrations', () => {
+  it('fires above 100 % in total', () => {
+    const draft = draftWith({
+      hazardousSubstances: {
+        value: [
+          { name: 'Nickel', identifier: '7440-02-0', concentrationPercent: '70' },
+          { name: 'Cobalt', identifier: '7440-48-4', concentrationPercent: '45' },
+        ],
+      },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-019');
+  });
+  it('is quiet for a realistic set', () => {
+    const draft = draftWith({
+      hazardousSubstances: {
+        value: [{ name: 'Nickel', identifier: '7440-02-0', concentrationPercent: '12.5' }],
+      },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-019');
+  });
+});
+
+describe('PW-PLAUS-020 remaining versus original', () => {
+  it('fires once per violated pair', () => {
+    const draft = draftWith({
+      ratedCapacity: { value: '195' },
+      remainingCapacity: { value: '210', recordedAt: '2026-08-30T18:30:00Z' },
+      initialRoundTripEnergyEfficiency: { value: '92' },
+      remainingRoundTripEnergyEfficiency: { value: '95', recordedAt: '2026-08-30T18:30:00Z' },
+    });
+    const hits = validatePlausibility(draft).findings.filter((x) => x.ruleId === 'PW-PLAUS-020');
+    expect(hits).toHaveLength(2);
+    expect(hits[0]?.message.en).toContain('remainingCapacity');
+  });
+  it('is quiet when every remaining value is at or below its original', () => {
+    const draft = draftWith({
+      ratedCapacity: { value: '195' },
+      remainingCapacity: { value: '194', recordedAt: '2026-08-30T18:30:00Z' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-020');
+  });
+});

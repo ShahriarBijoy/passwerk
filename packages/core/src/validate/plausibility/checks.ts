@@ -65,6 +65,44 @@ function templateForcesPresence(attributeId: string): boolean {
   );
 }
 
+/**
+ * Tolerances. These are engineering judgement, not values stated in the Regulation: they
+ * decide how noisy L4 feels on real supplier data. Tune here, in one place.
+ */
+export const ENERGY_COHERENCE_TOLERANCE = 0.2; // 20 % of the derived energy
+export const SHARE_SUM_TOLERANCE_PP = 1; // percentage points around 100
+export const CAPACITY_FADE_TOLERANCE_PP = 1; // percentage points
+
+/** Remaining/original attribute pairs checked by PW-PLAUS-020. */
+const REMAINING_PAIRS: { remaining: string; original: string }[] = [
+  { remaining: 'remainingCapacity', original: 'ratedCapacity' },
+  { remaining: 'remainingUsableBatteryEnergy', original: 'certifiedUsableBatteryEnergy' },
+  {
+    remaining: 'remainingRoundTripEnergyEfficiency',
+    original: 'initialRoundTripEnergyEfficiency',
+  },
+];
+
+/** Sum the massKg entries of a composite material list. */
+function sumMassKg(items: unknown): Decimal | undefined {
+  if (!Array.isArray(items)) return undefined;
+  let total = new Decimal(0);
+  let seen = false;
+  for (const item of items) {
+    const raw = (item as { massKg?: unknown })?.massKg;
+    if (typeof raw !== 'string') continue;
+    try {
+      const d = new Decimal(raw);
+      if (!d.isFinite()) continue;
+      total = total.plus(d);
+      seen = true;
+    } catch {
+      /* a malformed mass is L1's problem, not L4's */
+    }
+  }
+  return seen ? total : undefined;
+}
+
 /** One check per PW-PLAUS rule id. Keys must match kb/rules.json exactly (see manifest test). */
 export const CHECKS: Record<string, RuleCheck> = {
   /** Listed percentages must lie between 0 and 100. */
@@ -266,5 +304,102 @@ export const CHECKS: Record<string, RuleCheck> = {
         params: { lower: lower.toString(), upper: upper.toString() },
       },
     ];
+  },
+
+  /** Certified usable energy must be within tolerance of rated capacity times nominal voltage. */
+  'PW-PLAUS-016': (ctx) => {
+    const capacity = ctx.decimal('ratedCapacity');
+    const voltage = ctx.decimal('nominalVoltage');
+    const declared = ctx.decimal('certifiedUsableBatteryEnergy');
+    if (capacity === undefined || voltage === undefined || declared === undefined) return [];
+    const derived = capacity.times(voltage).div(1000);
+    if (derived.isZero()) return [];
+    if (declared.minus(derived).abs().div(derived).lte(ENERGY_COHERENCE_TOLERANCE)) return [];
+    return [
+      {
+        attributeId: 'certifiedUsableBatteryEnergy',
+        params: {
+          declared: declared.toString(),
+          derived: derived.toDecimalPlaces(3).toString(),
+        },
+      },
+    ];
+  },
+
+  /** The four life-cycle shares should add up to about 100 %. */
+  'PW-PLAUS-017': (ctx) => {
+    const ids = ruleAttributes('PW-PLAUS-017');
+    const shares = ids.map((id) => ctx.decimal(id)).filter((d): d is Decimal => d !== undefined);
+    if (shares.length < 3) return [];
+    const sum = shares.reduce((acc, d) => acc.plus(d), new Decimal(0));
+    if (sum.minus(100).abs().lte(SHARE_SUM_TOLERANCE_PP)) return [];
+    return [
+      {
+        attributeId: 'carbonFootprintShareRawMaterials',
+        params: { sum: sum.toDecimalPlaces(2).toString() },
+      },
+    ];
+  },
+
+  /** The declared material masses must not outweigh the battery. */
+  'PW-PLAUS-018': (ctx) => {
+    const mass = ctx.decimal('batteryMass');
+    if (mass === undefined) return [];
+    const parts = [
+      sumMassKg(ctx.value('criticalRawMaterials')),
+      sumMassKg(ctx.value('electrodeAndElectrolyteMaterials')),
+    ].filter((d): d is Decimal => d !== undefined);
+    if (parts.length === 0) return [];
+    const sum = parts.reduce((acc, d) => acc.plus(d), new Decimal(0));
+    if (sum.lte(mass)) return [];
+    return [
+      {
+        attributeId: 'batteryMass',
+        params: { sum: sum.toDecimalPlaces(3).toString(), mass: mass.toString() },
+      },
+    ];
+  },
+
+  /** Hazardous substance concentrations must not exceed 100 % together. */
+  'PW-PLAUS-019': (ctx) => {
+    const items = ctx.value<{ concentrationPercent?: unknown }[]>('hazardousSubstances');
+    if (!Array.isArray(items)) return [];
+    let sum = new Decimal(0);
+    let seen = false;
+    for (const item of items) {
+      const raw = item?.concentrationPercent;
+      if (typeof raw !== 'string') continue;
+      try {
+        const d = new Decimal(raw);
+        if (!d.isFinite()) continue;
+        sum = sum.plus(d);
+        seen = true;
+      } catch {
+        /* malformed concentration is L1's problem */
+      }
+    }
+    if (!seen || sum.lte(100)) return [];
+    return [
+      { attributeId: 'hazardousSubstances', params: { sum: sum.toDecimalPlaces(2).toString() } },
+    ];
+  },
+
+  /** No remaining value may exceed its original counterpart. */
+  'PW-PLAUS-020': (ctx) => {
+    const out: RuleViolation[] = [];
+    for (const { remaining, original } of REMAINING_PAIRS) {
+      const now = ctx.decimal(remaining);
+      const then = ctx.decimal(original);
+      if (now === undefined || then === undefined || now.lte(then)) continue;
+      out.push({
+        attributeId: remaining,
+        params: {
+          pair: `${remaining} / ${original}`,
+          remaining: now.toString(),
+          original: then.toString(),
+        },
+      });
+    }
+    return out;
   },
 };

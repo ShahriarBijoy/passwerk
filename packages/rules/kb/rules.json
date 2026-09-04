@@ -1,5 +1,5 @@
 {
-  "$comment": "passwerk plausibility rules (validation layer L4, see docs/BUILD_PLAN.md 2.4). Data only: the rule engine in @passwerk/core implements one check per id. Rules never override the AAS metamodel (L2) or template conformance (L3) verdicts. Severity 'error' makes the verdict invalid; 'warning' yields valid_with_warnings. 'attributes' lists the attribute ids (kb/attributes) a rule reads. Legal references are informational and come from kb/ec-datapoints.json or the cited article.",
+  "$comment": "passwerk plausibility rules (validation layer L4, see docs/BUILD_PLAN.md 2.4). Data only: the rule engine in @passwerk/core implements one check per id. Rules never override the AAS metamodel (L2) or template conformance (L3) verdicts. Severity 'error' makes the verdict invalid; 'warning' yields valid_with_warnings. 'attributes' lists the attribute ids (kb/attributes) a rule reads. Legal references are informational and come from kb/ec-datapoints.json or the cited article. Rules with \"legalRef\": null are arithmetic consistency checks, not legal requirements. The numeric tolerances used by PW-PLAUS-016, 017 and 022 are engineering judgement, not values stated in the Regulation; they are named constants in @passwerk/core.",
   "lastVerified": "2026-09-04",
   "rules": [
     {
@@ -314,6 +314,108 @@
       },
       "attributes": ["temperatureRangeIdleLowerBoundary", "temperatureRangeIdleUpperBoundary"],
       "legalRef": "BR Annex XIII 1(l)"
+    },
+    {
+      "id": "PW-PLAUS-016",
+      "severity": "warning",
+      "title": {
+        "en": "Certified usable energy must fit rated capacity and nominal voltage",
+        "de": "Zertifizierte nutzbare Energie muss zu Nennkapazität und Nennspannung passen"
+      },
+      "message": {
+        "en": "Declared {declared} kWh differs by more than 20 % from the {derived} kWh implied by rated capacity and nominal voltage.",
+        "de": "Angegebene {declared} kWh weichen um mehr als 20 % von den aus Nennkapazität und Nennspannung berechneten {derived} kWh ab."
+      },
+      "fixHint": {
+        "en": "Usually Wh reported as kWh, or cell values reported as pack values. State pack-level figures in kWh.",
+        "de": "Häufig werden Wh als kWh oder Zellwerte als Packwerte angegeben. Werte auf Packebene und in kWh angeben."
+      },
+      "attributes": ["certifiedUsableBatteryEnergy", "ratedCapacity", "nominalVoltage"],
+      "legalRef": "BR Annex XIII 1(g), 1(h)"
+    },
+    {
+      "id": "PW-PLAUS-017",
+      "severity": "warning",
+      "title": {
+        "en": "The life-cycle carbon footprint shares should add up to 100 %",
+        "de": "Die Anteile am CO2-Fußabdruck sollten zusammen 100 % ergeben"
+      },
+      "message": {
+        "en": "The life-cycle shares add up to {sum} % instead of 100 %.",
+        "de": "Die Lebenszyklus-Anteile ergeben zusammen {sum} % statt 100 %."
+      },
+      "fixHint": {
+        "en": "Take all four shares from the same life-cycle assessment; mixing studies rarely adds up.",
+        "de": "Alle vier Anteile aus derselben Ökobilanz übernehmen; gemischte Studien ergeben selten 100 %."
+      },
+      "attributes": [
+        "carbonFootprintShareRawMaterials",
+        "carbonFootprintShareManufacturing",
+        "carbonFootprintShareDistribution",
+        "carbonFootprintShareEndOfLife"
+      ],
+      "legalRef": null
+    },
+    {
+      "id": "PW-PLAUS-018",
+      "severity": "error",
+      "title": {
+        "en": "The material masses must not exceed the battery mass",
+        "de": "Die Summe der Materialmassen darf die Batteriemasse nicht überschreiten"
+      },
+      "message": {
+        "en": "The declared material masses add up to {sum} kg but the battery mass is {mass} kg.",
+        "de": "Die angegebenen Materialmassen ergeben zusammen {sum} kg, die Batteriemasse ist mit {mass} kg angegeben."
+      },
+      "fixHint": {
+        "en": "Check whether masses were given per cell instead of per pack, or whether the battery mass is too low.",
+        "de": "Prüfen, ob Massen je Zelle statt je Pack angegeben wurden oder ob die Batteriemasse zu niedrig ist."
+      },
+      "attributes": ["batteryMass", "criticalRawMaterials", "electrodeAndElectrolyteMaterials"],
+      "legalRef": "BR Annex VI Part A (5), Annex XIII 1(b)"
+    },
+    {
+      "id": "PW-PLAUS-019",
+      "severity": "error",
+      "title": {
+        "en": "Hazardous substance concentrations must not exceed 100 % together",
+        "de": "Die Konzentrationen der Gefahrstoffe dürfen zusammen 100 % nicht überschreiten"
+      },
+      "message": {
+        "en": "The declared concentrations add up to {sum} %.",
+        "de": "Die angegebenen Konzentrationen ergeben zusammen {sum} %."
+      },
+      "fixHint": {
+        "en": "State each concentration as a mass share of the whole pack, from section 3 of the safety data sheet.",
+        "de": "Jede Konzentration als Massenanteil am Gesamtpack angeben, aus Abschnitt 3 des Sicherheitsdatenblatts."
+      },
+      "attributes": ["hazardousSubstances"],
+      "legalRef": "BR Annex VI Part A (8)"
+    },
+    {
+      "id": "PW-PLAUS-020",
+      "severity": "error",
+      "title": {
+        "en": "Remaining values must not exceed their original counterparts",
+        "de": "Restwerte dürfen ihre Ausgangswerte nicht überschreiten"
+      },
+      "message": {
+        "en": "{pair}: the remaining value {remaining} is greater than the original value {original}.",
+        "de": "{pair}: Restwert {remaining} ist größer als der Ausgangswert {original}."
+      },
+      "fixHint": {
+        "en": "Remaining values come from the battery management system, original values from the data sheet; bring both to the same level and unit.",
+        "de": "Restwerte stammen aus dem Batteriemanagementsystem, Ausgangswerte aus dem Datenblatt; beide auf dieselbe Ebene und Einheit bringen."
+      },
+      "attributes": [
+        "remainingCapacity",
+        "ratedCapacity",
+        "remainingUsableBatteryEnergy",
+        "certifiedUsableBatteryEnergy",
+        "remainingRoundTripEnergyEfficiency",
+        "initialRoundTripEnergyEfficiency"
+      ],
+      "legalRef": "BR Annex XIII 4(a)"
     }
   ]
 }
