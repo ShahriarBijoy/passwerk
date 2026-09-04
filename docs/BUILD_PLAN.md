@@ -17,6 +17,12 @@ Working name: **passwerk** (German: "Pass" + "Werk"). Rename freely; keep the pa
 > (built as a vertical slice on the three MVP submodels first, then the remaining four);
 > **D-006** a fully client-side web app (`apps/web`) with QR preview replaces the `site/`
 > browser demo and gets its own phase (7a). Where this document and an ADR disagree, the ADR wins.
+>
+> **Amendment (2026-09-04, D-019).** The web app is the product for suppliers, the MCP server
+> plus skill is the AI interface, the CLI is the automation interface. A passwerk **MCP App**
+> (interactive UI rendered inside Claude, ChatGPT, Cursor and VS Code) joins the surfaces as
+> Phase 7b, and packaging (MCPB, Codex plugin, connector submission) as Phase 7c. §2.5, §5
+> and §7 below carry the amended text.
 
 ---
 
@@ -160,17 +166,31 @@ export const Field = <T extends z.ZodTypeAny>(inner: T) => z.object({
 "Valid" is only ever the real verdict. `emit` re-validates its own output before returning `valid: true`.
 
 ### 2.5 Agent-agnostic delivery — "the best way"
-MCP is the one protocol every major coding agent speaks (Claude Code, Codex CLI, OpenCode, Cursor, Windsurf, Claude Desktop, Gemini CLI). So the **MCP server is the primary interface**. Around it:
+One deterministic engine, several thin surfaces (D-001, D-006, D-019). The hierarchy, amended by D-019:
+
+| Rank | Surface | Who | Why |
+|---|---|---|---|
+| Product | `apps/web` (client-side, no backend) | Quality / compliance manager at the supplier | Upload files, review mappings, resolve gaps, download the passport. Never a terminal. |
+| AI interface | `@passwerk/server` + `skills/passwerk` + MCP App | Consultants and agent users in Claude, Codex, Cursor, OpenCode | Conversational analysis; the host LLM does the semantic step (D-002) |
+| Automation | `@passwerk/cli` | Developers, ERP and CI teams | Batch runs, exit codes, ERP integration |
+| Foundation | `@passwerk/core` | Anyone building their own agent or UI | Plain library |
+
+MCP is the one protocol every major coding agent speaks (Claude Code, Codex CLI, OpenCode, Cursor, Windsurf, Claude Desktop, Gemini CLI), so it stays the single AI interface. The surfaces:
 
 | Surface | Purpose | Location |
 |---|---|---|
-| `@passwerk/server` (npm, `npx -y @passwerk/server`) | MCP over stdio; `--http` for Streamable HTTP with bearer token; Docker image | `packages/server` |
+| `apps/web` | Static, fully client-side app bundling `@passwerk/core`: ingest, mapping review, gap report, validation, emit, QR preview. Optional bring-your-own-key model call from the browser | `apps/web` |
+| `@passwerk/server` (npm, `npx -y @passwerk/server`) | MCP over stdio; `--http` for Streamable HTTP with bearer token; Docker image; session store keyed by bundle / draft id | `packages/server` |
+| passwerk MCP App | `ui://` resource served by the server (MCP Apps extension `io.modelcontextprotocol/ui`): the web app's review, gap and export views in an iframe inside Claude, ChatGPT, Cursor, VS Code. Files enter through a file input in the iframe; not rendered by Claude Code or Codex CLI, which use the text tools | `apps/mcp-app` |
 | `skills/passwerk/SKILL.md` | Agent Skill (Anthropic skill format) that teaches *any* agent the workflow: ingest → map → validate → fix → emit. Works in Claude Code, Codex (`AGENTS.md` pointer), OpenCode | `skills/passwerk/` |
 | `AGENTS.md` + `CLAUDE.md` | Repo-level instructions (Codex reads AGENTS.md, Claude Code reads CLAUDE.md, OpenCode reads both) | repo root |
 | `.mcp.json` / `opencode.json` / `.codex/config.toml` examples | One-line install for each agent | `docs/install/` |
+| Packages: MCPB (Claude Desktop, local, offline), Codex plugin (`.codex-plugin/plugin.json`: skill + stdio server), Claude connector (remote, directory submission) | One-click install of the same server and skill | `packaging/` |
 | `@passwerk/cli` (`passwerk`) | Scriptable, no-LLM: `passwerk audit draft.json` exits 0/1/2; `passwerk extract *.pdf`; optional `chat` demo loop | `packages/cli` |
 | `@passwerk/core` (npm) | Plain library for anyone building their own agent/UI | `packages/core` |
-| `site/` | Static docs + live browser demo (core runs in the browser via WASM — a great CV demo) | `site/` |
+| `site/` | Static docs (the browser demo moved to `apps/web`, D-006) | `site/` |
+
+Privacy modes, stated honestly in every README: the web app and the local stdio / MCPB installs process everything on the user's machine; the hosted connector routes tool calls through the AI host and the operator's endpoint and is a convenience mode with an explicit retention policy, never advertised as offline.
 
 ---
 
@@ -297,6 +317,8 @@ All tools: Zod input schema → JSON schema; return `structuredContent` **and** 
 | `generate_carrier` | `{ draft \| uid, gs1?: {gtin, serial} \| giai, format: 'svg'\|'png', resolverBase? }` | UID string, GS1 Digital Link URI, QR image | Validates UID format. |
 | `list_capabilities` | `{}` | versions of bundled templates/standards, KB stats, `lastVerified` dates, sovereignty statement | |
 
+Session state (D-019): every tool that takes a `DocumentBundle`, `FactSet` or `PassportDraft` also accepts the id the server returned for it (`bundleId`, `factSetId`, `draftId`) and every tool that produces one returns its id. The store is in-memory and per connection, so the MCP App iframe and the host model operate on the same objects without re-sending them. Optional `_meta.ui.resourceUri` on `suggest_mappings`, `gap_report` and `emit_passport` points at the MCP App resource; hosts without the extension ignore it.
+
 ### 5.2 Resources
 - `passwerk://samples/{name}` — golden inputs and drafts (e.g. `industrial-valid`, `ev-missing-pcf`, `lmt-conflicting-mass`)
 - `passwerk://reference/attributes` — the full attribute KB (agent reads it to map intelligently)
@@ -399,13 +421,30 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 
 ### Phase 6 — MCP server + skill + CLI (2–3 days)
 - Server: tools/resources/prompts per §5; stdio + Streamable HTTP (`PASSWERK_AUTH_TOKEN`), `/healthz`; payload logging off.
+- `ingest_documents` accepts inline bytes as well as paths; a session store keyed by `bundleId` / `draftId` (in-memory, per connection) so a later MCP App and the model see the same state (D-019). Tools accept an id or the full object.
 - `skills/passwerk/SKILL.md`; install docs for Claude Code (`.mcp.json`), Codex (`config.toml` + `AGENTS.md`), OpenCode (`opencode.json`), Cursor, Claude Desktop; MCP Inspector CLI examples.
 - CLI: `audit` (exit codes 0/1/2), `extract`, `emit`, `obligations`, `tools`; optional `chat` (Anthropic SDK agent loop, prints every tool call).
 - DoD: end-to-end demo script: `passwerk chat -m "Erstelle einen Batteriepass aus ./fixtures/lieferant-a/*"` reaches `valid` on the valid fixture set and produces a correct gap list on the broken set.
 
-### Phase 7 — Carrier, HTML sheet, Docker, docs site, release (2–3 days)
-- UID + GS1 Digital Link + QR; HTML passport sheet; Dockerfile (non-root, multi-arch), compose; `site/` with browser demo (core via Vite/WASM); README with GIF demo; publish `@passwerk/*` to npm; submit to the Official MCP Registry.
+### Phase 7 — Carrier, HTML sheet, Docker, release (2–3 days)
+- UID + GS1 Digital Link + QR; HTML passport sheet; Dockerfile (non-root, multi-arch), compose; `site/` static docs; README with GIF demo; publish `@passwerk/*` to npm; submit to the Official MCP Registry.
 - DoD: `npx -y @passwerk/server` works from a clean machine; registry listing live.
+
+### Phase 7a — Web app (D-006, D-019) (3–4 days)
+- `apps/web`: static Vite app bundling `@passwerk/core` (pdfjs `workerSrc` supplied, D-016). Screens: project (category, role, capacity, date → `check_obligations`), upload, extracted facts with provenance, mapping review (accept / reject / edit, conflicts), gap report grouped by data owner with legal refs, validate, export (AAS JSON, AASX, HTML sheet, gap report, QR).
+- Review, gap and export views are built as a shared component library so Phase 7b can reuse them unchanged.
+- Optional bring-your-own-key model call from the browser for semantic mapping (D-002 boundary).
+- DoD: Playwright run on the Musterwerk fixtures reaches `valid` on the valid set and shows the expected gap list on the broken set; no network request in the default mode (sovereignty test in the browser).
+
+### Phase 7b — MCP App (D-019) (2–3 days)
+- `apps/mcp-app`: the Phase 7a review, gap and export components wrapped in the MCP Apps bridge (`@modelcontextprotocol/ext-apps`), served by `@passwerk/server` as a `ui://` resource referenced from `_meta.ui.resourceUri` on the relevant tools.
+- File entry: plain file input inside the iframe; bytes go to `ingest_documents` inline, or `core` runs inside the iframe and only the `FactSet` is sent. Decide after measuring the host's message size limit and confirming the sandbox permits file inputs (both unverified, D-019).
+- Verified against Claude Desktop (stdio) and Claude web (Streamable HTTP); Claude Code and Codex CLI fall back to the text tools plus skill.
+- DoD: the same fixture run as 7a completes inside Claude Desktop; screenshots for the directory submission.
+
+### Phase 7c — Packaging (D-019) (1–2 days)
+- MCPB bundle for Claude Desktop (`manifest.json`, bundled Node server, `user_config` for the working directory); Codex plugin (`.codex-plugin/plugin.json` with the skills directory and the stdio server); Claude connector submission checklist (Streamable HTTP, tool annotations, privacy policy, screenshots).
+- DoD: one-click install works on macOS and Windows for MCPB; the plugin loads in Codex CLI from a local marketplace.
 
 ### Phase 8 — Proof & pilot (ongoing)
 - Run emitted AASX through AASX Package Explorer and the BatteryPass-Ready public test environment; record reports in `CONFORMANCE.md`.
@@ -420,7 +459,7 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - [ ] `docs/CONFORMANCE.md`: N/N golden passports pass official `aas-test-engines`, replayed every CI run
 - [ ] `sovereignty.test.ts` + `--network none` job green
 - [ ] Gap report with legal citations in DE and EN
-- [ ] Browser demo on the docs site
+- [ ] `apps/web` runs the whole workflow client-side; MCP App renders in Claude Desktop
 - [ ] One pilot / case study (even anonymized) or a recorded run on realistic fixtures
 - [ ] Apache-2.0, `PROVENANCE.md`, `SECURITY.md`
 
