@@ -124,6 +124,38 @@ describe('applyMappings', () => {
     expect(r.draft.attributes['manufacturerInformation']?.source).toHaveLength(3);
     expect(validateSchema(r.draft).findings).toEqual([]);
   });
+  it('repeating an identical path decision merges sources but does not recount as applied', () => {
+    const once = applyMappings(newDraft(meta), [
+      {
+        attributeId: 'manufacturerInformation',
+        path: 'name.de',
+        value: 'Musterwerk GmbH',
+        source: src('line 2'),
+      },
+    ]);
+    expect(once.applied).toBe(1);
+    const twice = applyMappings(once.draft, [
+      {
+        attributeId: 'manufacturerInformation',
+        path: 'name.de',
+        value: 'Musterwerk GmbH',
+        source: [{ file: 's.xlsx', cell: 'A1' }],
+      },
+    ]);
+    expect(twice.applied).toBe(0);
+    expect(twice.draft.attributes['manufacturerInformation']?.value).toEqual({
+      name: { de: 'Musterwerk GmbH' },
+    });
+    expect(twice.draft.attributes['manufacturerInformation']?.source).toEqual([
+      ...src('line 2'),
+      { file: 's.xlsx', cell: 'A1' },
+    ]);
+    // A path decision that actually changes the sub-field still counts.
+    const changed = applyMappings(twice.draft, [
+      { attributeId: 'manufacturerInformation', path: 'name.de', value: 'Other GmbH' },
+    ]);
+    expect(changed.applied).toBe(1);
+  });
   it('rejects unknown attribute ids and values that fail the leaf schema', () => {
     expect(() => applyMappings(newDraft(meta), [{ attributeId: 'nope', value: 1 }])).toThrow(
       /nope/,

@@ -91,12 +91,20 @@ export function applyMappings(draft: PassportDraft, decisions: MappingDecision[]
           : {}),
     });
     if (!existing || existing.value === undefined || d.path || d.override) {
+      // A `path` decision that repeats an already-applied sub-field change must not inflate
+      // `applied`; every other branch here (a first value, or an explicit override) always
+      // counts, matching the pre-existing behaviour.
+      const changed =
+        !d.path ||
+        !existing ||
+        existing.value === undefined ||
+        !same(existing.value, incomingValue);
       attributes[d.attributeId] = fresh(
         incomingValue,
         'present',
         mergeSources(existing?.source ?? [], incomingSources),
       );
-      applied += 1;
+      if (changed) applied += 1;
       continue;
     }
     if (same(existing.value, incomingValue)) {
