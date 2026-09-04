@@ -59,6 +59,8 @@ export * from './model/field.js';
 export * from './model/passport.js';
 export * from './model/provenance.js';
 export * from './model/values.js';
+export * from './obligations/check.js';
+export * from './obligations/types.js';
 export * from './samples/index.js';
 export * from './validate/aas.js';
 export * from './validate/finding.js';
