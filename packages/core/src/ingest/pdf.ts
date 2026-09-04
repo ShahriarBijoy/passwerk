@@ -21,16 +21,16 @@ export async function readPdf(file: InputFile): Promise<Page[]> {
     disableFontFace: true,
     useSystemFonts: false,
   });
-  let pdf: Awaited<typeof task.promise>;
   try {
-    pdf = await task.promise;
-  } catch (e) {
-    const name = (e as { name?: string }).name ?? '';
-    if (name === 'PasswordException')
-      throw new IngestFailure('encrypted', `${file.name} is password protected`);
-    throw new IngestFailure('corrupt', `${file.name}: ${String((e as Error).message ?? e)}`);
-  }
-  try {
+    let pdf: Awaited<typeof task.promise>;
+    try {
+      pdf = await task.promise;
+    } catch (e) {
+      const name = (e as { name?: string }).name ?? '';
+      if (name === 'PasswordException')
+        throw new IngestFailure('encrypted', `${file.name} is password protected`);
+      throw new IngestFailure('corrupt', `${file.name}: ${String((e as Error).message ?? e)}`);
+    }
     const pages: Page[] = [];
     for (let n = 1; n <= pdf.numPages; n += 1) {
       const page = await pdf.getPage(n);
@@ -76,7 +76,7 @@ export async function readPdf(file: InputFile): Promise<Page[]> {
         lines,
         tables,
       });
-      page.cleanup();
+      await page.cleanup();
     }
     return pages;
   } finally {

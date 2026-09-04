@@ -34,4 +34,13 @@ describe('pdf reader', () => {
   it('garbage with a .pdf name is corrupt', async () => {
     await expect(readPdf(file('edge', 'not-a-pdf.pdf'))).rejects.toBeInstanceOf(IngestFailure);
   });
+  it('cleans up after a failed load: repeated failures and a later success both work', async () => {
+    for (let i = 0; i < 3; i += 1) {
+      await expect(readPdf(file('edge', 'encrypted.pdf'))).rejects.toMatchObject({
+        code: 'encrypted',
+      });
+    }
+    const [page] = await readPdf(file('musterwerk', 'lieferantenerklaerung.pdf'));
+    expect(page).toMatchObject({ number: 1, lang: 'de', textless: false });
+  });
 });
