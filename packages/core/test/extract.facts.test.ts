@@ -1,7 +1,49 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type DocumentBundle, extractFacts, ingest } from '@passwerk/core';
+import {
+  type Cell,
+  type CellKind,
+  type DocumentBundle,
+  extractFacts,
+  ingest,
+  type Line,
+  type Table,
+} from '@passwerk/core';
 import { beforeAll, describe, expect, it } from 'vitest';
+
+/** Build an in-memory Table (no file) for testing tableDrafts shapes directly. */
+function mkTable(index: number, rows: string[][], kinds?: (CellKind | undefined)[][]): Table {
+  const cells: Cell[][] = rows.map((row, ri) =>
+    row.map((text, ci) => {
+      const ref = `T${index}:R${ri + 1}C${ci + 1}`;
+      const kind = kinds?.[ri]?.[ci];
+      return kind
+        ? { text, ref, kind, source: { file: 'inline', cell: ref } }
+        : { text, ref, source: { file: 'inline', cell: ref } };
+    }),
+  );
+  return { index, rows: cells, source: { file: 'inline' } };
+}
+
+function mkLine(text: string, segments: string[], note: string): Line {
+  return { text, segments, source: { file: 'inline', note } };
+}
+
+/** Wrap tables/lines into a one-document, one-page bundle (no ingest() involved). */
+function mkBundle(tables: Table[], lines: Line[] = []): DocumentBundle {
+  return {
+    documents: [
+      {
+        name: 'inline',
+        format: 'txt',
+        contentType: 'text/plain',
+        sha256: '0'.repeat(64),
+        lang: 'de',
+        pages: [{ number: 1, lang: 'de', textless: false, lines, tables }],
+      },
+    ],
+  };
+}
 
 const FIX = join(import.meta.dirname, 'fixtures', 'musterwerk');
 const file = (name: string) => ({
@@ -63,6 +105,73 @@ describe('extractFacts', () => {
         cell: expect.stringMatching(/^T\d+:R2C2$/),
       },
     });
+    // Ruling 3: labelKey folds the row label in, so same-header facts on different rows don't
+    // collapse to the same key ('post consumer' for every row's Post-Consumer fact).
+    expect(cobaltPost?.labelKey).toBe('kobalt post consumer');
+    const lithiumPost = facts.find(
+      (f) => f.shape === 'header-cell' && f.rowLabel === 'Lithium' && f.label === 'Post-Consumer',
+    );
+    expect(lithiumPost?.labelKey).toBe('lithium post consumer');
+    expect(lithiumPost?.labelKey).not.toBe(cobaltPost?.labelKey);
+  });
+  it('a width-2 header table (no width floor) yields header-cell facts, not sheet-pair', () => {
+    // "Nr | Wert" with numeric first cells in the data rows: headerIsText is true regardless of
+    // width, but pairLike is false (the data rows' first cell is not a label), so this becomes
+    // header-cell facts for both columns rather than being skipped or misread as sheet-pair.
+    const table = mkTable(1, [
+      ['Nr', 'Wert'],
+      ['1', '94,5'],
+      ['2', '12'],
+    ]);
+    const { facts } = extractFacts(mkBundle([table]));
+    const nrFacts = facts.filter((f) => f.label === 'Nr');
+    const wertFacts = facts.filter((f) => f.label === 'Wert');
+    expect(nrFacts.map((f) => f.raw)).toEqual(['1', '2']);
+    expect(wertFacts.map((f) => f.value)).toEqual(['94.5', '12']);
+    expect(facts.some((f) => f.shape === 'sheet-pair')).toBe(false);
+    expect(facts.every((f) => f.shape === 'header-cell')).toBe(true);
+  });
+  it('a colon-less two-segment line is a weak draft, added only if unclaimed by a strong fact', () => {
+    // Note: uses "Gewicht:" rather than the illustrative "A:" from the finding, since "a" is a
+    // normalizeLabel stopword and would make the label's labelKey empty (dropping the fact
+    // entirely, which would defeat the point of this test).
+    const table = mkTable(1, [['Gewicht:', '1']]);
+    const lines = [
+      mkLine('Gewicht:  1', ['Gewicht:', '1'], 'line 1'),
+      mkLine('Gesamtgewicht  412,7 kg', ['Gesamtgewicht', '412,7 kg'], 'line 2'),
+    ];
+    const { facts } = extractFacts(mkBundle([table], lines));
+    // The mirrored "Gewicht:" line (strong, colon-based) and the pair-like table's "Gewicht:"
+    // row (strong, table-derived) share a dedupe key; lines are processed first, so exactly one
+    // survives.
+    expect(facts.filter((f) => f.label === 'Gewicht:')).toHaveLength(1);
+    // "Gesamtgewicht" has no colon and no table counterpart: its weak draft is unclaimed and
+    // survives as an ordinary kv fact.
+    expect(facts.find((f) => f.label === 'Gesamtgewicht')).toMatchObject({
+      value: '412.7',
+      unit: 'kg',
+      shape: 'kv',
+    });
+  });
+  it('header-cell facts without a row label use the row number to avoid a dedupe collision', () => {
+    // Both material names contain a digit (NMC811, LFP-1), so neither row gets a row label;
+    // without folding the row number into the dedupe key, the two identical
+    // ('kobalt rec', '0', '') keys would collapse to a single fact.
+    const table = mkTable(1, [
+      ['Material', 'Kobalt rec. %'],
+      ['NMC811', '0'],
+      ['LFP-1', '0'],
+    ]);
+    const { facts } = extractFacts(mkBundle([table]));
+    const kobalt = facts.filter((f) => f.label === 'Kobalt rec. %');
+    expect(kobalt).toHaveLength(2);
+    expect(kobalt.every((f) => f.rowLabel === undefined)).toBe(true);
+  });
+  it('a text header row with no data rows yields no facts', () => {
+    const table = mkTable(1, [['Kenngröße', 'Wert', 'Einheit']]);
+    const { facts, tables } = extractFacts(mkBundle([table]));
+    expect(facts).toHaveLength(0);
+    expect(tables).toHaveLength(0);
   });
   it('sheet pairs from XLSX: number cells are canonical, unit from the label, date cells', () => {
     const { facts } = extractFacts(bundle);

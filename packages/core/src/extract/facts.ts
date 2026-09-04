@@ -10,14 +10,20 @@ const KV_LINE = /^(.{1,80}?:)\s+(.+)$/;
 const hasDigit = (s: string) => /\d/.test(s);
 const isUri = (s: string) => /^[A-Za-z][A-Za-z0-9+.-]*:\S+$/.test(s) && !/^\d/.test(s);
 
-/** Internal draft, prior to dedup and id assignment. Optional-ish fields are always present
- * (possibly undefined) rather than `?:` so building the object never fights
- * `exactOptionalPropertyTypes`; the final `Fact` uses conditional spread instead. */
+/** Internal draft, prior to dedup and id assignment. `labelKey` and `dedupeSuffix` are computed
+ * at draft-creation time (shape-aware: rule 3 for header-cell facts) rather than generically
+ * derived later. Optional-ish fields are always present (possibly undefined) rather than `?:`
+ * so building the object never fights `exactOptionalPropertyTypes`; the final `Fact` uses
+ * conditional spread instead. */
 interface Draft {
   label: string;
+  labelKey: string;
   raw: string;
   shape: Fact['shape'];
   rowLabel: string | undefined;
+  /** Third segment of the dedupe key: `rowLabel`, or `R<n>` for a row-numbered header-cell fact
+   * with no row label (rule: two BOM-style rows with no label must not collide), or '' otherwise. */
+  dedupeSuffix: string;
   source: Provenance;
   unitHint: string | undefined;
   cellKind: Cell['kind'] | undefined;
@@ -78,7 +84,8 @@ function isLabelCell(c: Cell | undefined): c is Cell {
   return !!c && c.text.length > 0 && !hasDigit(c.text) && c.kind !== 'number';
 }
 
-/** The first row is all-text with at least two populated cells (candidate column headers). */
+/** The first row is all-text with at least two populated cells (candidate column headers). No
+ * width floor: a width-2 table can be a header table too (e.g. a "Nr | Wert" table). */
 function isTextHeaderRow(header: Cell[]): boolean {
   const populated = header.filter((c) => c.text.length > 0);
   return (
@@ -98,11 +105,11 @@ function tableDrafts(
   if (rows.length === 0) return out;
   const width = Math.max(...rows.map((r) => r.filter((c) => c.text.length > 0).length));
   const header = rows[0] as Cell[];
-  // A width-2 vertical key/value list (the PDF's kv block, an XLSX Stammdaten sheet) is never
-  // treated as a header table even when its first row happens to be text-only: it has no
-  // distinct "header vs. data" shape, just N rows of the same kind.
-  const isHeaderTable = width >= 3 && rows.length > 1 && isTextHeaderRow(header);
-  const dataRows = isHeaderTable ? rows.slice(1) : rows;
+  const headerIsText = isTextHeaderRow(header);
+  const dataRows = headerIsText ? rows.slice(1) : rows;
+  // A text header row with nothing beneath it (just a header, no data) yields no facts at all.
+  if (headerIsText && dataRows.length === 0) return out;
+
   const pairLike =
     (width === 2 || width === 3) &&
     rows.every((r) => isLabelCell(r[0])) &&
@@ -126,9 +133,11 @@ function tableDrafts(
           : unitFromLabel(label.text);
       out.push({
         label: label.text,
+        labelKey: normalizeLabel(label.text),
         raw: value.text,
         shape: 'sheet-pair',
         rowLabel: undefined,
+        dedupeSuffix: '',
         source: value.source,
         unitHint,
         cellKind: value.kind,
@@ -136,7 +145,7 @@ function tableDrafts(
     }
   }
 
-  if (isHeaderTable) {
+  if (headerIsText) {
     const headers = header.map((c) => c.text);
     tables.push({
       id: `${doc.name}#${page.number}:T${table.index}`,
@@ -149,23 +158,34 @@ function tableDrafts(
     // header tables (Leistung, the CSV) already got sheet-pair facts above; adding header-cell
     // facts too would just duplicate them under worse labels.
     if (!pairLike) {
-      for (const r of dataRows) {
+      dataRows.forEach((r, ri) => {
         const rowLabel = isLabelCell(r[0]) ? r[0]?.text : undefined;
+        const rowNumber = ri + 1;
         r.forEach((cell, ci) => {
           const columnHeader = headers[ci];
           if (!columnHeader || cell.text.length === 0 || (ci === 0 && rowLabel !== undefined))
             return;
+          // Rule 3: a row-labelled header-cell fact's labelKey folds the row label in, so
+          // e.g. "Kobalt"+"Post-Consumer" and "Lithium"+"Post-Consumer" don't collide; the
+          // header-as-written stays the fact's `label`. A row with no label (e.g. a BOM row
+          // whose first cell contains a digit) instead gets its 1-based row number folded into
+          // the dedupe key alone, so two such rows sharing a header and value both survive.
           out.push({
             label: columnHeader,
+            labelKey:
+              rowLabel !== undefined
+                ? normalizeLabel(`${rowLabel} ${columnHeader}`)
+                : normalizeLabel(columnHeader),
             raw: cell.text,
             shape: 'header-cell',
             rowLabel,
+            dedupeSuffix: rowLabel ?? `R${rowNumber}`,
             source: cell.source,
             unitHint: unitFromLabel(columnHeader),
             cellKind: cell.kind,
           });
         });
-      }
+      });
     }
   }
   return out;
@@ -176,53 +196,56 @@ export function extractFacts(bundle: DocumentBundle): FactSet {
   const tables: TableFact[] = [];
   for (const doc of bundle.documents) {
     for (const page of doc.pages) {
-      const drafts: Draft[] = [];
+      // Colon `kv` facts and every table-derived fact are strong; a colon-less two-segment line
+      // yields a weak draft. Strong drafts are deduped first (lines before tables, so a real kv
+      // line wins over its mirrored table row); a weak draft is then added only if its key was
+      // not already claimed by a strong fact, and weak drafts also dedupe among themselves.
+      const strongDrafts: Draft[] = [];
+      const weakDrafts: Draft[] = [];
       for (const line of page.lines) {
         const m = KV_LINE.exec(line.text);
         if (m) {
-          drafts.push({
-            label: (m[1] as string).trim(),
+          const label = (m[1] as string).trim();
+          strongDrafts.push({
+            label,
+            labelKey: normalizeLabel(label),
             raw: (m[2] as string).trim(),
             shape: 'kv',
             rowLabel: undefined,
+            dedupeSuffix: '',
             source: line.source,
             unitHint: undefined,
             cellKind: undefined,
           });
-        } else if (
-          // A colon-less "label  value" line is only trusted as a fact of its own when the page
-          // has no tables: xlsx/csv readers mirror every table row into `lines` too, and that
-          // table row (with a real cell kind, unit and provenance) is the better source.
-          page.tables.length === 0 &&
-          line.segments.length === 2 &&
-          !hasDigit(line.segments[0] as string)
-        ) {
-          drafts.push({
-            label: line.segments[0] as string,
+        } else if (line.segments.length === 2 && !hasDigit(line.segments[0] as string)) {
+          const label = line.segments[0] as string;
+          weakDrafts.push({
+            label,
+            labelKey: normalizeLabel(label),
             raw: line.segments[1] as string,
             shape: 'kv',
             rowLabel: undefined,
+            dedupeSuffix: '',
             source: line.source,
             unitHint: undefined,
             cellKind: undefined,
           });
         }
       }
-      for (const table of page.tables) drafts.push(...tableDrafts(table, page, tables, doc));
+      for (const table of page.tables) strongDrafts.push(...tableDrafts(table, page, tables, doc));
 
       const seen = new Set<string>();
       let n = 0;
-      for (const d of drafts) {
-        const labelKey = normalizeLabel(d.label);
-        const key = `${labelKey}|${d.raw}|${d.rowLabel ?? ''}`;
-        if (labelKey.length === 0 || d.raw.length === 0 || seen.has(key)) continue;
+      const accept = (d: Draft) => {
+        const key = `${d.labelKey}|${d.raw}|${d.dedupeSuffix}`;
+        if (d.labelKey.length === 0 || d.raw.length === 0 || seen.has(key)) return;
         seen.add(key);
         n += 1;
         const interpreted = interpretValue(d.raw, page.lang, d.unitHint, d.cellKind);
         facts.push({
           id: `${doc.name}#${page.number}:${n}`,
           label: d.label,
-          labelKey,
+          labelKey: d.labelKey,
           raw: d.raw,
           ...interpreted,
           lang: page.lang,
@@ -230,7 +253,9 @@ export function extractFacts(bundle: DocumentBundle): FactSet {
           ...(d.rowLabel !== undefined ? { rowLabel: d.rowLabel } : {}),
           source: d.source,
         });
-      }
+      };
+      for (const d of strongDrafts) accept(d);
+      for (const d of weakDrafts) accept(d);
     }
   }
   const documents = bundle.documents.map((d) => ({
