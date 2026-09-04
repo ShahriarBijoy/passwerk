@@ -27,6 +27,10 @@ const MESSAGES: Record<string, { de: string; en: string }> = {
     de: 'Zusammengesetztes Attribut "{detail}" hat in dieser Version noch keine feste Struktur; der Wert wird nicht geprüft.',
     en: 'Composite attribute "{detail}" has no fixed shape in this version yet; the value is not checked.',
   },
+  'PW-L1-DOCUMENT-UNCLASSIFIED': {
+    de: 'Dokument "{detail}" hat keine VDI-2770-Klassifikation und wird nicht in die Übergabedokumentation (IDTA 02035-2) übernommen.',
+    en: 'Document "{detail}" has no VDI 2770 classification and is not included in Handover Documentation (IDTA 02035-2).',
+  },
   'PW-L2-DESERIALIZE': {
     de: 'Die AAS-JSON-Ausgabe lässt sich nicht als AAS-Umgebung lesen: {detail}',
     en: 'The AAS JSON output cannot be read as an AAS environment: {detail}',

@@ -224,3 +224,52 @@ supplied by the user; both are marked `verify` until then.
 
 **Consequences.** All three emitters stay data-driven through catalogue paths; no semanticId
 or idShort is typed by hand. The oracle set grows to 14 files.
+
+## D-016: Ingest takes bytes; PDF through pdfjs-dist, OOXML through fflate and fast-xml-parser (2026-09-04)
+
+**Context.** Core must run in the browser (D-006) and offline (D-013). SheetJS is unmaintained
+on npm, exceljs needs Node streams, and every OCR engine ships models or fetches them.
+
+**Decision.** `ingest(files, options?)` takes `{ name, bytes }` only; `cli` and `server` read
+paths. PDF text and glyph positions come from the pdfjs-dist legacy build, loaded lazily,
+with `verbosity: 0`, `disableFontFace: true`, `useSystemFonts: false` and `useWorkerFetch:
+false`; no cMap, standard-font or wasm URL is set, so pdfjs's binary-data factory throws
+before any transport is attempted. (`isEvalSupported` no longer exists in pdfjs-dist 6.x.)
+Lines and tables are reconstructed from glyph positions. XLSX and DOCX are read by hand from
+the OOXML parts with fflate and fast-xml-parser. CSV sniffs `;`, `,` and tab and falls back to
+windows-1252. A page without a text layer is reported as `textless`; there is no OCR. Outside
+Node, pdfjs also needs `GlobalWorkerOptions.workerSrc`; `readPdf(file, { pdf: { workerSrc } })`
+and `ingest(files, { pdf: { workerSrc } })` set it when given, Node ignores it, and a browser
+caller must supply it (Phase 7a).
+
+**Consequences.** One dependency of a few megabytes (pdfjs) and one small XML parser; no
+native modules. Provenance is exact: sheet cell, table cell or line number per fact.
+Scanned PDFs surface as textless pages the host agent must handle.
+
+## D-017: Part 2 documents need an explicit VDI 2770 classification (2026-09-04)
+
+**Context.** IDTA 02035-2 requires a class id, name and system per document. No bundled
+artefact carries the VDI 2770 class table, and inventing ids is forbidden.
+
+**Decision.** `DocumentRef.classification` is supplied by the user or host agent. Only
+classified documents are emitted into Handover Documentation; the others raise the L1
+warning `PW-L1-DOCUMENT-UNCLASSIFIED` so the gap stays visible. Golden samples use the
+example classification the template itself documents (`02-04`, `Certificates, declarations`,
+`VDI2770:2020`) and say so. `documentRefFromIngest` seeds id, title, language, file name
+and content type from ingest; `DocumentDomainId` defaults to the passport id.
+
+**Consequences.** Seven of seven submodels are emitted. A verified VDI 2770 table can be
+bundled later as data with default classes per document attribute without changing code.
+
+## D-018: Node 22.13 is the floor (2026-09-04)
+
+**Context.** pdfjs-dist 6.x declares `engines: node >=22.13.0 || >=24` and uses
+`Promise.withResolvers`, which Node 20 lacks; the Phase 4 CI run failed on every Node 20
+job. Node 20 reached end of life on 30 April 2026.
+
+**Decision.** Every package declares `engines.node >=22.13`, `.nvmrc` stays at 22, and CI
+tests Node 22 and 24 on Linux, macOS and Windows. No polyfill is added to `core`.
+
+**Consequences.** The build plan's "Node 20 & 22" portability row becomes "22 & 24".
+Browsers older than the `Promise.withResolvers` baseline (Chrome 119, Safari 17.4,
+Firefox 121) cannot run the PDF reader; the Phase 7a web app states that requirement.

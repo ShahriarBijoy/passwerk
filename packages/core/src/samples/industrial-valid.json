@@ -1,5 +1,5 @@
 {
-  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Industrial battery above 2 kWh with several markings and hazardous substances.",
+  "$comment": "Golden sample. All values are fictional and for testing only (Musterwerk Batteriesysteme GmbH does not exist). Industrial battery above 2 kWh with several markings and hazardous substances. Document classifications use the example the IDTA 02035-2 template documents (02-04, VDI2770:2020); real passports need the class matching each document (ADR D-017, verify). className.en (\"Certificates, declarations\") is the template's own example value; className.de (\"Zertifikate, Erklärungen\") is our translation of it, not a value the template or VDI 2770 documents (verify).",
   "meta": {
     "schemaVersion": "1.0",
     "category": "INDUSTRIAL_GT_2KWH",
@@ -144,7 +144,14 @@
       "value": [
         {
           "id": "DoC-MW-IND-2026-02",
-          "uri": "https://passport.musterwerk.example/docs/DoC-MW-IND-2026-02.pdf"
+          "uri": "https://passport.musterwerk.example/docs/DoC-MW-IND-2026-02.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -158,10 +165,26 @@
     "testReportsProvingCompliance": {
       "value": [
         {
-          "id": "TR-2026-0388"
+          "id": "TR-2026-0388",
+          "fileName": "TR-2026-0388.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         },
         {
-          "id": "TR-2026-0391"
+          "id": "TR-2026-0391",
+          "fileName": "TR-2026-0391.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -368,7 +391,14 @@
       "value": [
         {
           "id": "PCF-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/pcf/MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/pcf/MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -661,7 +691,14 @@
       "value": [
         {
           "id": "DISM-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/docs/DISM-MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/docs/DISM-MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -783,7 +820,14 @@
       "value": [
         {
           "id": "SAFETY-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/docs/SAFETY-MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/docs/SAFETY-MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -808,7 +852,14 @@
       "value": [
         {
           "id": "EOL-PREVENTION-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/docs/EOL-PREVENTION-MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/docs/EOL-PREVENTION-MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -823,7 +874,14 @@
       "value": [
         {
           "id": "EOL-SEPARATE-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/docs/EOL-SEPARATE-MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/docs/EOL-SEPARATE-MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",
@@ -838,7 +896,14 @@
       "value": [
         {
           "id": "EOL-COLLECTION-MW-IND-2026",
-          "uri": "https://passport.musterwerk.example/docs/EOL-COLLECTION-MW-IND-2026.pdf"
+          "uri": "https://passport.musterwerk.example/docs/EOL-COLLECTION-MW-IND-2026.pdf",
+          "classification": {
+            "classId": "02-04",
+            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "system": "VDI2770:2020"
+          },
+          "languages": ["de"],
+          "contentType": "application/pdf"
         }
       ],
       "status": "present",

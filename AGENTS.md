@@ -40,7 +40,7 @@ Never import upward.
 ## Commands
 
 ```sh
-pnpm install            # Node >= 20 (see .nvmrc), pnpm 10
+pnpm install            # Node >= 22.13 (see .nvmrc), pnpm 10
 pnpm build              # tsc -b across all packages
 pnpm test               # vitest, all packages
 pnpm lint               # biome check
@@ -102,5 +102,16 @@ so no build is needed before `pnpm test`.
   Circularity emitters, `Field.recordedAt`, five new composites, extended golden samples plus
   `lmt-missing-state-of-charge`; oracle parity 14/14. Part 2 waits for ingest (ADR D-014);
   emitter conventions in ADR D-015.
-- **Next: Phase 4.** Ingest, extract and mapping (`DocumentBundle`, `FactSet`,
-  `suggestMappings`), then the part 2 emitter once real files exist.
+- **Phase 4 (ingest, extract, mapping, part 2): done.** Readers for PDF (pdfjs-dist, lazily
+  loaded), XLSX and DOCX (fflate plus fast-xml-parser over the OOXML parts), CSV (delimiter
+  sniffing, windows-1252 fallback) and TXT, all producing a `DocumentBundle` with page, line,
+  table and cell provenance. `extractFacts` normalises labelled values (numbers, units,
+  dates) into a `FactSet`; `suggestMappings` scores candidates against the KB synonym index
+  with DE/EN explanations, and `applyMappings` folds accepted decisions into a `PassportDraft`
+  with conflict detection. Musterwerk fixtures (five deterministic supplier documents) back
+  the recall gate at 32/34 = 94.1 % of expected attributes proposed at confidence >= 0.7 (the
+  two misses are attributes marked `not_displayed` for EV). The IDTA 02035-2 (Handover
+  Documentation) emitter runs behind an explicit VDI 2770 classification, raising
+  `PW-L1-DOCUMENT-UNCLASSIFIED` for unclassified documents; see ADRs D-016 and D-017. Oracle
+  parity 16/16.
+- **Next: Phase 5.** Gap report, obligations, `explain`, and L4 plausibility.

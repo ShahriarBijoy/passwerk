@@ -3,12 +3,16 @@
  * runs with zero network attempts. Guards sit at the socket and resolver level so that http,
  * https, tls, undici/fetch and any transitive library are all caught. The Docker
  * `--network none` CI job is the hard proof; this test is the fast, cross-platform one.
- * Phase 6 extends the exercised surface to every MCP tool, resource and prompt.
+ * Phase 4 extends the exercised surface to ingest (including the lazily loaded pdfjs engine),
+ * extract and mapping. Phase 6 extends it further to every MCP tool, resource and prompt.
  */
+
 import dns from 'node:dns';
+import { readFileSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
+import { join } from 'node:path';
 import tls from 'node:tls';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -67,7 +71,9 @@ describe('sovereignty: zero network attempts', () => {
     attempts.length = 0;
   });
 
-  it('loading and exercising the whole public surface of rules and core makes no attempt', async () => {
+  it('loading and exercising the whole public surface of rules and core makes no attempt', {
+    timeout: 20000,
+  }, async () => {
     vi.resetModules();
     const rules = await import('@passwerk/rules');
     const core = await import('@passwerk/core');
@@ -112,6 +118,41 @@ describe('sovereignty: zero network attempts', () => {
         core.readAasxEnvironment(core.emitAasx(draft).output);
       }
     }
+
+    // Phase 4: ingest, extract, mapping over every fixture (files read here with node:fs, in the test only)
+    const fixtureDir = join(import.meta.dirname, 'fixtures', 'musterwerk');
+    const names = [
+      'lieferantenerklaerung.pdf',
+      'stueckliste.xlsx',
+      'energierechnung.pdf',
+      'datasheet-en.csv',
+      'handover-notes.docx',
+    ];
+    const bundle = await core.ingest(
+      names.map((name) => ({ name, bytes: new Uint8Array(readFileSync(join(fixtureDir, name))) })),
+    );
+    const facts = core.extractFacts(bundle);
+    const proposals = core.suggestMappings(facts, { category: 'EV' });
+    const draft = core.applyMappings(
+      core.newDraft({
+        schemaVersion: '1.0',
+        category: 'EV',
+        createdAt: '2026-09-04T00:00:00Z',
+        passportId: 'https://passport.musterwerk.example/battery/MW-EV-2026-000123',
+      }),
+      proposals
+        .filter((p) => p.confidence >= 0.7)
+        .map((p) => ({
+          attributeId: p.attributeId,
+          value: p.value,
+          ...(p.unit ? { unit: p.unit } : {}),
+          ...(p.path ? { path: p.path } : {}),
+          source: p.source,
+          confidence: p.confidence,
+        })),
+    ).draft;
+    core.validate(draft);
+    for (const doc of bundle.documents) core.documentRefFromIngest(doc);
 
     expect(attempts).toEqual([]);
   });

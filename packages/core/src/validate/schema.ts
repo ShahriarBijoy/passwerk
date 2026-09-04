@@ -4,6 +4,7 @@ import { isAttributeId } from '../model/attributeIds.js';
 import { COMPOSITE_SCHEMAS } from '../model/composites.js';
 import type { AnyFieldValue } from '../model/field.js';
 import { PassportDraft } from '../model/passport.js';
+import type { DocumentRef } from '../model/values.js';
 import { valueSchemaFor } from '../model/values.js';
 import type { Finding } from './finding.js';
 import { message } from './messages.js';
@@ -80,7 +81,31 @@ function attributeFindings(draft: PassportDraft): Finding[] {
     }
 
     const r = valueSchemaFor(attribute.valueKind).safeParse(field.value);
-    if (!r.success) findings.push(valueFinding(id, attribute.valueKind, r.error.issues));
+    if (!r.success) {
+      findings.push(valueFinding(id, attribute.valueKind, r.error.issues));
+      continue;
+    }
+
+    // The emitter only reads 'present'/'conflict' fields (presentValue); the Field schema
+    // already forbids a value on any other status, but this stays explicit in case that
+    // invariant ever moves.
+    if (
+      attribute.valueKind === 'document' &&
+      (field.status === 'present' || field.status === 'conflict')
+    ) {
+      for (const doc of field.value as DocumentRef[]) {
+        if (!doc.classification) {
+          findings.push({
+            layer: 'L1',
+            ruleId: 'PW-L1-DOCUMENT-UNCLASSIFIED',
+            severity: 'warning',
+            path: `attributes.${id}.value`,
+            attributeId: id,
+            message: message('PW-L1-DOCUMENT-UNCLASSIFIED', `${id}/${doc.id}`),
+          });
+        }
+      }
+    }
   }
 
   const passportIdAttr = attrs['batteryPassportIdentifier'];

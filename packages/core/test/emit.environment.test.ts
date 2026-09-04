@@ -14,6 +14,7 @@ describe('buildEnvironment', () => {
     );
     expect(env.submodels?.map((s) => s.idShort)).toEqual([
       'BatteryNameplate',
+      'HandoverDocumentation',
       'CarbonFootprint',
       'TechnicalData',
       'ProductCondition',
@@ -28,6 +29,7 @@ describe('buildEnvironment', () => {
     const lmt = buildEnvironment(PassportDraft.parse(samples['lmt-valid']));
     expect(lmt.submodels?.map((s) => s.idShort)).toEqual([
       'BatteryNameplate',
+      'HandoverDocumentation',
       'TechnicalData',
       'ProductCondition',
       'MaterialComposition',

@@ -1,0 +1,209 @@
+{
+  "$comment": "Hand-checked expectations for the Musterwerk fixtures (tools/fixtures/src/content.ts). Values are fictional.",
+  "files": {
+    "lieferantenerklaerung.pdf": { "format": "pdf", "lang": "de", "pages": 1 },
+    "stueckliste.xlsx": { "format": "xlsx", "lang": "de", "pages": 3 },
+    "energierechnung.pdf": { "format": "pdf", "lang": "de", "pages": 1 },
+    "datasheet-en.csv": { "format": "csv", "lang": "en", "pages": 1 },
+    "handover-notes.docx": { "format": "docx", "lang": "de", "pages": 1 }
+  },
+  "attributes": [
+    {
+      "attributeId": "manufacturerInformation",
+      "path": "name.de",
+      "value": "Musterwerk Batteriesysteme GmbH",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 2" }
+    },
+    {
+      "attributeId": "batteryIdentifier",
+      "value": "MW-EV-2026-000123",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 4" }
+    },
+    {
+      "attributeId": "batteryChemistry",
+      "path": "shortName",
+      "value": "NMC811",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 5" }
+    },
+    {
+      "attributeId": "ratedCapacity",
+      "value": "94.5",
+      "unit": "Ah",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 6" }
+    },
+    {
+      "attributeId": "nominalVoltage",
+      "value": "355.2",
+      "unit": "V",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 7" }
+    },
+    {
+      "attributeId": "minimumVoltage",
+      "value": "270",
+      "unit": "V",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 8" }
+    },
+    {
+      "attributeId": "maximumVoltage",
+      "value": "403.2",
+      "unit": "V",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 9" }
+    },
+    {
+      "attributeId": "batteryMass",
+      "value": "412.7",
+      "unit": "kg",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 10" }
+    },
+    {
+      "attributeId": "manufacturingDate",
+      "value": "2026-02-10",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 11" }
+    },
+    {
+      "attributeId": "warrantyPeriod",
+      "value": "96",
+      "unit": "months",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 12" }
+    },
+    {
+      "attributeId": "expectedLifetimeCycles",
+      "value": "3000",
+      "unit": "cycles",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "note": "line 13" }
+    },
+    {
+      "attributeId": "recycledCobaltPostConsumer",
+      "value": "12.5",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R2C2" }
+    },
+    {
+      "attributeId": "recycledCobaltPreConsumer",
+      "value": "4.0",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R2C3" }
+    },
+    {
+      "attributeId": "recycledLithiumPostConsumer",
+      "value": "6.0",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R3C2" }
+    },
+    {
+      "attributeId": "recycledLithiumPreConsumer",
+      "value": "2.5",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R3C3" }
+    },
+    {
+      "attributeId": "recycledNickelPostConsumer",
+      "value": "8.0",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R4C2" }
+    },
+    {
+      "attributeId": "recycledNickelPreConsumer",
+      "value": "3.0",
+      "unit": "%",
+      "source": { "file": "lieferantenerklaerung.pdf", "page": 1, "cell": "T2:R4C3" }
+    },
+    {
+      "attributeId": "batteryPassportIdentifier",
+      "value": "https://passport.musterwerk.example/battery/MW-EV-2026-000123",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B1" }
+    },
+    {
+      "attributeId": "batteryIdentifier",
+      "value": "MW-EV-2026-000123",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B2" }
+    },
+    {
+      "attributeId": "batteryCategory",
+      "value": "EV",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B3" }
+    },
+    {
+      "attributeId": "batteryMass",
+      "value": "412.7",
+      "unit": "kg",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B5" }
+    },
+    {
+      "attributeId": "operatorIdentifier",
+      "value": "DE-OP-4711",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B6" }
+    },
+    {
+      "attributeId": "manufacturingPlace",
+      "value": "DE-MW-0001-PLANT-BRE",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B7" }
+    },
+    {
+      "attributeId": "dateOfPuttingIntoService",
+      "value": "2026-03-01",
+      "source": { "file": "stueckliste.xlsx", "page": 1, "cell": "Stammdaten!B8" }
+    },
+    {
+      "attributeId": "stateOfCharge",
+      "value": "68",
+      "unit": "%",
+      "source": { "file": "stueckliste.xlsx", "page": 3, "cell": "Leistung!B2" }
+    },
+    {
+      "attributeId": "capacityFade",
+      "value": "3.2",
+      "unit": "%",
+      "source": { "file": "stueckliste.xlsx", "page": 3, "cell": "Leistung!B3" }
+    },
+    {
+      "attributeId": "numberOfFullCycles",
+      "value": "142",
+      "unit": "cycles",
+      "source": { "file": "stueckliste.xlsx", "page": 3, "cell": "Leistung!B4" }
+    },
+    {
+      "attributeId": "currentSelfDischargeRate",
+      "value": "1.1",
+      "unit": "%/month",
+      "source": { "file": "stueckliste.xlsx", "page": 3, "cell": "Leistung!B5" }
+    },
+    {
+      "attributeId": "ratedCapacity",
+      "value": "94.5",
+      "unit": "Ah",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R2C2" }
+    },
+    {
+      "attributeId": "nominalVoltage",
+      "value": "355.2",
+      "unit": "V",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R3C2" }
+    },
+    {
+      "attributeId": "batteryMass",
+      "value": "412.7",
+      "unit": "kg",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R4C2" }
+    },
+    {
+      "attributeId": "expectedLifetimeCycles",
+      "value": "3000",
+      "unit": "cycles",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R5C2" }
+    },
+    {
+      "attributeId": "temperatureRangeIdleLowerBoundary",
+      "value": "-20",
+      "unit": "degC",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R7C2" }
+    },
+    {
+      "attributeId": "temperatureRangeIdleUpperBoundary",
+      "value": "45",
+      "unit": "degC",
+      "source": { "file": "datasheet-en.csv", "page": 1, "cell": "R8C2" }
+    }
+  ],
+  "negatives": ["energierechnung.pdf", "handover-notes.docx"]
+}

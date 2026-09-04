@@ -24,4 +24,8 @@ describe('Phase 2 definition of done', () => {
       expect(got, name).toEqual([...expectedFindings].sort());
     }
   });
+  it('a document-only warning does not make the sample invalid', () => {
+    const { draft } = brokenSamples['ev-document-without-classification'];
+    expect(validate(draft).verdict).toBe('valid_with_warnings');
+  });
 });

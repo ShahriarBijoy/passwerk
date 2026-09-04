@@ -3,6 +3,7 @@ import type { PassportDraft } from '../model/passport.js';
 import { type EmitOptions, resolveIds } from './ids.js';
 import { emitCarbonFootprint } from './submodels/carbonFootprint.js';
 import { emitCircularity } from './submodels/circularity.js';
+import { emitHandoverDocumentation } from './submodels/handoverDocumentation.js';
 import { emitMaterialComposition } from './submodels/materialComposition.js';
 import { emitNameplate } from './submodels/nameplate.js';
 import { emitProductCondition } from './submodels/productCondition.js';
@@ -10,7 +11,7 @@ import { emitTechnicalData } from './submodels/technicalData.js';
 
 const { types, jsonization } = aas;
 
-/** One shell + every submodel that has data, in template part order (1, 3, 4, 5, 6, 7). */
+/** One shell + every submodel that has data, in template part order (1, 2, 3, 4, 5, 6, 7). */
 export function buildEnvironment(
   draft: PassportDraft,
   options: EmitOptions = {},
@@ -18,6 +19,7 @@ export function buildEnvironment(
   const ids = resolveIds(draft, options);
   const submodels = [
     emitNameplate(draft, ids),
+    emitHandoverDocumentation(draft, ids),
     emitCarbonFootprint(draft, ids),
     emitTechnicalData(draft, ids),
     emitProductCondition(draft, ids),

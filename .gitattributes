@@ -7,3 +7,6 @@
 
 # Bundled third-party artefacts are checksummed: never normalise them
 packages/rules/artefacts/** -text
+
+# Test fixtures are byte-exact (a test regenerates and compares them)
+packages/core/test/fixtures/** -text

@@ -7,7 +7,7 @@ mismatch or any drift of the committed report and badge.
 
 ## Run locally
 
-Requires Node 20+, pnpm 10 and [uv](https://docs.astral.sh/uv/).
+Requires Node 22.13+, pnpm 10 and [uv](https://docs.astral.sh/uv/).
 
     pnpm build
     cd tools/oracle && uv sync --frozen && cd ../..
