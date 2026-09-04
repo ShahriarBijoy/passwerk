@@ -6,7 +6,11 @@ interface UnitRule {
   factor?: string;
 }
 
-/** Written forms -> KB unit vocabulary. Longer patterns first; all anchored and case-sensitive where the SI symbol demands it. */
+/**
+ * Written forms -> KB unit vocabulary. All patterns are anchored (`^...$`); order matters
+ * only among overlapping alternatives, where the more specific pattern must come first
+ * (`%/month` before the bare `%`, `mAh`/`mV`/`mOhm` before `Ah`/`V`/`Ohm`).
+ */
 const RULES: UnitRule[] = [
   { match: /^kg\s*CO2(e|-?[aä]q\.?)\s*\/\s*kWh$/i, unit: 'kgCO2e/kWh' },
   { match: /^t\s*CO2(e|-?[aä]q\.?)$/i, unit: 'tCO2e' },
@@ -30,7 +34,9 @@ const RULES: UnitRule[] = [
   { match: /^%$/, unit: '%' },
   { match: /^(Zyklen|cycles|Zyklus|cycle)$/i, unit: 'cycles' },
   { match: /^(Monate|Monat|months|month)$/i, unit: 'months' },
-  { match: /^(Jahre|Jahr|years|year|a)$/i, unit: 'years' },
+  { match: /^(Jahre|Jahr|years|year)$/i, unit: 'years' },
+  // Bare lower-case 'a' is the SI year abbreviation; upper-case 'A' is ampere and must not match.
+  { match: /^a$/, unit: 'years' },
   { match: /^(h|Std\.?|Stunden|hours)$/i, unit: 'min', factor: '60' },
   { match: /^(min|Minuten|minutes)$/i, unit: 'min' },
   { match: /^C$/, unit: 'C' },
@@ -45,7 +51,9 @@ export function canonicalUnit(raw: string): { unit: string; factor?: string } | 
 
 /** "94,5 Ah" -> { number: "94,5", unitRaw: "Ah" }; "0,5C" -> C-rate; text without a leading number -> number "". */
 export function splitValueUnit(raw: string): { number: string; unitRaw?: string; rest: string } {
-  const m = /^([-+]?\d[\d.,\s  ]*)\s*([^\d\s][^\s]*(?:\s+[^\d\s][^\s]*)*)?$/.exec(raw.trim());
+  const m = /^([-+]?\d[\d.,\s\u00a0\u202f]*)\s*([^\d\s][^\s]*(?:\s+[^\d\s][^\s]*)*)?$/.exec(
+    raw.trim(),
+  );
   if (!m || !/\d/.test(m[1] ?? '')) return { number: '', rest: raw.trim() };
   const number = (m[1] as string).trim();
   const unitRaw = m[2]?.trim();

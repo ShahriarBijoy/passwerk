@@ -1,7 +1,7 @@
 import type { Lang } from '../ingest/types.js';
 import { isDecimalString } from '../model/values.js';
 
-const NUMERIC = /^[-+]?[\d.,\s  ]+$/;
+const NUMERIC = /^[-+]?[\d.,\s\u00a0\u202f]+$/;
 
 export function parseNumber(
   raw: string,
@@ -9,7 +9,7 @@ export function parseNumber(
 ): { value: string; kind: 'decimal' | 'integer' } | undefined {
   const trimmed = raw.trim();
   if (!NUMERIC.test(trimmed) || !/\d/.test(trimmed)) return undefined;
-  let s = trimmed.replace(/[\s  ]/g, '');
+  let s = trimmed.replace(/[\s\u00a0\u202f]/g, '');
   const sign = s.startsWith('-') ? '-' : '';
   s = s.replace(/^[-+]/, '');
   const commas = (s.match(/,/g) ?? []).length;

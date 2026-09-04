@@ -56,6 +56,10 @@ describe('units', () => {
     expect(canonicalUnit('EUR')).toBeUndefined();
     expect(canonicalUnit('Tage')).toBeUndefined();
   });
+  it('bare lower-case "a" is years, but upper-case "A" (ampere) is not', () => {
+    expect(canonicalUnit('a')).toEqual({ unit: 'years' });
+    expect(canonicalUnit('A')).toBeUndefined();
+  });
   it('converts with decimal.js, no floats', () => {
     expect(convertUnit('33600', '0.001')).toBe('33.6');
     expect(convertUnit('0.1', '0.001')).toBe('0.0001');
