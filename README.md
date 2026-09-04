@@ -1,4 +1,5 @@
-# passwerk
+# Passwerk
+**Offline EU Battery Passport Compiler.**
 
 ![CI](https://github.com/ShahriarBijoy/passwerk/actions/workflows/ci.yml/badge.svg)
 ![AAS conformance](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/conformance-badge.json)
