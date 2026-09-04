@@ -3,6 +3,7 @@ import {
   brokenSamples,
   samples,
   VALID_SAMPLE_NAMES,
+  validate,
   validateSchema,
 } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
@@ -27,5 +28,14 @@ describe('golden samples', () => {
   it('every sample is marked fictional', () => {
     const all = [...Object.values(samples), ...Object.values(brokenSamples).map((b) => b.draft)];
     for (const s of all) expect((s as { $comment?: string }).$comment).toMatch(/fictional/i);
+  });
+  it('broken samples produce the PW-PLAUS findings they declare', () => {
+    for (const name of BROKEN_SAMPLE_NAMES) {
+      const { draft, expectedFindings } = brokenSamples[name];
+      const produced = validate(draft).findings.map((f) => f.ruleId);
+      for (const id of expectedFindings.filter((e) => e.startsWith('PW-PLAUS-'))) {
+        expect(produced, name).toContain(id);
+      }
+    }
   });
 });

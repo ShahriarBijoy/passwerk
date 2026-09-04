@@ -429,3 +429,98 @@ describe('PW-PLAUS-020 remaining versus original', () => {
     expect(ruleIds(draft)).not.toContain('PW-PLAUS-020');
   });
 });
+
+describe('PW-PLAUS-021 efficiency over cycle life', () => {
+  it('fires when the later value is higher', () => {
+    const draft = draftWith({
+      initialRoundTripEnergyEfficiency: { value: '88' },
+      roundTripEnergyEfficiencyAt50PercentCycleLife: { value: '92' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-021');
+  });
+  it('is quiet when efficiency degrades', () => {
+    const draft = draftWith({
+      initialRoundTripEnergyEfficiency: { value: '92' },
+      roundTripEnergyEfficiencyAt50PercentCycleLife: { value: '88' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-021');
+  });
+});
+
+describe('PW-PLAUS-022 capacity fade coherence', () => {
+  it('fires when the declared fade does not match the capacities', () => {
+    // (1 - 150/200) x 100 = 25 %, not 2 %.
+    const draft = draftWith({
+      ratedCapacity: { value: '200' },
+      remainingCapacity: { value: '150', recordedAt: '2026-08-30T18:30:00Z' },
+      capacityFade: { value: '2' },
+    });
+    const f = validatePlausibility(draft).findings.find((x) => x.ruleId === 'PW-PLAUS-022');
+    expect(f?.message.en).toContain('25');
+  });
+  it('is quiet within a percentage point', () => {
+    const draft = draftWith({
+      ratedCapacity: { value: '195' },
+      remainingCapacity: { value: '194', recordedAt: '2026-08-30T18:30:00Z' },
+      capacityFade: { value: '0' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-022');
+  });
+});
+
+describe('PW-PLAUS-023 cycle count', () => {
+  it('fires above the expected lifetime', () => {
+    const draft = draftWith({
+      numberOfFullCycles: { value: '4200', recordedAt: '2026-08-30T18:30:00Z' },
+      expectedLifetimeCycles: { value: '3000' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-023');
+  });
+  it('is quiet below it', () => {
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2026-08-30T18:30:00Z' },
+      expectedLifetimeCycles: { value: '3000' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-023');
+  });
+});
+
+describe('PW-PLAUS-024 carbon footprint companions', () => {
+  it('fires once per missing companion', () => {
+    const draft = draftWith({ carbonFootprintPerFunctionalUnit: { value: '61.2' } });
+    const hits = validatePlausibility(draft).findings.filter((x) => x.ruleId === 'PW-PLAUS-024');
+    expect(hits).toHaveLength(2);
+  });
+  it('is quiet when both companions are present', () => {
+    const draft = draftWith({
+      carbonFootprintPerFunctionalUnit: { value: '61.2' },
+      carbonFootprintGeneralInformation: { value: { calculationMethods: ['PEFCR 2023'] } },
+      carbonFootprintStudyLink: {
+        value: [{ id: 'cf-study', title: 'LCA study', uri: 'https://example.org/lca.pdf' }],
+      },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-024');
+  });
+});
+
+describe('PW-PLAUS-025 extreme temperature time', () => {
+  it('fires when the times exceed the age since putting into service', () => {
+    // In service since 2026-08-31, asOf 2026-09-03: about 4320 minutes.
+    const draft = draftWith({
+      dateOfPuttingIntoService: { value: '2026-08-31' },
+      timeInExtremeHighTemperature: { value: '50000', recordedAt: '2026-09-01T00:00:00Z' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-025');
+  });
+  it('is quiet for a plausible exposure and when the service date is unknown', () => {
+    const ok = draftWith({
+      dateOfPuttingIntoService: { value: '2026-01-01' },
+      timeInExtremeHighTemperature: { value: '120', recordedAt: '2026-09-01T00:00:00Z' },
+    });
+    expect(ruleIds(ok)).not.toContain('PW-PLAUS-025');
+    const noDate = draftWith({
+      timeInExtremeHighTemperature: { value: '50000', recordedAt: '2026-09-01T00:00:00Z' },
+    });
+    expect(ruleIds(noDate)).not.toContain('PW-PLAUS-025');
+  });
+});

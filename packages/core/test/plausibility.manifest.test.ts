@@ -31,4 +31,20 @@ describe('plausibility manifest', () => {
       expect(placeholders(rule.message.de), rule.id).toEqual(placeholders(rule.message.en));
     }
   });
+
+  it('the registry and the rule catalogue are exactly 1:1', () => {
+    const ruleIdsInKb = plausibilityRules.map((r) => r.id).sort();
+    expect(Object.keys(CHECKS).sort()).toEqual(ruleIdsInKb);
+  });
+
+  it('no finding leaves an unresolved placeholder', async () => {
+    const { brokenSamples, samples, validate } = await import('@passwerk/core');
+    const drafts = [...Object.values(samples), ...Object.values(brokenSamples).map((b) => b.draft)];
+    for (const draft of drafts) {
+      for (const finding of validate(draft).findings) {
+        expect(finding.message.de, finding.ruleId).not.toMatch(/\{\w+\}/);
+        expect(finding.message.en, finding.ruleId).not.toMatch(/\{\w+\}/);
+      }
+    }
+  });
 });

@@ -103,6 +103,27 @@ function sumMassKg(items: unknown): Decimal | undefined {
   return seen ? total : undefined;
 }
 
+/** Minutes in a day, for the age arithmetic of PW-PLAUS-025. */
+const MINUTES_PER_DAY = 1440;
+
+/** Whole days between two ISO dates, computed from the calendar, never from a Date object. */
+export function daysBetween(fromIsoDate: string, toIsoDate: string): number {
+  const toDays = (iso: string): number => {
+    // Cast to a fixed-length tuple: the ISO date shape is guaranteed by the callers
+    // (RuleContext.date and asOf.slice(0, 10)), and noUncheckedIndexedAccess otherwise
+    // treats each destructured element of a plain number[] as possibly undefined.
+    const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+    // Days since the epoch by the civil-from-days algorithm: no Date, no timezone.
+    const year = m <= 2 ? y - 1 : y;
+    const era = Math.floor(year / 400);
+    const yoe = year - era * 400;
+    const doy = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1;
+    const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+    return era * 146097 + doe - 719468;
+  };
+  return toDays(toIsoDate) - toDays(fromIsoDate);
+}
+
 /** One check per PW-PLAUS rule id. Keys must match kb/rules.json exactly (see manifest test). */
 export const CHECKS: Record<string, RuleCheck> = {
   /** Listed percentages must lie between 0 and 100. */
@@ -401,5 +422,100 @@ export const CHECKS: Record<string, RuleCheck> = {
       });
     }
     return out;
+  },
+
+  /** Round trip efficiency must not rise between the initial value and 50 % of cycle life. */
+  'PW-PLAUS-021': (ctx) => {
+    const initial = ctx.decimal('initialRoundTripEnergyEfficiency');
+    const later = ctx.decimal('roundTripEnergyEfficiencyAt50PercentCycleLife');
+    if (initial === undefined || later === undefined || later.lte(initial)) return [];
+    return [
+      {
+        attributeId: 'roundTripEnergyEfficiencyAt50PercentCycleLife',
+        params: { later: later.toString(), initial: initial.toString() },
+      },
+    ];
+  },
+
+  /** Declared capacity fade must match the rated and remaining capacities. */
+  'PW-PLAUS-022': (ctx) => {
+    const rated = ctx.decimal('ratedCapacity');
+    const remaining = ctx.decimal('remainingCapacity');
+    const declared = ctx.decimal('capacityFade');
+    if (rated === undefined || remaining === undefined || declared === undefined) return [];
+    if (rated.isZero()) return [];
+    const derived = new Decimal(1).minus(remaining.div(rated)).times(100);
+    if (declared.minus(derived).abs().lte(CAPACITY_FADE_TOLERANCE_PP)) return [];
+    return [
+      {
+        attributeId: 'capacityFade',
+        params: {
+          declared: declared.toString(),
+          derived: derived.toDecimalPlaces(2).toString(),
+        },
+      },
+    ];
+  },
+
+  /** The cycle count must not exceed the expected lifetime in cycles. */
+  'PW-PLAUS-023': (ctx) => {
+    const cycles = ctx.decimal('numberOfFullCycles');
+    const expected = ctx.decimal('expectedLifetimeCycles');
+    if (cycles === undefined || expected === undefined || cycles.lte(expected)) return [];
+    return [
+      {
+        attributeId: 'numberOfFullCycles',
+        params: { cycles: cycles.toString(), expected: expected.toString() },
+      },
+    ];
+  },
+
+  /** A declared carbon footprint needs its calculation method and a link to the study. */
+  'PW-PLAUS-024': (ctx) => {
+    if (ctx.value('carbonFootprintPerFunctionalUnit') === undefined) return [];
+    const out: RuleViolation[] = [];
+    const general = ctx.value<{ calculationMethods?: unknown }>(
+      'carbonFootprintGeneralInformation',
+    );
+    const methods = general?.calculationMethods;
+    if (!Array.isArray(methods) || methods.length === 0) {
+      out.push({
+        attributeId: 'carbonFootprintGeneralInformation',
+        params: { missing: 'carbonFootprintGeneralInformation.calculationMethods' },
+      });
+    }
+    const study = ctx.value<unknown[]>('carbonFootprintStudyLink');
+    if (!Array.isArray(study) || study.length === 0) {
+      out.push({
+        attributeId: 'carbonFootprintStudyLink',
+        params: { missing: 'carbonFootprintStudyLink' },
+      });
+    }
+    return out;
+  },
+
+  /** Extreme-temperature exposure cannot exceed the time the battery has been in service. */
+  'PW-PLAUS-025': (ctx) => {
+    const inService = ctx.date('dateOfPuttingIntoService');
+    if (inService === undefined) return [];
+    const ids = [
+      'timeInExtremeHighTemperature',
+      'timeInExtremeLowTemperature',
+      'timeChargingInExtremeHighTemperature',
+      'timeChargingInExtremeLowTemperature',
+    ];
+    const values = ids.map((id) => ctx.decimal(id)).filter((d): d is Decimal => d !== undefined);
+    if (values.length === 0) return [];
+    const minutes = values.reduce((acc, d) => acc.plus(d), new Decimal(0));
+    const ageDays = daysBetween(inService, ctx.asOf.slice(0, 10));
+    if (ageDays < 0) return []; // a service date after asOf is PW-PLAUS-003's business
+    const ageMinutes = new Decimal(ageDays).times(MINUTES_PER_DAY);
+    if (minutes.lte(ageMinutes)) return [];
+    return [
+      {
+        attributeId: 'timeInExtremeHighTemperature',
+        params: { minutes: minutes.toString(), ageMinutes: ageMinutes.toString() },
+      },
+    ];
   },
 };
