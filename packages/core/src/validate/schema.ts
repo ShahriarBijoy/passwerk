@@ -86,7 +86,13 @@ function attributeFindings(draft: PassportDraft): Finding[] {
       continue;
     }
 
-    if (attribute.valueKind === 'document') {
+    // The emitter only reads 'present'/'conflict' fields (presentValue); the Field schema
+    // already forbids a value on any other status, but this stays explicit in case that
+    // invariant ever moves.
+    if (
+      attribute.valueKind === 'document' &&
+      (field.status === 'present' || field.status === 'conflict')
+    ) {
       for (const doc of field.value as DocumentRef[]) {
         if (!doc.classification) {
           findings.push({

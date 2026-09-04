@@ -90,6 +90,19 @@ describe('L1 validateSchema', () => {
     expect(r.findings.map((f) => f.ruleId)).toContain('PW-L1-DOCUMENT-UNCLASSIFIED');
     expect(r.findings.every((f) => f.severity === 'warning')).toBe(true);
   });
+  it('a not_applicable document field cannot carry a value, so it never triggers PW-L1-DOCUMENT-UNCLASSIFIED', () => {
+    const draft = structuredClone(getSample('ev-valid')) as PassportDraftInput;
+    const attrs = draft.attributes as Record<
+      string,
+      { value: unknown; status: string } | undefined
+    >;
+    const field = attrs['euDeclarationOfConformity'];
+    if (field) field.status = 'not_applicable'; // keeps its value: schema must reject this
+    const r = validateSchema(draft);
+    expect(ids(r)).toContain('PW-L1-SCHEMA');
+    expect(ids(r)).not.toContain('PW-L1-DOCUMENT-UNCLASSIFIED');
+    expect(r.draft).toBeUndefined();
+  });
   it('every composite attribute in the knowledge base has an explicit shape', () => {
     const unmodelled = attributes
       .filter((a) => a.valueKind === 'composite' && !COMPOSITE_SCHEMAS[a.id])
