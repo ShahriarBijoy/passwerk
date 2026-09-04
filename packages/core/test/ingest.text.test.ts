@@ -41,6 +41,9 @@ describe('detectLang', () => {
   it('still detects English technical vocabulary as exact tokens', () => {
     expect(detectLang('Rated capacity and nominal voltage of the pack')).toBe('en');
   });
+  it('detects short German technical vocabulary as whole tokens, not just compounds', () => {
+    expect(detectLang('Wert 94,5 Ah Masse 412 kg')).toBe('de');
+  });
 });
 
 describe('cell refs', () => {

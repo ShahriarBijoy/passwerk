@@ -38,12 +38,15 @@ const EN = new Set([
 ]);
 
 /**
- * German technical vocabulary, matched as a prefix or suffix of a longer token (never a bare
- * substring): German battery-datasheet text compounds words (e.g. "Nennkapazität",
- * "Batteriemasse") that would never equal a whole-word entry. Only checked against tokens of at
- * least MIN_COMPOUND_LEN characters, so short incidental containment (e.g. an unrelated 5-letter
- * word that happens to contain a 4-letter entry) can't produce a false hit. 'datum' is
- * deliberately excluded: it is also an ordinary English word.
+ * German technical vocabulary, matched in two ways: (1) a whole token equal to an entry (like
+ * the stop-word sets), so short entries such as "wert"/"masse"/"nenn"/"obere" fire on their own;
+ * or (2) an entry as a prefix or suffix of a longer token (never a bare substring), for the
+ * compounds German battery-datasheet text is full of (e.g. "Nennkapazität", "Batteriemasse",
+ * which never equal a whole-list entry). Mode (2) only applies to tokens of at least
+ * MIN_COMPOUND_LEN characters, so short incidental containment (e.g. an unrelated 5-letter word
+ * that happens to contain a 4-letter entry) can't produce a false hit that way — mode (1) still
+ * catches the entry on its own regardless of length. 'datum' is deliberately excluded: it is also
+ * an ordinary English word.
  */
 const DE_TECH = [
   'wert',
@@ -64,6 +67,7 @@ const DE_TECH = [
   'kenngroesse',
   'zyklen',
 ];
+const DE_TECH_SET = new Set(DE_TECH);
 const MIN_COMPOUND_LEN = 6;
 
 /** English technical vocabulary, matched by exact token equality only (like the stop words): a
@@ -105,8 +109,8 @@ export function detectLang(text: string): Lang {
     else if (EN.has(raw)) en += 1;
     else if (EN_TECH.has(raw)) en += 1;
     else if (
-      raw.length >= MIN_COMPOUND_LEN &&
-      DE_TECH.some((w) => raw.startsWith(w) || raw.endsWith(w))
+      DE_TECH_SET.has(raw) ||
+      (raw.length >= MIN_COMPOUND_LEN && DE_TECH.some((w) => raw.startsWith(w) || raw.endsWith(w)))
     )
       de += 1;
   }
