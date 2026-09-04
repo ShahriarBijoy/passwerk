@@ -39,12 +39,12 @@ const ROLE_GUIDANCE: Record<Role, LangText> = {
     de: 'Ein Bevollmächtigter handelt auf Grundlage eines schriftlichen Mandats des Herstellers; im Mandat sollte geregelt sein, wer den Pass pflegt.',
   },
   importer: {
-    en: 'An importer must check that the passport exists and is reachable before placing the battery on the Union market.',
-    de: 'Ein Importeur muss vor dem Inverkehrbringen in der Union prüfen, dass der Pass existiert und erreichbar ist.',
+    en: 'An importer should verify that the passport exists and is reachable before placing the battery on the Union market.',
+    de: 'Ein Importeur sollte vor dem Inverkehrbringen in der Union prüfen, dass der Pass existiert und erreichbar ist.',
   },
   distributor: {
-    en: 'A distributor must check that the battery carries the QR code and must not make it available if the passport is missing.',
-    de: 'Ein Händler muss prüfen, dass die Batterie den QR-Code trägt, und darf sie ohne Pass nicht bereitstellen.',
+    en: 'A distributor should verify that the battery carries the QR code and should not make it available if the passport is missing.',
+    de: 'Ein Händler sollte prüfen, dass die Batterie den QR-Code trägt, und sollte sie ohne Pass nicht bereitstellen.',
   },
   fulfilment_service_provider: {
     en: 'A fulfilment service provider handles batteries placed on the market by others and should obtain written confirmation that a passport exists.',
@@ -111,23 +111,13 @@ function result(
  */
 export function checkObligations(input: ObligationInput): ObligationResult {
   const event = passportEvent();
-  const effectiveDate = input.asOf ?? input.placedOnMarketDate ?? '';
-
-  if (effectiveDate === '') {
-    return result(
-      {
-        verdict: 'insufficient_input',
-        category: null,
-        missingInput: ['placedOnMarketDate', 'asOf'],
-        reason: {
-          en: 'The passport obligation depends on when the battery is placed on the market. Provide that date, or an "as of" date to reason about.',
-          de: 'Die Passpflicht hängt davon ab, wann die Batterie in Verkehr gebracht wird. Bitte dieses Datum oder ein Stichdatum angeben.',
-        },
-      },
-      input.role,
-      event.date,
-    );
-  }
+  // The date gate answers "has the duty attached yet", so it looks at when the battery was (or
+  // will be) placed on the market first, falling back to the "as of" query date only when that
+  // is all we have.
+  const gateDate = input.placedOnMarketDate ?? input.asOf;
+  // The timeline's inEffect flags answer "what does the law look like right now", so they look
+  // at the "as of" query date first, falling back to the placed-on-market date.
+  const inEffectDate = input.asOf ?? input.placedOnMarketDate ?? '';
 
   const category = CATEGORY_OF[input.batteryType] ?? null;
 
@@ -142,7 +132,7 @@ export function checkObligations(input: ObligationInput): ObligationResult {
         },
       },
       input.role,
-      effectiveDate,
+      inEffectDate,
     );
   }
 
@@ -159,13 +149,17 @@ export function checkObligations(input: ObligationInput): ObligationResult {
           },
         },
         input.role,
-        effectiveDate,
+        inEffectDate,
       );
     }
-    let energy: Decimal;
+    let energy: Decimal | null = null;
     try {
-      energy = new Decimal(input.energyKwh);
+      const candidate = new Decimal(input.energyKwh);
+      if (candidate.isFinite()) energy = candidate;
     } catch {
+      // energy stays null: input.energyKwh could not be parsed as a decimal
+    }
+    if (energy === null) {
       return result(
         {
           verdict: 'insufficient_input',
@@ -177,7 +171,7 @@ export function checkObligations(input: ObligationInput): ObligationResult {
           },
         },
         input.role,
-        effectiveDate,
+        inEffectDate,
       );
     }
     if (!energy.gt(2)) {
@@ -191,23 +185,40 @@ export function checkObligations(input: ObligationInput): ObligationResult {
           },
         },
         input.role,
-        effectiveDate,
+        inEffectDate,
       );
     }
   }
 
-  if (effectiveDate < event.date) {
+  if (gateDate === undefined) {
+    return result(
+      {
+        verdict: 'insufficient_input',
+        category: null,
+        missingInput: ['placedOnMarketDate', 'asOf'],
+        reason: {
+          en: 'The passport obligation depends on when the battery is placed on the market. Provide that date, or an "as of" date to reason about.',
+          de: 'Die Passpflicht hängt davon ab, wann die Batterie in Verkehr gebracht wird. Bitte dieses Datum oder ein Stichdatum angeben.',
+        },
+      },
+      input.role,
+      // No date is known at all, so no timeline row can honestly be flagged in effect.
+      '',
+    );
+  }
+
+  if (gateDate < event.date) {
     return result(
       {
         verdict: 'not_required',
         category: null,
         reason: {
-          en: `The battery passport obligation starts on ${event.date} (${event.legalRef}). A battery placed on the market on ${effectiveDate} is before that date.`,
-          de: `Die Batteriepass-Pflicht beginnt am ${event.date} (${event.legalRef}). Eine am ${effectiveDate} in Verkehr gebrachte Batterie liegt davor.`,
+          en: `The battery passport obligation starts on ${event.date} (${event.legalRef}). A battery placed on the market on ${gateDate} is before that date.`,
+          de: `Die Batteriepass-Pflicht beginnt am ${event.date} (${event.legalRef}). Eine am ${gateDate} in Verkehr gebrachte Batterie liegt davor.`,
         },
       },
       input.role,
-      effectiveDate,
+      inEffectDate,
     );
   }
 
@@ -226,6 +237,6 @@ export function checkObligations(input: ObligationInput): ObligationResult {
       },
     },
     input.role,
-    effectiveDate,
+    inEffectDate,
   );
 }

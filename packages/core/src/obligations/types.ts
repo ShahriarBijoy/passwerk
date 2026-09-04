@@ -33,7 +33,12 @@ export interface ObligationInput {
   /** ISO date the battery is or was placed on the market or put into service. */
   placedOnMarketDate?: string;
   role: Role;
-  /** ISO date treated as "now". Falls back to placedOnMarketDate. */
+  /**
+   * ISO date treated as "now". Drives the timeline's `inEffect` flags (falling back to
+   * `placedOnMarketDate` when absent). The date gate itself is decided by
+   * `placedOnMarketDate ?? asOf`, because the duty attaches when the battery is placed on
+   * the market, not on the day someone happens to be asking.
+   */
   asOf?: string;
 }
 

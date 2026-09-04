@@ -44,6 +44,21 @@ describe('checkObligations', () => {
     const r = checkObligations({ batteryType: 'INDUSTRIAL', role: 'manufacturer', asOf: AS_OF });
     expect(r.verdict).toBe('insufficient_input');
     expect(r.missingInput).toContain('energyKwh');
+    expect(r.isNotLegalAdvice).toBe(true);
+    expect(r.sources.length).toBeGreaterThan(0);
+  });
+
+  it('declines to answer for malformed or non-finite energy values', () => {
+    for (const energyKwh of ['abc', 'NaN', 'Infinity']) {
+      const r = checkObligations({
+        batteryType: 'INDUSTRIAL',
+        energyKwh,
+        role: 'manufacturer',
+        asOf: AS_OF,
+      });
+      expect(r.verdict, energyKwh).toBe('insufficient_input');
+      expect(r.missingInput, energyKwh).toContain('energyKwh');
+    }
   });
 
   it('treats stationary storage as industrial and says so', () => {
@@ -67,6 +82,11 @@ describe('checkObligations', () => {
     }
   });
 
+  it('does not require one for a portable battery even with no date at all', () => {
+    const r = checkObligations({ batteryType: 'PORTABLE', role: 'manufacturer' });
+    expect(r.verdict).toBe('not_required');
+  });
+
   it('does not require one before the passport obligation starts', () => {
     const r = checkObligations({
       batteryType: 'EV',
@@ -74,7 +94,19 @@ describe('checkObligations', () => {
       placedOnMarketDate: '2026-11-01',
     });
     expect(r.verdict).toBe('not_required');
+    expect(r.category).toBeNull();
+    expect(r.mandatoryAttributes).toEqual([]);
     expect(r.reason.en).toContain('2027-02-18');
+  });
+
+  it('gates on placedOnMarketDate even when a later asOf is also given', () => {
+    const r = checkObligations({
+      batteryType: 'EV',
+      role: 'manufacturer',
+      placedOnMarketDate: '2026-11-01',
+      asOf: '2027-03-01',
+    });
+    expect(r.verdict).toBe('not_required');
   });
 
   it('declines to answer without any date', () => {
