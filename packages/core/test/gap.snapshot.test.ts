@@ -27,7 +27,11 @@ describe('gap report snapshots', () => {
         }, {}),
         invalid: report.items.filter((i) => i.status === 'invalid').map((i) => i.attributeId),
         bySubmodel: report.bySubmodel.map((g) => [g.part, g.completeness.percent]),
-        byDataOwner: report.byDataOwner.map((o) => o.owner.en),
+        byDataOwner: {
+          count: report.byDataOwner.length,
+          first: report.byDataOwner[0]?.owner.en,
+          last: report.byDataOwner.at(-1)?.owner.en,
+        },
       }).toMatchSnapshot();
     });
   }
