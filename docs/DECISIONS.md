@@ -305,7 +305,7 @@ policy; the hosted connector is described as a convenience mode, never as offlin
 
 ## D-020: L4 is a full verdict layer; rules are data, checks are a keyed code registry (2026-09-04)
 
-**Context.** `kb/rules.json` holds 25 `PW-PLAUS` rules as reviewable data (severity, DE/EN
+**Context.** `kb/rules.json` holds 24 `PW-PLAUS` rules as reviewable data (severity, DE/EN
 title, message, fix hint, attribute list, legal reference). The arithmetic they describe
 ranges from mass sums to tolerance comparisons to date maths, which no practical JSON
 predicate language expresses without becoming a programming language in disguise.

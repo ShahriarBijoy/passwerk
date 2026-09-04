@@ -124,7 +124,7 @@ export function gapReport(draft: PassportDraft, options: GapReportOptions = {}):
       legalRefs: attribute.legalRefs,
       whoTypicallyHasIt: attribute.whoTypicallyHasIt,
       explanation: attribute.explanation,
-      suggestedAction: suggestedAction(status, bucket, attribute.whoTypicallyHasIt),
+      suggestedAction: suggestedAction(status, bucket, cell.status, attribute.whoTypicallyHasIt),
       sources: field?.source ?? [],
       ...(field?.confidence !== undefined ? { confidence: field.confidence } : {}),
       findings: [...(found?.ids ?? [])].sort(),

@@ -100,8 +100,9 @@ function banded(
   range: { min: number | null; max: number | null } | null,
   fallback: { min: number; max: number } | null,
 ): z.ZodType {
-  const min = range?.min ?? fallback?.min ?? null;
-  const max = range?.max ?? fallback?.max ?? null;
+  // Resolve the band as a unit: an authored range that states only one end must not silently
+  // inherit the other end from the fallback, which would invent a bound nobody authored.
+  const { min, max } = range ?? fallback ?? { min: null, max: null };
   if (min === null && max === null) return base;
   const label = `expected a value between ${min ?? '-inf'} and ${max ?? 'inf'}`;
   return base.refine((s: string) => {

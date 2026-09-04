@@ -64,6 +64,70 @@ describe('gapReport', () => {
     expect(item?.suggestedAction.de).not.toMatch(/bei Das/);
   });
 
+  describe('deferred wording follows the Commission verdict, not just the bucket', () => {
+    const deferred = (attributeId: string) => {
+      const item = gapReport(parse('ev-valid')).items.find((i) => i.attributeId === attributeId);
+      expect(item?.bucket, attributeId).toBe('deferred');
+      return item;
+    };
+
+    it("attributes 'not yet applicable' correctly for a value already held", () => {
+      // 18 of the 27 deferred items on ev-valid are not_yet_applicable, and most of them
+      // already carry a value. Telling their holder the Commission says "not to be filled or
+      // displayed", or speaking of an "absence", states the wrong verdict about a value the
+      // supplier has.
+      const item = deferred('carbonFootprintPerFunctionalUnit');
+      expect(item?.applicability).toBe('not_yet_applicable');
+      expect(item?.status).toBe('present');
+      expect(item?.suggestedAction.en).toBe(
+        'No action. This data point is not yet applicable for this battery category; the value you already hold is informational until the enabling act applies.',
+      );
+      expect(item?.suggestedAction.de).toBe(
+        'Keine Aktion. Dieser Datenpunkt ist für diese Batteriekategorie noch nicht anwendbar; der bereits vorliegende Wert ist bis zum Geltungsbeginn des Rechtsakts informativ.',
+      );
+      expect(item?.suggestedAction.en).not.toContain('not to be filled');
+      expect(item?.suggestedAction.de).not.toContain('nicht auszufüllen');
+    });
+
+    it("points a missing 'not yet applicable' item at the obligations timeline", () => {
+      const item = deferred('carbonFootprintLabel');
+      expect(item?.applicability).toBe('not_yet_applicable');
+      expect(item?.status).toBe('missing');
+      expect(item?.suggestedAction.en).toBe(
+        'No action yet. The Commission marks this data point as not yet applicable for this battery category; it becomes relevant on a later date (see the obligations timeline), so its absence is not a gap today.',
+      );
+      expect(item?.suggestedAction.de).toBe(
+        'Noch keine Aktion. Die Kommission stuft diesen Datenpunkt für diese Batteriekategorie als noch nicht anwendbar ein; er wird zu einem späteren Zeitpunkt relevant (siehe Pflichten-Zeitplan), sein Fehlen ist heute keine Lücke.',
+      );
+    });
+
+    it("keeps the established wording for a missing 'not displayed' item", () => {
+      const item = deferred('dateOfPuttingIntoService');
+      expect(item?.applicability).toBe('not_displayed');
+      expect(item?.status).toBe('missing');
+      expect(item?.suggestedAction.en).toBe(
+        'No action. The Commission marks this data point as not to be filled or displayed for this battery category, so its absence is not a gap.',
+      );
+      expect(item?.suggestedAction.de).toBe(
+        'Keine Aktion. Die Kommission stuft diesen Datenpunkt für diese Batteriekategorie als nicht auszufüllen bzw. nicht anzuzeigen ein; sein Fehlen ist keine Lücke.',
+      );
+    });
+
+    it("does not speak of absence for a 'not displayed' value that is present", () => {
+      const item = deferred('remainingCapacity');
+      expect(item?.applicability).toBe('not_displayed');
+      expect(item?.status).toBe('present');
+      expect(item?.suggestedAction.en).toBe(
+        'No action. The Commission marks this data point as not to be filled or displayed for this battery category; the value you hold is not a passport requirement.',
+      );
+      expect(item?.suggestedAction.de).toBe(
+        'Keine Aktion. Die Kommission stuft diesen Datenpunkt für diese Batteriekategorie als nicht auszufüllen bzw. nicht anzuzeigen ein; der vorliegende Wert ist keine Passanforderung.',
+      );
+      expect(item?.suggestedAction.en).not.toContain('absence');
+      expect(item?.suggestedAction.de).not.toContain('Fehlen');
+    });
+  });
+
   it('carries legal references, who-has-it and a DE/EN suggested action', () => {
     const item = gapReport(parse('ev-valid')).items.find((i) => i.attributeId === 'batteryMass');
     expect(item?.legalRefs.length).toBeGreaterThan(0);
