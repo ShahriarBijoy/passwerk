@@ -1,5 +1,12 @@
-import { CHECKS, PassportDraft, validatePlausibility, validateSchema } from '@passwerk/core';
-import { attributes, BATTERY_CATEGORIES } from '@passwerk/rules';
+import {
+  CHECKS,
+  PassportDraft,
+  validatePlausibility,
+  validateSchema,
+  valueSchemaFor,
+} from '@passwerk/core';
+import { attributes, BATTERY_CATEGORIES, getAttribute } from '@passwerk/rules';
+import { Decimal } from 'decimal.js';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
@@ -68,8 +75,10 @@ const inBandDraftArb = fc
           const { min, max } = bandFor(attribute);
           return fc.integer({ min, max }).map((raw) => {
             if (attribute.valueKind === 'integer') return String(raw);
-            // Append .5 only when the fractional value still fits inside the band.
-            return raw + 0.5 <= max ? `${raw}.5` : String(raw);
+            // Built with decimal.js, not string concatenation: `${raw}.5` for raw = -100
+            // would yield "-100.5", which is *below* -100, not above it. Append .5 only
+            // when the fractional value still fits inside the band.
+            return raw + 0.5 <= max ? new Decimal(raw).plus('0.5').toString() : String(raw);
           });
         }),
       )
@@ -178,6 +187,23 @@ describe('L4 properties', () => {
         }),
         RUN,
       );
+    }
+  });
+
+  it('inBandDraftArb only ever emits values L1 accepts', () => {
+    // Pins the invariant the arbitrary's name promises: every drawn value parses against the
+    // attribute's own valueSchemaFor (which enforces the authored band), not just "looks like
+    // a decimal string". A fixed sample, not fc.assert, because this checks the generator
+    // itself rather than a property of validatePlausibility.
+    const samples = fc.sample(inBandDraftArb, { seed: 20260904, numRuns: 100 });
+    for (const draft of samples) {
+      const entries = Object.entries(draft.attributes) as [string, { value: unknown }][];
+      for (const [id, field] of entries) {
+        const attribute = getAttribute(id);
+        expect(attribute, id).toBeDefined();
+        const result = valueSchemaFor(attribute!).safeParse(field.value);
+        expect(result.success, `${id}: ${String(field.value)}`).toBe(true);
+      }
     }
   });
 });
