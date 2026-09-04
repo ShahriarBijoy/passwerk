@@ -132,4 +132,9 @@ describe('applyMappings', () => {
       applyMappings(newDraft(meta), [{ attributeId: 'batteryMass', value: '12,5' }]),
     ).toThrow(/batteryMass/);
   });
+  it('rejects a path decision targeting a non-composite attribute', () => {
+    expect(() =>
+      applyMappings(newDraft(meta), [{ attributeId: 'ratedCapacity', path: 'foo', value: '1' }]),
+    ).toThrow(/ratedCapacity/);
+  });
 });

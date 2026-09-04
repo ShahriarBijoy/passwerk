@@ -40,6 +40,11 @@ function checkLeaf(id: string, decision: MappingDecision): void {
   const attribute = getAttribute(id);
   if (!attribute) throw new Error(`@passwerk/core: applyMappings: unknown attribute id ${id}`);
   if (attribute.valueKind === 'composite') return; // partial objects are checked by L1 once complete
+  if (decision.path !== undefined) {
+    throw new Error(
+      `@passwerk/core: applyMappings: ${id}: a path decision targets a composite sub-field, but ${id} is not a composite attribute`,
+    );
+  }
   const r = valueSchemaFor(attribute.valueKind).safeParse(decision.value);
   if (!r.success)
     throw new Error(
