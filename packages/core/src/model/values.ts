@@ -38,10 +38,26 @@ export const Uri = z.string().refine(isUri, 'expected a URL or URN');
 export const MultilingualText = z
   .record(z.string().min(2), z.string().min(1))
   .refine((r) => Object.keys(r).length > 0, 'expected at least one language');
+export const DocumentClassification = z.object({
+  classId: z.string().min(1),
+  className: MultilingualText,
+  system: z.string().min(1),
+});
+export type DocumentClassification = z.infer<typeof DocumentClassification>;
+
 export const DocumentRef = z.object({
   id: z.string().min(1),
   title: z.string().min(1).optional(),
   uri: Uri.optional(),
+  classification: DocumentClassification.optional(),
+  languages: z
+    .array(z.string().regex(/^[a-z]{2}$/))
+    .min(1)
+    .optional(),
+  version: z.string().min(1).optional(),
+  fileName: z.string().min(1).optional(),
+  contentType: z.string().min(1).optional(),
+  domainId: z.string().min(1).optional(),
 });
 export type DocumentRef = z.infer<typeof DocumentRef>;
 export const GraphicRef = z.object({

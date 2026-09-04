@@ -26,6 +26,7 @@ export {
 export * from './emit/submodels/technicalData.js';
 export * from './ingest/csv.js';
 export * from './ingest/docx.js';
+export * from './ingest/index.js';
 export * from './ingest/lang.js';
 export * from './ingest/layout.js';
 export * from './ingest/ooxml.js';
