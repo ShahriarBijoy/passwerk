@@ -8,7 +8,7 @@ Scope: `docs/BUILD_PLAN.md` section 7, Phase 5. Everything lands in `@passwerk/c
 
 | Deliverable | Done when |
 |---|---|
-| L4 plausibility | 25 `PW-PLAUS-*` rules implemented, `validate()` reports four layers, property tests green |
+| L4 plausibility | 24 `PW-PLAUS-*` rules implemented, `validate()` reports four layers, property tests green |
 | `gapReport` | Per-attribute items, two completeness figures, submodel and data-owner groupings, DE/EN, snapshot per broken sample |
 | `checkObligations` | Decision tree over `timeline.json` answers required / not required / insufficient input for seven battery types |
 | `explainAttribute` / `explainRule` | Data joins over the KB with no composed legal claims |
@@ -190,9 +190,21 @@ grounding is arithmetic carry `legalRef: null`.
 | PW-PLAUS-024 | warning | When `carbonFootprintPerFunctionalUnit` is present, `carbonFootprintGeneralInformation.calculationMethods` and `carbonFootprintStudyLink` are present too. One violation per missing companion. | `{missing}` | `BR Annex XIII 1(c)` |
 | PW-PLAUS-025 | warning | Sum of `timeInExtremeHighTemperature`, `timeInExtremeLowTemperature`, `timeChargingInExtremeHighTemperature`, `timeChargingInExtremeLowTemperature` (minutes) does not exceed the minutes between `dateOfPuttingIntoService` and `asOf`. Skipped when `dateOfPuttingIntoService` is absent. | `{minutes} {ageMinutes}` | `BR Annex XIII 4(d)` |
 
-Amended existing rule: **PW-PLAUS-003** additionally reports a `manufacturingDate` or
-`dateOfPuttingIntoService` later than `asOf`. Its message gains a `{date}` placeholder
-variant; the DE/EN texts are extended, its id, severity and legal reference are unchanged.
+**PW-PLAUS-003 needs no amendment.** Its authored message already covers the full semantics
+("is in the future, before 2000, or after the date of putting into service"); only the
+implementation was missing. Nothing in its data changes.
+
+**PW-PLAUS-013 is removed** (ADR D-023). It was authored to fire on a *missing* deferred
+attribute, which is reassurance rather than a defect: implemented as written it would emit a
+dozen warnings on every draft and no passport could ever reach `valid`. Its DE/EN text moves
+to the gap report's `deferred` bucket, where the reassurance belongs. The catalogue therefore
+holds **24** rules, not 25.
+
+**PW-PLAUS-012 is scoped by template cardinality** (ADR D-023). The Commission marks the
+state-of-health data points `not_displayed` for EV while IDTA 02035-5 declares the same blocks
+with cardinality `One`, so an EV passport cannot satisfy both. The rule stays silent where the
+template forces the element to be present and keeps its teeth where the element is
+`ZeroToOne`.
 
 Rule-to-layer boundary: the KB `range` is enforced once, by L1 (section 7). No PW-PLAUS rule
 re-checks a band, because the context hides anything L1 rejected (section 5.2). PW-PLAUS-001
@@ -513,6 +525,8 @@ sample, so the new surface is covered by the zero-network proof (ADR D-013).
 - **D-022**: `checkObligations` accepts a wider battery-type vocabulary than the three
   passport categories so it can answer "no passport needed", and cites only Article 77(1),
   because the KB holds no Article 3 definitions and this project does not guess references.
+- **D-023**: where IDTA and the Commission disagree, the template wins the emitted file and
+  the guidance wins the advice; PW-PLAUS-013 is removed as misfiled.
 
 ## 14. Out of scope
 
