@@ -29,6 +29,10 @@ export const DecimalString = z
   .refine(isDecimalString, 'expected a decimal string like "12.5"');
 export const IntegerString = z.string().regex(INTEGER_RE, 'expected an integer string like "42"');
 export const PercentString = DecimalString.refine((s) => {
+  // Same guard as banded() below: Zod still runs this refine even when the earlier
+  // isDecimalString refine on DecimalString already failed, so a lexically-invalid string
+  // must not reach `new Decimal` here either.
+  if (!isDecimalString(s)) return true;
   const d = new Decimal(s);
   return d.gte(0) && d.lte(100);
 }, 'expected a percentage between 0 and 100');

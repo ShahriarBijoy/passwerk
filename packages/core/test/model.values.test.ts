@@ -1,4 +1,4 @@
-import { isDecimalString, valueSchemaFor, valueSchemaForKind } from '@passwerk/core';
+import { isDecimalString, PercentString, valueSchemaFor, valueSchemaForKind } from '@passwerk/core';
 import { getAttribute } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
@@ -89,5 +89,42 @@ describe('valueSchemaFor uses the knowledge-base range (D-021)', () => {
 
   it('valueSchemaForKind stays band-less for callers that hold only a kind', () => {
     expect(valueSchemaForKind('decimal').safeParse('99999999').success).toBe(true);
+  });
+});
+
+describe('a malformed decimal string is rejected without throwing (regression)', () => {
+  it('a percentage attribute band rejects "61,2" cleanly', () => {
+    const attribute = getAttribute('carbonFootprintShareEndOfLife')!; // -100 .. 100
+    let result: { success: boolean } | undefined;
+    expect(() => {
+      result = valueSchemaFor(attribute).safeParse('61,2');
+    }).not.toThrow();
+    expect(result?.success).toBe(false);
+  });
+
+  it('a decimal attribute band rejects "12.5.3" cleanly', () => {
+    const attribute = getAttribute('batteryMass')!; // 0 .. 10000 kg
+    let result: { success: boolean } | undefined;
+    expect(() => {
+      result = valueSchemaFor(attribute).safeParse('12.5.3');
+    }).not.toThrow();
+    expect(result?.success).toBe(false);
+  });
+
+  it('an integer attribute band rejects "12.5.3" cleanly', () => {
+    const attribute = getAttribute('expectedLifetimeCalendarYears')!; // 0 .. 100
+    let result: { success: boolean } | undefined;
+    expect(() => {
+      result = valueSchemaFor(attribute).safeParse('12.5.3');
+    }).not.toThrow();
+    expect(result?.success).toBe(false);
+  });
+
+  it('PercentString itself rejects "61,2" cleanly', () => {
+    let result: { success: boolean } | undefined;
+    expect(() => {
+      result = PercentString.safeParse('61,2');
+    }).not.toThrow();
+    expect(result?.success).toBe(false);
   });
 });
