@@ -61,7 +61,9 @@ describe('suggestMappings', () => {
   });
   it('sorts by confidence, then attributeId, then factId, and drops below minConfidence', () => {
     const list = suggestMappings(
-      facts([{ label: 'Masse', labelKey: 'masse', value: '412.7', kind: 'decimal', unit: 'kg' }]),
+      facts([
+        { label: 'Gewicht', labelKey: 'gewicht', value: '412.7', kind: 'decimal', unit: 'kg' },
+      ]),
       { minConfidence: 0.3 },
     );
     expect(list.length).toBeGreaterThan(0);
@@ -82,16 +84,16 @@ describe('suggestMappings', () => {
       facts([
         {
           id: 'f#1:2',
-          label: 'Masse',
-          labelKey: 'masse',
+          label: 'Gewicht',
+          labelKey: 'gewicht',
           value: '412.7',
           kind: 'decimal',
           unit: 'kg',
         },
         {
           id: 'f#1:1',
-          label: 'Masse',
-          labelKey: 'masse',
+          label: 'Gewicht',
+          labelKey: 'gewicht',
           value: '412.7',
           kind: 'decimal',
           unit: 'kg',
