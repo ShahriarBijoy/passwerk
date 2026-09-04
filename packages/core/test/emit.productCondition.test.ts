@@ -35,13 +35,13 @@ describe('emitProductCondition', () => {
     ]);
   });
 
-  it('pairs each value with its LastUpdate from recordedAt, else createdAt', () => {
+  it('pairs each value with its LastUpdate from recordedAt', () => {
     const soc = root('StateOfCharge');
     expect(val(child(soc, 'StateOfChargeValue'))).toBe('70');
     expect(val(child(soc, 'LastUpdate'))).toBe('2026-08-31T06:00:00Z');
     const cycles = root('NumberOfFullCycles');
     expect(val(child(cycles, 'NumberOfFullCyclesValue'))).toBe('12');
-    expect(val(child(cycles, 'LastUpdate'))).toBe(ev.meta.createdAt);
+    expect(val(child(cycles, 'LastUpdate'))).toBe('2026-08-30T18:30:00Z');
     expect(val(child(root('RemainingEnergy'), 'RemainingEnergyValue'))).toBe('74.6');
     expect(val(child(root('EvolutionOfSelfDischarge'), 'EvolutionOfSelfDischargeValue'))).toBe('0');
   });
@@ -57,7 +57,7 @@ describe('emitProductCondition', () => {
     expect(val(child(events?.value?.[1], 'NegativeEventValue'))).toBe(
       `${getAttribute('overchargeEvents')?.name.en}: 1`,
     );
-    expect(val(child(first, 'LastUpdate'))).toBe(ev.meta.createdAt);
+    expect(val(child(first, 'LastUpdate'))).toBe('2026-08-31T06:00:00Z');
   });
 
   it('lists accident documents by uri', () => {
@@ -85,13 +85,13 @@ describe('emitProductCondition', () => {
   it('maps remaining power capability to the dynamic block plus LastUpdate', () => {
     const rpc = root('RemainingPowerCapability');
     const dyn = child(rpc, 'RemainingPowerCapabilityDynamicAt');
-    expect(val(child(dyn, 'RPCLastUpdated'))).toBe(ev.meta.createdAt);
+    expect(val(child(dyn, 'RPCLastUpdated'))).toBe('2026-09-02T21:45:00Z');
     expect(val(child(dyn, 'AtSoC'))).toBe('80');
     expect(val(child(dyn, 'PowerCapabilityAt'))).toBe('98');
-    expect(val(child(rpc, 'LastUpdate'))).toBe(ev.meta.createdAt);
+    expect(val(child(rpc, 'LastUpdate'))).toBe('2026-09-02T21:45:00Z');
   });
 
-  it('emits the structural InformationOnAccidents list even without documents, and omits absent blocks', () => {
+  it('emits the structural InformationOnAccidents list even without documents, falls back to createdAt without recordedAt, and omits absent blocks', () => {
     const draft = PassportDraft.parse({
       ...samples['ev-valid'],
       attributes: { numberOfFullCycles: { value: '3.0', status: 'present' } },
@@ -103,6 +103,7 @@ describe('emitProductCondition', () => {
     ]);
     const cycles = out?.submodelElements?.[0];
     expect(val(child(cycles, 'NumberOfFullCyclesValue'))).toBe('3');
+    expect(val(child(cycles, 'LastUpdate'))).toBe(draft.meta.createdAt);
     expect((out?.submodelElements?.[1] as SML | undefined)?.value).toBeNull();
   });
 

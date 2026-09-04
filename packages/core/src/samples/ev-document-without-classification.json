@@ -642,7 +642,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "energyThroughput": {
       "value": "900",
@@ -653,7 +654,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "capacityThroughput": {
       "value": "2340",
@@ -664,7 +666,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "stateOfCertifiedEnergy": {
       "value": "99.5",
@@ -675,7 +678,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "remainingUsableBatteryEnergy": {
       "value": "74.6",
@@ -686,7 +690,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "remainingCapacity": {
       "value": "194",
@@ -697,7 +702,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "deepDischargeEvents": {
       "value": "0",
@@ -707,7 +713,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "overchargeEvents": {
       "value": "1",
@@ -717,7 +724,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "informationOnAccidents": {
       "value": [
@@ -762,7 +770,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "timeInExtremeLowTemperature": {
       "value": "3",
@@ -773,7 +782,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "timeChargingInExtremeHighTemperature": {
       "value": "0",
@@ -784,7 +794,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "timeChargingInExtremeLowTemperature": {
       "value": "1",
@@ -795,7 +806,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "remainingPowerCapability": {
       "value": {
@@ -809,7 +821,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-09-02T21:45:00Z"
     },
     "evolutionOfSelfDischarge": {
       "value": "0",
@@ -820,7 +833,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-09-02T21:45:00Z"
     },
     "currentSelfDischargeRate": {
       "value": "2",
@@ -831,7 +845,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-30T18:30:00Z"
     },
     "remainingRoundTripEnergyEfficiency": {
       "value": "95.5",
@@ -842,7 +857,8 @@
           "file": "bms-export.csv",
           "cell": "B2"
         }
-      ]
+      ],
+      "recordedAt": "2026-09-01T09:15:00Z"
     },
     "dismantlingInformation": {
       "value": [

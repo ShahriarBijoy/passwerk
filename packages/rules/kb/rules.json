@@ -1,6 +1,6 @@
 {
   "$comment": "passwerk plausibility rules (validation layer L4, see docs/BUILD_PLAN.md 2.4). Data only: the rule engine in @passwerk/core implements one check per id. Rules never override the AAS metamodel (L2) or template conformance (L3) verdicts. Severity 'error' makes the verdict invalid; 'warning' yields valid_with_warnings. 'attributes' lists the attribute ids (kb/attributes) a rule reads. Legal references are informational and come from kb/ec-datapoints.json or the cited article.",
-  "lastVerified": "2026-09-03",
+  "lastVerified": "2026-09-04",
   "rules": [
     {
       "id": "PW-PLAUS-001",
@@ -278,37 +278,6 @@
         "evolutionOfSelfDischarge"
       ],
       "legalRef": "EC guidance v2.0, data points 33 and 61-66"
-    },
-    {
-      "id": "PW-PLAUS-013",
-      "severity": "warning",
-      "title": {
-        "en": "Deferred data points are informational until their enabling act applies",
-        "de": "Zurückgestellte Datenpunkte sind bis zum Geltungsbeginn ihres Rechtsakts informativ"
-      },
-      "message": {
-        "en": "{attribute} is missing; this is not a gap as of February 2027 because the Commission marks it 'not yet applicable' ({reason}).",
-        "de": "{attribute} fehlt; das ist ab Februar 2027 keine Lücke, weil die Kommission es als 'noch nicht anwendbar' einstuft ({reason})."
-      },
-      "fixHint": {
-        "en": "Collect the value anyway if available; the obligation will start once the delegated or implementing act is in force.",
-        "de": "Wert trotzdem erheben, falls verfügbar; die Pflicht beginnt mit Inkrafttreten des delegierten oder Durchführungsrechtsakts."
-      },
-      "attributes": [
-        "carbonFootprintPerFunctionalUnit",
-        "carbonFootprintLabel",
-        "carbonFootprintPerformanceClass",
-        "dueDiligenceReport",
-        "recycledNickelPreConsumer",
-        "recycledCobaltPreConsumer",
-        "recycledLithiumPreConsumer",
-        "recycledLeadPreConsumer",
-        "recycledNickelPostConsumer",
-        "recycledCobaltPostConsumer",
-        "recycledLithiumPostConsumer",
-        "recycledLeadPostConsumer"
-      ],
-      "legalRef": "EC guidance v2.0, data points 17-23 and 44"
     },
     {
       "id": "PW-PLAUS-014",

@@ -195,3 +195,124 @@ describe('PW-PLAUS-008 passport identifier', () => {
     ).not.toContain('PW-PLAUS-008');
   });
 });
+
+describe('PW-PLAUS-009 CAS numbers', () => {
+  it('accepts a valid CAS number and rejects a bad check digit', () => {
+    const ok = draftWith({
+      criticalRawMaterials: { value: [{ name: 'Cobalt', identifier: '7440-48-4' }] },
+    });
+    expect(ruleIds(ok)).not.toContain('PW-PLAUS-009');
+    const bad = draftWith({
+      criticalRawMaterials: { value: [{ name: 'Cobalt', identifier: '7440-48-9' }] },
+    });
+    expect(ruleIds(bad)).toContain('PW-PLAUS-009');
+  });
+  it('rejects a trade name', () => {
+    const draft = draftWith({
+      criticalRawMaterials: { value: [{ name: 'Cobalt', identifier: 'CoSulfate-A' }] },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-009');
+  });
+});
+
+describe('PW-PLAUS-010 recycled shares per material', () => {
+  it('fires when pre and post consumer exceed 100 % together', () => {
+    const draft = draftWith({
+      recycledCobaltPreConsumer: { value: '60' },
+      recycledCobaltPostConsumer: { value: '55' },
+    });
+    const f = validatePlausibility(draft).findings.find((x) => x.ruleId === 'PW-PLAUS-010');
+    expect(f?.message.en).toContain('115');
+    expect(f?.message.en).toContain('Cobalt');
+  });
+  it('is quiet at exactly 100 % and when one side is missing', () => {
+    const at100 = draftWith({
+      recycledCobaltPreConsumer: { value: '40' },
+      recycledCobaltPostConsumer: { value: '60' },
+    });
+    expect(ruleIds(at100)).not.toContain('PW-PLAUS-010');
+    expect(ruleIds(draftWith({ recycledCobaltPreConsumer: { value: '90' } }))).not.toContain(
+      'PW-PLAUS-010',
+    );
+  });
+});
+
+describe('PW-PLAUS-011 LastUpdate on dynamic values', () => {
+  it('fires when a dynamic value has no recordedAt', () => {
+    expect(ruleIds(draftWith({ numberOfFullCycles: { value: '412' } }))).toContain('PW-PLAUS-011');
+  });
+  it('fires when recordedAt is in the future', () => {
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2027-01-01T00:00:00Z' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-011');
+  });
+  it('is quiet with a past recordedAt', () => {
+    const draft = draftWith({
+      numberOfFullCycles: { value: '412', recordedAt: '2026-08-30T18:30:00Z' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-011');
+  });
+});
+
+describe('PW-PLAUS-012 not-displayed data points (D-023)', () => {
+  it('warns for an optional template element the Commission says not to display', () => {
+    // capacityThresholdForExhaustion is ZeroToOne in IDTA 02035-4 and not_displayed for
+    // INDUSTRIAL_GT_2KWH, so the supplier can leave it out.
+    const draft = draftWith(
+      { capacityThresholdForExhaustion: { value: '80' } },
+      'INDUSTRIAL_GT_2KWH',
+    );
+    expect(ruleIds(draft)).toContain('PW-PLAUS-012');
+  });
+  it('stays quiet when the template makes the element mandatory', () => {
+    // remainingCapacity is not_displayed for EV but its IDTA 02035-5 block is cardinality One:
+    // omitting it would make L3 fail, so the supplier has no choice and we do not nag.
+    const draft = draftWith(
+      { remainingCapacity: { value: '194', recordedAt: '2026-08-30T18:30:00Z' } },
+      'EV',
+    );
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-012');
+  });
+});
+
+describe('PW-PLAUS-013 is not a validation rule', () => {
+  it('is absent from the catalogue and the registry', async () => {
+    const { getRule } = await import('@passwerk/rules');
+    const { CHECKS } = await import('@passwerk/core');
+    expect(getRule('PW-PLAUS-013')).toBeUndefined();
+    expect(CHECKS['PW-PLAUS-013']).toBeUndefined();
+  });
+});
+
+describe('PW-PLAUS-014 internal resistance unit', () => {
+  it('fires for a pack resistance of 85 Ohm', () => {
+    const draft = draftWith({
+      initialInternalResistance: { value: { cellOhm: '0.0012', packOhm: '85' } },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-014');
+  });
+  it('is quiet for milliohm-scale values', () => {
+    const draft = draftWith({
+      initialInternalResistance: { value: { cellOhm: '0.0012', packOhm: '0.085' } },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-014');
+  });
+});
+
+describe('PW-PLAUS-015 idle temperature range', () => {
+  it('fires when the lower boundary is not below the upper', () => {
+    const draft = draftWith({
+      temperatureRangeIdleLowerBoundary: { value: '45' },
+      temperatureRangeIdleUpperBoundary: { value: '-20' },
+    });
+    expect(ruleIds(draft)).toContain('PW-PLAUS-015');
+  });
+  it('is quiet for a well-ordered range', () => {
+    const draft = draftWith({
+      temperatureRangeIdleLowerBoundary: { value: '-20' },
+      temperatureRangeIdleUpperBoundary: { value: '45' },
+    });
+    expect(ruleIds(draft)).not.toContain('PW-PLAUS-015');
+  });
+});

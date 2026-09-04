@@ -363,3 +363,27 @@ maps onto the `INDUSTRIAL_GT_2KWH` attribute set with an explicit note.
 **Consequences.** The tool can decline to answer, which is the honest outcome when a supplier
 does not yet know the pack energy. Adding precise per-type citations later is a knowledge-base
 addition (`kb/battery-types.json`) that changes no code path.
+
+## D-023: Where the IDTA template and the Commission guidance disagree, the template wins the file and the guidance wins the advice (2026-09-04)
+
+**Context.** The Commission's v2.0 guidance marks the state-of-health data points (61-66)
+"not to be filled/displayed" for EV batteries as of February 2027. IDTA 02035-5 declares the
+same blocks (`RemainingCapacity`, `RemainingPowerCapability`,
+`RemainingRoundTripEnergyEfficiency`, `EvolutionOfSelfDischarge`) with cardinality `One`. An
+EV passport cannot satisfy both: omitting the block makes L3 report `PW-L3-MISSING`, filling
+it makes PW-PLAUS-012 warn. Separately, PW-PLAUS-013 was authored to fire on a *missing*
+deferred attribute, which would have emitted a dozen warnings on every draft and made
+`valid` unreachable.
+
+**Decision.** PW-PLAUS-012 stays silent for an attribute whose template element is mandatory,
+and keeps its teeth where the element is `ZeroToOne` and the supplier can genuinely leave it
+out. The emitted file therefore always follows the template (L3 stays authoritative for
+conformance) and the advice follows the guidance wherever the supplier has a choice.
+PW-PLAUS-013 is removed from `kb/rules.json`; reassurance that a deferred data point is not a
+gap belongs to the gap report's `deferred` bucket, not to a validation finding. The catalogue
+holds 24 rules.
+
+**Consequences.** No golden sample is warned about a value the template obliges it to carry.
+The conflict is recorded rather than papered over, and is worth raising with IDTA when the
+templates are next revised. L4 never reports a missing value, which keeps the layer boundary
+with the gap report clean.

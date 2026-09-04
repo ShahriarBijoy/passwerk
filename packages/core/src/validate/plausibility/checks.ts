@@ -1,4 +1,5 @@
-import { type BatteryCategory, getRule } from '@passwerk/rules';
+import { type BatteryCategory, getAttribute, getRule } from '@passwerk/rules';
+import { Decimal } from 'decimal.js';
 import type { RuleContext } from './context.js';
 
 export interface RuleViolation {
@@ -29,6 +30,40 @@ const MASS_RANGES: Record<BatteryCategory, { min: number; max: number }> = {
 const BATTERY_STATUSES = new Set(['original', 'repurposed', 'reused', 'remanufactured', 'waste']);
 
 const normaliseStatus = (s: string): string => s.trim().toLowerCase().replaceAll('-', '');
+
+/** CAS registry number: NN..N-NN-C, where C is a modulo-10 weighted check digit. */
+export function isCasNumber(value: string): boolean {
+  const match = /^(\d{2,7})-(\d{2})-(\d)$/.exec(value);
+  if (!match) return false;
+  const digits = `${match[1]}${match[2]}`.split('').reverse();
+  const sum = digits.reduce((acc, digit, index) => acc + Number(digit) * (index + 1), 0);
+  return sum % 10 === Number(match[3]);
+}
+
+/** The four materials with a recycled-content obligation, with their attribute pair. */
+const RECYCLED_PAIRS: { material: string; pre: string; post: string }[] = [
+  { material: 'Nickel', pre: 'recycledNickelPreConsumer', post: 'recycledNickelPostConsumer' },
+  { material: 'Cobalt', pre: 'recycledCobaltPreConsumer', post: 'recycledCobaltPostConsumer' },
+  { material: 'Lithium', pre: 'recycledLithiumPreConsumer', post: 'recycledLithiumPostConsumer' },
+  { material: 'Lead', pre: 'recycledLeadPreConsumer', post: 'recycledLeadPostConsumer' },
+];
+
+/** Above this, an internal resistance in ohms is almost certainly stated in milliohms. */
+const INTERNAL_RESISTANCE_OHM_LIMIT = 10;
+
+/**
+ * True when the template forces the element to be present, so the supplier has no choice.
+ * The catalogue stores a numeric `cardinality.min` even for "One" (min: 1, max: 1), so
+ * comparing `min >= 1` works directly; `raw` is not needed as a fallback (verified against
+ * kb/generated/template-catalogue.json for 5/RemainingCapacity/RemainingCapacityValue).
+ */
+function templateForcesPresence(attributeId: string): boolean {
+  const attribute = getAttribute(attributeId);
+  if (!attribute) return false;
+  return attribute.templateElements.some(
+    (element) => element.cardinality.min !== null && element.cardinality.min >= 1,
+  );
+}
 
 /** One check per PW-PLAUS rule id. Keys must match kb/rules.json exactly (see manifest test). */
 export const CHECKS: Record<string, RuleCheck> = {
@@ -128,5 +163,108 @@ export const CHECKS: Record<string, RuleCheck> = {
     if (typeof value !== 'string') return [];
     if (/^https:\/\/\S+$/.test(value)) return [];
     return [{ attributeId: 'batteryPassportIdentifier', params: { value } }];
+  },
+
+  /** Material identifiers should be CAS registry numbers. */
+  'PW-PLAUS-009': (ctx) => {
+    const out: RuleViolation[] = [];
+    for (const id of ruleAttributes('PW-PLAUS-009')) {
+      const items = ctx.value<{ identifier?: unknown }[]>(id);
+      if (!Array.isArray(items)) continue;
+      for (const item of items) {
+        const identifier = item?.identifier;
+        if (typeof identifier !== 'string' || isCasNumber(identifier)) continue;
+        out.push({ attributeId: id, params: { value: identifier } });
+      }
+    }
+    return out;
+  },
+
+  /** Pre- and post-consumer recycled shares of one material must not exceed 100 % together. */
+  'PW-PLAUS-010': (ctx) => {
+    const out: RuleViolation[] = [];
+    for (const { material, pre, post } of RECYCLED_PAIRS) {
+      const preShare = ctx.decimal(pre);
+      const postShare = ctx.decimal(post);
+      if (preShare === undefined || postShare === undefined) continue;
+      const sum = preShare.plus(postShare);
+      if (sum.lte(100)) continue;
+      out.push({
+        attributeId: pre,
+        params: {
+          material,
+          pre: preShare.toString(),
+          post: postShare.toString(),
+          sum: sum.toString(),
+        },
+      });
+    }
+    return out;
+  },
+
+  /** A dynamic value needs a LastUpdate timestamp that is not in the future. */
+  'PW-PLAUS-011': (ctx) => {
+    const out: RuleViolation[] = [];
+    for (const id of ruleAttributes('PW-PLAUS-011')) {
+      if (ctx.value(id) === undefined) continue;
+      const recordedAt = ctx.recordedAt(id);
+      if (recordedAt !== undefined && recordedAt <= ctx.asOf) continue;
+      out.push({ attributeId: id, params: { attribute: id, timestamp: recordedAt ?? '-' } });
+    }
+    return out;
+  },
+
+  /**
+   * Data points the Commission marks 'not to be filled/displayed' should be empty — unless
+   * the IDTA template makes the element mandatory, in which case the supplier has no choice
+   * and we stay quiet (ADR D-023).
+   */
+  'PW-PLAUS-012': (ctx) => {
+    const out: RuleViolation[] = [];
+    for (const id of ruleAttributes('PW-PLAUS-012')) {
+      if (ctx.value(id) === undefined) continue;
+      const attribute = getAttribute(id);
+      if (attribute?.applicability[ctx.category].status !== 'not_displayed') continue;
+      if (templateForcesPresence(id)) continue;
+      out.push({ attributeId: id, params: { attribute: id, category: ctx.category } });
+    }
+    return out;
+  },
+
+  /** An internal resistance above 10 ohms is almost certainly stated in milliohms. */
+  'PW-PLAUS-014': (ctx) => {
+    const value = ctx.value<Record<string, unknown>>('initialInternalResistance');
+    if (typeof value !== 'object' || value === null) return [];
+    const out: RuleViolation[] = [];
+    for (const key of ['cellOhm', 'moduleOhm', 'packOhm']) {
+      const raw = value[key];
+      if (typeof raw !== 'string') continue;
+      let ohms: Decimal;
+      try {
+        ohms = new Decimal(raw);
+      } catch {
+        continue;
+      }
+      if (!ohms.isFinite() || ohms.lte(INTERNAL_RESISTANCE_OHM_LIMIT)) continue;
+      out.push({
+        attributeId: 'initialInternalResistance',
+        path: `attributes.initialInternalResistance.value.${key}`,
+        params: { value: ohms.toString() },
+      });
+    }
+    return out;
+  },
+
+  /** The idle temperature range must have its lower boundary below the upper. */
+  'PW-PLAUS-015': (ctx) => {
+    const lower = ctx.decimal('temperatureRangeIdleLowerBoundary');
+    const upper = ctx.decimal('temperatureRangeIdleUpperBoundary');
+    if (lower === undefined || upper === undefined || lower.lt(upper)) return [];
+    return [
+      {
+        attributeId: 'temperatureRangeIdleLowerBoundary',
+        params: { lower: lower.toString(), upper: upper.toString() },
+      },
+    ];
   },
 };
