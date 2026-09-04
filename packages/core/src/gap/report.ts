@@ -6,6 +6,7 @@ import {
   type LangText,
 } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
+import { byCodePoint } from '../mapping/propose.js';
 import type { AnyFieldValue } from '../model/field.js';
 import { getField, type PassportDraft } from '../model/passport.js';
 import type { Provenance } from '../model/provenance.js';
@@ -163,7 +164,7 @@ export function gapReport(draft: PassportDraft, options: GapReportOptions = {}):
     owners.set(key, entry);
   }
   const byDataOwner = [...owners.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => byCodePoint(a, b))
     .map(([, value]) => value);
 
   return {

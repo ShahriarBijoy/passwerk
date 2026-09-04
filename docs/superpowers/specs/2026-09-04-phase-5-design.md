@@ -321,8 +321,12 @@ status is `conflict`; else `not_applicable` when the field says so; else `presen
 field status is `present`; else `missing`. Only `present` counts toward completeness.
 
 `suggestedAction` is generated DE/EN engine text from `gap/action.ts`, keyed on
-`(status, bucket)` and interpolating `whoTypicallyHasIt`. It is a workflow instruction, not a
-legal claim: "Ask the cell manufacturer for this value" / "Beim Zellhersteller anfragen".
+`(status, bucket)` and interpolating `whoTypicallyHasIt` as a colon-led holder clause after a
+full stop (the KB's `whoTypicallyHasIt` strings are themselves complete sentences, so they
+cannot be spliced mid-clause). It is a workflow instruction, not a legal claim: "Request this
+value. Typical data holder: The cell manufacturer holds this value." / "Diesen Wert anfordern.
+Typischer Datenhalter: Der Zellhersteller hält diesen Wert."
+
 
 Ordering: `items` by DIN longlist number (the KB's own order); `bySubmodel` by part with the
 null-part bucket last; `byDataOwner` grouped on the **English** `whoTypicallyHasIt` string and

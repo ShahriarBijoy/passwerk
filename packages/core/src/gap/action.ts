@@ -27,13 +27,13 @@ export function suggestedAction(
       };
     case 'invalid':
       return {
-        en: `The value is present but rejected by validation. Correct it with ${whoTypicallyHasIt.en}.`,
-        de: `Der Wert ist vorhanden, aber von der Prüfung abgelehnt. Mit ${whoTypicallyHasIt.de} korrigieren.`,
+        en: `The value is present but rejected by validation. Correct it with the typical data holder: ${whoTypicallyHasIt.en}`,
+        de: `Der Wert ist vorhanden, aber von der Prüfung abgelehnt. Mit dem typischen Datenhalter korrigieren: ${whoTypicallyHasIt.de}`,
       };
     case 'conflict':
       return {
-        en: `Two documents disagree. Decide which source is authoritative, with ${whoTypicallyHasIt.en}.`,
-        de: `Zwei Dokumente widersprechen sich. Mit ${whoTypicallyHasIt.de} klären, welche Quelle maßgeblich ist.`,
+        en: `Two documents disagree. Decide which source is authoritative with the typical data holder: ${whoTypicallyHasIt.en}`,
+        de: `Zwei Dokumente widersprechen sich. Mit dem typischen Datenhalter klären, welche Quelle maßgeblich ist: ${whoTypicallyHasIt.de}`,
       };
     case 'not_applicable':
       return {
@@ -43,12 +43,12 @@ export function suggestedAction(
     default:
       return bucket === 'conditional'
         ? {
-            en: `Confirm whether this applies to your battery; if it does, request the value from ${whoTypicallyHasIt.en}.`,
-            de: `Prüfen, ob dies für Ihre Batterie zutrifft; falls ja, den Wert bei ${whoTypicallyHasIt.de} anfordern.`,
+            en: `Confirm whether this applies to your battery; if it does, request the value. Typical data holder: ${whoTypicallyHasIt.en}`,
+            de: `Prüfen, ob dies für Ihre Batterie zutrifft; falls ja, den Wert anfordern. Typischer Datenhalter: ${whoTypicallyHasIt.de}`,
           }
         : {
-            en: `Request this value from ${whoTypicallyHasIt.en}.`,
-            de: `Diesen Wert bei ${whoTypicallyHasIt.de} anfordern.`,
+            en: `Request this value. Typical data holder: ${whoTypicallyHasIt.en}`,
+            de: `Diesen Wert anfordern. Typischer Datenhalter: ${whoTypicallyHasIt.de}`,
           };
   }
 }

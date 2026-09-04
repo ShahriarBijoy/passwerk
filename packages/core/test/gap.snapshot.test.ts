@@ -26,6 +26,8 @@ describe('gap report snapshots', () => {
           return acc;
         }, {}),
         invalid: report.items.filter((i) => i.status === 'invalid').map((i) => i.attributeId),
+        bySubmodel: report.bySubmodel.map((g) => [g.part, g.completeness.percent]),
+        byDataOwner: report.byDataOwner.map((o) => o.owner.en),
       }).toMatchSnapshot();
     });
   }

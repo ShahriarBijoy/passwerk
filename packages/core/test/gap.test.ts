@@ -1,4 +1,4 @@
-import { gapReport, PassportDraft, samples, validate } from '@passwerk/core';
+import { brokenSamples, gapReport, PassportDraft, samples, validate } from '@passwerk/core';
 import { attributes } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 
@@ -37,12 +37,31 @@ describe('gapReport', () => {
   });
 
   it('marks an attribute with an error finding as invalid, not present', () => {
-    const draft = parse('ev-valid');
-    const validation = validate(draft);
-    const r = gapReport(draft, { report: validation });
-    for (const item of r.items) {
-      if (item.status === 'invalid') expect(item.findings.length).toBeGreaterThan(0);
-    }
+    const draft = PassportDraft.parse(brokenSamples['lmt-wrong-date-format'].draft);
+    const r = gapReport(draft, { report: validate(draft) });
+    const item = r.items.find((i) => i.attributeId === 'manufacturingDate');
+    expect(item?.status).toBe('invalid');
+    expect(item?.findings.length).toBeGreaterThan(0);
+  });
+
+  it('does not mark an attribute with only a warning finding as invalid', () => {
+    const draft = PassportDraft.parse(brokenSamples['ev-document-without-classification'].draft);
+    const r = gapReport(draft, { report: validate(draft) });
+    const item = r.items.find((i) => i.attributeId === 'euDeclarationOfConformity');
+    expect(item?.status).not.toBe('invalid');
+    expect(item?.findings.length).toBeGreaterThan(0);
+  });
+
+  it('never splices a full-sentence data-holder into the middle of a clause', () => {
+    // Regression pin: whoTypicallyHasIt strings are full sentences ending in ".", so a
+    // missing/required suggestedAction must not read as "... from <Sentence.>." or
+    // "... bei <Satz.> anfordern." (a dative preposition before a capitalised sentence).
+    const r = gapReport(parse('ev-valid'));
+    const item = r.items.find((i) => i.status === 'missing' && i.bucket === 'required');
+    expect(item).toBeDefined();
+    expect(item?.suggestedAction.en).not.toMatch(/\.\./);
+    expect(item?.suggestedAction.de).not.toMatch(/\.\./);
+    expect(item?.suggestedAction.de).not.toMatch(/bei Das/);
   });
 
   it('carries legal references, who-has-it and a DE/EN suggested action', () => {
