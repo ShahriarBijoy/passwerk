@@ -1,0 +1,155 @@
+import { type FactSet, suggestMappings } from '@passwerk/core';
+import { describe, expect, it } from 'vitest';
+
+const facts = (list: Partial<FactSet['facts'][number]>[]): FactSet => ({
+  facts: list.map((f, i) => ({
+    id: `f#1:${i + 1}`,
+    label: 'x',
+    labelKey: 'x',
+    raw: '',
+    kind: 'text',
+    lang: 'de',
+    shape: 'kv',
+    source: { file: 'f.pdf', page: 1, note: `line ${i + 1}` },
+    ...f,
+  })),
+  tables: [],
+  documents: [],
+});
+
+describe('suggestMappings', () => {
+  it('proposes ratedCapacity for "Nennkapazität: 94,5 Ah" with full confidence and a DE/EN why', () => {
+    const [p] = suggestMappings(
+      facts([
+        {
+          label: 'Nennkapazität:',
+          labelKey: 'nennkapazitaet',
+          raw: '94,5 Ah',
+          value: '94.5',
+          kind: 'decimal',
+          unit: 'Ah',
+          rawUnit: 'Ah',
+        },
+      ]),
+    );
+    expect(p).toMatchObject({
+      attributeId: 'ratedCapacity',
+      value: '94.5',
+      unit: 'Ah',
+      confidence: 1,
+      factId: 'f#1:1',
+      source: [{ file: 'f.pdf', page: 1, note: 'line 1' }],
+      checks: { label: 1, unit: 'match', kind: 'ok' },
+    });
+    expect(p!.why.de).toContain('Nennkapazität');
+    expect(p!.why.en).toContain('unit matches');
+  });
+  it('a wrong unit caps confidence', () => {
+    const [p] = suggestMappings(
+      facts([
+        {
+          label: 'Nennkapazität',
+          labelKey: 'nennkapazitaet',
+          value: '94.5',
+          kind: 'decimal',
+          unit: 'V',
+        },
+      ]),
+    );
+    expect(p!.attributeId).toBe('ratedCapacity');
+    expect(p!.confidence).toBeCloseTo(0.3);
+  });
+  it('sorts by confidence, then attributeId, then factId, and drops below minConfidence', () => {
+    const list = suggestMappings(
+      facts([{ label: 'Masse', labelKey: 'masse', value: '412.7', kind: 'decimal', unit: 'kg' }]),
+      { minConfidence: 0.3 },
+    );
+    expect(list.length).toBeGreaterThan(0);
+    for (let i = 1; i < list.length; i += 1) {
+      const a = list[i - 1]!;
+      const b = list[i]!;
+      expect(
+        a.confidence > b.confidence ||
+          (a.confidence === b.confidence && a.attributeId <= b.attributeId),
+      ).toBe(true);
+    }
+    expect(list.every((p) => p.confidence >= 0.3)).toBe(true);
+  });
+  it('composites: manufacturer name lands in name.<lang>, chemistry in shortName', () => {
+    const list = suggestMappings(
+      facts([
+        {
+          label: 'Hersteller:',
+          labelKey: 'hersteller',
+          value: 'Musterwerk GmbH',
+          kind: 'text',
+          lang: 'de',
+        },
+        { label: 'Zellchemie:', labelKey: 'zellchemie', value: 'NMC811', kind: 'text' },
+      ]),
+    );
+    expect(list.find((p) => p.attributeId === 'manufacturerInformation')).toMatchObject({
+      path: 'name.de',
+      value: 'Musterwerk GmbH',
+    });
+    expect(list.find((p) => p.attributeId === 'batteryChemistry')).toMatchObject({
+      path: 'shortName',
+      value: 'NMC811',
+    });
+  });
+  it('never proposes document or graphic attributes and never other composites', () => {
+    const list = suggestMappings(
+      facts([
+        {
+          label: 'Demontageanleitung',
+          labelKey: 'demontageanleitung',
+          value: 'siehe Anhang',
+          kind: 'text',
+        },
+        { label: 'Gefahrstoffe', labelKey: 'gefahrstoffe', value: 'Blei', kind: 'text' },
+      ]),
+    );
+    expect(list.map((p) => p.attributeId)).not.toContain('dismantlingInformation');
+    expect(list.map((p) => p.attributeId)).not.toContain('hazardousSubstances');
+  });
+  it('value shapes follow the attribute valueKind', () => {
+    const list = suggestMappings(
+      facts([
+        {
+          label: 'Herstellungsdatum',
+          labelKey: 'herstellungsdatum',
+          value: '2026-02-10',
+          kind: 'date',
+        },
+        {
+          label: 'Anzahl Vollzyklen',
+          labelKey: 'anzahl vollzyklen',
+          value: '142',
+          kind: 'integer',
+          unit: 'cycles',
+        },
+      ]),
+    );
+    expect(list.find((p) => p.attributeId === 'manufacturingDate')!.value).toBe('2026-02-10');
+    expect(list.find((p) => p.attributeId === 'numberOfFullCycles')!.value).toBe('142');
+  });
+  it('category filter drops attributes not displayed for the category', async () => {
+    const all = suggestMappings(
+      facts([
+        { label: 'Ladezustand', labelKey: 'ladezustand', value: '68', kind: 'integer', unit: '%' },
+      ]),
+    );
+    expect(all.some((p) => p.attributeId === 'stateOfCharge')).toBe(true);
+    const filtered = suggestMappings(
+      facts([
+        { label: 'Ladezustand', labelKey: 'ladezustand', value: '68', kind: 'integer', unit: '%' },
+      ]),
+      { category: 'INDUSTRIAL_GT_2KWH' },
+    );
+    // stateOfCharge applicability for INDUSTRIAL is taken from the KB; assert consistency, not a hard-coded status
+    const soc = (await import('@passwerk/rules')).getAttribute('stateOfCharge')!;
+    expect(filtered.some((p) => p.attributeId === 'stateOfCharge')).toBe(
+      soc.applicability.INDUSTRIAL_GT_2KWH.status !== 'not_displayed',
+    );
+  });
+});
