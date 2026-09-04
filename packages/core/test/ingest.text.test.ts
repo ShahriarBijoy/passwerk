@@ -35,6 +35,12 @@ describe('detectLang', () => {
   it('detects German technical vocabulary without stop words', () => {
     expect(detectLang('Nennkapazität 94,5 Ah; Batteriemasse 412,7 kg')).toBe('de');
   });
+  it('does not flip to English on incidental EN_TECH substrings in German text', () => {
+    expect(detectLang('Orange Hochvoltkabel, Update der Firmware, Gemeinde Bremen')).toBe('de');
+  });
+  it('still detects English technical vocabulary as exact tokens', () => {
+    expect(detectLang('Rated capacity and nominal voltage of the pack')).toBe('en');
+  });
 });
 
 describe('cell refs', () => {
