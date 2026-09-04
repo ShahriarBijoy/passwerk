@@ -13,13 +13,35 @@ function loadPdfJs(): Promise<PdfJs> {
   return pdfjsPromise;
 }
 
-export async function readPdf(file: InputFile): Promise<Page[]> {
+export interface PdfReadOptions {
+  /**
+   * `pdfjs-dist` needs a worker script outside Node; it throws
+   * `No "GlobalWorkerOptions.workerSrc" specified` without one. Node ignores this (it runs
+   * pdfjs on the main thread regardless), so only a browser caller (Phase 7a) must supply it,
+   * typically a URL to the `pdf.worker.min.mjs` asset it bundles alongside pdfjs-dist.
+   */
+  workerSrc?: string;
+}
+
+/**
+ * Reads a PDF's text, tables and per-page language. In a browser, pass
+ * `{ pdf: { workerSrc } }` (via {@link ingest}'s `options.pdf` or directly here) before the
+ * first call; Node needs nothing.
+ */
+export async function readPdf(
+  file: InputFile,
+  options?: { pdf?: PdfReadOptions },
+): Promise<Page[]> {
   const pdfjs = await loadPdfJs();
+  if (options?.pdf?.workerSrc !== undefined) {
+    pdfjs.GlobalWorkerOptions.workerSrc = options.pdf.workerSrc;
+  }
   const task = pdfjs.getDocument({
     data: new Uint8Array(file.bytes),
     verbosity: 0,
     disableFontFace: true,
     useSystemFonts: false,
+    useWorkerFetch: false,
   });
   try {
     let pdf: Awaited<typeof task.promise>;

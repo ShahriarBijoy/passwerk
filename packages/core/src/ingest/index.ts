@@ -1,11 +1,18 @@
+import { unzipSync } from 'fflate';
 import type { DocumentRef } from '../model/values.js';
 import { readCsv } from './csv.js';
 import { readDocx } from './docx.js';
+import type { PdfReadOptions } from './pdf.js';
 import { readPdf } from './pdf.js';
 import { readTxt } from './txt.js';
 import type { DocumentBundle, Format, IngestedDocument, InputFile, Page } from './types.js';
 import { IngestFailure } from './types.js';
 import { readXlsx } from './xlsx.js';
+
+export interface IngestOptions {
+  /** Forwarded to {@link readPdf}; a browser caller must set `workerSrc` (Phase 7a). */
+  pdf?: PdfReadOptions;
+}
 
 const CONTENT_TYPES: Record<Exclude<Format, 'unsupported'>, string> = {
   pdf: 'application/pdf',
@@ -18,6 +25,24 @@ const CONTENT_TYPES: Record<Exclude<Format, 'unsupported'>, string> = {
 const startsWith = (bytes: Uint8Array, ascii: string) =>
   ascii.split('').every((ch, i) => bytes[i] === ch.charCodeAt(0));
 
+/**
+ * OOXML packages (xlsx, docx) are zip archives; a zip's magic bytes alone do not say which.
+ * Peek at just the two part names that distinguish them, without inflating the rest of the
+ * archive (spec section 4: magic-byte detection is the fallback for an unknown extension).
+ */
+function detectZipInner(bytes: Uint8Array): 'xlsx' | 'docx' | undefined {
+  try {
+    const entries = unzipSync(bytes, {
+      filter: (f) => f.name === 'xl/workbook.xml' || f.name === 'word/document.xml',
+    });
+    if (entries['xl/workbook.xml']) return 'xlsx';
+    if (entries['word/document.xml']) return 'docx';
+  } catch {
+    // Not a readable zip; let the caller report it as unsupported/corrupt as usual.
+  }
+  return undefined;
+}
+
 export function detectFormat(file: InputFile): { format: Format; contentType: string } {
   const ext = file.name.toLowerCase().split('.').pop() ?? '';
   let format: Format = 'unsupported';
@@ -26,6 +51,7 @@ export function detectFormat(file: InputFile): { format: Format; contentType: st
   else if (ext === 'docx') format = 'docx';
   else if (ext === 'csv') format = 'csv';
   else if (ext === 'txt' || ext === 'md') format = 'txt';
+  else if (startsWith(file.bytes, 'PK\x03\x04')) format = detectZipInner(file.bytes) ?? format;
   return {
     format,
     contentType:
@@ -40,10 +66,14 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function readPages(file: InputFile, format: Format): Promise<Page[]> {
+async function readPages(
+  file: InputFile,
+  format: Format,
+  options?: IngestOptions,
+): Promise<Page[]> {
   switch (format) {
     case 'pdf':
-      return readPdf(file);
+      return readPdf(file, options);
     case 'xlsx':
       return readXlsx(file);
     case 'docx':
@@ -62,14 +92,18 @@ function majorityLang(pages: Page[]): 'de' | 'en' {
   return en > pages.length - en ? 'en' : 'de';
 }
 
-/** Ingest every file; a failing file becomes a document with `error` and no pages. Order is preserved. */
-export async function ingest(files: InputFile[]): Promise<DocumentBundle> {
+/**
+ * Ingest every file; a failing file becomes a document with `error` and no pages. Order is
+ * preserved. `options.pdf.workerSrc` is forwarded to {@link readPdf}; Node ignores it, a
+ * browser caller must supply it (Phase 7a).
+ */
+export async function ingest(files: InputFile[], options?: IngestOptions): Promise<DocumentBundle> {
   const documents: IngestedDocument[] = [];
   for (const file of files) {
     const { format, contentType } = detectFormat(file);
     const sha256 = await sha256Hex(file.bytes);
     try {
-      const pages = await readPages(file, format);
+      const pages = await readPages(file, format, options);
       documents.push({
         name: file.name,
         format,
@@ -82,7 +116,7 @@ export async function ingest(files: InputFile[]): Promise<DocumentBundle> {
       const failure =
         e instanceof IngestFailure
           ? e
-          : new IngestFailure('corrupt', String((e as Error).message ?? e));
+          : new IngestFailure('corrupt', e instanceof Error ? e.message : String(e));
       documents.push({
         name: file.name,
         format,
