@@ -39,6 +39,52 @@ const draftArb = fc
     return { meta: { ...META, category }, attributes: Object.fromEntries(entries) };
   });
 
+/** The attribute's authored band, or a generous default when none is authored (ADR D-021). */
+function bandFor(attribute: (typeof NUMERIC)[number]): { min: number; max: number } {
+  const { range, valueKind } = attribute;
+  if (range === null) {
+    return valueKind === 'percentage' ? { min: 0, max: 100 } : { min: 0, max: 100000 };
+  }
+  return { min: range.min ?? 0, max: range.max ?? 100000 };
+}
+
+/**
+ * Same shape as draftArb (category, up to 12 distinct numeric attributes), but every value is
+ * drawn inside the attribute's authored band, so L1 accepts it and L4 actually gets to
+ * evaluate rules that need in-band values — voltage ordering (002), the 2 kWh threshold (005),
+ * energy coherence (016), the percentage-ordering rules (020, 021, 022) and more. draftArb's
+ * wide uniform [-2000, 20000] range mostly misses those bands and L1 rejects the rest.
+ */
+const inBandDraftArb = fc
+  .tuple(
+    categoryArb,
+    fc.uniqueArray(fc.integer({ min: 0, max: NUMERIC.length - 1 }), { maxLength: 12 }),
+  )
+  .chain(([category, indices]) =>
+    fc
+      .tuple(
+        ...indices.map((index) => {
+          const attribute = NUMERIC[index]!;
+          const { min, max } = bandFor(attribute);
+          return fc.integer({ min, max }).map((raw) => {
+            if (attribute.valueKind === 'integer') return String(raw);
+            // Append .5 only when the fractional value still fits inside the band.
+            return raw + 0.5 <= max ? `${raw}.5` : String(raw);
+          });
+        }),
+      )
+      .map((values) => {
+        const entries = indices.map((index, i) => {
+          const attribute = NUMERIC[index]!;
+          return [attribute.id, { value: values[i]!, status: 'present', source: [] }];
+        });
+        return { meta: { ...META, category }, attributes: Object.fromEntries(entries) };
+      }),
+  );
+
+/** Coverage evidence for the in-band arbitrary: which PW-PLAUS-* rules it actually fired. */
+const inBandCoveredRuleIds = new Set<string>();
+
 describe('L4 properties', () => {
   it('never fires on a draft with no attributes', () => {
     fc.assert(
@@ -58,6 +104,24 @@ describe('L4 properties', () => {
         expect(() => validatePlausibility(parsed.data)).not.toThrow();
       }),
       RUN,
+    );
+
+    fc.assert(
+      fc.property(inBandDraftArb, (input) => {
+        const parsed = PassportDraft.safeParse(input);
+        if (!parsed.success) return;
+        let findings: ReturnType<typeof validatePlausibility>['findings'] = [];
+        expect(() => {
+          findings = validatePlausibility(parsed.data).findings;
+        }).not.toThrow();
+        for (const finding of findings) inBandCoveredRuleIds.add(finding.ruleId);
+      }),
+      RUN,
+    );
+    // Coverage evidence, logged not asserted: which rules the in-band arbitrary actually fires.
+    console.log(
+      'L4 in-band coverage (fired rule ids):',
+      [...inBandCoveredRuleIds].sort().join(', '),
     );
   });
 
@@ -79,37 +143,41 @@ describe('L4 properties', () => {
   });
 
   it('is independent of attribute insertion order', () => {
-    fc.assert(
-      fc.property(draftArb, (input) => {
-        const parsed = PassportDraft.safeParse(input);
-        if (!parsed.success) return;
-        const reversed = PassportDraft.parse({
-          meta: input.meta,
-          attributes: Object.fromEntries(Object.entries(input.attributes).reverse()),
-        });
-        expect(validatePlausibility(reversed).findings).toEqual(
-          validatePlausibility(parsed.data).findings,
-        );
-      }),
-      RUN,
-    );
+    for (const arb of [draftArb, inBandDraftArb]) {
+      fc.assert(
+        fc.property(arb, (input) => {
+          const parsed = PassportDraft.safeParse(input);
+          if (!parsed.success) return;
+          const reversed = PassportDraft.parse({
+            meta: input.meta,
+            attributes: Object.fromEntries(Object.entries(input.attributes).reverse()),
+          });
+          expect(validatePlausibility(reversed).findings).toEqual(
+            validatePlausibility(parsed.data).findings,
+          );
+        }),
+        RUN,
+      );
+    }
   });
 
   it('produces findings only for rules that exist, with both languages filled', () => {
-    fc.assert(
-      fc.property(draftArb, (input) => {
-        const parsed = PassportDraft.safeParse(input);
-        if (!parsed.success) return;
-        for (const finding of validatePlausibility(parsed.data).findings) {
-          expect(Object.keys(CHECKS)).toContain(finding.ruleId);
-          expect(finding.layer).toBe('L4');
-          expect(finding.message.de.length).toBeGreaterThan(0);
-          expect(finding.message.en.length).toBeGreaterThan(0);
-          expect(finding.message.de).not.toMatch(/\{\w+\}/);
-          expect(finding.message.en).not.toMatch(/\{\w+\}/);
-        }
-      }),
-      RUN,
-    );
+    for (const arb of [draftArb, inBandDraftArb]) {
+      fc.assert(
+        fc.property(arb, (input) => {
+          const parsed = PassportDraft.safeParse(input);
+          if (!parsed.success) return;
+          for (const finding of validatePlausibility(parsed.data).findings) {
+            expect(Object.keys(CHECKS)).toContain(finding.ruleId);
+            expect(finding.layer).toBe('L4');
+            expect(finding.message.de.length).toBeGreaterThan(0);
+            expect(finding.message.en.length).toBeGreaterThan(0);
+            expect(finding.message.de).not.toMatch(/\{\w+\}/);
+            expect(finding.message.en).not.toMatch(/\{\w+\}/);
+          }
+        }),
+        RUN,
+      );
+    }
   });
 });
