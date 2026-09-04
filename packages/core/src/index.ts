@@ -26,10 +26,12 @@ export {
 export * from './emit/submodels/technicalData.js';
 export * from './ingest/csv.js';
 export * from './ingest/lang.js';
+export * from './ingest/ooxml.js';
 export * from './ingest/refs.js';
 export * from './ingest/text.js';
 export * from './ingest/txt.js';
 export * from './ingest/types.js';
+export * from './ingest/xlsx.js';
 export * from './model/attributeIds.js';
 export * from './model/composites.js';
 export * from './model/field.js';
