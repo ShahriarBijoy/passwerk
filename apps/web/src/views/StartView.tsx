@@ -125,7 +125,13 @@ export function StartView(props: StartViewProps) {
             data-testid="import-draft"
             type="file"
             accept="application/json,.json"
-            onChange={(e) => void onFile(e.target.files?.[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              // Clearing the input makes re-picking the same path fire `change` again, so a
+              // corrected file of the same name can be imported without a detour.
+              e.target.value = '';
+              void onFile(file);
+            }}
           />
           {error && (
             <p className="text-destructive text-sm" data-testid="import-error">

@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { StartView } from '@/views/StartView.tsx';
 import { mount } from './render.tsx';
@@ -57,6 +57,36 @@ describe('StartView', () => {
       target: { files: [new File(['{}'], 'draft.json', { type: 'application/json' })] },
     });
     expect((await screen.findByTestId('import-error')).textContent).toContain('broken');
+  });
+
+  it('clears the file input so the same file can be picked again', async () => {
+    const onImport = vi.fn(() => ({ ok: true }) as const);
+    mount(
+      <StartView
+        lang="en"
+        defaultPassportId="urn:x"
+        onStart={() => undefined}
+        onImport={onImport}
+        onResume={() => undefined}
+        onReset={() => undefined}
+      />,
+    );
+    const input = screen.getByTestId('import-draft') as HTMLInputElement;
+    // jsdom keeps the FileList `fireEvent` installed even when `value` is reset, so the reset
+    // itself is what the test can observe.
+    let cleared = false;
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: () => '',
+      set: (v: string) => {
+        cleared = v === '';
+      },
+    });
+    fireEvent.change(input, {
+      target: { files: [new File(['{}'], 'draft.json', { type: 'application/json' })] },
+    });
+    expect(cleared).toBe(true);
+    await waitFor(() => expect(onImport).toHaveBeenCalledWith('{}'));
   });
 
   it('shows the resume card when a session exists', () => {
