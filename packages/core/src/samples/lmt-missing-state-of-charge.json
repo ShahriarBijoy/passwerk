@@ -445,7 +445,8 @@
           "file": "bms-export.csv",
           "cell": "B3"
         }
-      ]
+      ],
+      "recordedAt": "2026-08-31T06:00:00Z"
     },
     "temperatureInformation": {
       "value": "21",

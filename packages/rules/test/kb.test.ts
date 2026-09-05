@@ -10,12 +10,22 @@ const ids = new Set(attributes.map((a) => a.id));
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('kb/rules.json', () => {
-  it('has sequential PW-PLAUS ids and both severities', () => {
+  it('has well-formed, unique, ascending PW-PLAUS ids and both severities', () => {
+    // Ids are stable identifiers, not positions (ADR D-023): PW-PLAUS-013 was retired and
+    // is not renumbered, so a gap in the sequence is expected and must not fail this check.
     expect(plausibilityRules.length).toBeGreaterThanOrEqual(10);
-    plausibilityRules.forEach((r, i) => {
-      expect(r.id).toBe(`PW-PLAUS-${String(i + 1).padStart(3, '0')}`);
+    const seen = new Set<string>();
+    let previousNumber = 0;
+    for (const r of plausibilityRules) {
+      const match = /^PW-PLAUS-(\d{3})$/.exec(r.id);
+      expect(match, r.id).not.toBeNull();
+      const number = Number(match?.[1]);
+      expect(seen.has(r.id), `duplicate ${r.id}`).toBe(false);
+      seen.add(r.id);
+      expect(number, r.id).toBeGreaterThan(previousNumber);
+      previousNumber = number;
       expect(['error', 'warning']).toContain(r.severity);
-    });
+    }
   });
 
   it('every rule has DE and EN title, message and fix hint, and references known attributes', () => {

@@ -80,7 +80,7 @@ function attributeFindings(draft: PassportDraft): Finding[] {
       continue;
     }
 
-    const r = valueSchemaFor(attribute.valueKind).safeParse(field.value);
+    const r = valueSchemaFor(attribute).safeParse(field.value);
     if (!r.success) {
       findings.push(valueFinding(id, attribute.valueKind, r.error.issues));
       continue;

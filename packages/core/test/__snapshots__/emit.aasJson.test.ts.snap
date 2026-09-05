@@ -8368,7 +8368,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-30T18:30:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8513,7 +8513,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-30T18:30:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8591,7 +8591,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-30T18:30:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8669,7 +8669,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-31T06:00:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8747,7 +8747,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-31T06:00:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8825,7 +8825,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-31T06:00:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -8894,7 +8894,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                       "type": "ExternalReference"
                     }
                   ],
-                  "value": "2026-09-03T12:00:00Z",
+                  "value": "2026-08-31T06:00:00Z",
                   "valueType": "xs:dateTime"
                 }
               ]
@@ -8949,7 +8949,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                       "type": "ExternalReference"
                     }
                   ],
-                  "value": "2026-09-03T12:00:00Z",
+                  "value": "2026-08-31T06:00:00Z",
                   "valueType": "xs:dateTime"
                 }
               ]
@@ -9162,7 +9162,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-08-31T06:00:00Z",
+              "value": "2026-09-02T21:45:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -9227,7 +9227,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                     ],
                     "type": "ExternalReference"
                   },
-                  "value": "2026-09-03T12:00:00Z",
+                  "value": "2026-09-02T21:45:00Z",
                   "valueType": "xs:dateTime"
                 },
                 {
@@ -9296,7 +9296,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-09-02T21:45:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -9363,7 +9363,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-09-02T21:45:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -9430,7 +9430,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-30T18:30:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -9497,7 +9497,7 @@ exports[`emitAasJson > ev-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-09-01T09:15:00Z",
               "valueType": "xs:dateTime"
             }
           ]
@@ -19981,32 +19981,6 @@ exports[`emitAasJson > industrial-valid: valid, canonical, snapshot 1`] = `
                   "valueType": "xs:unsignedInt"
                 },
                 {
-                  "idShort": "CapacityThresholdExhaustion",
-                  "modelType": "Property",
-                  "semanticId": {
-                    "keys": [
-                      {
-                        "type": "GlobalReference",
-                        "value": "0173-1#02-ABL838#002"
-                      }
-                    ],
-                    "type": "ExternalReference"
-                  },
-                  "supplementalSemanticIds": [
-                    {
-                      "keys": [
-                        {
-                          "type": "GlobalReference",
-                          "value": "urn:samm:io.admin-shell.idta.batterypass.technical_data:1.0.0#capacityThresholdForExhaustion"
-                        }
-                      ],
-                      "type": "ExternalReference"
-                    }
-                  ],
-                  "value": "70",
-                  "valueType": "xs:float"
-                },
-                {
                   "idShort": "CRateOfRelevantCycleLifeTest",
                   "modelType": "Property",
                   "semanticId": {
@@ -28487,7 +28461,7 @@ exports[`emitAasJson > lmt-valid: valid, canonical, snapshot 1`] = `
                   "type": "ExternalReference"
                 }
               ],
-              "value": "2026-09-03T12:00:00Z",
+              "value": "2026-08-31T06:00:00Z",
               "valueType": "xs:dateTime"
             }
           ]

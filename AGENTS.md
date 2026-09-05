@@ -117,4 +117,14 @@ so no build is needed before `pnpm test`.
   Documentation) emitter runs behind an explicit VDI 2770 classification, raising
   `PW-L1-DOCUMENT-UNCLASSIFIED` for unclassified documents; see ADRs D-016 and D-017. Oracle
   parity 16/16.
-- **Next: Phase 5.** Gap report, obligations, `explain`, and L4 plausibility.
+- **Phase 5 (gap report, obligations, explain, L4): done.** L4 plausibility is a full verdict
+  layer over 24 `PW-PLAUS` rules (ADR D-020): rules stay data in `kb/rules.json`, checks are a
+  registry keyed by rule id, and L4's context hides any attribute L1 rejected so a bad value is
+  reported once. Numeric bands now come from the knowledge-base `range` rather than a hardcoded
+  0-100 (ADR D-021). `gapReport` buckets every attribute as required, conditional, deferred or
+  optional, reports mandatory and overall completeness, and groups by submodel and by data
+  owner. `checkObligations` answers required / not required / insufficient input for seven
+  battery types, citing Article 77(1) only (ADR D-022). `explainAttribute` and `explainRule`
+  join the knowledge base without composing a single new claim. Where IDTA and the Commission
+  disagree, the template wins the file and the guidance wins the advice (ADR D-023).
+- **Next: Phase 6.** MCP server, agent skill and CLI.

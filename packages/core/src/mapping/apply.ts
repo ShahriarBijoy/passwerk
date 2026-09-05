@@ -45,7 +45,7 @@ function checkLeaf(id: string, decision: MappingDecision): void {
       `@passwerk/core: applyMappings: ${id}: a path decision targets a composite sub-field, but ${id} is not a composite attribute`,
     );
   }
-  const r = valueSchemaFor(attribute.valueKind).safeParse(decision.value);
+  const r = valueSchemaFor(attribute).safeParse(decision.value);
   if (!r.success)
     throw new Error(
       `@passwerk/core: applyMappings: ${id}: ${r.error.issues.map((i) => i.message).join('; ')}`,

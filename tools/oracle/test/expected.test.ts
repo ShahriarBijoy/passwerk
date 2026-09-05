@@ -22,6 +22,7 @@ function report(findings: Finding[]): ValidationReport {
       L1: { ran: true, errors: count('L1'), warnings: 0 },
       L2: { ran: true, errors: count('L2'), warnings: 0 },
       L3: { ran: true, errors: count('L3'), warnings: 0 },
+      L4: { ran: false, errors: 0, warnings: 0 },
     },
   };
 }

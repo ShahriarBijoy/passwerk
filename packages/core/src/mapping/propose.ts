@@ -1,8 +1,8 @@
 import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rules';
 import { integral } from '../emit/submodels/shared.js';
 import type { Fact, FactSet } from '../extract/types.js';
-import { valueSchemaFor } from '../model/values.js';
-import { explain, kindFactor, labelScore, unitFactor } from './scorer.js';
+import { valueSchemaForKind } from '../model/values.js';
+import { explainMatch, kindFactor, labelScore, unitFactor } from './scorer.js';
 import { type IndexEntry, synonymIndex } from './synonymIndex.js';
 import type { MappingChecks, MappingProposal } from './types.js';
 
@@ -42,14 +42,18 @@ export function proposalValue(
       return fact.kind === 'boolean' ? { value: v === 'true' } : undefined;
     case 'integer': {
       const value = integral(v);
-      return valueSchemaFor('integer').safeParse(value).success ? { value } : undefined;
+      return valueSchemaForKind('integer').safeParse(value).success ? { value } : undefined;
     }
     case 'multilingualText': {
       const value = { [fact.lang]: v };
-      return valueSchemaFor('multilingualText').safeParse(value).success ? { value } : undefined;
+      return valueSchemaForKind('multilingualText').safeParse(value).success
+        ? { value }
+        : undefined;
     }
     default:
-      return valueSchemaFor(attribute.valueKind).safeParse(v).success ? { value: v } : undefined;
+      return valueSchemaForKind(attribute.valueKind).safeParse(v).success
+        ? { value: v }
+        : undefined;
   }
 }
 
@@ -60,7 +64,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * data and can differ between Node builds and browsers, which would break the deterministic,
  * byte-identical output this browser-safe package promises (AGENTS.md).
  */
-function byCodePoint(a: string, b: string): number {
+export function byCodePoint(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
@@ -107,7 +111,10 @@ export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): M
         source: [fact.source],
         confidence,
         factId: fact.id,
-        why: { de: explain(fact.label, checks, 'de'), en: explain(fact.label, checks, 'en') },
+        why: {
+          de: explainMatch(fact.label, checks, 'de'),
+          en: explainMatch(fact.label, checks, 'en'),
+        },
         checks,
       });
     }

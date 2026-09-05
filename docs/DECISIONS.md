@@ -205,6 +205,10 @@ supplied by the user; both are marked `verify` until then.
 **Decision.**
 - `Field.recordedAt` (ISO date-time) is the measurement time of a value. Part 5 `LastUpdate`
   elements use it and fall back to `meta.createdAt`, the passport assembly time, when absent.
+  The fallback keeps the file template-conformant (the element is cardinality `One`) but is
+  not a measurement; since Phase 5, `PW-PLAUS-011` (severity `error`) fires on every dynamic
+  value without a `recordedAt`, so a passport that relies on the fallback can never reach
+  `valid`. The emitter keeps L2/L3 honest; L4 keeps the verdict honest.
 - Template properties typed `xs:integer` or `xs:unsignedInt` receive the integral lexical form
   when the decimal string is whole (`"95.0"` to `"95"`); a fractional value passes through and
   fails L2 honestly.
@@ -302,3 +306,88 @@ verified in Phase 7b before they are relied on: that Claude's iframe sandbox per
 inputs, and the host's message size limit for inline bytes. Directory listing on Claude
 requires a Team or Enterprise organisation, Streamable HTTP, production hosting and a privacy
 policy; the hosted connector is described as a convenience mode, never as offline.
+
+## D-020: L4 is a full verdict layer; rules are data, checks are a keyed code registry (2026-09-04)
+
+**Context.** `kb/rules.json` holds 24 `PW-PLAUS` rules as reviewable data (severity, DE/EN
+title, message, fix hint, attribute list, legal reference). The arithmetic they describe
+ranges from mass sums to tolerance comparisons to date maths, which no practical JSON
+predicate language expresses without becoming a programming language in disguise.
+
+**Decision.** `validate()` runs L1 to L4 and a `PW-PLAUS` rule of severity `error` makes the
+verdict `invalid`, exactly as L1 to L3 do. Rules stay data; the checks live in
+`CHECKS: Record<string, RuleCheck>` keyed by rule id, and a manifest test asserts the two key
+sets are 1:1 in both directions. Messages interpolate the named placeholders the rule
+authored (`{min}`, `{value}`, ...). L4 receives L1's findings and its context hides every
+attribute L1 rejected, so a bad value is reported once, by the layer that owns it. A check
+skips silently when an attribute it needs is absent: L4 never reports a missing value.
+
+**Consequences.** A domain expert reviews JSON and never reads TypeScript to judge a rule's
+wording, severity or legal grounding. Adding a rule is two edits that the manifest test
+forces to stay in step. Oracle parity is unaffected: it is defined as L2 parity (D-012), and
+`expected.ts` reads L1 to L3 only. `ValidationReport.layers` gains an `L4` key, which every
+consumer of the type sees at compile time.
+
+## D-021: The knowledge-base `range` is the single source for numeric bands (2026-09-04)
+
+**Context.** `model/values.ts` mapped `valueKind: 'percentage'` to a hardcoded 0-100 band.
+Three attributes are authored wider in the knowledge base and were therefore unrepresentable:
+`evolutionOfSelfDischarge` (-100 to 1000), `internalResistanceIncrease` (0 to 1000) and
+`carbonFootprintShareEndOfLife` (-100 to 100). A battery whose internal resistance had risen
+150 % could not be modelled at all; L1 rejected it as a value-type error.
+
+**Decision.** `valueSchemaFor` takes the resolved `Attribute`, not the bare `ValueKind`, and
+derives the band for `percentage`, `decimal` and `integer` from `attribute.range`
+(`percentage` with `range: null` keeps 0-100). L1 remains the one enforcement point for
+bands, so nothing outside a reviewed band reaches the emitted AAS file, and no `PW-PLAUS`
+rule restates the check. `valueSchemaForKind` stays for callers that hold only a kind, and
+`PercentString` stays for the per-field composite shapes, which are not attribute-keyed.
+
+**Consequences.** Widening or narrowing a band is a knowledge-base edit reviewed by a domain
+expert, not a code change. The three attributes above become usable. L4's rules are left to
+do what a per-field schema cannot: reason about relationships between values.
+
+## D-022: `checkObligations` answers "no passport needed", and cites only Article 77(1) (2026-09-04)
+
+**Context.** The unserved buyer's first question is whether the Regulation applies to their
+battery at all. A tool that only accepts the three passport categories has assumed the answer.
+Answering "no" for a portable or SLI battery means naming battery types the knowledge base
+does not define: `kb/` holds the Commission's data points and the DIN longlist, not the
+Article 3 definitions, and this project does not guess legal references.
+
+**Decision.** The input vocabulary is `EV`, `LMT`, `INDUSTRIAL`,
+`STATIONARY_BATTERY_ENERGY_STORAGE`, `PORTABLE`, `SLI`, `OTHER`, plus energy in kWh, the date
+placed on the market, the operator role and an injected `asOf`. Every claim cites
+`BR Article 77(1), Annex XIII`, read from the `battery-passport` event in `timeline.json`;
+no Article 3 point numbers are cited. Type and role labels are DE/EN engine text, not quoted
+law. The verdict is `required`, `not_required` or `insufficient_input` with `missingInput[]`,
+never a boolean that has to guess when the capacity or the date is unknown. Stationary storage
+maps onto the `INDUSTRIAL_GT_2KWH` attribute set with an explicit note.
+
+**Consequences.** The tool can decline to answer, which is the honest outcome when a supplier
+does not yet know the pack energy. Adding precise per-type citations later is a knowledge-base
+addition (`kb/battery-types.json`) that changes no code path.
+
+## D-023: Where the IDTA template and the Commission guidance disagree, the template wins the file and the guidance wins the advice (2026-09-04)
+
+**Context.** The Commission's v2.0 guidance marks the state-of-health data points (61-66)
+"not to be filled/displayed" for EV batteries as of February 2027. IDTA 02035-5 declares the
+same blocks (`RemainingCapacity`, `RemainingPowerCapability`,
+`RemainingRoundTripEnergyEfficiency`, `EvolutionOfSelfDischarge`) with cardinality `One`. An
+EV passport cannot satisfy both: omitting the block makes L3 report `PW-L3-MISSING`, filling
+it makes PW-PLAUS-012 warn. Separately, PW-PLAUS-013 was authored to fire on a *missing*
+deferred attribute, which would have emitted a dozen warnings on every draft and made
+`valid` unreachable.
+
+**Decision.** PW-PLAUS-012 stays silent for an attribute whose template element is mandatory,
+and keeps its teeth where the element is `ZeroToOne` and the supplier can genuinely leave it
+out. The emitted file therefore always follows the template (L3 stays authoritative for
+conformance) and the advice follows the guidance wherever the supplier has a choice.
+PW-PLAUS-013 is removed from `kb/rules.json`; reassurance that a deferred data point is not a
+gap belongs to the gap report's `deferred` bucket, not to a validation finding. The catalogue
+holds 24 rules.
+
+**Consequences.** No golden sample is warned about a value the template obliges it to carry.
+The conflict is recorded rather than papered over, and is worth raising with IDTA when the
+templates are next revised. L4 never reports a missing value, which keeps the layer boundary
+with the gap report clean.

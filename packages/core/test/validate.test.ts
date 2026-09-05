@@ -11,6 +11,7 @@ describe('validate (L1 -> emit -> L2 + L3)', () => {
         L1: { ran: true, errors: 0, warnings: 0 },
         L2: { ran: true, errors: 0, warnings: 0 },
         L3: { ran: true, errors: 0, warnings: 0 },
+        L4: { ran: true, errors: 0, warnings: 0 },
       });
       expect(r.aasJson).toContain('"modelType": "Submodel"');
     }

@@ -1,4 +1,4 @@
-export type Layer = 'L1' | 'L2' | 'L3';
+export type Layer = 'L1' | 'L2' | 'L3' | 'L4';
 export type Severity = 'error' | 'warning';
 export type Verdict = 'valid' | 'valid_with_warnings' | 'invalid';
 
@@ -12,6 +12,10 @@ export interface Finding {
   templatePath?: string;
   attributeId?: string;
   message: { de: string; en: string };
+  /** Legal reference from the knowledge base. Never composed by the engine. */
+  legalRef?: string;
+  /** DE/EN hint on how to fix the finding, from the knowledge base. */
+  fixHint?: { de: string; en: string };
 }
 
 export interface LayerResult {
@@ -49,6 +53,7 @@ export function buildReport(findings: Finding[], ran: Record<Layer, boolean>): V
       L1: layerResult(findings, 'L1', ran.L1),
       L2: layerResult(findings, 'L2', ran.L2),
       L3: layerResult(findings, 'L3', ran.L3),
+      L4: layerResult(findings, 'L4', ran.L4),
     },
   };
 }

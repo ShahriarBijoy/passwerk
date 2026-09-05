@@ -154,6 +154,16 @@ describe('sovereignty: zero network attempts', () => {
     core.validate(draft);
     for (const doc of bundle.documents) core.documentRefFromIngest(doc);
 
+    // Phase 5: L4 plausibility, gap report, obligations and explain over every sample and id
+    for (const name of [...core.VALID_SAMPLE_NAMES, ...core.BROKEN_SAMPLE_NAMES]) {
+      const sampleDraft = core.PassportDraft.parse(core.getSample(name));
+      core.validatePlausibility(sampleDraft);
+      core.gapReport(sampleDraft, { report: core.validate(sampleDraft) });
+    }
+    core.checkObligations({ batteryType: 'EV', role: 'manufacturer', asOf: '2027-03-01' });
+    for (const attribute of rules.attributes) core.explainAttribute(attribute.id);
+    for (const rule of rules.plausibilityRules) core.explainRule(rule.id);
+
     expect(attempts).toEqual([]);
   });
 });

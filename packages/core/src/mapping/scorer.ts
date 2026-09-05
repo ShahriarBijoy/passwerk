@@ -128,7 +128,7 @@ const KIND_TEXT = {
   },
 } as const;
 
-export function explain(label: string, checks: MappingChecks, lang: 'de' | 'en'): string {
+export function explainMatch(label: string, checks: MappingChecks, lang: 'de' | 'en'): string {
   const score = checks.label.toFixed(2);
   const head =
     lang === 'de'

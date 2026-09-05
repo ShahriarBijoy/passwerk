@@ -666,17 +666,6 @@
         }
       ]
     },
-    "capacityThresholdForExhaustion": {
-      "value": "70",
-      "unit": "%",
-      "status": "present",
-      "source": [
-        {
-          "file": "datenblatt.pdf",
-          "page": 2
-        }
-      ]
-    },
     "cRateOfCycleLifeTest": {
       "value": "0.5",
       "status": "present",

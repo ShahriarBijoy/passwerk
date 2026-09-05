@@ -60,6 +60,11 @@ export function emitAasx(input: unknown, options: EmitOptions = {}): EmitResult<
   const environment = buildEnvironment(l1.draft, options);
   const output = packAasx(canonicalJson(environmentToJsonable(environment)));
   const rest = validateEnvironmentJson(readAasxEnvironment(output));
-  const report = buildReport([...l1.findings, ...rest.findings], { L1: true, L2: true, L3: true });
+  const report = buildReport([...l1.findings, ...rest.findings], {
+    L1: true,
+    L2: true,
+    L3: true,
+    L4: false,
+  });
   return { output, environment, verdict: report.verdict, findings: report.findings, report };
 }
