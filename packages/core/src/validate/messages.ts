@@ -27,6 +27,10 @@ const MESSAGES: Record<string, { de: string; en: string }> = {
     de: 'Zusammengesetztes Attribut "{detail}" hat in dieser Version noch keine feste Struktur; der Wert wird nicht geprüft.',
     en: 'Composite attribute "{detail}" has no fixed shape in this version yet; the value is not checked.',
   },
+  'PW-L1-CONFLICT-UNRESOLVED': {
+    de: 'Attribut "{detail}" hat widersprüchliche Werte aus verschiedenen Quellen, die noch nicht aufgelöst sind. Prüfen Sie die Lieferantenangaben und übernehmen Sie einen Wert ausdrücklich (override).',
+    en: 'Attribute "{detail}" has conflicting values from different sources that are not yet resolved. Review the supplier data and accept one value explicitly (override).',
+  },
   'PW-L1-DOCUMENT-UNCLASSIFIED': {
     de: 'Dokument "{detail}" hat keine VDI-2770-Klassifikation und wird nicht in die Übergabedokumentation (IDTA 02035-2) übernommen.',
     en: 'Document "{detail}" has no VDI 2770 classification and is not included in Handover Documentation (IDTA 02035-2).',

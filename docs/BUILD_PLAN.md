@@ -163,7 +163,7 @@ export const Field = <T extends z.ZodTypeAny>(inner: T) => z.object({
 | L4 Plausibility (`PW-PLAUS-*`) | Units/ranges (capacity, voltage, mass), % shares sum ≤ 100, dates ordered, UID format, checksum, cross-field consistency (category ⇄ mandatory set), PCF value present when category requires | passwerk rules | warnings/errors, never overrides L2/L3 |
 | **Oracle (CI only)** | Independent proof: run official `aas-test-engines` (Python) on every emitted golden file; diff verdicts against ours | Python in CI, `pnpm oracle` | yes — parity gate |
 
-"Valid" is only ever the real verdict. `emit` re-validates its own output before returning `valid: true`.
+"Valid" is only ever the real verdict. `emit` re-validates its own output through the same four-layer report as `validate` (L2/L3 on the emitted file, L1/L4 on the draft, one `asOf`; ADR D-026) before returning `valid: true`.
 
 ### 2.5 Agent-agnostic delivery — "the best way"
 One deterministic engine, several thin surfaces (D-001, D-006, D-019). The hierarchy, amended by D-019:

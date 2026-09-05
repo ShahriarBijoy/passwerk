@@ -1,11 +1,9 @@
 import { strFromU8, strToU8, unzipSync, type ZipOptions, type Zippable, zipSync } from 'fflate';
-import { buildReport } from '../validate/finding.js';
-import { validateEnvironmentJson } from '../validate/index.js';
+import { assembleReport, type ValidateOptions } from '../validate/index.js';
 import { validateSchema } from '../validate/schema.js';
 import { type EmitResult, PassportDraftError } from './aasJson.js';
 import { canonicalJson } from './canonical.js';
 import { buildEnvironment, environmentToJsonable } from './environment.js';
-import type { EmitOptions } from './ids.js';
 
 export const AASX_SPEC_PART = 'aasx/passwerk/passwerk.aas.json';
 
@@ -53,18 +51,16 @@ export function readAasxEnvironment(bytes: Uint8Array): unknown {
   return JSON.parse(strFromU8(part));
 }
 
-/** AASX with the canonical JSON inside; re-validated from the packaged bytes. */
-export function emitAasx(input: unknown, options: EmitOptions = {}): EmitResult<Uint8Array> {
+/**
+ * AASX with the canonical JSON inside. L2 and L3 run on the environment read back out of the
+ * packaged bytes; L1 and L4 come from the draft, through the same `assembleReport` as
+ * `validate` (issue #12).
+ */
+export function emitAasx(input: unknown, options: ValidateOptions = {}): EmitResult<Uint8Array> {
   const l1 = validateSchema(input);
   if (!l1.draft) throw new PassportDraftError(l1.findings);
   const environment = buildEnvironment(l1.draft, options);
   const output = packAasx(canonicalJson(environmentToJsonable(environment)));
-  const rest = validateEnvironmentJson(readAasxEnvironment(output));
-  const report = buildReport([...l1.findings, ...rest.findings], {
-    L1: true,
-    L2: true,
-    L3: true,
-    L4: false,
-  });
+  const report = assembleReport({ ...l1, draft: l1.draft }, readAasxEnvironment(output), options);
   return { output, environment, verdict: report.verdict, findings: report.findings, report };
 }
