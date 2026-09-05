@@ -64,9 +64,14 @@ export function convertUnit(value: string, factor: string): string {
   return new Decimal(value).mul(new Decimal(factor)).toFixed();
 }
 
-/** A unit written into the label: "Batteriemasse [kg]", "Rated capacity (Ah)", "Kobalt rec. %". */
+/**
+ * A unit written into the label: "Batteriemasse [kg]", "Rated capacity (Ah)", "Kobalt rec. %".
+ * Returns the unit **as written** (e.g. `g`, `mAh`), never its canonical form, so that the
+ * caller converts exactly once through `canonicalUnit` and keeps the written unit as `rawUnit`
+ * (issue #9: returning `kg` here made `500 [g]` a 500 kg fact).
+ */
 export function unitFromLabel(label: string): string | undefined {
   const bracket = /[[(]\s*([^\])]+?)\s*[\])]\s*:?\s*$/.exec(label);
-  const candidate = bracket?.[1] ?? (/%\s*$/.test(label) ? '%' : undefined);
-  return candidate ? canonicalUnit(candidate)?.unit : undefined;
+  const candidate = bracket?.[1]?.trim() ?? (/%\s*$/.test(label) ? '%' : undefined);
+  return candidate && canonicalUnit(candidate) ? candidate : undefined;
 }

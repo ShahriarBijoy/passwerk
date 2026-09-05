@@ -431,3 +431,28 @@ script) moves with Phase 6. #13 reverses the documented "a `path` decision never
 contract of `applyMappings`; that change is recorded next to the fix. The held-out set must be
 authored without tuning the synonym index against it, or its numbers are training-set numbers
 again. Oracle parity stays L2-only (D-012); #12 must not widen the comparison.
+
+## D-025: Composite paths are validated against the shape, and a changed leaf is a conflict (2026-09-05)
+
+**Context.** `applyMappings` accepted any `path` string, walked it with plain property access
+(so `__proto__.x` wrote to `Object.prototype`, issue #10), and documented that a `path` decision
+"never produces a conflict; a changed sub-field simply overwrites" (issue #13). Phase 6 makes
+mapping decisions an external input over stdio and HTTP, and the Phase 7a review UI needs to
+show a supplier disagreement on `manufacturerInformation.name.en` just as it shows one on a
+scalar attribute.
+
+**Decision.** Every `path` is parsed before any traversal: empty segments and the segments
+`__proto__`, `prototype` and `constructor` are rejected, and the remaining segments must exist
+in the composite's Zod shape (`COMPOSITE_SCHEMAS`), walking object fields, record values
+(language maps) and numeric array indices. `setPath` and `getPath` touch own properties only.
+The protection lives in `core`, not only in the input schema, so plain-JavaScript callers get
+it too. A `path` decision now behaves like a scalar one at leaf grain: a missing leaf is filled,
+an identical leaf merges provenance, a different leaf records a `MappingConflict` carrying
+`path` and leaves the existing value in place, and only `override: true` replaces it. Filling a
+different leaf while another leaf is in conflict keeps the field in `conflict`; an override is
+the resolution and restores `present`.
+
+**Consequences.** The `applyMappings` contract in the Phase 4 spec (6.5) is amended; the
+"changed sub-field counts as applied" test was rewritten deliberately. `MappingConflict` gains
+an optional `path`. Composite leaf values are still not type-checked at apply time (L1 checks
+the object once complete); only the path is.

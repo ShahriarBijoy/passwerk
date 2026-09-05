@@ -38,6 +38,8 @@ export type MappingDecision = z.infer<typeof MappingDecision>;
 
 export const MappingConflict = z.object({
   attributeId: z.string(),
+  /** Set when two `path` decisions disagree on one composite leaf (issue #13). */
+  path: z.string().optional(),
   existing: z.unknown(),
   incoming: z.unknown(),
   source: z.array(Provenance),
