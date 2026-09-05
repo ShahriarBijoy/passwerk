@@ -127,15 +127,17 @@ function l1Only(draft: PassportDraft): ValidationReport {
 /**
  * Fold the decisions one at a time, validating after each, and set aside the ones that fail.
  *
- * The base draft itself may be one core cannot validate: an imported draft carrying a value of
- * the wrong shape arrives with its decisions cleared, so there is no decision to blame. When
- * that is so, a later validation failure is not attributed to the decision that happened to be
- * applied at the time, and the report falls back to L1 alone.
+ * `report` is the invariant: it holds the validation of exactly the draft in hand, or `null`
+ * when that draft is one core cannot walk. A decision is blamed only when the state *directly
+ * before it* validated, because only then is the decision what broke it: an imported draft can
+ * arrive broken with its decisions already cleared, and a decision that repairs such a base
+ * makes the ones after it blameable again. When the prior state did not validate either, the
+ * decision is merged unblamed and `report` stays `null`, so the fallback below reports L1 alone
+ * rather than carrying a stale verdict over a draft no validator has walked.
  */
 function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   let draft = base;
   const seed = tryValidate(base, asOf);
-  const baseValidates = seed.ok;
   let report: ValidationReport | null = seed.ok ? seed.value : null;
   const conflicts: MappingConflict[] = [];
   const invalidDecisions: InvalidDecision[] = [];
@@ -148,12 +150,12 @@ function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string
     // Validate before keeping the draft: a whole-composite value passes `applyMappings`
     // (its shape is L1's business) and only throws once a validator walks it.
     const next = tryValidate(applied.value.draft, asOf);
-    if (!next.ok && baseValidates) {
+    if (!next.ok && report !== null) {
       invalidDecisions.push({ key: entry.key, message: next.message });
       continue;
     }
     draft = applied.value.draft;
-    if (next.ok) report = next.value;
+    report = next.ok ? next.value : null;
     conflicts.push(...applied.value.conflicts);
   }
   return { draft, conflicts, invalidDecisions, report: report ?? l1Only(draft) };

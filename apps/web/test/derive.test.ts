@@ -231,7 +231,44 @@ describe('derive', () => {
     // The base is what validation trips over, so a clean decision is not blamed for it.
     expect(d?.invalidDecisions).toEqual([]);
     expect(d?.draft.attributes['ratedCapacity']?.value).toBe('99.9');
+    // Still nothing but L1 has walked this draft, so the report may not claim more.
     expect(d?.report.verdict).toBe('invalid');
+    expect(d?.report.layers.L1.ran).toBe(true);
+    expect(d?.report.layers.L2.ran).toBe(false);
+  });
+
+  it('blames a decision that breaks a state an earlier decision had repaired', () => {
+    // Decisions fold in sorted key order: `criticalRawMaterials` repairs the base, and
+    // `hazardousSubstances` then breaks validation again. The second one is blameable
+    // precisely because the first one made the draft validatable.
+    const sample = structuredClone(getSample('ev-valid')) as PassportDraft;
+    const repaired = (sample.attributes as Record<string, { value: unknown }>)[
+      'criticalRawMaterials'
+    ]?.value;
+    const s: WorkflowState = {
+      ...reduce(initialState, { type: 'importDraft', draft: brokenBase(), at: AT }),
+      decisions: {
+        criticalRawMaterials: {
+          kind: 'manual',
+          attributeId: 'criticalRawMaterials',
+          // Core's mapping value is `unknown`; only the UI is limited to strings.
+          value: repaired as string,
+        },
+        hazardousSubstances: {
+          kind: 'manual',
+          attributeId: 'hazardousSubstances',
+          value: 'kaputt',
+        },
+      },
+    };
+    const d = derive(s, AT);
+    expect(d?.invalidDecisions.map((x) => x.key)).toEqual(['hazardousSubstances']);
+    expect(d?.draft.attributes['criticalRawMaterials']?.value).toEqual(repaired);
+    // The blamed decision's draft is discarded, not merged behind a stale report.
+    expect(d?.draft.attributes['hazardousSubstances']?.value).not.toBe('kaputt');
+    expect(Array.isArray(d?.draft.attributes['hazardousSubstances']?.value)).toBe(true);
+    expect(d?.report.verdict).toBe('valid');
+    expect(d?.report.layers.L2.ran).toBe(true);
   });
 
   it('an imported golden sample validates as core says', () => {
