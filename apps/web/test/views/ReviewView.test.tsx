@@ -96,6 +96,35 @@ describe('ReviewView', () => {
     expect(onClear).toHaveBeenCalledWith('ratedCapacity');
   });
 
+  it('renders a mapping conflict with both values', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[
+          {
+            attributeId: 'ratedCapacity',
+            existing: '1',
+            incoming: '2',
+            source: [{ file: 'a.pdf' }],
+          },
+        ]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    const conflict = screen.getByTestId('conflict');
+    expect(conflict.textContent).toContain('ratedCapacity');
+    expect(conflict.textContent).toContain('1');
+    expect(conflict.textContent).toContain('2');
+  });
+
   it('renders German chrome', () => {
     mount(
       <ReviewView

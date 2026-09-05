@@ -175,4 +175,15 @@ describe('derive', () => {
     const b = reduce(initialState, { type: 'importDraft', draft: broken, at: AT });
     expect(derive(b, AT)?.report.verdict).toBe('invalid');
   });
+
+  it('an imported draft with a conflict field yields invalid', () => {
+    const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
+    const attrs = draft.attributes as Record<string, { status: string } | undefined>;
+    const id = Object.keys(attrs).sort()[0];
+    const field = id === undefined ? undefined : attrs[id];
+    if (!field) throw new Error('need an attribute to mark as a conflict');
+    field.status = 'conflict';
+    const s = reduce(initialState, { type: 'importDraft', draft, at: AT });
+    expect(derive(s, AT)?.report.verdict).toBe('invalid');
+  });
 });

@@ -42,6 +42,23 @@ describe('StartView', () => {
     expect((await screen.findByTestId('import-error')).textContent).toContain('boom');
   });
 
+  it('shows the import error the importer returns', async () => {
+    mount(
+      <StartView
+        lang="en"
+        defaultPassportId="urn:x"
+        onStart={() => undefined}
+        onImport={() => ({ ok: false, message: { de: 'kaputt', en: 'broken' } })}
+        onResume={() => undefined}
+        onReset={() => undefined}
+      />,
+    );
+    fireEvent.change(screen.getByTestId('import-draft'), {
+      target: { files: [new File(['{}'], 'draft.json', { type: 'application/json' })] },
+    });
+    expect((await screen.findByTestId('import-error')).textContent).toContain('broken');
+  });
+
   it('shows the resume card when a session exists', () => {
     mount(
       <StartView
