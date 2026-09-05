@@ -7,55 +7,20 @@
  * extract and mapping. Phase 6 extends it further to every MCP tool, resource and prompt.
  */
 
-import dns from 'node:dns';
 import { readFileSync } from 'node:fs';
 import http from 'node:http';
-import https from 'node:https';
 import net from 'node:net';
 import { join } from 'node:path';
-import tls from 'node:tls';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createNetworkGuard } from './helpers/networkGuard.ts';
 
-interface Attempt {
-  api: string;
-  target: string;
-}
+const guard = createNetworkGuard();
+const attempts = guard.attempts;
 
-const attempts: Attempt[] = [];
-const restores: Array<() => void> = [];
-
-function guard<T extends object>(obj: T, key: keyof T, api: string): void {
-  const original = obj[key];
-  const blocked = (...args: unknown[]) => {
-    attempts.push({ api, target: String(args[0] ?? '') });
-    throw new Error(`passwerk sovereignty: network attempt via ${api}`);
-  };
-  (obj as Record<keyof T, unknown>)[key] = blocked;
-  restores.push(() => {
-    (obj as Record<keyof T, unknown>)[key] = original;
-  });
-}
-
-beforeAll(() => {
-  guard(net.Socket.prototype, 'connect', 'net.Socket.prototype.connect');
-  guard(tls, 'connect', 'tls.connect');
-  guard(dns, 'lookup', 'dns.lookup');
-  guard(dns, 'resolve', 'dns.resolve');
-  guard(dns, 'resolve4', 'dns.resolve4');
-  guard(dns, 'resolve6', 'dns.resolve6');
-  guard(dns.promises, 'lookup', 'dns.promises.lookup');
-  guard(dns.promises, 'resolve', 'dns.promises.resolve');
-  guard(dns.promises, 'resolve4', 'dns.promises.resolve4');
-  guard(dns.promises, 'resolve6', 'dns.promises.resolve6');
-  guard(http, 'request', 'http.request');
-  guard(http, 'get', 'http.get');
-  guard(https, 'request', 'https.request');
-  guard(https, 'get', 'https.get');
-  guard(globalThis, 'fetch', 'fetch');
-});
-
-afterAll(() => {
-  for (const restore of restores.reverse()) restore();
+beforeAll(() => guard.install());
+afterAll(() => guard.restore());
+beforeEach(() => {
+  attempts.length = 0;
 });
 
 describe('sovereignty: zero network attempts', () => {

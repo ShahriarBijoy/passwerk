@@ -58,7 +58,7 @@ describe('prompts', () => {
     for (const name of PROMPT_NAMES) {
       const t = await text(name, { lang: 'en' });
       for (const m of t.match(/\b[a-z]+_[a-z_]+\b/g) ?? []) {
-        if (m.startsWith('is')) continue;
+        if (['not_required', 'valid_with_warnings', 'insufficient_input'].includes(m)) continue;
         expect(names, `${name}: ${m}`).toContain(m);
       }
     }
