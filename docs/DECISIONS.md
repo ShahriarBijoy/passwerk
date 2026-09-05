@@ -370,24 +370,31 @@ addition (`kb/battery-types.json`) that changes no code path.
 
 ## D-023: Where the IDTA template and the Commission guidance disagree, the template wins the file and the guidance wins the advice (2026-09-04)
 
-**Context.** The Commission's v2.0 guidance marks the state-of-health data points (61-66)
-"not to be filled/displayed" for EV batteries as of February 2027. IDTA 02035-5 declares the
-same blocks (`RemainingCapacity`, `RemainingPowerCapability`,
-`RemainingRoundTripEnergyEfficiency`, `EvolutionOfSelfDischarge`) with cardinality `One`. An
-EV passport cannot satisfy both: omitting the block makes L3 report `PW-L3-MISSING`, filling
-it makes PW-PLAUS-012 warn. Separately, PW-PLAUS-013 was authored to fire on a *missing*
+**Context.** The Commission's v2.0 guidance marks state-of-health data points 62-65 "not to
+be filled/displayed" for EV batteries (61, state of certified energy, stays mandatory). A
+template could in principle force one of these onto a supplier anyway: IDTA 02035-5 declares
+`StateOfCharge` with cardinality `One`, so if the guidance ever excluded it for a category the
+supplier would have no choice. As first drafted, this ADR claimed exactly that conflict for
+`RemainingCapacity`, `RemainingPowerCapability`, `RemainingRoundTripEnergyEfficiency` and
+`EvolutionOfSelfDischarge`. That was a misreading: those four *blocks* are `ZeroToOne` in
+IDTA 02035-5 V1.0.2; only the properties inside them (`…Value`, `LastUpdate`) are `One`,
+which is mandatory relative to the block, not to the submodel. Checked across all 93
+attributes and three categories, **no** not-displayed data point sits in a template element
+the supplier is forced to emit. Separately, PW-PLAUS-013 was authored to fire on a *missing*
 deferred attribute, which would have emitted a dozen warnings on every draft and made
 `valid` unreachable.
 
-**Decision.** PW-PLAUS-012 stays silent for an attribute whose template element is mandatory,
-and keeps its teeth where the element is `ZeroToOne` and the supplier can genuinely leave it
-out. The emitted file therefore always follows the template (L3 stays authoritative for
-conformance) and the advice follows the guidance wherever the supplier has a choice.
+**Decision.** PW-PLAUS-012 stays silent for an attribute whose template element is forced —
+where forced means every collection from the submodel root down to the leaf is mandatory
+(`templatePathIsForced`), not merely the leaf — and keeps its teeth wherever the supplier can
+leave the block out. Today that guard has no live case; it exists so that a future template or
+guidance revision that does create a conflict resolves the same way: the emitted file follows
+the template (L3 stays authoritative for conformance), the advice follows the guidance.
 PW-PLAUS-013 is removed from `kb/rules.json`; reassurance that a deferred data point is not a
 gap belongs to the gap report's `deferred` bucket, not to a validation finding. The catalogue
 holds 24 rules.
 
-**Consequences.** No golden sample is warned about a value the template obliges it to carry.
-The conflict is recorded rather than papered over, and is worth raising with IDTA when the
-templates are next revised. L4 never reports a missing value, which keeps the layer boundary
-with the gap report clean.
+**Consequences.** `ev-valid` no longer fills the four EV state-of-health blocks (they were
+fictional values for data points the Commission says not to display); the part 5 emitter tests
+carry them as a test-only fixture instead. There is nothing to raise with IDTA on this point.
+L4 never reports a missing value, which keeps the layer boundary with the gap report clean.

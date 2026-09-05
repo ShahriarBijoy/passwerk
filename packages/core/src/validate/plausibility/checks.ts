@@ -1,4 +1,4 @@
-import { type BatteryCategory, getAttribute, getRule } from '@passwerk/rules';
+import { type BatteryCategory, getAttribute, getRule, getTemplateElement } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
 import type { RuleContext } from './context.js';
 
@@ -80,12 +80,29 @@ const INTERNAL_RESISTANCE_OHM_LIMIT = 10;
  * comparing `min >= 1` works directly; `raw` is not needed as a fallback (verified against
  * kb/generated/template-catalogue.json for 5/RemainingCapacity/RemainingCapacityValue).
  */
+/**
+ * True only when the template forces the element at `path` to exist: every collection from the
+ * submodel root down to the leaf must be mandatory. A `One` child inside a `ZeroToOne` block is
+ * mandatory relative to its block, not to the submodel; the supplier may omit the whole block.
+ * Unknown paths are never forced.
+ */
+export function templatePathIsForced(path: string): boolean {
+  const segments = path.split('/');
+  // segments[0] is the part number; the chain starts at the depth-1 block.
+  for (let depth = 2; depth <= segments.length; depth++) {
+    const element = getTemplateElement(segments.slice(0, depth).join('/'));
+    if (!element) return false;
+    const min = element.cardinality.min;
+    if (min === null || min < 1) return false;
+  }
+  return segments.length > 1;
+}
+
+/** True when the template forces at least one of the attribute's elements to be present (D-023). */
 function templateForcesPresence(attributeId: string): boolean {
   const attribute = getAttribute(attributeId);
   if (!attribute) return false;
-  return attribute.templateElements.some(
-    (element) => element.cardinality.min !== null && element.cardinality.min >= 1,
-  );
+  return attribute.templatePaths.some(templatePathIsForced);
 }
 
 /**

@@ -114,7 +114,9 @@ describe('gapReport', () => {
     });
 
     it("does not speak of absence for a 'not displayed' value that is present", () => {
-      const item = deferred('remainingCapacity');
+      // energyThroughput is not_displayed for EV and still filled in ev-valid; the four
+      // state-of-health blocks were removed from the sample because PW-PLAUS-012 warns on them.
+      const item = deferred('energyThroughput');
       expect(item?.applicability).toBe('not_displayed');
       expect(item?.status).toBe('present');
       expect(item?.suggestedAction.en).toBe(

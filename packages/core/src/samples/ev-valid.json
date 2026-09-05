@@ -111,7 +111,10 @@
           "uri": "https://passport.musterwerk.example/docs/DoC-MW-EV-2026-01.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -133,7 +136,10 @@
           "fileName": "TR-2026-0457.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -330,7 +336,10 @@
           "uri": "https://passport.musterwerk.example/pcf/MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -698,18 +707,6 @@
       ],
       "recordedAt": "2026-08-31T06:00:00Z"
     },
-    "remainingCapacity": {
-      "value": "194",
-      "unit": "Ah",
-      "status": "present",
-      "source": [
-        {
-          "file": "bms-export.csv",
-          "cell": "B2"
-        }
-      ],
-      "recordedAt": "2026-08-31T06:00:00Z"
-    },
     "deepDischargeEvents": {
       "value": "0",
       "status": "present",
@@ -739,7 +736,10 @@
           "uri": "https://passport.musterwerk.example/docs/ACC-MW-EV-2026-000123-01.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -814,33 +814,6 @@
       ],
       "recordedAt": "2026-08-31T06:00:00Z"
     },
-    "remainingPowerCapability": {
-      "value": {
-        "atSocPercent": "80",
-        "powerPercent": "98"
-      },
-      "unit": "%",
-      "status": "present",
-      "source": [
-        {
-          "file": "bms-export.csv",
-          "cell": "B2"
-        }
-      ],
-      "recordedAt": "2026-09-02T21:45:00Z"
-    },
-    "evolutionOfSelfDischarge": {
-      "value": "0",
-      "unit": "%",
-      "status": "present",
-      "source": [
-        {
-          "file": "bms-export.csv",
-          "cell": "B2"
-        }
-      ],
-      "recordedAt": "2026-09-02T21:45:00Z"
-    },
     "currentSelfDischargeRate": {
       "value": "2",
       "unit": "%",
@@ -853,18 +826,6 @@
       ],
       "recordedAt": "2026-08-30T18:30:00Z"
     },
-    "remainingRoundTripEnergyEfficiency": {
-      "value": "95.5",
-      "unit": "%",
-      "status": "present",
-      "source": [
-        {
-          "file": "bms-export.csv",
-          "cell": "B2"
-        }
-      ],
-      "recordedAt": "2026-09-01T09:15:00Z"
-    },
     "dismantlingInformation": {
       "value": [
         {
@@ -872,7 +833,10 @@
           "uri": "https://passport.musterwerk.example/docs/DISM-MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -1054,7 +1018,10 @@
           "uri": "https://passport.musterwerk.example/docs/SAFETY-MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -1086,7 +1053,10 @@
           "uri": "https://passport.musterwerk.example/docs/EOL-PREVENTION-MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -1108,7 +1078,10 @@
           "uri": "https://passport.musterwerk.example/docs/EOL-SEPARATE-MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
@@ -1130,7 +1103,10 @@
           "uri": "https://passport.musterwerk.example/docs/EOL-COLLECTION-MW-EV-2026.pdf",
           "classification": {
             "classId": "02-04",
-            "className": { "en": "Certificates, declarations", "de": "Zertifikate, Erklärungen" },
+            "className": {
+              "en": "Certificates, declarations",
+              "de": "Zertifikate, Erklärungen"
+            },
             "system": "VDI2770:2020"
           },
           "languages": ["de"],
