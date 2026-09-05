@@ -53,6 +53,8 @@ pnpm check              # lint + typecheck + test. Run before every commit
 pnpm oracle             # emit golden passports and replay them through aas-test-engines (needs uv)
 pnpm heldout            # regenerate the held-out documents and docs/EVALUATION.md (after pnpm build)
 pnpm review-sheet       # regenerate docs/KB_REVIEW.md (every verify: true knowledge-base entry)
+pnpm build:web          # vite build of apps/web (after pnpm build)
+pnpm e2e                # Playwright suite of apps/web (after pnpm build:web; needs Chromium)
 ```
 
 Tests import workspace packages by name (`@passwerk/core`). Vitest aliases them to `src/`,
@@ -129,7 +131,13 @@ so no build is needed before `pnpm test`.
   battery types, citing Article 77(1) only (ADR D-022). `explainAttribute` and `explainRule`
   join the knowledge base without composing a single new claim. Where IDTA and the Commission
   disagree, the template wins the file and the guidance wins the advice (ADR D-023).
-- **Next: Phase 5b (ADR D-024).** Hardening before any agent surface: issues #9 to #15 (mapping
-  safety, verdict integrity, ingest bounds), a held-out evaluation on public datasheets and a
-  `verify: true` review sheet. Then a minimal Phase 7a web workflow, then Phase 6 (MCP server,
-  agent skill, CLI).
+- **Phase 7a, first slice (`apps/web`): done.** Vite, React, Tailwind and shadcn/ui in three
+  layers (`workflow`, `views`, `app`) with a tested import boundary (ADR D-029). Start, upload,
+  review (accept, reject, edit, manual values, composite leaves), gaps and export (AAS JSON,
+  AASX, draft JSON, gap report JSON), DE/EN chrome, IndexedDB autosave without document bytes.
+  Playwright proves browser results equal core's Node results on the Musterwerk fixtures and
+  the golden samples, and that no request leaves the origin. `pnpm --filter @passwerk/web dev`
+  to run it.
+- **Next: Phase 6** (MCP server, agent skill, CLI), then Phase 7, 7b, 7c (D-024 order). The
+  rest of Phase 7a (project screen with obligations, facts screen, HTML sheet, QR, BYOK)
+  follows Phase 7.

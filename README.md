@@ -67,6 +67,19 @@ pnpm oracle     # replay golden passports through aas-test-engines (needs uv)
 
 Contributor instructions for humans and coding agents live in `AGENTS.md` and `CLAUDE.md`.
 
+## Web app
+
+`apps/web` is a client-side Vite app that runs the same ingest, mapping, validation and gap
+report pipeline as `@passwerk/core` in the browser: upload supplier documents, review the
+proposed mappings, see the gap report and export the passport. Documents never leave the
+browser, and the autosave to IndexedDB keeps your decisions, not the uploaded files.
+
+```sh
+pnpm install
+pnpm build
+pnpm --filter @passwerk/web dev
+```
+
 ## Not legal advice
 
 passwerk cites the regulation and the standards it implements, but it is a tool, not a
