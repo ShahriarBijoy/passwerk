@@ -36,10 +36,18 @@ export function StartView(props: StartViewProps) {
   const [error, setError] = useState<string | null>(null);
   const valid = isUri(passportId);
 
+  // `void onFile(...)` in the change handler has nowhere to report a rejection, so every failure
+  // (reading the file, or an `onImport` that throws rather than returning a message) becomes the
+  // same inline error.
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    const r = props.onImport(await file.text());
-    setError(r.ok ? null : t(lang, 'start.import.error', { reason: r.message[lang] }));
+    try {
+      const r = props.onImport(await file.text());
+      setError(r.ok ? null : t(lang, 'start.import.error', { reason: r.message[lang] }));
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      setError(t(lang, 'start.import.error', { reason }));
+    }
   };
 
   return (

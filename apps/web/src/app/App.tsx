@@ -100,15 +100,19 @@ export function App({ store, storageNotice }: AppProps) {
 
   const onExport = (kind: 'aasJson' | 'aasx' | 'draft' | 'gaps') => {
     if (!derived) return;
-    const out = buildExports(derived);
-    if ('error' in out) {
-      setExportError(out.error);
-      return;
+    try {
+      const out = buildExports(derived);
+      if ('error' in out) {
+        setExportError(out.error);
+        return;
+      }
+      setExportError(undefined);
+      const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3 }[kind];
+      const file = out.files[index];
+      if (file) downloadFile(file);
+    } catch (e) {
+      fail(e);
     }
-    setExportError(undefined);
-    const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3 }[kind];
-    const file = out.files[index];
-    if (file) downloadFile(file);
   };
 
   const reachable = (step: Step): boolean => {

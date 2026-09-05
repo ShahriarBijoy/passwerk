@@ -23,6 +23,25 @@ describe('StartView', () => {
     expect(screen.getByText('Battery category')).toBeTruthy();
   });
 
+  it('reports a throwing import instead of letting the rejection escape', async () => {
+    mount(
+      <StartView
+        lang="en"
+        defaultPassportId="urn:x"
+        onStart={() => undefined}
+        onImport={() => {
+          throw new Error('boom');
+        }}
+        onResume={() => undefined}
+        onReset={() => undefined}
+      />,
+    );
+    fireEvent.change(screen.getByTestId('import-draft'), {
+      target: { files: [new File(['{}'], 'draft.json', { type: 'application/json' })] },
+    });
+    expect((await screen.findByTestId('import-error')).textContent).toContain('boom');
+  });
+
   it('shows the resume card when a session exists', () => {
     mount(
       <StartView
