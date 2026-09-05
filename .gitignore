@@ -26,3 +26,6 @@ Thumbs.db
 tools/oracle/out/
 .venv/
 __pycache__/
+
+apps/web/playwright-report/
+apps/web/test-results/

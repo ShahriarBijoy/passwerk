@@ -11,9 +11,11 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "build:web": "pnpm --filter @passwerk/web build",
     "clean": "pnpm -r run clean && rimraf --glob \"packages/*/*.tsbuildinfo\"",
-    "typecheck": "tsc -b && tsc -p tsconfig.test.json",
+    "typecheck": "tsc -b && tsc -p tsconfig.test.json && tsc -p apps/web/tsconfig.json",
     "test": "vitest run",
+    "e2e": "pnpm --filter @passwerk/web e2e",
     "test:watch": "vitest",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.11",
     "@types/node": "^22.18.0",
+    "@vitejs/plugin-react": "6.1.1",
     "fast-check": "4.9.0",
     "rimraf": "^6.0.1",
     "typescript": "~5.9.3",
