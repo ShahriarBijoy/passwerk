@@ -1,12 +1,13 @@
 /** Importing a command module registers it; the order here is the order in `--help`. */
 import './audit.js';
 import './emit.js';
+import './extract.js';
 import './gaps.js';
 import './obligations.js';
 import './tools.js';
 import { registerCommand } from '../program.js';
 
-const PENDING = ['extract', 'chat'] as const;
+const PENDING = ['chat'] as const;
 
 for (const name of PENDING) {
   registerCommand((program) => {
