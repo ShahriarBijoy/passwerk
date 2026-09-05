@@ -17,8 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { type Language, pick, t } from '../i18n/index.ts';
+import { type LangText, type Language, pick, t } from '../i18n/index.ts';
 import type { Decision } from '../workflow/state.ts';
+import { validateValue } from '../workflow/validateValue.ts';
 import { attributeChoices, compositeLeaves } from './reviewModel.ts';
 
 const WHOLE = '__whole__';
@@ -37,15 +38,23 @@ export function AddValueDialog({
   const [leaf, setLeaf] = useState(WHOLE);
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('');
+  const [error, setError] = useState<LangText | null>(null);
   const choices = attributeChoices(category);
   const leaves = attributeId ? compositeLeaves(attributeId) : [];
 
   const submit = () => {
     if (!attributeId || !value.trim()) return;
+    const path = leaf !== WHOLE ? leaf : undefined;
+    const check = validateValue(attributeId, path, value.trim());
+    if (!check.ok) {
+      setError(check.message);
+      return;
+    }
+    setError(null);
     onAdd({
       kind: 'manual',
       attributeId,
-      ...(leaf !== WHOLE ? { path: leaf } : {}),
+      ...(path !== undefined ? { path } : {}),
       value: value.trim(),
       ...(unit.trim() ? { unit: unit.trim() } : {}),
     });
@@ -115,6 +124,11 @@ export function AddValueDialog({
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
           />
+          {error && (
+            <p className="text-destructive text-sm" data-testid="value-error">
+              {pick(lang, error)}
+            </p>
+          )}
           <Button data-testid="add-submit" onClick={submit}>
             {t(lang, 'review.addValue.add')}
           </Button>

@@ -181,6 +181,7 @@ export function App({ store, storageNotice }: AppProps) {
             groups={groups}
             manual={manualEntries(state.decisions)}
             conflicts={derived.conflicts}
+            invalidDecisions={derived.invalidDecisions}
             accepted={accepted}
             pending={pending}
             verdict={derived.report.verdict}

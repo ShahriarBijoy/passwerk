@@ -5,6 +5,7 @@ import {
   extractFacts,
   getSample,
   ingest,
+  type MappingProposal,
   type PassportDraft,
   SCHEMA_VERSION,
   suggestMappings,
@@ -122,6 +123,48 @@ describe('derive', () => {
     const again = derive({ ...withProposals }, AT);
     expect(canonicalJson(again?.report)).toBe(canonicalJson(d1?.report));
     expect(canonicalJson(again?.gap)).toBe(canonicalJson(d1?.gap));
+  });
+
+  it('a decision core rejects is reported, not thrown; the rest still apply', () => {
+    const bad = {
+      attributeId: 'ratedCapacity',
+      value: '94.5',
+      unit: 'Ah',
+      factId: 'bad-1',
+      confidence: 0.9,
+      source: [{ file: 'a.pdf', page: 1 }],
+      why: { de: 'Treffer', en: 'Match' },
+      checks: { label: 1, matched: 'x', unit: 'match', kind: 'ok' },
+    } satisfies MappingProposal;
+    const base = { ...withProposals, proposals: [...withProposals.proposals, bad] };
+    let s = reduce(base, {
+      type: 'decide',
+      decision: {
+        kind: 'edit',
+        attributeId: 'ratedCapacity',
+        factId: 'bad-1',
+        value: '94,5',
+        unit: 'Ah',
+      },
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'batteryChemistry',
+        path: 'clearName',
+        value: 'Lithium nickel manganese cobalt oxide',
+      },
+      at: AT,
+    });
+    const d = derive(s, AT);
+    expect(d?.invalidDecisions.map((x) => x.key)).toEqual(['ratedCapacity']);
+    expect(d?.invalidDecisions[0]?.message).toContain('ratedCapacity');
+    expect(d?.draft.attributes['batteryChemistry']?.value).toEqual({
+      clearName: 'Lithium nickel manganese cobalt oxide',
+    });
+    expect(d?.draft.attributes['ratedCapacity']).toBeUndefined();
   });
 
   it('an imported golden sample validates as core says', () => {

@@ -8,11 +8,18 @@ import {
   type ValidationReport,
   validate,
 } from '@passwerk/core';
-import type { Decision, WorkflowState } from './state.ts';
+import type { Decision, DecisionKey, WorkflowState } from './state.ts';
+
+/** A decision core refused to apply, kept out of the draft and reported to the reviewer. */
+export interface InvalidDecision {
+  key: DecisionKey;
+  message: string;
+}
 
 export interface Derived {
   draft: PassportDraft;
   conflicts: MappingConflict[];
+  invalidDecisions: InvalidDecision[];
   report: ValidationReport;
   gap: GapReport;
   asOf: string;
@@ -47,14 +54,64 @@ function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
   };
 }
 
+interface MappingEntry {
+  key: DecisionKey;
+  mapping: MappingDecision;
+}
+
 /** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
-export function decisionsToMappings(state: WorkflowState): MappingDecision[] {
+function mappingEntries(state: WorkflowState): MappingEntry[] {
   return Object.keys(state.decisions)
     .sort()
-    .map((key) => state.decisions[key])
-    .filter((d): d is Decision => d !== undefined)
-    .map((d) => toMapping(state, d))
-    .filter((m): m is MappingDecision => m !== null);
+    .map((key) => ({ key, decision: state.decisions[key] }))
+    .filter((e): e is { key: DecisionKey; decision: Decision } => e.decision !== undefined)
+    .map((e) => ({ key: e.key, mapping: toMapping(state, e.decision) }))
+    .filter((e): e is MappingEntry => e.mapping !== null);
+}
+
+/** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
+export function decisionsToMappings(state: WorkflowState): MappingDecision[] {
+  return mappingEntries(state).map((e) => e.mapping);
+}
+
+interface Applied {
+  draft: PassportDraft;
+  conflicts: MappingConflict[];
+  invalidDecisions: InvalidDecision[];
+}
+
+function messageOf(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * `applyMappings` throws on a value its attribute's schema rejects, and `derive` runs during
+ * render, so an unchecked decision would take the whole page down (and it is already autosaved).
+ * The happy path is the single batch call; only when that throws does the fold below isolate
+ * the offending decisions and keep the rest.
+ */
+function applyAll(base: PassportDraft, entries: MappingEntry[]): Applied {
+  try {
+    const r = applyMappings(
+      base,
+      entries.map((e) => e.mapping),
+    );
+    return { draft: r.draft, conflicts: r.conflicts, invalidDecisions: [] };
+  } catch {
+    let draft = base;
+    const conflicts: MappingConflict[] = [];
+    const invalidDecisions: InvalidDecision[] = [];
+    for (const entry of entries) {
+      try {
+        const r = applyMappings(draft, [entry.mapping]);
+        draft = r.draft;
+        conflicts.push(...r.conflicts);
+      } catch (e) {
+        invalidDecisions.push({ key: entry.key, message: messageOf(e) });
+      }
+    }
+    return { draft, conflicts, invalidDecisions };
+  }
 }
 
 const cache = new WeakMap<WorkflowState, { asOf: string; derived: Derived | null }>();
@@ -64,10 +121,10 @@ export function derive(state: WorkflowState, asOf: string): Derived | null {
   if (hit && hit.asOf === asOf) return hit.derived;
   let derived: Derived | null = null;
   if (state.baseDraft) {
-    const { draft, conflicts } = applyMappings(state.baseDraft, decisionsToMappings(state));
+    const { draft, conflicts, invalidDecisions } = applyAll(state.baseDraft, mappingEntries(state));
     const report = validate(draft, { asOf });
     const gap = gapReport(draft, { report, asOf });
-    derived = { draft, conflicts, report, gap, asOf };
+    derived = { draft, conflicts, invalidDecisions, report, gap, asOf };
   }
   cache.set(state, { asOf, derived });
   return derived;

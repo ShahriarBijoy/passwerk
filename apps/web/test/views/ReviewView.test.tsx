@@ -48,6 +48,54 @@ describe('ReviewView', () => {
       factId: 'f1',
     });
   });
+  it('blocks a save whose value core would reject, and does not dispatch', () => {
+    const onDecide = vi.fn();
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={onDecide}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit'));
+    fireEvent.change(screen.getByTestId('edit-value'), { target: { value: '94,5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onDecide).not.toHaveBeenCalled();
+    expect(screen.getByTestId('value-error').textContent).toContain('Rated capacity');
+  });
+  it('renders an invalid decision with a clear button', () => {
+    const onClear = vi.fn();
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        invalidDecisions={[{ key: 'ratedCapacity', message: 'expected a decimal string' }]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={onClear}
+        onContinue={() => undefined}
+      />,
+    );
+    const row = screen.getByTestId('invalid-decision');
+    expect(row.textContent).toContain('ratedCapacity');
+    expect(row.textContent).toContain('expected a decimal string');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(onClear).toHaveBeenCalledWith('ratedCapacity');
+  });
+
   it('renders German chrome', () => {
     mount(
       <ReviewView

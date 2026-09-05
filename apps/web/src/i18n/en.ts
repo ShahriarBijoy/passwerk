@@ -77,6 +77,8 @@ export const en: Record<keyof typeof de, string> = {
   'review.addValue.whole': 'Whole value',
   'review.addValue.add': 'Add',
   'review.conflict': 'Conflict: existing {existing}, incoming {incoming}',
+  'review.value.invalid': 'The value does not match the expected format for {attribute}: {reason}',
+  'review.invalidDecision': 'This decision could not be applied: {reason}',
   'review.empty': 'No proposals for this filter.',
   'review.continue': 'Continue to gaps & export',
   'gaps.title': 'Gaps & export',

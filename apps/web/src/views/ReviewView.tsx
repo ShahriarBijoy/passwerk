@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type Language, pick, t } from '../i18n/index.ts';
+import { type LangText, type Language, pick, t } from '../i18n/index.ts';
+import type { InvalidDecision } from '../workflow/derive.ts';
 import type { Decision, DecisionKey } from '../workflow/state.ts';
+import { validateValue } from '../workflow/validateValue.ts';
 import { AddValueDialog } from './AddValueDialog.tsx';
 import { ConfidenceBadge } from './parts/ConfidenceBadge.tsx';
 import { SourceRef } from './parts/SourceRef.tsx';
@@ -18,6 +20,7 @@ export interface ReviewViewProps {
   groups: ReviewGroup[];
   manual: Decision[];
   conflicts: MappingConflict[];
+  invalidDecisions?: InvalidDecision[];
   accepted: number;
   pending: number;
   verdict: Verdict;
@@ -42,6 +45,7 @@ function ProposalRow({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(p.value ?? ''));
   const [unit, setUnit] = useState(p.unit ?? '');
+  const [error, setError] = useState<LangText | null>(null);
   const base = {
     attributeId: group.attributeId,
     ...(group.path !== undefined ? { path: group.path } : {}),
@@ -71,12 +75,23 @@ function ProposalRow({
           <Button
             size="sm"
             onClick={() => {
+              const check = validateValue(group.attributeId, group.path, value);
+              if (!check.ok) {
+                setError(check.message);
+                return;
+              }
+              setError(null);
               onDecide({ kind: 'edit', ...base, value, ...(unit ? { unit } : {}) });
               setEditing(false);
             }}
           >
             {t(lang, 'review.save')}
           </Button>
+          {error && (
+            <p className="text-destructive text-sm" data-testid="value-error">
+              {pick(lang, error)}
+            </p>
+          )}
         </>
       ) : (
         <>
@@ -162,6 +177,14 @@ export function ReviewView(props: ReviewViewProps) {
             existing: JSON.stringify(c.existing),
             incoming: JSON.stringify(c.incoming),
           })}
+        </p>
+      ))}
+      {(props.invalidDecisions ?? []).map((d) => (
+        <p key={d.key} className="text-destructive text-sm" data-testid="invalid-decision">
+          {d.key}: {t(lang, 'review.invalidDecision', { reason: d.message })}{' '}
+          <Button size="sm" variant="ghost" onClick={() => props.onClear(d.key)}>
+            {t(lang, 'review.clear')}
+          </Button>
         </p>
       ))}
       {props.manual.map((d) => (
