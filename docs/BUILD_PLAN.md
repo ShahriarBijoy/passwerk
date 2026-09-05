@@ -444,7 +444,7 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - `apps/web`: static Vite app bundling `@passwerk/core` (pdfjs `workerSrc` supplied, D-016). Screens: project (category, role, capacity, date → `check_obligations`), upload, extracted facts with provenance, mapping review (accept / reject / edit, conflicts), gap report grouped by data owner with legal refs, validate, export (AAS JSON, AASX, HTML sheet, gap report, QR).
 - Review, gap and export views are built as a shared component library so Phase 7b can reuse them unchanged.
 - Optional bring-your-own-key model call from the browser for semantic mapping (D-002 boundary).
-- DoD: Playwright run on the Musterwerk fixtures reaches `valid` on the valid set and shows the expected gap list on the broken set; no network request in the default mode (sovereignty test in the browser).
+- DoD (first slice, D-029): Playwright on the built app, Chromium. Musterwerk track: the five fixtures uploaded and every proposal at confidence >= 0.7 accepted show the verdict, findings and gap items core computes in Node for the same inputs and clock. Golden track: each golden sample imported as draft JSON shows core's verdict and finding ids. Sovereignty: no request leaves the preview origin. Persistence: decisions survive a reload. The documents alone do not reach `valid` (31.9 % of mandatory data points), which is why `valid` is measured on the golden samples.
 
 ### Phase 7b — MCP App (D-019) (2–3 days)
 - `apps/mcp-app`: the Phase 7a review, gap and export components wrapped in the MCP Apps bridge (`@modelcontextprotocol/ext-apps`), served by `@passwerk/server` as a `ui://` resource referenced from `_meta.ui.resourceUri` on the relevant tools.

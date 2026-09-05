@@ -30,7 +30,7 @@ proves zero network calls.
 
 ## Status
 
-**Phase 5 of 8 done: gap report, obligations, `explain` and L4 plausibility.**
+**Phases 0 to 5b and the Phase 7a first slice are done; Phase 6 is next.**
 `@passwerk/rules` (artefacts and knowledge base, now with 24 plausibility rules as reviewable
 JSON) and `@passwerk/core` (model, AAS JSON and AASX emitters for all seven IDTA 02035 parts,
 validation L1 to L4, readers for PDF, XLSX, CSV, DOCX and TXT, fact extraction,
@@ -42,8 +42,9 @@ both sides reject (`docs/CONFORMANCE.md`), and a
 sovereignty test plus a `--network none` Docker job prove zero network calls. Mapping quality on
 unseen supplier documents is measured, not asserted: `docs/EVALUATION.md` scores the pipeline on
 six documents transcribed from public datasheets (recall, precision and correction effort next to
-the authored-fixture gate). Next: Phase 5b hardening (ADR D-024), then a minimal web workflow, then
-the MCP server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
+the authored-fixture gate). `apps/web` runs the same pipeline in the browser as a first slice of
+Phase 7a (upload, review, gaps, export; ADR D-029). Next: Phase 6, the MCP server, agent skill and
+CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 
@@ -53,6 +54,7 @@ the MCP server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISION
 | `@passwerk/core` | MCP-free library: ingest, extract, map, validate (4 layers), gap report, emit AAS JSON / AASX / HTML, data carrier (UID, GS1 Digital Link, QR) |
 | `@passwerk/server` | MCP server over stdio and Streamable HTTP |
 | `@passwerk/cli` | `passwerk audit | extract | emit | obligations` with CI-friendly exit codes |
+| `@passwerk/web` | Client-side web app: upload, review, gaps, export; the primary product (ADR D-019) |
 
 ## Development
 
@@ -66,6 +68,20 @@ pnpm oracle     # replay golden passports through aas-test-engines (needs uv)
 ```
 
 Contributor instructions for humans and coding agents live in `AGENTS.md` and `CLAUDE.md`.
+
+## Web app
+
+`apps/web` is a client-side Vite app that runs the same ingest, mapping, validation and gap
+report pipeline as `@passwerk/core` in the browser: upload supplier documents, review the
+proposed mappings, see the gap report and export the passport. Documents never leave the
+browser, and the autosave to IndexedDB keeps your decisions, the extracted facts and the
+proposals, but never the uploaded files.
+
+```sh
+pnpm install
+pnpm build
+pnpm --filter @passwerk/web dev
+```
 
 ## Not legal advice
 

@@ -544,3 +544,33 @@ The detail table names each gap (colon-less German datasheet lines, "≥ 96 %" a
 bounds, tolerances such as "5490g±300g", `Items / Standards / Remarks` spec tables, and a
 `cut-off voltage` synonym that fires for both voltage limits). Those are Phase 7a and knowledge-
 base work items, to be fixed with the numbers re-run, not by editing the expectations.
+
+## D-029: The web app's first slice is one package with a tested import boundary and derived verdicts (2026-09-05)
+
+**Context.** D-024 put a minimal web workflow (upload, review, gaps, export) before the MCP
+server so the primary product (D-019) meets real documents first. The build plan wanted the
+review, gap and export views reusable by the MCP App (Phase 7b), and asked for a Playwright
+run that "reaches `valid` on the valid set". A probe on 2026-09-05 showed the Musterwerk
+documents cover 15 of 47 mandatory data points after accepting every proposal at confidence
+>= 0.7, so no document-only run can reach `valid`.
+
+**Decision.** `apps/web` is a single Vite package in three layers, `workflow` (pure TypeScript
+over core), `views` (props-driven React on shadcn/ui) and `app` (shell, persistence), with the
+import direction enforced by a unit test rather than by a second package; Phase 7b lifts
+`views` out when it needs them. Only inputs are state (meta, base draft, file summaries, facts,
+proposals, decisions); the draft, conflicts, validation report and gap report are derived on
+every change from base draft plus decisions, so the screen can never show a stale verdict.
+Decisions are keyed by attribute and composite path with one decision per key, and every
+decision carries `override: true` because a user's choice is the resolution. The input state
+autosaves to IndexedDB: the decisions, the extracted facts and the proposals, but never the
+uploaded files; a version mismatch is reported, never migrated.
+The definition of done has two tracks: the Musterwerk documents must produce in the browser
+the same verdict, findings and gap items core computes in Node for the same inputs and clock,
+and the eight golden samples imported as draft JSON must show core's verdicts. A browser-side
+sovereignty test fails on any request that leaves the preview origin.
+
+**Consequences.** Build plan Phase 7a's definition of done is reworded. The page reads its
+clock from one module that honours `window.__passwerkClock` so Playwright and the Node oracle
+agree on `asOf`. CI gains an Ubuntu Playwright job with a cached Chromium (about four billed
+minutes). The project screen, extracted-facts screen, HTML sheet, QR and bring-your-own-key
+mode remain for the rest of Phase 7a and Phase 7.
