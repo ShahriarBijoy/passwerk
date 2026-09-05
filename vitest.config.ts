@@ -17,31 +17,16 @@ export default defineConfig({
     },
   },
   test: {
+    include: [
+      'packages/*/test/**/*.test.ts',
+      'packages/*/src/**/*.test.ts',
+      'tools/*/test/**/*.test.ts',
+      'apps/web/test/**/*.test.{ts,tsx}',
+    ],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts', 'apps/web/src/**/*.{ts,tsx}'],
     },
-    projects: [
-      {
-        test: {
-          name: 'node',
-          environment: 'node',
-          include: [
-            'packages/*/test/**/*.test.ts',
-            'packages/*/src/**/*.test.ts',
-            'tools/*/test/**/*.test.ts',
-            'apps/web/test/**/*.test.ts',
-          ],
-        },
-      },
-      {
-        test: {
-          name: 'web-dom',
-          environment: 'jsdom',
-          include: ['apps/web/test/**/*.test.tsx'],
-        },
-      },
-    ],
   },
 });
