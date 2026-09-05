@@ -25,11 +25,17 @@ export interface FileSystemAdapter {
   stat(path: string): Promise<{ kind: 'file' | 'directory' | 'missing' }>;
   /** Direct children of a directory: names, not paths. */
   readDir(path: string): Promise<string[]>;
-  /** Absolute, normalised. Throws {@link PathOutsideRootError} when a root is configured. */
+  /**
+   * Absolute, normalised, lexical. Throws {@link PathOutsideRootError} when a root is
+   * configured and the path escapes it lexically. Every operation above re-checks the
+   * canonical target (symlinks resolved), so this is the first gate, not the only one.
+   */
   resolve(path: string): string;
   join(...parts: string[]): string;
   /** The last path segment. */
   basename(path: string): string;
+  /** Stable document identity: the path relative to the root (or cwd), forward slashes. */
+  relative(path: string): string;
 }
 
 export class PathOutsideRootError extends Error {

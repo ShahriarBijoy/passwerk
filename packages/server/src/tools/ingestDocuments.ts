@@ -1,12 +1,7 @@
 import { type DocumentBundle, type IngestedDocument, type InputFile, ingest } from '@passwerk/core';
 import { z } from 'zod';
 import { decodeBase64 } from '../base64.js';
-import {
-  type FileSystemAdapter,
-  out,
-  PathOutsideRootError,
-  type ToolDefinition,
-} from '../types.js';
+import { type FileSystemAdapter, out, type ToolDefinition } from '../types.js';
 
 const SUPPORTED = new Set(['pdf', 'xlsx', 'csv', 'docx', 'txt']);
 
@@ -67,33 +62,66 @@ export function summarise(doc: IngestedDocument): DocumentSummary {
   };
 }
 
+type PathError = { path: string; message: string };
+
+const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
+/**
+ * Reads files and directories through the adapter. Each child of a directory is handled on
+ * its own (a read failure or a subdirectory named like a file drops that child only), and
+ * every document is named by its root-relative path so same-named files in different
+ * directories stay distinct (PR #25 review, P2).
+ */
 async function readPaths(
   paths: string[],
   fs: FileSystemAdapter,
-): Promise<{ files: InputFile[]; errors: { path: string; message: string }[] }> {
+): Promise<{ files: InputFile[]; errors: PathError[] }> {
   const files: InputFile[] = [];
-  const errors: { path: string; message: string }[] = [];
-  for (const p of paths) {
+  const errors: PathError[] = [];
+  const readOne = async (target: string, shown: string): Promise<void> => {
     try {
-      const abs = fs.resolve(p);
-      const st = await fs.stat(abs);
-      if (st.kind === 'missing') {
-        errors.push({ path: p, message: 'not found' });
+      files.push({ name: fs.relative(target), bytes: await fs.readFile(target) });
+    } catch (e) {
+      errors.push({ path: shown, message: errorMessage(e) });
+    }
+  };
+  for (const p of paths) {
+    let abs: string;
+    let kind: 'file' | 'directory' | 'missing';
+    try {
+      abs = fs.resolve(p);
+      kind = (await fs.stat(abs)).kind;
+    } catch (e) {
+      errors.push({ path: p, message: errorMessage(e) });
+      continue;
+    }
+    if (kind === 'missing') {
+      errors.push({ path: p, message: 'not found' });
+      continue;
+    }
+    if (kind === 'file') {
+      await readOne(abs, p);
+      continue;
+    }
+    let names: string[];
+    try {
+      names = (await fs.readDir(abs))
+        .filter((n) => SUPPORTED.has(n.split('.').pop()?.toLowerCase() ?? ''))
+        .sort();
+    } catch (e) {
+      errors.push({ path: p, message: errorMessage(e) });
+      continue;
+    }
+    for (const n of names) {
+      const child = fs.join(abs, n);
+      const shown = `${p.replace(/[/]+$/, '')}/${n}`;
+      try {
+        if ((await fs.stat(child)).kind !== 'file') continue;
+      } catch (e) {
+        errors.push({ path: shown, message: errorMessage(e) });
         continue;
       }
-      const targets =
-        st.kind === 'directory'
-          ? (await fs.readDir(abs))
-              .filter((n) => SUPPORTED.has(n.split('.').pop()?.toLowerCase() ?? ''))
-              .sort()
-              .map((n) => fs.join(abs, n))
-          : [abs];
-      for (const t of targets) {
-        files.push({ name: fs.basename(t), bytes: await fs.readFile(t) });
-      }
-    } catch (e) {
-      if (e instanceof PathOutsideRootError) errors.push({ path: p, message: e.message });
-      else errors.push({ path: p, message: e instanceof Error ? e.message : String(e) });
+      await readOne(child, shown);
     }
   }
   return { files, errors };
@@ -133,19 +161,31 @@ export const ingestDocumentsTool: ToolDefinition<typeof inputSchema, typeof outp
         },
       };
     }
-    const files: InputFile[] = [];
-    const errors: { path: string; message: string }[] = [];
+    const collected: InputFile[] = [];
+    const errors: PathError[] = [];
     if (input.paths?.length && ctx.fs) {
       const r = await readPaths(input.paths, ctx.fs);
-      files.push(...r.files);
+      collected.push(...r.files);
       errors.push(...r.errors);
     }
     for (const doc of input.inline ?? []) {
       try {
-        files.push({ name: doc.name, bytes: decodeBase64(doc.base64) });
+        collected.push({ name: doc.name, bytes: decodeBase64(doc.base64) });
       } catch (e) {
-        errors.push({ path: doc.name, message: e instanceof Error ? e.message : String(e) });
+        errors.push({ path: doc.name, message: errorMessage(e) });
       }
+    }
+    // Core keys fact ids and provenance on the name: a second document with the same name
+    // would be indistinguishable, so it is reported and skipped.
+    const seen = new Set<string>();
+    const files: InputFile[] = [];
+    for (const f of collected) {
+      if (seen.has(f.name)) {
+        errors.push({ path: f.name, message: 'duplicate document name; skipped' });
+        continue;
+      }
+      seen.add(f.name);
+      files.push(f);
     }
     const bundle: DocumentBundle = await ingest(
       files,

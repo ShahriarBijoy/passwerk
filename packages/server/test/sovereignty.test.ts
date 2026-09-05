@@ -61,7 +61,7 @@ describe('sovereignty: the server surface makes no network attempt', () => {
       // A directory is read in sorted order; send inline bytes the same way for equal ids.
       const inline = await run('ingest_documents', {
         inline: [...NAMES].sort().map((n) => ({
-          name: n,
+          name: `docs/${n}`,
           base64: encodeBase64(bytes[`/work/docs/${n}`] as Uint8Array),
         })),
       });

@@ -46,11 +46,16 @@ const normalise = (p: string): string => {
   return `/${parts.join('/')}`;
 };
 
-/** POSIX-style in-memory file system rooted at `root` (default `/work`). */
+/**
+ * POSIX-style in-memory file system rooted at `root` (default `/work`). Paths listed in
+ * `unreadable` behave like permission-denied files.
+ */
 export function memoryFileSystem(
   files: Record<string, Uint8Array<ArrayBuffer>>,
   root = '/work',
+  options: { unreadable?: string[] } = {},
 ): FileSystemAdapter & { written: Map<string, Uint8Array> } {
+  const unreadable = new Set((options.unreadable ?? []).map(normalise));
   const store = new Map<string, Uint8Array<ArrayBuffer>>(
     Object.entries(files).map(([k, v]) => [normalise(k), v]),
   );
@@ -65,8 +70,14 @@ export function memoryFileSystem(
     resolve,
     join: (...parts) => normalise(parts.join('/')),
     basename: (p) => p.split('/').filter(Boolean).at(-1) ?? p,
+    relative: (p) => {
+      const abs = resolve(p);
+      return abs === root ? '.' : abs.slice(root.length + 1);
+    },
     async readFile(p) {
-      const bytes = store.get(resolve(p));
+      const abs = resolve(p);
+      if (unreadable.has(abs)) throw new Error(`EACCES: permission denied, open '${p}'`);
+      const bytes = store.get(abs);
       if (!bytes) throw new Error(`ENOENT: ${p}`);
       return bytes;
     },

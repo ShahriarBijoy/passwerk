@@ -30,7 +30,7 @@ const matches = (p: MappingProposal, e: Expected) =>
   (e.path === undefined || p.path === e.path) &&
   p.source.some(
     (s) =>
-      s.file === e.source.file &&
+      s.file === `docs/${e.source.file}` &&
       s.page === e.source.page &&
       s.cell === e.source.cell &&
       s.note === e.source.note,
@@ -57,9 +57,11 @@ describe('ingest_documents', () => {
     const r = await call<Ingest>(session.client, 'ingest_documents', { paths: ['docs'] });
     expect(r.isError).toBe(false);
     expect(r.structured.bundleId).toMatch(/^bnd_/);
-    expect(r.structured.documents.map((d) => d.name).sort()).toEqual([...names].sort());
+    expect(r.structured.documents.map((d) => d.name).sort()).toEqual(
+      names.map((n) => `docs/${n}`).sort(),
+    );
     for (const d of r.structured.documents) {
-      const e = expected.files[d.name];
+      const e = expected.files[d.name.slice('docs/'.length)];
       expect({ format: d.format, lang: d.lang, pages: d.pages }, d.name).toEqual(e);
     }
     expect(r.structured.bundle).toBeUndefined();
@@ -77,7 +79,7 @@ describe('ingest_documents', () => {
     expect(full.text).toContain('5 Dokument(e) eingelesen');
     const inline = await call<Ingest>(session.client, 'ingest_documents', {
       inline: names.map((n) => ({
-        name: n,
+        name: `docs/${n}`,
         base64: encodeBase64(bytes[n] as Uint8Array<ArrayBuffer>),
       })),
     });
@@ -92,6 +94,69 @@ describe('ingest_documents', () => {
     expect(r.structured.documents).toHaveLength(1);
     expect(r.structured.errors.map((e) => e.path)).toEqual(['docs/nope.pdf', '../etc/passwd']);
     expect(r.structured.errors[1]?.message).toMatch(/outside the configured root/);
+  });
+
+  it('keeps same-named files in different directories distinct (PR #25 review, P2)', async () => {
+    const utf8 = (t: string) => new TextEncoder().encode(t);
+    const local = await connect({
+      fs: memoryFileSystem({
+        '/work/supplier-a/supplier.txt': utf8('Capacity: 94.5 Ah\n'),
+        '/work/supplier-b/supplier.txt': utf8('Capacity: 80 Ah\n'),
+      }),
+    });
+    try {
+      const ing = await call<Ingest>(local.client, 'ingest_documents', {
+        paths: ['supplier-a/supplier.txt', 'supplier-b/supplier.txt'],
+      });
+      expect(ing.structured.documents.map((d) => d.name)).toEqual([
+        'supplier-a/supplier.txt',
+        'supplier-b/supplier.txt',
+      ]);
+      const ext = await call<{
+        facts: { facts: { id: string; value?: string; source: { file: string } }[] };
+      }>(local.client, 'extract_facts', { bundle: { bundleId: ing.structured.bundleId } });
+      const files = new Set(ext.structured.facts.facts.map((f) => f.source.file));
+      expect(files).toEqual(new Set(['supplier-a/supplier.txt', 'supplier-b/supplier.txt']));
+      const ids = ext.structured.facts.facts.map((f) => f.id);
+      expect(new Set(ids).size).toBe(ids.length);
+
+      const dup = await call<Ingest>(local.client, 'ingest_documents', {
+        paths: ['supplier-a/supplier.txt'],
+        inline: [{ name: 'supplier-a/supplier.txt', base64: encodeBase64(utf8('x')) }],
+      });
+      expect(dup.structured.documents).toHaveLength(1);
+      expect(dup.structured.errors).toEqual([
+        { path: 'supplier-a/supplier.txt', message: expect.stringMatching(/duplicate/) },
+      ]);
+    } finally {
+      await local.close();
+    }
+  });
+
+  it('one bad directory child does not drop the others (PR #25 review, P2)', async () => {
+    const utf8 = (t: string) => new TextEncoder().encode(t);
+    const local = await connect({
+      fs: memoryFileSystem(
+        {
+          '/work/mixed/a.txt/inner.bin': utf8('a directory named like a file'),
+          '/work/mixed/b.txt': utf8('Capacity: 80 Ah\n'),
+          '/work/mixed/c.txt': utf8('unreadable'),
+          '/work/mixed/d.txt': utf8('Voltage: 355 V\n'),
+        },
+        '/work',
+        { unreadable: ['/work/mixed/c.txt'] },
+      ),
+    });
+    try {
+      const ing = await call<Ingest>(local.client, 'ingest_documents', { paths: ['mixed'] });
+      expect(ing.isError).toBe(false);
+      expect(ing.structured.documents.map((d) => d.name)).toEqual(['mixed/b.txt', 'mixed/d.txt']);
+      expect(ing.structured.errors).toEqual([
+        { path: 'mixed/c.txt', message: expect.stringMatching(/EACCES/) },
+      ]);
+    } finally {
+      await local.close();
+    }
   });
 
   it('refuses empty input and paths without a file system', async () => {
