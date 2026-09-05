@@ -205,6 +205,10 @@ supplied by the user; both are marked `verify` until then.
 **Decision.**
 - `Field.recordedAt` (ISO date-time) is the measurement time of a value. Part 5 `LastUpdate`
   elements use it and fall back to `meta.createdAt`, the passport assembly time, when absent.
+  The fallback keeps the file template-conformant (the element is cardinality `One`) but is
+  not a measurement; since Phase 5, `PW-PLAUS-011` (severity `error`) fires on every dynamic
+  value without a `recordedAt`, so a passport that relies on the fallback can never reach
+  `valid`. The emitter keeps L2/L3 honest; L4 keeps the verdict honest.
 - Template properties typed `xs:integer` or `xs:unsignedInt` receive the integral lexical form
   when the decimal string is whole (`"95.0"` to `"95"`); a fractional value passes through and
   fails L2 honestly.
