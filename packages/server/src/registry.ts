@@ -1,8 +1,12 @@
 import { applyMappingsTool } from './tools/applyMappings.js';
 import { checkObligationsTool } from './tools/checkObligations.js';
+import { emitPassportTool } from './tools/emitPassport.js';
 import { explainAttributeTool } from './tools/explainAttribute.js';
+import { extractFactsTool } from './tools/extractFacts.js';
 import { gapReportTool } from './tools/gapReport.js';
+import { ingestDocumentsTool } from './tools/ingestDocuments.js';
 import { listCapabilitiesTool, setToolNames } from './tools/listCapabilities.js';
+import { suggestMappingsTool } from './tools/suggestMappings.js';
 import { validatePassportTool } from './tools/validatePassport.js';
 import type { AnyToolDefinition } from './types.js';
 
@@ -12,9 +16,13 @@ import type { AnyToolDefinition } from './types.js';
  * test iterates it.
  */
 export const TOOLS: readonly AnyToolDefinition[] = [
+  ingestDocumentsTool,
+  extractFactsTool,
+  suggestMappingsTool,
   applyMappingsTool,
   validatePassportTool,
   gapReportTool,
+  emitPassportTool,
   checkObligationsTool,
   explainAttributeTool,
   listCapabilitiesTool,

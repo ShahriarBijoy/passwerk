@@ -48,10 +48,10 @@ const normalise = (p: string): string => {
 
 /** POSIX-style in-memory file system rooted at `root` (default `/work`). */
 export function memoryFileSystem(
-  files: Record<string, Uint8Array>,
+  files: Record<string, Uint8Array<ArrayBuffer>>,
   root = '/work',
 ): FileSystemAdapter & { written: Map<string, Uint8Array> } {
-  const store = new Map<string, Uint8Array>(
+  const store = new Map<string, Uint8Array<ArrayBuffer>>(
     Object.entries(files).map(([k, v]) => [normalise(k), v]),
   );
   const written = new Map<string, Uint8Array>();
@@ -72,8 +72,9 @@ export function memoryFileSystem(
     },
     async writeFile(p, bytes) {
       const abs = resolve(p);
-      store.set(abs, bytes);
-      written.set(abs, bytes);
+      const copy = new Uint8Array(bytes);
+      store.set(abs, copy);
+      written.set(abs, copy);
     },
     async stat(p) {
       const abs = resolve(p);

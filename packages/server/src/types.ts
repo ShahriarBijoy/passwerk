@@ -19,7 +19,8 @@ export function pick(text: LangText, lang: Lang | undefined): string {
  * tests inject an in-memory one; `createServer` without one accepts inline bytes only.
  */
 export interface FileSystemAdapter {
-  readFile(path: string): Promise<Uint8Array>;
+  /** Core's `InputFile.bytes` is `Uint8Array<ArrayBuffer>`; a fresh `Uint8Array` always is. */
+  readFile(path: string): Promise<Uint8Array<ArrayBuffer>>;
   writeFile(path: string, bytes: Uint8Array): Promise<void>;
   stat(path: string): Promise<{ kind: 'file' | 'directory' | 'missing' }>;
   /** Direct children of a directory: names, not paths. */

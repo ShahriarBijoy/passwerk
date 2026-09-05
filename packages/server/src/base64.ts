@@ -13,7 +13,7 @@ export function encodeBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-export function decodeBase64(text: string): Uint8Array {
+export function decodeBase64(text: string): Uint8Array<ArrayBuffer> {
   const cleaned = text.replace(/\s+/g, '');
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleaned) || cleaned.length % 4 === 1) {
     throw new Error('invalid base64');

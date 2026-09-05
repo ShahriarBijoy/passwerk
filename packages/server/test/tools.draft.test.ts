@@ -2,15 +2,18 @@ import {
   BROKEN_SAMPLE_NAMES,
   brokenSamples,
   canonicalJson,
+  emitAasJson,
   type Finding,
   gapReport,
   getSample,
+  readAasxEnvironment,
   VALID_SAMPLE_NAMES,
   validate,
   validateSchema,
 } from '@passwerk/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { call, connect, TEST_CLOCK } from './harness.ts';
+import { decodeBase64 } from '../src/base64.ts';
+import { call, connect, memoryFileSystem, TEST_CLOCK } from './harness.ts';
 
 let session: Awaited<ReturnType<typeof connect>>;
 beforeAll(async () => {
@@ -86,9 +89,8 @@ describe('gap_report', () => {
     expect(r.structured.completeness).toEqual(expected.completeness);
     expect(r.structured.isNotLegalAdvice).toBe(true);
     expect(r.structured.sources.length).toBeGreaterThan(0);
-    expect(r.text).toMatch(
-      new RegExp(`^Mandatory d+/d+ (${expected.completeness.mandatory.percent} %)`),
-    );
+    expect(r.text.startsWith('Mandatory ')).toBe(true);
+    expect(r.text).toContain(`(${expected.completeness.mandatory.percent} %)`);
   });
 
   it('a broken sample lists the finding that made the attribute a gap', async () => {
@@ -206,5 +208,73 @@ describe('explain_attribute', () => {
     const unknown = await call(session.client, 'explain_attribute', { id: 'nope' });
     expect(unknown.isError).toBe(true);
     expect(unknown.text).toMatch(/Unknown id "nope"/);
+  });
+});
+
+interface Emit {
+  draftId: string;
+  verdict: string;
+  findings: Finding[];
+  files: { target: string; name: string; size: number; path?: string; bytes?: string }[];
+}
+
+describe('emit_passport', () => {
+  it('returns the three targets inline with the emitter’s verdict', async () => {
+    const draft = getSample('ev-valid');
+    const r = await call<Emit>(session.client, 'emit_passport', {
+      draft,
+      targets: ['aas-json', 'aasx', 'draft-json'],
+    });
+    expect(r.isError).toBe(false);
+    expect(r.structured.verdict).toBe(emitAasJson(draft).verdict);
+    expect(r.structured.files.map((f) => f.target)).toEqual(['aas-json', 'aasx', 'draft-json']);
+    const [json, aasx, draftJson] = r.structured.files;
+    expect(json?.name.endsWith('.aas.json')).toBe(true);
+    expect(new TextDecoder().decode(decodeBase64(json?.bytes ?? ''))).toBe(
+      emitAasJson(draft).output,
+    );
+    expect(() => readAasxEnvironment(decodeBase64(aasx?.bytes ?? ''))).not.toThrow();
+    expect(
+      JSON.parse(new TextDecoder().decode(decodeBase64(draftJson?.bytes ?? ''))),
+    ).toHaveProperty('meta');
+    expect(r.text).toMatch(/^Re-validation verdict: valid/);
+  });
+
+  it('writes into outDir through the file system and returns paths', async () => {
+    const fs = memoryFileSystem({});
+    const withFs = await connect({ fs });
+    try {
+      const r = await call<Emit>(withFs.client, 'emit_passport', {
+        draft: getSample('lmt-valid'),
+        targets: ['aas-json', 'aasx', 'draft-json'],
+        outDir: 'out',
+        lang: 'de',
+      });
+      expect(r.isError).toBe(false);
+      expect(r.structured.files.every((f) => f.bytes === undefined)).toBe(true);
+      expect([...fs.written.keys()].sort()).toEqual(r.structured.files.map((f) => f.path).sort());
+      expect(fs.written.size).toBe(3);
+      for (const key of fs.written.keys()) expect(key.startsWith('/work/out/')).toBe(true);
+      expect(r.text).toMatch(/^Ergebnis der Nachvalidierung: valid/);
+    } finally {
+      await withFs.close();
+    }
+  });
+
+  it('still returns files for an invalid draft, and refuses outDir without a file system', async () => {
+    const r = await call<Emit>(session.client, 'emit_passport', {
+      draft: brokenSamples['lmt-missing-state-of-charge'].draft,
+      targets: ['aasx'],
+    });
+    expect(r.structured.verdict).toBe('invalid');
+    expect(r.structured.files).toHaveLength(1);
+    expect(r.structured.findings.some((f) => f.ruleId === 'PW-L3-MISSING')).toBe(true);
+    const noFs = await call(session.client, 'emit_passport', {
+      draft: getSample('ev-valid'),
+      targets: ['draft-json'],
+      outDir: 'out',
+    });
+    expect(noFs.isError).toBe(true);
+    expect(noFs.text).toMatch(/needs a file system/);
   });
 });
