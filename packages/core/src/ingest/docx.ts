@@ -4,7 +4,7 @@ import { unzipOoxml } from './ooxml.js';
 import { tableRef } from './refs.js';
 import { segmentsOf } from './txt.js';
 import type { Cell, InputFile, Line, Page, Table } from './types.js';
-import { IngestFailure } from './types.js';
+import { IngestFailure, type IngestLimits } from './types.js';
 
 /** preserveOrder node: { [tag]: OrderedNode[], ':@'?: attrs } or { '#text': string } */
 type Ordered = Record<string, unknown>;
@@ -25,8 +25,8 @@ function paragraphText(children: Ordered[]): string {
   return out;
 }
 
-export function readDocx(file: InputFile): Page[] {
-  const files = unzipOoxml(file.bytes);
+export function readDocx(file: InputFile, limits: Partial<IngestLimits> = {}): Page[] {
+  const files = unzipOoxml(file.bytes, limits);
   const xml = files['word/document.xml'];
   if (!xml) throw new IngestFailure('corrupt', 'word/document.xml is missing');
   const parser = new XMLParser({

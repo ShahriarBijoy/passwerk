@@ -2,7 +2,7 @@ import { detectLang } from './lang.js';
 import { textOf, unzipOoxml, xmlParser } from './ooxml.js';
 import { a1, parseA1 } from './refs.js';
 import type { Cell, CellKind, InputFile, Line, Page, Table } from './types.js';
-import { IngestFailure } from './types.js';
+import { IngestFailure, type IngestLimits, resolveLimits } from './types.js';
 
 type Node = Record<string, unknown>;
 const arr = (v: unknown): Node[] => (Array.isArray(v) ? (v as Node[]) : []);
@@ -84,34 +84,72 @@ function cellValue(c: Node, wb: Workbook): { text: string; kind: CellKind } {
   return { text: v, kind: 'number' };
 }
 
-export function readXlsx(file: InputFile): Page[] {
-  const files = unzipOoxml(file.bytes);
+const byNumber = (a: number, b: number) => a - b;
+
+/**
+ * One page per sheet. The worksheet is kept **sparse** (issue #15): only occupied cells are
+ * read, empty rows and columns are dropped from the table, and every cell keeps its original
+ * A1 reference and its row number in the line provenance. A single cell at Z1000 therefore
+ * costs one Cell, not 26,000. `limits` bound the occupied-cell count and the compacted grid.
+ */
+export function readXlsx(file: InputFile, limits: Partial<IngestLimits> = {}): Page[] {
+  const lim = resolveLimits(limits);
+  const files = unzipOoxml(file.bytes, lim);
   const wb = loadWorkbook(files);
   const parser = xmlParser();
+  let totalCells = 0;
   return wb.sheets.map((sheet, si) => {
     const xml = files[sheet.path];
     if (!xml) throw new IngestFailure('corrupt', `sheet part ${sheet.path} is missing`);
     const ws = (parser.parse(xml) as Node)['worksheet'] as Node | undefined;
     const grid = new Map<string, { text: string; kind: CellKind }>();
-    let maxRow = 0;
-    let maxCol = 0;
+    const rowSet = new Set<number>();
+    const colSet = new Set<number>();
     for (const row of arr((ws?.['sheetData'] as Node | undefined)?.['row'])) {
       for (const c of arr(row['c'])) {
         const ref = attr(c, 'r');
         if (!ref) continue;
-        const { row: r, col } = parseA1(ref);
+        let coord: { row: number; col: number };
+        try {
+          coord = parseA1(ref);
+        } catch (e) {
+          throw new IngestFailure('corrupt', e instanceof Error ? e.message : String(e));
+        }
+        if (coord.row < 1 || coord.col < 1 || coord.row > lim.maxRows || coord.col > lim.maxCols) {
+          throw new IngestFailure(
+            'corrupt',
+            `cell reference ${ref} is outside the allowed range (rows 1..${lim.maxRows}, columns 1..${lim.maxCols})`,
+          );
+        }
         const value = cellValue(c, wb);
         if (value.text.trim().length === 0) continue;
+        if (!grid.has(ref)) {
+          totalCells += 1;
+          if (totalCells > lim.maxCells) {
+            throw new IngestFailure(
+              'limit_exceeded',
+              `workbook has more occupied cells than the limit of ${lim.maxCells} cells`,
+            );
+          }
+        }
         grid.set(ref, { text: value.text.trim(), kind: value.kind });
-        maxRow = Math.max(maxRow, r);
-        maxCol = Math.max(maxCol, col);
+        rowSet.add(coord.row);
+        colSet.add(coord.col);
       }
+    }
+    const rowIndex = [...rowSet].sort(byNumber);
+    const colIndex = [...colSet].sort(byNumber);
+    if (rowIndex.length * colIndex.length > lim.maxGridCells) {
+      throw new IngestFailure(
+        'limit_exceeded',
+        `sheet ${sheet.name} compacts to a grid of ${rowIndex.length} x ${colIndex.length} cells, above the limit of ${lim.maxGridCells} cells`,
+      );
     }
     const rows: Cell[][] = [];
     const lines: Line[] = [];
-    for (let r = 1; r <= maxRow; r += 1) {
+    for (const r of rowIndex) {
       const cells: Cell[] = [];
-      for (let col = 1; col <= maxCol; col += 1) {
+      for (const col of colIndex) {
         const ref = a1(r, col);
         const v = grid.get(ref);
         const qualified = `${sheet.name}!${ref}`;
@@ -130,9 +168,21 @@ export function readXlsx(file: InputFile): Page[] {
         source: { file: file.name, page: si + 1, note: `line ${r}` },
       });
     }
+    const first = rowIndex[0];
+    const firstCol = colIndex[0];
     const tables: Table[] =
-      rows.length > 0
-        ? [{ index: 1, rows, source: { file: file.name, page: si + 1, cell: `${sheet.name}!A1` } }]
+      rows.length > 0 && first !== undefined && firstCol !== undefined
+        ? [
+            {
+              index: 1,
+              rows,
+              source: {
+                file: file.name,
+                page: si + 1,
+                cell: `${sheet.name}!${a1(first, firstCol)}`,
+              },
+            },
+          ]
         : [];
     const allText = lines.map((l) => l.text).join('\n');
     return {

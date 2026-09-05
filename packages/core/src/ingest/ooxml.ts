@@ -1,19 +1,67 @@
 import { XMLParser } from 'fast-xml-parser';
 import { unzipSync } from 'fflate';
-import { IngestFailure } from './types.js';
+import { IngestFailure, type IngestLimits, resolveLimits } from './types.js';
 
-/** Unzip an OOXML package into { path: xmlText }. */
-export function unzipOoxml(bytes: Uint8Array): Record<string, string> {
+const isXmlPart = (name: string) => name.endsWith('.xml') || name.endsWith('.rels');
+
+/**
+ * Unzip an OOXML package into { path: xmlText }, within `limits` (issue #15). The input size is
+ * checked before anything is read; the zip directory is walked through fflate's `filter`, which
+ * runs before each entry is inflated, so entry count and the declared inflated size of the XML
+ * parts are bounded before allocation and non-XML parts (media, embeddings) are never inflated.
+ * The actual inflated size is checked again afterwards in case a directory entry lied.
+ */
+export function unzipOoxml(
+  bytes: Uint8Array,
+  limits: Partial<IngestLimits> = {},
+): Record<string, string> {
+  const lim = resolveLimits(limits);
+  if (bytes.length > lim.maxInputBytes) {
+    throw new IngestFailure(
+      'limit_exceeded',
+      `package is ${bytes.length} bytes, above the limit of ${lim.maxInputBytes} bytes`,
+    );
+  }
   let entries: Record<string, Uint8Array>;
+  let count = 0;
+  let declared = 0;
   try {
-    entries = unzipSync(bytes);
+    entries = unzipSync(bytes, {
+      filter: (f) => {
+        count += 1;
+        if (count > lim.maxArchiveEntries) {
+          throw new IngestFailure(
+            'limit_exceeded',
+            `archive lists more than the limit of ${lim.maxArchiveEntries} entries`,
+          );
+        }
+        if (!isXmlPart(f.name)) return false;
+        declared += f.originalSize;
+        if (declared > lim.maxExpandedBytes) {
+          throw new IngestFailure(
+            'limit_exceeded',
+            `inflated XML parts exceed the limit of ${lim.maxExpandedBytes} bytes`,
+          );
+        }
+        return true;
+      },
+    });
   } catch (e) {
+    if (e instanceof IngestFailure) throw e;
     throw new IngestFailure('corrupt', `not a readable zip package: ${String(e)}`);
   }
+  let actual = 0;
   const out: Record<string, string> = {};
   const decoder = new TextDecoder('utf-8');
   for (const [path, data] of Object.entries(entries)) {
-    if (path.endsWith('.xml') || path.endsWith('.rels')) out[path] = decoder.decode(data);
+    actual += data.length;
+    if (actual > lim.maxExpandedBytes) {
+      throw new IngestFailure(
+        'limit_exceeded',
+        `inflated XML parts exceed the limit of ${lim.maxExpandedBytes} bytes`,
+      );
+    }
+    out[path] = decoder.decode(data);
   }
   return out;
 }

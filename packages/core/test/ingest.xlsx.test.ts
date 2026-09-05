@@ -61,8 +61,10 @@ describe('xlsx reader', () => {
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Edge" sheetId="1" r:id="rId1"/></sheets></workbook>';
     const relsXml =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>';
-    // A1: error cell, B1: boolean cell, C1: no <c> element at all (a gap), D1: present so the
-    // row spans through C1 and forces it to be read as an empty cell.
+    // A1: error cell, B1: boolean cell, C1: no <c> element at all (a gap), D1: present. Column
+    // C is empty in every row, so the sparse reader drops it (issue #15) and D1 follows B1
+    // directly while keeping its own reference. A gap cell only survives when its column is
+    // occupied somewhere else in the sheet (see ingest.limits.test.ts).
     const sheetXml =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="e"><v>#DIV/0!</v></c><c r="B1" t="b"><v>1</v></c><c r="D1" t="inlineStr"><is><t>x</t></is></c></row></sheetData></worksheet>';
     const bytes = zipSync({
@@ -74,6 +76,7 @@ describe('xlsx reader', () => {
     const row = page!.tables[0]!.rows[0]!;
     expect(row[0]).toMatchObject({ text: '#DIV/0!', kind: 'text' });
     expect(row[1]).toMatchObject({ text: 'true', kind: 'boolean' });
-    expect(row[2]).toMatchObject({ text: '', kind: 'text' });
+    expect(row[2]).toMatchObject({ text: 'x', kind: 'text', ref: 'Edge!D1' });
+    expect(row).toHaveLength(3);
   });
 });
