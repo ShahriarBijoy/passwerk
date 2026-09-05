@@ -58,6 +58,19 @@ function attributeFindings(draft: PassportDraft): Finding[] {
   const attrs = draft.attributes as Record<string, AnyFieldValue | undefined>;
 
   for (const [id, field] of Object.entries(attrs)) {
+    // An unresolved supplier disagreement is never a valid passport (issue #11). The value is
+    // kept for review and still emitted fail-honestly, but the verdict says `invalid` until an
+    // explicit override resolves it (applyMappings restores `present`).
+    if (field?.status === 'conflict') {
+      findings.push({
+        layer: 'L1',
+        ruleId: 'PW-L1-CONFLICT-UNRESOLVED',
+        severity: 'error',
+        path: `attributes.${id}`,
+        attributeId: id,
+        message: message('PW-L1-CONFLICT-UNRESOLVED', id),
+      });
+    }
     if (!field || field.value === undefined) continue;
     const attribute = getAttribute(id);
     if (!attribute) continue; // cannot happen after the unknown-id check

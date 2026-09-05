@@ -1,15 +1,9 @@
 import type * as aas from '@aas-core-works/aas-core3.0-typescript';
-import {
-  buildReport,
-  type Finding,
-  type ValidationReport,
-  type Verdict,
-} from '../validate/finding.js';
-import { validateEnvironmentJson } from '../validate/index.js';
+import type { Finding, ValidationReport, Verdict } from '../validate/finding.js';
+import { assembleReport, type ValidateOptions } from '../validate/index.js';
 import { validateSchema } from '../validate/schema.js';
 import { canonicalJson } from './canonical.js';
 import { buildEnvironment, environmentToJsonable } from './environment.js';
-import type { EmitOptions } from './ids.js';
 
 export interface EmitResult<T> {
   output: T;
@@ -31,20 +25,16 @@ export class PassportDraftError extends Error {
 
 /**
  * Canonical AAS JSON for the draft. Fail-honest: value-level L1 errors still emit, and the
- * verdict is recomputed from L1 + L2 + L3 on the emitted output.
+ * verdict is the full L1 + L2 + L3 + L4 report on the emitted output, assembled by the same
+ * `assembleReport` that `validate` uses (issue #12), so a draft never exports `valid` while
+ * validating `invalid`.
  */
-export function emitAasJson(input: unknown, options: EmitOptions = {}): EmitResult<string> {
+export function emitAasJson(input: unknown, options: ValidateOptions = {}): EmitResult<string> {
   const l1 = validateSchema(input);
   if (!l1.draft) throw new PassportDraftError(l1.findings);
   const environment = buildEnvironment(l1.draft, options);
   const jsonable = environmentToJsonable(environment);
-  const rest = validateEnvironmentJson(jsonable);
-  const report = buildReport([...l1.findings, ...rest.findings], {
-    L1: true,
-    L2: true,
-    L3: true,
-    L4: false,
-  });
+  const report = assembleReport({ ...l1, draft: l1.draft }, jsonable, options);
   return {
     output: canonicalJson(jsonable),
     environment,

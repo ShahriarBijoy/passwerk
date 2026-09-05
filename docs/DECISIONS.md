@@ -456,3 +456,29 @@ the resolution and restores `present`.
 "changed sub-field counts as applied" test was rewritten deliberately. `MappingConflict` gains
 an optional `path`. Composite leaf values are still not type-checked at apply time (L1 checks
 the object once complete); only the path is.
+
+## D-026: One report assembler; export verdicts include L4; an unresolved conflict is an L1 error (2026-09-05)
+
+**Context.** `validate` ran L1 to L4 while `emitAasJson` and `emitAasx` built their verdict
+from L1 to L3 and stamped `L4: false`, so the same draft could be `invalid` when validated and
+`valid` when exported (issue #12). Independently, a field whose `status` is `conflict` passed
+L1 and was emitted through `presentValue`, so an unresolved supplier disagreement exported as
+`valid` (issue #11). Phase 5 deliberately left the emitters untouched (D-020), which is where
+the gap came from.
+
+**Decision.** `assembleReport(l1, emitted, options)` in `validate/index.ts` is the only place a
+four-layer report is built. `validate` feeds it the in-memory emission; `emitAasJson` feeds it
+the JSON it returns; `emitAasx` feeds it the environment read back out of the packaged bytes.
+L2 and L3 always run on the emitted output, L4 on the draft with the same injected `asOf`
+(default `meta.createdAt`, so output stays deterministic), and L1's findings are carried through
+so L4 keeps hiding values L1 rejected. The emitters accept `ValidateOptions` (`asOf`,
+`skipPlausibility`); a structural-only export verdict is available only by asking for it, and
+`report.layers.L4.ran` says so. L1 raises `PW-L1-CONFLICT-UNRESOLVED` (error, DE/EN, scoped to
+the attribute) for every field in `conflict`; the value stays in the draft for review and is
+still emitted fail-honestly, but no entry point can return `valid` until an explicit override
+resolves it.
+
+**Consequences.** Oracle parity is untouched: `emit-golden.ts` reads `layers.L2` and D-012 stays
+L2-only. Emitted bytes do not change, only verdicts. Adapters (Phase 6) pass `asOf` once and get
+one answer from every tool. The Phase 5 memory note that L4 "refuses valid when LastUpdate falls
+back to createdAt" now holds for the exporters too.

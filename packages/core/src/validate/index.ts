@@ -1,10 +1,11 @@
 import { canonicalJson } from '../emit/canonical.js';
 import { buildEnvironment, environmentToJsonable } from '../emit/environment.js';
 import type { EmitOptions } from '../emit/ids.js';
+import type { PassportDraft } from '../model/passport.js';
 import { validateAas } from './aas.js';
 import { buildReport, type Finding, type ValidationReport } from './finding.js';
 import { validatePlausibility } from './plausibility.js';
-import { validateSchema } from './schema.js';
+import { type SchemaResult, validateSchema } from './schema.js';
 import { validateTemplate } from './template.js';
 
 export interface ValidateOptions extends EmitOptions {
@@ -22,18 +23,17 @@ export function validateEnvironmentJson(jsonable: unknown): { findings: Finding[
 }
 
 /**
- * L1 on the draft; if it is structurally sound, emit the AAS JSON in memory and run L2 and L3
- * on it. The verdict therefore always reflects the emitted output (BUILD_PLAN 2.4).
+ * The one place a verdict is assembled (issue #12). `emitted` is the AAS environment as JSON:
+ * for `validate` the in-memory emission, for the emitters the actual output (re-read from the
+ * AASX package in that case). L2 and L3 run on `emitted`; L4 runs on the draft with the same
+ * injected `asOf`; L1's findings are carried through so L4 can hide rejected values.
  */
-export function validate(
-  input: unknown,
+export function assembleReport(
+  l1: SchemaResult & { draft: PassportDraft },
+  emitted: unknown,
   options: ValidateOptions = {},
-): ValidationReport & { aasJson?: string } {
-  const l1 = validateSchema(input);
-  if (!l1.draft) return buildReport(l1.findings, { L1: true, L2: false, L3: false, L4: false });
-
-  const jsonable = environmentToJsonable(buildEnvironment(l1.draft, options));
-  const rest = validateEnvironmentJson(jsonable);
+): ValidationReport {
+  const rest = validateEnvironmentJson(emitted);
   const runL4 = options.skipPlausibility !== true;
   const l4 = runL4
     ? validatePlausibility(l1.draft, {
@@ -41,11 +41,26 @@ export function validate(
         l1Findings: l1.findings,
       }).findings
     : [];
-  const report = buildReport([...l1.findings, ...rest.findings, ...l4], {
+  return buildReport([...l1.findings, ...rest.findings, ...l4], {
     L1: true,
     L2: true,
     L3: true,
     L4: runL4,
   });
+}
+
+/**
+ * L1 on the draft; if it is structurally sound, emit the AAS JSON in memory and run L2, L3 and
+ * L4 through `assembleReport`. The verdict therefore always reflects the emitted output
+ * (BUILD_PLAN 2.4) and is the same verdict `emitAasJson` / `emitAasx` return for the draft.
+ */
+export function validate(
+  input: unknown,
+  options: ValidateOptions = {},
+): ValidationReport & { aasJson?: string } {
+  const l1 = validateSchema(input);
+  if (!l1.draft) return buildReport(l1.findings, { L1: true, L2: false, L3: false, L4: false });
+  const jsonable = environmentToJsonable(buildEnvironment(l1.draft, options));
+  const report = assembleReport({ ...l1, draft: l1.draft }, jsonable, options);
   return { ...report, aasJson: canonicalJson(jsonable) };
 }
