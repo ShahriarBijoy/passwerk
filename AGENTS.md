@@ -127,4 +127,7 @@ so no build is needed before `pnpm test`.
   battery types, citing Article 77(1) only (ADR D-022). `explainAttribute` and `explainRule`
   join the knowledge base without composing a single new claim. Where IDTA and the Commission
   disagree, the template wins the file and the guidance wins the advice (ADR D-023).
-- **Next: Phase 6.** MCP server, agent skill and CLI.
+- **Next: Phase 5b (ADR D-024).** Hardening before any agent surface: issues #9 to #15 (mapping
+  safety, verdict integrity, ingest bounds), a held-out evaluation on public datasheets and a
+  `verify: true` review sheet. Then a minimal Phase 7a web workflow, then Phase 6 (MCP server,
+  agent skill, CLI).

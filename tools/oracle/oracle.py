@@ -107,7 +107,7 @@ def render_badge(rows: list[dict]) -> dict:
     total = len(rows)
     return {
         "schemaVersion": 1,
-        "label": "AAS conformance",
+        "label": "AAS L2 oracle parity",
         "message": f"{passed}/{total}",
         "color": "brightgreen" if passed == total and total > 0 else "red",
     }
