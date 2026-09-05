@@ -53,6 +53,17 @@ describe('validateValue', () => {
     expect(validateValue('criticalRawMaterials', '0.name', 'Lithium').ok).toBe(false);
   });
 
+  it('rejects an unparsable measured-at timestamp, and accepts a real one', () => {
+    expect(validateValue('stateOfCharge', undefined, '80', '2026-09-04T10:00')).toEqual({
+      ok: true,
+    });
+    const r = validateValue('stateOfCharge', undefined, '80', 'gestern');
+    expect(r.ok).toBe(false);
+    if (r.ok) throw new Error('expected a failure');
+    expect(r.message.de).toBe('Ungültiger Zeitpunkt');
+    expect(r.message.en).toBe('Invalid timestamp');
+  });
+
   it('passes an unknown attribute through', () => {
     expect(validateValue('notAnAttribute', undefined, 'x')).toEqual({ ok: true });
   });

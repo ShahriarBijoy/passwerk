@@ -77,6 +77,8 @@ export const en: Record<keyof typeof de, string> = {
   'review.addValue.add': 'Add',
   'review.conflict': 'Conflict: existing {existing}, incoming {incoming}',
   'review.value.invalid': 'The value does not match the expected format for {attribute}: {reason}',
+  'review.recordedAt': 'Measured at',
+  'review.recordedAt.invalid': 'Invalid timestamp',
   'review.value.compositeWhole': 'Composite values are entered field by field; choose a sub-field.',
   'review.invalidDecision': 'This decision could not be applied: {reason}',
   'review.empty': 'No proposals for this filter.',

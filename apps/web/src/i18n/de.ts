@@ -78,6 +78,8 @@ export const de = {
   'review.conflict': 'Konflikt: vorhanden {existing}, neu {incoming}',
   'review.value.invalid':
     'Der Wert entspricht nicht dem erwarteten Format für {attribute}: {reason}',
+  'review.recordedAt': 'Messzeitpunkt',
+  'review.recordedAt.invalid': 'Ungültiger Zeitpunkt',
   'review.value.compositeWhole':
     'Zusammengesetzte Werte werden feldweise erfasst; bitte ein Teilfeld wählen.',
   'review.invalidDecision': 'Diese Entscheidung konnte nicht angewendet werden: {reason}',

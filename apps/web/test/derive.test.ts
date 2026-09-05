@@ -205,6 +205,33 @@ describe('derive', () => {
     expect(derive(b, AT)?.report.verdict).toBe('invalid');
   });
 
+  it('a reviewer-supplied recordedAt reaches the mapping and satisfies PW-PLAUS-011', () => {
+    const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
+    delete (draft.attributes as Record<string, unknown>)['stateOfCharge'];
+    const base = reduce(initialState, { type: 'importDraft', draft, at: AT });
+    const decision = { kind: 'manual', attributeId: 'stateOfCharge', value: '80' } as const;
+
+    const unstamped = reduce(base, { type: 'decide', decision, at: AT });
+    expect(derive(unstamped, AT)?.report.findings.map((f) => f.ruleId)).toContain('PW-PLAUS-011');
+
+    const stamped = reduce(base, {
+      type: 'decide',
+      decision: { ...decision, recordedAt: '2026-09-04T10:00:00.000Z' },
+      at: AT,
+    });
+    expect(decisionsToMappings(stamped)).toEqual([
+      {
+        attributeId: 'stateOfCharge',
+        value: '80',
+        recordedAt: '2026-09-04T10:00:00.000Z',
+        override: true,
+      },
+    ]);
+    const d = derive(stamped, AT);
+    expect(d?.draft.attributes['stateOfCharge']?.recordedAt).toBe('2026-09-04T10:00:00.000Z');
+    expect(d?.report.findings.map((f) => f.ruleId)).not.toContain('PW-PLAUS-011');
+  });
+
   it('an imported draft with a conflict field yields invalid', () => {
     const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
     const attrs = draft.attributes as Record<string, { status: string } | undefined>;

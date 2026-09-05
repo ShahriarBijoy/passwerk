@@ -1,8 +1,10 @@
 import type { BatteryCategory, MappingConflict, MappingProposal, Verdict } from '@passwerk/core';
+import { getAttribute } from '@passwerk/rules';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type LangText, type Language, pick, t } from '../i18n/index.ts';
 import type { InvalidDecision } from '../workflow/derive.ts';
@@ -45,7 +47,11 @@ function ProposalRow({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(p.value ?? ''));
   const [unit, setUnit] = useState(p.unit ?? '');
+  const [recordedAt, setRecordedAt] = useState('');
   const [error, setError] = useState<LangText | null>(null);
+  // A dynamic value is only meaningful with the moment it was measured (PW-PLAUS-011). The
+  // reviewer supplies it; the app never invents one from the clock.
+  const dynamic = getAttribute(group.attributeId)?.dynamic === true;
   const base = {
     attributeId: group.attributeId,
     ...(group.path !== undefined ? { path: group.path } : {}),
@@ -72,16 +78,36 @@ function ProposalRow({
             onChange={(e) => setUnit(e.target.value)}
             data-testid="edit-unit"
           />
+          {dynamic && (
+            <>
+              <Label htmlFor={`recorded-${p.factId}`}>{t(lang, 'review.recordedAt')}</Label>
+              <Input
+                className="w-56"
+                id={`recorded-${p.factId}`}
+                type="datetime-local"
+                value={recordedAt}
+                onChange={(e) => setRecordedAt(e.target.value)}
+                data-testid="edit-recorded-at"
+              />
+            </>
+          )}
           <Button
             size="sm"
             onClick={() => {
-              const check = validateValue(group.attributeId, group.path, value);
+              const stamp = recordedAt.trim() === '' ? undefined : recordedAt;
+              const check = validateValue(group.attributeId, group.path, value, stamp);
               if (!check.ok) {
                 setError(check.message);
                 return;
               }
               setError(null);
-              onDecide({ kind: 'edit', ...base, value, ...(unit ? { unit } : {}) });
+              onDecide({
+                kind: 'edit',
+                ...base,
+                value,
+                ...(unit ? { unit } : {}),
+                ...(stamp === undefined ? {} : { recordedAt: new Date(stamp).toISOString() }),
+              });
               setEditing(false);
             }}
           >

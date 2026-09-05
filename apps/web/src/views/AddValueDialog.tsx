@@ -1,4 +1,5 @@
 import type { BatteryCategory } from '@passwerk/core';
+import { getAttribute } from '@passwerk/rules';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,16 +37,21 @@ export function AddValueDialog({
   const [leaf, setLeaf] = useState('');
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('');
+  const [recordedAt, setRecordedAt] = useState('');
   const [error, setError] = useState<LangText | null>(null);
   const choices = attributeChoices(category);
   const leaves = attributeId ? compositeLeaves(attributeId) : [];
+  // A dynamic value is only meaningful with the moment it was measured (PW-PLAUS-011). The
+  // reviewer supplies it; the app never invents one from the clock.
+  const dynamic = attributeId !== '' && getAttribute(attributeId)?.dynamic === true;
 
   const submit = () => {
     // A composite is only ever entered through one of its sub-fields, so the leaf is required
     // whenever the attribute has any: there is no "whole value" to type.
     if (!attributeId || !value.trim() || (leaves.length > 0 && leaf === '')) return;
     const path = leaf === '' ? undefined : leaf;
-    const check = validateValue(attributeId, path, value.trim());
+    const stamp = recordedAt.trim() === '' ? undefined : recordedAt;
+    const check = validateValue(attributeId, path, value.trim(), stamp);
     if (!check.ok) {
       setError(check.message);
       return;
@@ -57,10 +63,12 @@ export function AddValueDialog({
       ...(path !== undefined ? { path } : {}),
       value: value.trim(),
       ...(unit.trim() ? { unit: unit.trim() } : {}),
+      ...(stamp === undefined ? {} : { recordedAt: new Date(stamp).toISOString() }),
     });
     setOpen(false);
     setValue('');
     setUnit('');
+    setRecordedAt('');
   };
 
   return (
@@ -81,6 +89,7 @@ export function AddValueDialog({
             onValueChange={(v) => {
               setAttributeId(v);
               setLeaf(compositeLeaves(v)[0] ?? '');
+              setRecordedAt('');
             }}
           >
             <SelectTrigger data-testid="add-attribute">
@@ -123,6 +132,17 @@ export function AddValueDialog({
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
           />
+          {dynamic && (
+            <>
+              <Label>{t(lang, 'review.recordedAt')}</Label>
+              <Input
+                data-testid="add-recorded-at"
+                type="datetime-local"
+                value={recordedAt}
+                onChange={(e) => setRecordedAt(e.target.value)}
+              />
+            </>
+          )}
           {error && (
             <p className="text-destructive text-sm" data-testid="value-error">
               {pick(lang, error)}

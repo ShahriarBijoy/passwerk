@@ -34,6 +34,7 @@ function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
       ...path,
       value: d.value,
       ...(d.unit ? { unit: d.unit } : {}),
+      ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
       override: true,
     };
   }
@@ -48,6 +49,7 @@ function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
     ...path,
     value,
     ...(unit ? { unit } : {}),
+    ...(d.kind === 'edit' && d.recordedAt ? { recordedAt: d.recordedAt } : {}),
     source: p.source,
     confidence: p.confidence,
     override: true,

@@ -43,6 +43,30 @@ describe('AddValueDialog', () => {
     });
   });
 
+  it('asks for a measured-at timestamp on a dynamic attribute only', () => {
+    const onAdd = vi.fn();
+    const { unmount } = mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('ratedCapacity');
+    expect(screen.queryByTestId('add-recorded-at')).toBeNull();
+    unmount();
+
+    mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('stateOfCharge');
+    const field = screen.getByTestId('add-recorded-at');
+    expect(field.getAttribute('type')).toBe('datetime-local');
+    fireEvent.change(screen.getByTestId('add-value-input'), { target: { value: '80' } });
+    fireEvent.change(field, { target: { value: '2026-09-04T10:00' } });
+    fireEvent.click(screen.getByTestId('add-submit'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'stateOfCharge',
+      value: '80',
+      recordedAt: new Date('2026-09-04T10:00').toISOString(),
+    });
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);

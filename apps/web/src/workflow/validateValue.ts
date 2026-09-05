@@ -27,12 +27,26 @@ const reasonOf = (issues: { message: string }[]): string => issues.map((i) => i.
  * (`checkLeaf` leaves its shape to L1), which means a raw string sails past `applyMappings`
  * and only blows up later inside `validate`. So the whole value is refused here, and a leaf
  * is checked against the schema its dotted path resolves to.
+ *
+ * `recordedAt` is the reviewer's LastUpdate for a dynamic value, as the browser's
+ * `datetime-local` input spells it. Only its parsability is checked; whether the instant is
+ * plausible is L4's call (PW-PLAUS-011).
  */
 export function validateValue(
   attributeId: string,
   path: string | undefined,
   value: string,
+  recordedAt?: string,
 ): ValueCheck {
+  if (recordedAt !== undefined && Number.isNaN(new Date(recordedAt).getTime())) {
+    return {
+      ok: false,
+      message: {
+        de: t('de', 'review.recordedAt.invalid'),
+        en: t('en', 'review.recordedAt.invalid'),
+      },
+    };
+  }
   const attribute = getAttribute(attributeId);
   if (!attribute) return OK;
   if (attribute.valueKind === 'composite') {

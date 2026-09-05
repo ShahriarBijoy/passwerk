@@ -35,8 +35,18 @@ export type Decision =
       factId: string;
       value: string;
       unit?: string;
+      /** ISO-8601. The reviewer's LastUpdate for a dynamic value; never synthesised. */
+      recordedAt?: string;
     }
-  | { kind: 'manual'; attributeId: string; path?: string; value: string; unit?: string };
+  | {
+      kind: 'manual';
+      attributeId: string;
+      path?: string;
+      value: string;
+      unit?: string;
+      /** ISO-8601. The reviewer's LastUpdate for a dynamic value; never synthesised. */
+      recordedAt?: string;
+    };
 
 export interface WorkflowState {
   version: typeof STATE_VERSION;
