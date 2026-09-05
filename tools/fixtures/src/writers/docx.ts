@@ -6,7 +6,12 @@ const p = (text: string) => `<w:p><w:r><w:t xml:space="preserve">${esc(text)}</w
 const tbl = (rows: string[][]) =>
   `<w:tbl>${rows.map((r) => `<w:tr>${r.map((c) => `<w:tc>${p(c)}</w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`;
 
-export function writeDocx(paragraphs: string[], table: string[][]): Uint8Array {
+/** `trailer` defaults to the Musterwerk closing line; pass `null` for none. */
+export function writeDocx(
+  paragraphs: string[],
+  table: string[][],
+  trailer: string | null = 'Ende der Übergabedokumentation.',
+): Uint8Array {
   const enc = (s: string) => new TextEncoder().encode(s);
   const files: Record<string, Uint8Array> = {
     '[Content_Types].xml': enc(
@@ -16,7 +21,7 @@ export function writeDocx(paragraphs: string[], table: string[][]): Uint8Array {
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
     ),
     'word/document.xml': enc(
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs.map(p).join('')}${tbl(table)}${p('Ende der Übergabedokumentation.')}</w:body></w:document>`,
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs.map(p).join('')}${tbl(table)}${trailer === null ? '' : p(trailer)}</w:body></w:document>`,
     ),
   };
   const ordered: Record<string, [Uint8Array, { mtime: Date; level: 6 }]> = {};

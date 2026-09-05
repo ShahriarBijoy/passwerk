@@ -512,3 +512,35 @@ elsewhere in the sheet; the Phase 4 edge-case test was updated accordingly. The 
 fixtures have no empty rows or columns inside their used range, so their provenance and
 extraction results are unchanged. Phase 7a should still parse in a worker with cancellation;
 that complements the limits, it does not replace them.
+
+## D-028: Mapping quality is measured on transcribed public datasheets; flagged KB entries get a review sheet (2026-09-05)
+
+**Context.** D-024 asked for a held-out evaluation and for an expert review of the `verify: true`
+knowledge-base entries. Redistributing manufacturers' PDFs in the repository is not acceptable,
+downloading them in CI is fragile, and inventing "realistic" supplier documents would repeat the
+Musterwerk problem (the same hands wrote the documents and the synonym index).
+
+**Decision.** `tools/fixtures/src/heldout` holds label wording and values transcribed **verbatim**
+from six public datasheets (an LFP cell specification, a home-storage system, a German commercial
+storage datasheet, a German all-in-one home storage datasheet, a commercial-vehicle battery web
+page and a retailer listing of an e-bike battery), each with URL, version and access date, and
+re-typesets them with the existing writers into the layouts a Tier-2 supplier sends (CSV export,
+spreadsheet, PDF, Word table, plain text). Deviations from the printed text are listed per source.
+`pnpm heldout` regenerates the documents, the manifest (`packages/core/test/fixtures/heldout/
+expected.json`) and `docs/EVALUATION.md`; a test fails when any of them is stale. The scorer
+counts, at confidence >= 0.7, **Accept** (attribute, value and unit as expected), **Edit** (right
+attribute, wrong value or unit), **Reject** (a confident proposal nobody expected) and **Manual**
+(nothing proposed); recall = Accept / Expected, precision = Accept / proposals, effort = Edit +
+Reject + Manual. The same scorer runs over the Musterwerk fixtures for comparison. The knowledge
+base is not tuned against this set; a change made in response to it must be recorded in the
+report. `pnpm review-sheet` renders `docs/KB_REVIEW.md`: every attribute with `verify: true`,
+the joins the author made (DIN row, Commission data point, template element and semanticId,
+legal references, applicability) and an empty decision block per entry. It contains no new
+claims; decisions are recorded in the JSON and the sheet regenerated.
+
+**Consequences.** The first run reports 15 of 35 expected mappings accepted, 2 edits, 4 rejects
+and 18 manual entries (recall 42.9 %, precision 71.4 %) against 94.1 % / 100 % on Musterwerk.
+The detail table names each gap (colon-less German datasheet lines, "≥ 96 %" and "bis zu 98 %"
+bounds, tolerances such as "5490g±300g", `Items / Standards / Remarks` spec tables, and a
+`cut-off voltage` synonym that fires for both voltage limits). Those are Phase 7a and knowledge-
+base work items, to be fixed with the numbers re-run, not by editing the expectations.

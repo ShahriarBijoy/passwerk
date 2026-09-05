@@ -51,6 +51,8 @@ pnpm lint:fix           # biome check --write
 pnpm typecheck          # tsc -b plus typecheck of test files
 pnpm check              # lint + typecheck + test. Run before every commit
 pnpm oracle             # emit golden passports and replay them through aas-test-engines (needs uv)
+pnpm heldout            # regenerate the held-out documents and docs/EVALUATION.md (after pnpm build)
+pnpm review-sheet       # regenerate docs/KB_REVIEW.md (every verify: true knowledge-base entry)
 ```
 
 Tests import workspace packages by name (`@passwerk/core`). Vitest aliases them to `src/`,

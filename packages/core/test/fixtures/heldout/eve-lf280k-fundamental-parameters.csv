@@ -1,0 +1,11 @@
+Items;Standards;Remarks
+Min. Capacity;280Ah;0.5P, 25±2℃, 2.5-3.65V
+Min. Energy;896Wh;0.5P, 25±2℃, 2.5-3.65V
+Initial IR;≤0.25mΩ;AC, 1kHz, 40%SOC
+Nominal Voltage;3.2V;0.5P, 2.5~3.65V
+Weight;5490g±300g;
+Charging Cut-off Voltage;3.65V;
+Discharging Cut-off Voltage;2.5V (T >0℃);
+Standard Charging Power;448W;0.5P
+Standard Discharging Power;448W;0.5P
+25℃ Standard Cycle;6000 Cycles;Under 300kgf±20kgf clamping force, 25℃±2℃ 0.5P/0.5P, 2.5~3.65V, Energy retention≥80%.

@@ -85,6 +85,9 @@ importers:
 
   tools/fixtures:
     devDependencies:
+      '@passwerk/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       fflate:
         specifier: 0.8.3
         version: 0.8.3

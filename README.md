@@ -39,8 +39,11 @@ attribute, an obligations decision tree, and DE/EN explanations for every attrib
 are implemented. Every emitted golden passport is replayed through the official
 `aas-test-engines` on every CI run with 16/16 L2 verdict parity, four of them expected failures
 both sides reject (`docs/CONFORMANCE.md`), and a
-sovereignty test plus a `--network none` Docker job prove zero network calls. Next: Phase 5b
-hardening (ADR D-024), then a minimal web workflow, then the MCP server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
+sovereignty test plus a `--network none` Docker job prove zero network calls. Mapping quality on
+unseen supplier documents is measured, not asserted: `docs/EVALUATION.md` scores the pipeline on
+six documents transcribed from public datasheets (recall, precision and correction effort next to
+the authored-fixture gate). Next: Phase 5b hardening (ADR D-024), then a minimal web workflow, then
+the MCP server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 

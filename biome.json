@@ -12,7 +12,8 @@
       "!**/coverage",
       "!pnpm-lock.yaml",
       "!packages/rules/artefacts",
-      "!packages/rules/kb/generated"
+      "!packages/rules/kb/generated",
+      "!packages/core/test/fixtures/heldout/expected.json"
     ]
   },
   "formatter": {

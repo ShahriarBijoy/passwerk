@@ -1,0 +1,14 @@
+Standard Battery Pro 40
+Dimensions (L x W x H)  960 x 687 x 302 mm
+Dry weight  297 kg
+Installed energy  ~ 40 kWh
+Nominal capacity  116 Ah
+Voltage range  333 - 407 V
+Energy density  ~ 232 Wh/l, > 135 Wh/kg
+Continuous power (CH / DCH) (@25 °C, SoC dependent)  45 / 55 kW
+Peak power (CH / DCH) (10 s, @25 °C, SoC dependent)  60 / 112 kW
+Lifetime (DoD, temperature and C-rate dependent)  Up to 3,000 cycles
+Volume flow  10 l/min
+Pressure loss  < 50 mbar
+Cell type  prismatic NMC
+Operating temperature  -30 °C to +55 °C
