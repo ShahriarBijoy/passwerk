@@ -2,9 +2,11 @@
 import './audit.js';
 import './emit.js';
 import './gaps.js';
+import './obligations.js';
+import './tools.js';
 import { registerCommand } from '../program.js';
 
-const PENDING = ['extract', 'obligations', 'tools', 'chat'] as const;
+const PENDING = ['extract', 'chat'] as const;
 
 for (const name of PENDING) {
   registerCommand((program) => {
