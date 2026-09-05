@@ -50,6 +50,16 @@ beforeAll(async () => {
   });
 }, 60_000);
 
+/** `ev-valid` with a raw string where core expects a list of materials. */
+function brokenBase(): PassportDraft {
+  const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
+  const attributes = draft.attributes as Record<string, { value: unknown }>;
+  const field = attributes['criticalRawMaterials'];
+  if (!field) throw new Error('ev-valid should carry criticalRawMaterials');
+  field.value = 'lithium, cobalt';
+  return draft;
+}
+
 describe('derive', () => {
   it('returns null without a base draft', () => {
     expect(derive(initialState, AT)).toBeNull();
@@ -193,6 +203,34 @@ describe('derive', () => {
     expect(d?.draft.attributes['batteryChemistry']?.value).toEqual({
       clearName: 'Lithium nickel manganese cobalt oxide',
     });
+    expect(d?.report.verdict).toBe('invalid');
+  });
+
+  it('an imported base draft that core cannot validate is reported, not thrown', () => {
+    // A whole-composite string reaches `importDraftJson` because L1 still returns a draft
+    // alongside its PW-L1-VALUE error, and `importDraft` clears the decisions, so there is no
+    // decision to blame: the base alone makes `validate` throw.
+    const s = reduce(initialState, { type: 'importDraft', draft: brokenBase(), at: AT });
+    const d = derive(s, AT);
+    expect(d?.report.verdict).toBe('invalid');
+    expect(d?.report.findings.filter((f) => f.layer === 'L1').length).toBeGreaterThan(0);
+    expect(d?.report.layers.L1.ran).toBe(true);
+    expect(d?.report.layers.L2.ran).toBe(false);
+    expect(d?.report.layers.L3.ran).toBe(false);
+    expect(d?.report.layers.L4.ran).toBe(false);
+  });
+
+  it('decisions still apply on top of a base draft core cannot validate', () => {
+    const base = reduce(initialState, { type: 'importDraft', draft: brokenBase(), at: AT });
+    const s = reduce(base, {
+      type: 'decide',
+      decision: { kind: 'manual', attributeId: 'ratedCapacity', value: '99.9', unit: 'Ah' },
+      at: AT,
+    });
+    const d = derive(s, AT);
+    // The base is what validation trips over, so a clean decision is not blamed for it.
+    expect(d?.invalidDecisions).toEqual([]);
+    expect(d?.draft.attributes['ratedCapacity']?.value).toBe('99.9');
     expect(d?.report.verdict).toBe('invalid');
   });
 

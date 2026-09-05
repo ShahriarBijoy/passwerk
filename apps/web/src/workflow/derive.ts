@@ -1,5 +1,7 @@
 import {
+  type ApplyResult,
   applyMappings,
+  buildReport,
   type GapReport,
   gapReport,
   type MappingConflict,
@@ -7,6 +9,7 @@ import {
   type PassportDraft,
   type ValidationReport,
   validate,
+  validateSchema,
 } from '@passwerk/core';
 import type { Decision, DecisionKey, WorkflowState } from './state.ts';
 
@@ -87,34 +90,81 @@ function messageOf(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-/** Fold the decisions one at a time, validating after each, and set aside the ones that fail. */
+type Attempt<T> = { ok: true; value: T } | { ok: false; message: string };
+
+function tryApply(draft: PassportDraft, mapping: MappingDecision): Attempt<ApplyResult> {
+  try {
+    return { ok: true, value: applyMappings(draft, [mapping]) };
+  } catch (e) {
+    return { ok: false, message: messageOf(e) };
+  }
+}
+
+function tryValidate(draft: PassportDraft, asOf: string): Attempt<ValidationReport> {
+  try {
+    return { ok: true, value: validate(draft, { asOf }) };
+  } catch (e) {
+    return { ok: false, message: messageOf(e) };
+  }
+}
+
+/**
+ * What core's L1 alone can say about a draft the full validator cannot walk. L1 is a plain
+ * schema pass and still returns its findings for such a draft (that is how one gets imported
+ * in the first place: `validateSchema` reports a PW-L1-VALUE error and hands the draft back).
+ * Nothing is invented and no layer is claimed to have run that did not, so the verdict is
+ * whatever L1's own findings make it: `invalid`, because a value-level error is an error.
+ */
+function l1Only(draft: PassportDraft): ValidationReport {
+  return buildReport(validateSchema(draft).findings, {
+    L1: true,
+    L2: false,
+    L3: false,
+    L4: false,
+  });
+}
+
+/**
+ * Fold the decisions one at a time, validating after each, and set aside the ones that fail.
+ *
+ * The base draft itself may be one core cannot validate: an imported draft carrying a value of
+ * the wrong shape arrives with its decisions cleared, so there is no decision to blame. When
+ * that is so, a later validation failure is not attributed to the decision that happened to be
+ * applied at the time, and the report falls back to L1 alone.
+ */
 function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   let draft = base;
-  let report = validate(base, { asOf });
+  const seed = tryValidate(base, asOf);
+  const baseValidates = seed.ok;
+  let report: ValidationReport | null = seed.ok ? seed.value : null;
   const conflicts: MappingConflict[] = [];
   const invalidDecisions: InvalidDecision[] = [];
   for (const entry of entries) {
-    try {
-      const r = applyMappings(draft, [entry.mapping]);
-      // Validate before keeping the draft: a whole-composite value passes `applyMappings`
-      // (its shape is L1's business) and only throws once a validator walks it.
-      const next = validate(r.draft, { asOf });
-      draft = r.draft;
-      report = next;
-      conflicts.push(...r.conflicts);
-    } catch (e) {
-      invalidDecisions.push({ key: entry.key, message: messageOf(e) });
+    const applied = tryApply(draft, entry.mapping);
+    if (!applied.ok) {
+      invalidDecisions.push({ key: entry.key, message: applied.message });
+      continue;
     }
+    // Validate before keeping the draft: a whole-composite value passes `applyMappings`
+    // (its shape is L1's business) and only throws once a validator walks it.
+    const next = tryValidate(applied.value.draft, asOf);
+    if (!next.ok && baseValidates) {
+      invalidDecisions.push({ key: entry.key, message: next.message });
+      continue;
+    }
+    draft = applied.value.draft;
+    if (next.ok) report = next.value;
+    conflicts.push(...applied.value.conflicts);
   }
-  return { draft, conflicts, invalidDecisions, report };
+  return { draft, conflicts, invalidDecisions, report: report ?? l1Only(draft) };
 }
 
 /**
  * `applyMappings` throws on a value its attribute's schema rejects and `validate` throws on a
- * composite whose shape is wrong, and `derive` runs during render, so an unchecked decision
- * would take the whole page down (and it is already autosaved). The happy path is one batch
- * apply and one validate; only when that pair throws does the fold above isolate the offending
- * decisions and keep the rest.
+ * composite whose shape is wrong, and `derive` runs during render, so neither an unchecked
+ * decision nor an imported draft would take the whole page down (and both are autosaved). The
+ * happy path is one batch apply and one validate; only when that pair throws does the fold
+ * above isolate the offending decisions and keep the rest.
  */
 function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   try {
