@@ -6,17 +6,20 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import manifestJson from '../artefacts/manifest.json' with { type: 'json' };
+import committedSammJson from '../kb/generated/batterypass-samm.json' with { type: 'json' };
 import committedLonglistJson from '../kb/generated/din-longlist.json' with { type: 'json' };
 import committedCatalogueJson from '../kb/generated/template-catalogue.json' with { type: 'json' };
 import { buildCatalogue, type TemplateCatalogue } from '../scripts/lib/catalogue.ts';
 import { extractLonglist, type Longlist } from '../scripts/lib/longlist.ts';
 import { renderProvenance } from '../scripts/lib/provenance.ts';
-import { LONGLIST_FILE, loadTemplateInputs } from '../scripts/lib/sources.ts';
+import { extractSammModel, type SammModel } from '../scripts/lib/samm.ts';
+import { LONGLIST_FILE, loadSammInputs, loadTemplateInputs } from '../scripts/lib/sources.ts';
 import type { ArtefactManifest } from '../src/types.ts';
 
 const pkg = resolve(import.meta.dirname, '..');
 const committedCatalogue = committedCatalogueJson as unknown as TemplateCatalogue;
 const committedLonglist = committedLonglistJson as unknown as Longlist;
+const committedSamm = committedSammJson as unknown as SammModel;
 
 describe('kb/generated', () => {
   it('template-catalogue.json is up to date and covers 7 templates / 211 elements', async () => {
@@ -56,6 +59,25 @@ describe('kb/generated', () => {
     expect(fresh.rows).toHaveLength(93);
     expect(fresh.rows.map((r) => r.no)).toEqual(Array.from({ length: 93 }, (_, i) => i + 1));
     expect(JSON.parse(JSON.stringify(fresh))).toEqual(committedLonglist);
+  });
+
+  it('batterypass-samm.json is up to date and covers the 7 Battery Pass aspect models', async () => {
+    const fresh = extractSammModel(await loadSammInputs(pkg));
+    expect(fresh.sections.map((s) => `${s.key}@${s.version}`)).toEqual([
+      'CarbonFootprint@1.2.0',
+      'Circularity@1.2.0',
+      'GeneralProductInformation@1.2.0',
+      'Labels@1.2.0',
+      'MaterialComposition@1.2.0',
+      'Performance@1.2.1',
+      'SupplyChainDueDiligence@1.2.0',
+    ]);
+    expect(fresh.sections.reduce((n, s) => n + s.propertyCount, 0)).toBe(144);
+    for (const s of fresh.sections) {
+      expect(s.namespace, s.key).toBe(`urn:samm:io.BatteryPass.${s.key}:${s.version}#`);
+      for (const p of s.properties) expect(p.paths.length, `${s.key}#${p.name}`).toBeGreaterThan(0);
+    }
+    expect(JSON.parse(JSON.stringify(fresh))).toEqual(committedSamm);
   });
 
   it('PROVENANCE.md is rendered from the manifest', () => {

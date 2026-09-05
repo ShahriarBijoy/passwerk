@@ -11,10 +11,12 @@ typed accessors; no filesystem, no network, no model calls. Runs in Node and in 
 | `artefacts/aas/{3.0.9,3.1.2}/aas.json` | AAS metamodel JSON Schemas | admin-shell-io/aas-specs, tagged releases, CC-BY-4.0 |
 | `artefacts/ec/` | Commission guidance "Digital Batteries Passport: data points by category" v2.0 (PDF) | European Commission, CC-BY-4.0 |
 | `artefacts/batterypass/` | Battery Pass Data Attribute Longlist v1.2 (xlsx) | Battery Pass consortium, CC-BY-4.0 |
+| `artefacts/batterypass/samm/` | Battery Pass Data Model aspect models v1.2.0 / 1.2.1 (SAMM Turtle, seven files) | batterypass/BatteryPassDataModel, pinned commit, CC-BY-4.0 |
 | `artefacts/manifest.json` | Source URL, version, sha256 and size of every artefact | maintained by `pnpm artefacts:write` |
 | `kb/ec-datapoints.json` | The 71 Commission data points with legal reference and per-category applicability | transcribed from the PDF above |
 | `kb/generated/template-catalogue.json` | Every template element (211) with path, semanticId, cardinality, value type, unit, DIN chapter | generated from the templates |
 | `kb/generated/din-longlist.json` | The 93 DIN DKE SPEC 99100 attributes with chapter, applicability, unit, format, access rights | generated from the xlsx |
+| `kb/generated/batterypass-samm.json` | The 144 Battery Pass SAMM properties with description, DIN chapter, data type, unit, enumeration values and range; dev-time cross-check only (ADR D-030) | generated from the Turtle files |
 | `kb/attributes/*.json` | 93 authored attributes: DE/EN names, synonyms, who-has-it, explanations, mapping to EC data points and template elements | authored, human-reviewed |
 | `kb/rules.json` | Plausibility rules `PW-PLAUS-*` (validation layer L4), DE/EN | authored |
 | `kb/timeline.json` | Legal dates with article references and status | verified against the consolidated regulation |

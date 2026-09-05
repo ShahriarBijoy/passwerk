@@ -574,3 +574,28 @@ clock from one module that honours `window.__passwerkClock` so Playwright and th
 agree on `asOf`. CI gains an Ubuntu Playwright job with a cached Chromium (about four billed
 minutes). The project screen, extracted-facts screen, HTML sheet, QR and bring-your-own-key
 mode remain for the rest of Phase 7a and Phase 7.
+
+## D-030: The Battery Pass SAMM model is a dev-time cross-check, not a runtime source (2026-09-05)
+
+**Context.** The Battery Pass consortium publishes its data model as SAMM aspect models
+(`batterypass/BatteryPassDataModel`, CC-BY-4.0, seven Turtle files). The knowledge base was
+authored from the consortium's attribute longlist at the same pinned commit; the aspect models
+add, per property, a data type, unit, enumeration values and range constraints, and most
+descriptions cite the DIN DKE SPEC 99100 chapter. IDTA derived its 02035 semanticIds from this
+model, so property names line up. The repository calls itself a draft and ships English only.
+
+**Decision.** Pin the newest version of each aspect model at the already-pinned commit
+(1.2.0, Performance 1.2.1) and generate `kb/generated/batterypass-samm.json` from them with
+`n3`. A pure cross-check joins every attribute to the SAMM properties by DIN chapter and by the
+local name of its IDTA semanticId, and reports unit, data type, enumeration and range
+disagreements in `docs/KB_REVIEW.md`. A `din` join, or a `name` join into a single template
+element, yields a mismatch; a `name` join into one of several elements or into a composite
+yields a note. The runtime never loads the SAMM index; IDTA 02035 stays the only emit target and
+the authored knowledge base stays the source of truth. Built-in SAMM characteristics without a
+declared data type in the file (Text, Timestamp, Boolean, ...) are not compared, so nothing is
+inferred from the meta-model.
+
+**Consequences.** Seven more bundled artefacts (31 of 38) and one more generated file that a
+test keeps fresh. The review sheet gains a cross-check section and two rows per flagged entry.
+Findings are review prompts: a reviewer resolves each one in the JSON, never the script. When
+the consortium re-releases, `pnpm artefacts:write` and `pnpm generate` re-pin and re-derive.
