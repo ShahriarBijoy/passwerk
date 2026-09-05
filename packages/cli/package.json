@@ -1,10 +1,12 @@
 {
   "name": "@passwerk/cli",
   "version": "0.0.0",
-  "description": "Scriptable passwerk command-line interface (audit, extract, emit, obligations)",
+  "description": "The passwerk command line: audit, extract, emit, gaps, obligations, tools and the chat demo",
   "license": "Apache-2.0",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/bin.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,10 +22,18 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "sync-skill": "node scripts/sync-skill.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.123.0",
     "@passwerk/core": "workspace:*",
-    "@passwerk/rules": "workspace:*"
+    "@passwerk/rules": "workspace:*",
+    "@passwerk/server": "workspace:*",
+    "commander": "15.0.0",
+    "zod": "4.5.4"
+  },
+  "bin": {
+    "passwerk": "./dist/bin.js"
   }
 }
