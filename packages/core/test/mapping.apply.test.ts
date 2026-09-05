@@ -150,11 +150,22 @@ describe('applyMappings', () => {
       ...src('line 2'),
       { file: 's.xlsx', cell: 'A1' },
     ]);
-    // A path decision that actually changes the sub-field still counts.
+    // A path decision that changes an already-set leaf is a conflict (#13), not an overwrite;
+    // only an explicit override counts as applied.
     const changed = applyMappings(twice.draft, [
       { attributeId: 'manufacturerInformation', path: 'name.de', value: 'Other GmbH' },
     ]);
-    expect(changed.applied).toBe(1);
+    expect(changed.applied).toBe(0);
+    expect(changed.conflicts).toHaveLength(1);
+    const overridden = applyMappings(twice.draft, [
+      {
+        attributeId: 'manufacturerInformation',
+        path: 'name.de',
+        value: 'Other GmbH',
+        override: true,
+      },
+    ]);
+    expect(overridden.applied).toBe(1);
   });
   it('rejects unknown attribute ids and values that fail the leaf schema', () => {
     expect(() => applyMappings(newDraft(meta), [{ attributeId: 'nope', value: 1 }])).toThrow(

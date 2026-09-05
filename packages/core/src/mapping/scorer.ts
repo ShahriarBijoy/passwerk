@@ -1,4 +1,4 @@
-import type { ValueKind } from '@passwerk/rules';
+import type { Attribute, ValueKind } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
 import { tokens } from '../extract/normalize.js';
 import type { Fact } from '../extract/types.js';
@@ -48,9 +48,25 @@ const TEXTUAL: ReadonlySet<ValueKind> = new Set([
   'composite',
 ]);
 
+type Range = Attribute['range'];
+
+/** The attribute's authored band (ADR D-021); `percentage` without one keeps 0..100. */
+function inBand(v: string, valueKind: ValueKind, range: Range): boolean {
+  const band = range ?? (valueKind === 'percentage' ? { min: 0, max: 100 } : null);
+  if (!band) return true;
+  const d = new Decimal(v);
+  return (band.min === null || d.gte(band.min)) && (band.max === null || d.lte(band.max));
+}
+
+/**
+ * Type compatibility of a fact with an attribute's value kind. Numeric kinds also check the
+ * knowledge-base `range` (issue #14): the same band `applyMappings` and L1 enforce, so a value
+ * the draft would accept is never scored as a type mismatch here.
+ */
 export function kindFactor(
   valueKind: ValueKind,
   fact: Fact,
+  range: Range = null,
 ): { factor: number; check: MappingChecks['kind'] } {
   if (valueKind === 'document' || valueKind === 'graphic') return { factor: 0, check: 'n/a' };
   if (TEXTUAL.has(valueKind)) return { factor: 1, check: 'n/a' };
@@ -58,17 +74,22 @@ export function kindFactor(
   let ok = false;
   switch (valueKind) {
     case 'decimal':
-      ok = (fact.kind === 'decimal' || fact.kind === 'integer') && isDecimalString(v);
+      ok =
+        (fact.kind === 'decimal' || fact.kind === 'integer') &&
+        isDecimalString(v) &&
+        inBand(v, valueKind, range);
       break;
     case 'integer':
-      ok = fact.kind === 'integer' || (isDecimalString(v) && new Decimal(v).isInteger());
+      ok =
+        (fact.kind === 'integer' || (isDecimalString(v) && new Decimal(v).isInteger())) &&
+        isDecimalString(v) &&
+        inBand(v, valueKind, range);
       break;
     case 'percentage':
       ok =
         (fact.kind === 'decimal' || fact.kind === 'integer') &&
         isDecimalString(v) &&
-        new Decimal(v).gte(0) &&
-        new Decimal(v).lte(100);
+        inBand(v, valueKind, range);
       break;
     case 'date':
       ok = fact.kind === 'date';

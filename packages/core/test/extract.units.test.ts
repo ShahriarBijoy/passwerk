@@ -71,5 +71,9 @@ describe('units', () => {
     expect(unitFromLabel('Kobalt rec. %')).toBe('%');
     expect(unitFromLabel('Rated capacity (Ah)')).toBe('Ah');
     expect(unitFromLabel('Hersteller')).toBeUndefined();
+    // The written unit is returned, not its canonical form: the caller converts exactly once.
+    expect(unitFromLabel('Batteriemasse [g]')).toBe('g');
+    expect(unitFromLabel('Kapazität (mAh)')).toBe('mAh');
+    expect(unitFromLabel('Bemerkung [frei]')).toBeUndefined();
   });
 });

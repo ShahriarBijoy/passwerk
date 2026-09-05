@@ -1,7 +1,7 @@
 import { type Attribute, attributes, type BatteryCategory } from '@passwerk/rules';
 import { integral } from '../emit/submodels/shared.js';
 import type { Fact, FactSet } from '../extract/types.js';
-import { valueSchemaForKind } from '../model/values.js';
+import { valueSchemaFor } from '../model/values.js';
 import { explainMatch, kindFactor, labelScore, unitFactor } from './scorer.js';
 import { type IndexEntry, synonymIndex } from './synonymIndex.js';
 import type { MappingChecks, MappingProposal } from './types.js';
@@ -19,8 +19,8 @@ export const COMPOSITE_ENTRY: Record<string, (fact: Fact) => { path: string; val
 
 /**
  * Shapes a fact's raw text into the value a proposal would carry, or `undefined` when the
- * shaped value fails the attribute's own value schema (`applyMappings` would otherwise throw
- * on acceptance) or, for `boolean`, when the fact was not itself extracted as a boolean.
+ * shaped value fails the attribute's own value schema including its knowledge-base range
+ * (`applyMappings` would otherwise throw on acceptance) or, for `boolean`, when the fact was not itself extracted as a boolean.
  * Exported for direct unit testing of value shapes the knowledge base does not yet exercise
  * end to end (no attribute is currently `boolean`).
  */
@@ -42,18 +42,16 @@ export function proposalValue(
       return fact.kind === 'boolean' ? { value: v === 'true' } : undefined;
     case 'integer': {
       const value = integral(v);
-      return valueSchemaForKind('integer').safeParse(value).success ? { value } : undefined;
+      return valueSchemaFor(attribute).safeParse(value).success ? { value } : undefined;
     }
     case 'multilingualText': {
       const value = { [fact.lang]: v };
-      return valueSchemaForKind('multilingualText').safeParse(value).success
-        ? { value }
-        : undefined;
+      return valueSchemaFor(attribute).safeParse(value).success ? { value } : undefined;
     }
     default:
-      return valueSchemaForKind(attribute.valueKind).safeParse(v).success
-        ? { value: v }
-        : undefined;
+      // The attribute's own schema, band included (ADR D-021, issue #14): what `applyMappings`
+      // accepts, a proposal must be allowed to carry.
+      return valueSchemaFor(attribute).safeParse(v).success ? { value: v } : undefined;
   }
 }
 
@@ -94,7 +92,7 @@ export function suggestMappings(facts: FactSet, options: SuggestOptions = {}): M
       const shaped = proposalValue(attribute, fact);
       if (!shaped) continue;
       const u = unitFactor(attribute.unit, fact);
-      const k = kindFactor(attribute.valueKind, fact);
+      const k = kindFactor(attribute.valueKind, fact, attribute.range);
       const confidence = round2(score * u.factor * k.factor);
       if (confidence < min) continue;
       const checks: MappingChecks = {
