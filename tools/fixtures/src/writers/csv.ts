@@ -23,3 +23,11 @@ export function writeCsv1252(rows: string[][]): Uint8Array {
   }
   return out;
 }
+
+/** Semicolon CSV in UTF-8 (no BOM) with LF endings, as exported by a non-German tool. */
+export function writeCsvUtf8(rows: string[][]): Uint8Array {
+  const text = rows
+    .map((r) => r.map((c) => (/[;"\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(';'))
+    .join('\n');
+  return new TextEncoder().encode(text);
+}

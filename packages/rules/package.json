@@ -27,7 +27,8 @@
     "artefacts": "tsx scripts/fetch.ts",
     "artefacts:write": "tsx scripts/fetch.ts --write",
     "artefacts:verify": "tsx scripts/fetch.ts --verify",
-    "generate": "tsx scripts/generate.ts"
+    "generate": "tsx scripts/generate.ts",
+    "review-sheet": "tsx scripts/review-sheet.ts"
   },
   "devDependencies": {
     "fflate": "0.7.5",
