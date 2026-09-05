@@ -419,6 +419,15 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - `explain_attribute`; PW-PLAUS rules to ~25 (sum-of-shares, ranges, date order, UID format, PCF present when required, mass consistency).
 - DoD: property tests for plausibility rules; gap report snapshot for each broken sample.
 
+### Phase 5b — Hardening, held-out evaluation, KB review sheet (D-024) (2–3 days)
+- Three small fix PRs closing the post-Phase-5 review: mapping safety (#10 unsafe composite paths, #13 same-leaf composite conflicts need `override`, #9 label unit factors, #14 KB `range` in proposals); verdict integrity (#11 unresolved conflicts are L1 errors, #12 one validation orchestrator shared by `validate` and both emitters, same `asOf`); ingest bounds (#15 sparse XLSX, OOXML decompression limits, structured limit-exceeded error).
+- Held-out evaluation: supplier documents assembled from public datasheets, authored without tuning the synonym index against them. Report precision at confidence ≥ 0.7 (incorrect high-confidence mappings), recall, and correction effort (accept / reject / edit actions to reach `valid`) next to the Musterwerk recall gate.
+- `verify: true` review sheet: one generated table of every flagged knowledge-base entry (DE/EN text, legal reference, source, reason for the flag) for a domain expert.
+- Conformance wording: badge and README name L2 oracle parity, including expected failures, never certification.
+- DoD: issues #9 to #15 closed with regression tests; `pnpm check` and `pnpm oracle` green; held-out numbers and the review sheet committed under `docs/`.
+
+**Order after D-024:** 5b → 7a (minimal upload → review → gaps → export workflow) → 6 → 7 → 7b → 7c → 8.
+
 ### Phase 6 — MCP server + skill + CLI (2–3 days)
 - Server: tools/resources/prompts per §5; stdio + Streamable HTTP (`PASSWERK_AUTH_TOKEN`), `/healthz`; payload logging off.
 - `ingest_documents` accepts inline bytes as well as paths; a session store keyed by `bundleId` / `draftId` (in-memory, per connection) so a later MCP App and the model see the same state (D-019). Tools accept an id or the full object.
@@ -430,7 +439,8 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - UID + GS1 Digital Link + QR; HTML passport sheet; Dockerfile (non-root, multi-arch), compose; `site/` static docs; README with GIF demo; publish `@passwerk/*` to npm; submit to the Official MCP Registry.
 - DoD: `npx -y @passwerk/server` works from a clean machine; registry listing live.
 
-### Phase 7a — Web app (D-006, D-019) (3–4 days)
+### Phase 7a — Web app (D-006, D-019, D-024: runs before Phase 6) (3–4 days)
+- First slice (D-024): upload, mapping review, gap report, export. Everything below completes the app afterwards.
 - `apps/web`: static Vite app bundling `@passwerk/core` (pdfjs `workerSrc` supplied, D-016). Screens: project (category, role, capacity, date → `check_obligations`), upload, extracted facts with provenance, mapping review (accept / reject / edit, conflicts), gap report grouped by data owner with legal refs, validate, export (AAS JSON, AASX, HTML sheet, gap report, QR).
 - Review, gap and export views are built as a shared component library so Phase 7b can reuse them unchanged.
 - Optional bring-your-own-key model call from the browser for semantic mapping (D-002 boundary).

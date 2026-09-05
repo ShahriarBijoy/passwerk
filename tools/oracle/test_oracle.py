@@ -93,7 +93,7 @@ class RenderTests(unittest.TestCase):
         rows = parity_rows(EXPECTED, RESULTS)
         self.assertEqual(
             render_badge(rows),
-            {"schemaVersion": 1, "label": "AAS conformance", "message": "2/2", "color": "brightgreen"},
+            {"schemaVersion": 1, "label": "AAS L2 oracle parity", "message": "2/2", "color": "brightgreen"},
         )
         rows[0]["parity"] = False
         self.assertEqual(render_badge(rows)["color"], "red")

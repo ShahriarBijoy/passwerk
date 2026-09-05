@@ -398,3 +398,36 @@ holds 24 rules.
 fictional values for data points the Commission says not to display); the part 5 emitter tests
 carry them as a test-only fixture instead. There is nothing to raise with IDTA on this point.
 L4 never reports a missing value, which keeps the layer boundary with the gap report clean.
+
+## D-024: Hardening and a minimal web workflow come before the MCP server (2026-09-05)
+
+**Context.** A post-Phase-5 review of `main` (issues #9 to #15) reproduced five P1 defects in
+the mapping and verdict layers: label units are canonicalised without their factor (#9), a
+composite `path` can reach `Object.prototype` (#10), a field in `conflict` still validates and
+exports `valid` (#11), the emitters compute their verdict from L1 to L3 while `validate` runs
+L4 (#12), and two documents that disagree on the same composite leaf silently pick the last
+value (#13). Two P2 findings follow: proposals ignore the knowledge-base `range` that D-021
+made authoritative (#14), and the XLSX reader expands a sparse sheet into a dense grid with no
+size bound (#15). Phase 6 would have exposed every one of these to agents over stdio and HTTP.
+Separately, the recall gate (32/34 on the Musterwerk fixtures) is measured on documents written
+by the same hands that wrote the synonym index, and the README described 16/16 L2 oracle parity
+as proven conformance.
+
+**Decision.** Phase 6 does not start until the P1 findings are closed. The build order after
+Phase 5 becomes: **Phase 5b** (hardening: three small fix PRs for #9/#10/#13/#14, #11/#12 and
+#15; a held-out evaluation on public supplier datasheets that reports precision at confidence
+>= 0.7, recall and correction effort next to the existing recall gate; a review sheet of every
+`verify: true` knowledge-base entry for a domain expert), then **Phase 7a** as a minimal web
+workflow (upload, review mappings, inspect gaps, export) so the primary product (D-019) is
+tested on real documents before any installation surface is built, then Phase 6 (MCP server,
+skill, CLI), Phase 7 (carrier, HTML sheet, release), Phase 7b (MCP App) and Phase 7c
+(packaging). The conformance badge and README name what CI proves: L2 verdict parity with
+`aas-test-engines` on the golden set, including the broken samples both sides reject. It is
+not certification of complete battery-passport compliance and is never worded as such.
+
+**Consequences.** Build plan section 7 gains Phase 5b and records the new order; D-019's
+build order is amended by this ADR. The Phase 6 definition of done (the `passwerk chat` demo
+script) moves with Phase 6. #13 reverses the documented "a `path` decision never conflicts"
+contract of `applyMappings`; that change is recorded next to the fix. The held-out set must be
+authored without tuning the synonym index against it, or its numbers are training-set numbers
+again. Oracle parity stays L2-only (D-012); #12 must not widen the comparison.

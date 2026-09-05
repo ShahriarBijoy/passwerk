@@ -2,7 +2,7 @@
 **Offline EU Battery Passport Compiler.**
 
 ![CI](https://github.com/ShahriarBijoy/passwerk/actions/workflows/ci.yml/badge.svg)
-![AAS conformance](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/conformance-badge.json)
+![AAS L2 oracle parity](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/conformance-badge.json)
 
 **The sovereign EU Battery Passport toolkit for AI agents.**
 
@@ -22,8 +22,11 @@ passport is roughly 90 data points scattered across a supplier's ERP, spreadshee
 Every commercial platform sells to OEMs and Tier-1s. passwerk is the on-ramp for the Tier-2
 and Mittelstand supplier who receives the data request and has no tooling to answer it.
 
-Conformance is proven, not claimed: every emitted passport is replayed through the official
-`aas-test-engines` oracle in CI, and a sovereignty test proves zero network calls.
+Every emitted golden passport is replayed through the official `aas-test-engines` oracle in
+CI, which checks the AAS 3.0 metamodel (passwerk's L2). The badge reports verdict parity with
+that oracle, expected failures included. It is not a certification of battery-passport
+compliance; template (L3) and plausibility (L4) checks are passwerk's own. A sovereignty test
+proves zero network calls.
 
 ## Status
 
@@ -34,9 +37,10 @@ validation L1 to L4, readers for PDF, XLSX, CSV, DOCX and TXT, fact extraction,
 confidence-scored mapping suggestions, a gap report with legal references and who-has-it per
 attribute, an obligations decision tree, and DE/EN explanations for every attribute and rule)
 are implemented. Every emitted golden passport is replayed through the official
-`aas-test-engines` on every CI run with 16/16 verdict parity (`docs/CONFORMANCE.md`), and a
-sovereignty test plus a `--network none` Docker job prove zero network calls. Next: the MCP
-server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
+`aas-test-engines` on every CI run with 16/16 L2 verdict parity, four of them expected failures
+both sides reject (`docs/CONFORMANCE.md`), and a
+sovereignty test plus a `--network none` Docker job prove zero network calls. Next: Phase 5b
+hardening (ADR D-024), then a minimal web workflow, then the MCP server, agent skill and CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 
