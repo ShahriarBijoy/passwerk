@@ -344,14 +344,29 @@ describe('PW-PLAUS-012 not-displayed data points (D-023)', () => {
     );
     expect(ruleIds(draft)).toContain('PW-PLAUS-012');
   });
-  it('stays quiet when the template makes the element mandatory', () => {
-    // remainingCapacity is not_displayed for EV but its IDTA 02035-5 block is cardinality One:
-    // omitting it would make L3 fail, so the supplier has no choice and we do not nag.
+  it('warns for remainingCapacity on EV: its IDTA 02035-5 block is ZeroToOne, so it can be left out', () => {
+    // Only the children inside the block (RemainingCapacityValue, LastUpdate) are cardinality
+    // One, and that is relative to the block, not to the submodel. The supplier has a choice.
     const draft = draftWith(
       { remainingCapacity: { value: '194', recordedAt: '2026-08-30T18:30:00Z' } },
       'EV',
     );
-    expect(ruleIds(draft)).not.toContain('PW-PLAUS-012');
+    expect(ruleIds(draft)).toContain('PW-PLAUS-012');
+  });
+});
+
+describe('templatePathIsForced walks the ancestor chain, not just the leaf', () => {
+  it('is true only when every collection from the submodel down to the leaf is mandatory', async () => {
+    const { templatePathIsForced } = await import('@passwerk/core');
+    // 5/StateOfCharge is One and StateOfChargeValue inside it is One: genuinely forced.
+    expect(templatePathIsForced('5/StateOfCharge/StateOfChargeValue')).toBe(true);
+    // 5/RemainingCapacity is ZeroToOne; its One-cardinality child is not forced by the template.
+    expect(templatePathIsForced('5/RemainingCapacity/RemainingCapacityValue')).toBe(false);
+    expect(templatePathIsForced('5/RemainingCapacity/LastUpdate')).toBe(false);
+  });
+  it('is false for a path the catalogue does not know', async () => {
+    const { templatePathIsForced } = await import('@passwerk/core');
+    expect(templatePathIsForced('5/NoSuchBlock/NoSuchLeaf')).toBe(false);
   });
 });
 

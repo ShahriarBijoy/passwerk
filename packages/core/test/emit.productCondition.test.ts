@@ -6,7 +6,45 @@ import { describe, expect, it } from 'vitest';
 type SMC = aas.types.SubmodelElementCollection;
 type SML = aas.types.SubmodelElementList;
 
-const ev = PassportDraft.parse(samples['ev-valid']);
+/**
+ * ev-valid no longer carries the four state-of-health blocks the Commission marks "not to be
+ * filled/displayed" for EV (PW-PLAUS-012 would warn). The emitter must still emit them for LMT
+ * and industrial passports, so this fixture re-adds them as test-only fields.
+ */
+const STATE_OF_HEALTH_FIELDS = {
+  remainingCapacity: {
+    value: '194',
+    unit: 'Ah',
+    status: 'present',
+    source: [{ file: 'bms-export.csv', cell: 'B2' }],
+    recordedAt: '2026-08-31T06:00:00Z',
+  },
+  remainingPowerCapability: {
+    value: { atSocPercent: '80', powerPercent: '98' },
+    unit: '%',
+    status: 'present',
+    source: [{ file: 'bms-export.csv', cell: 'B2' }],
+    recordedAt: '2026-09-02T21:45:00Z',
+  },
+  remainingRoundTripEnergyEfficiency: {
+    value: '95.5',
+    unit: '%',
+    status: 'present',
+    source: [{ file: 'bms-export.csv', cell: 'B2' }],
+    recordedAt: '2026-09-01T09:15:00Z',
+  },
+  evolutionOfSelfDischarge: {
+    value: '0',
+    unit: '%',
+    status: 'present',
+    source: [{ file: 'bms-export.csv', cell: 'B2' }],
+    recordedAt: '2026-09-02T21:45:00Z',
+  },
+} as const;
+const ev = PassportDraft.parse({
+  ...samples['ev-valid'],
+  attributes: { ...samples['ev-valid'].attributes, ...STATE_OF_HEALTH_FIELDS },
+});
 const sm = emitProductCondition(ev, resolveIds(ev));
 const root = (idShort: string) => sm?.submodelElements?.find((e) => e.idShort === idShort);
 const child = (parent: aas.types.ISubmodelElement | undefined, idShort: string) =>

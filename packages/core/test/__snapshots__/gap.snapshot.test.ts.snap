@@ -58,8 +58,8 @@ exports[`gap report snapshots > is stable for ev-document-without-classification
   },
   "invalid": [],
   "statuses": {
-    "missing": 10,
-    "present": 83,
+    "missing": 14,
+    "present": 79,
   },
 }
 `;
