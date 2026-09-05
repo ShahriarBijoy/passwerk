@@ -74,11 +74,12 @@ export const de = {
   'review.addValue': 'Wert hinzufügen',
   'review.addValue.attribute': 'Attribut',
   'review.addValue.leaf': 'Teilfeld',
-  'review.addValue.whole': 'Gesamter Wert',
   'review.addValue.add': 'Hinzufügen',
   'review.conflict': 'Konflikt: vorhanden {existing}, neu {incoming}',
   'review.value.invalid':
     'Der Wert entspricht nicht dem erwarteten Format für {attribute}: {reason}',
+  'review.value.compositeWhole':
+    'Zusammengesetzte Werte werden feldweise erfasst; bitte ein Teilfeld wählen.',
   'review.invalidDecision': 'Diese Entscheidung konnte nicht angewendet werden: {reason}',
   'review.empty': 'Keine Vorschläge für diesen Filter.',
   'review.continue': 'Weiter zu Lücken & Export',

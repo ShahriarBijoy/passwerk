@@ -49,9 +49,32 @@ describe('review model', () => {
     expect(filterGroups(groups, 'all', 'volt', 'en').map((g) => g.key)).toEqual(['nominalVoltage']);
   });
   it('lists composite leaves and category attributes', () => {
-    expect(compositeLeaves('batteryChemistry')).toContain('clearName');
+    expect(compositeLeaves('batteryChemistry')).toEqual(['shortName', 'clearName']);
     expect(compositeLeaves('criticalRawMaterials')).toEqual([]);
     expect(compositeLeaves('ratedCapacity')).toEqual([]);
     expect(attributeChoices('EV').some((a) => a.id === 'ratedCapacity')).toBe(true);
+  });
+
+  it('reaches nested object and multilingual leaves with dotted paths', () => {
+    const leaves = compositeLeaves('manufacturerInformation');
+    expect(leaves).toContain('name.de');
+    expect(leaves).toContain('name.en');
+    expect(leaves).toContain('identifier');
+    expect(leaves).toContain('address.cityTown');
+    // A sub-object is not itself a leaf; only its scalar fields are offered.
+    expect(leaves).not.toContain('address');
+    expect(leaves).not.toContain('name');
+  });
+
+  it('skips repeated rows: a composite made of an array has no leaves and no choice', () => {
+    expect(compositeLeaves('hazardousSubstances')).toEqual([]);
+    expect(compositeLeaves('carbonFootprintGeneralInformation')).toEqual([
+      'referenceImpactUnit',
+      'quantityOfMeasure',
+    ]);
+    const ids = attributeChoices('EV').map((a) => a.id);
+    expect(ids).not.toContain('criticalRawMaterials');
+    expect(ids).not.toContain('hazardousSubstances');
+    expect(ids).toContain('manufacturerInformation');
   });
 });

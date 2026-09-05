@@ -78,39 +78,52 @@ interface Applied {
   draft: PassportDraft;
   conflicts: MappingConflict[];
   invalidDecisions: InvalidDecision[];
+  report: ValidationReport;
 }
 
 function messageOf(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+/** Fold the decisions one at a time, validating after each, and set aside the ones that fail. */
+function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
+  let draft = base;
+  let report = validate(base, { asOf });
+  const conflicts: MappingConflict[] = [];
+  const invalidDecisions: InvalidDecision[] = [];
+  for (const entry of entries) {
+    try {
+      const r = applyMappings(draft, [entry.mapping]);
+      // Validate before keeping the draft: a whole-composite value passes `applyMappings`
+      // (its shape is L1's business) and only throws once a validator walks it.
+      const next = validate(r.draft, { asOf });
+      draft = r.draft;
+      report = next;
+      conflicts.push(...r.conflicts);
+    } catch (e) {
+      invalidDecisions.push({ key: entry.key, message: messageOf(e) });
+    }
+  }
+  return { draft, conflicts, invalidDecisions, report };
+}
+
 /**
- * `applyMappings` throws on a value its attribute's schema rejects, and `derive` runs during
- * render, so an unchecked decision would take the whole page down (and it is already autosaved).
- * The happy path is the single batch call; only when that throws does the fold below isolate
- * the offending decisions and keep the rest.
+ * `applyMappings` throws on a value its attribute's schema rejects and `validate` throws on a
+ * composite whose shape is wrong, and `derive` runs during render, so an unchecked decision
+ * would take the whole page down (and it is already autosaved). The happy path is one batch
+ * apply and one validate; only when that pair throws does the fold above isolate the offending
+ * decisions and keep the rest.
  */
-function applyAll(base: PassportDraft, entries: MappingEntry[]): Applied {
+function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   try {
     const r = applyMappings(
       base,
       entries.map((e) => e.mapping),
     );
-    return { draft: r.draft, conflicts: r.conflicts, invalidDecisions: [] };
+    const report = validate(r.draft, { asOf });
+    return { draft: r.draft, conflicts: r.conflicts, invalidDecisions: [], report };
   } catch {
-    let draft = base;
-    const conflicts: MappingConflict[] = [];
-    const invalidDecisions: InvalidDecision[] = [];
-    for (const entry of entries) {
-      try {
-        const r = applyMappings(draft, [entry.mapping]);
-        draft = r.draft;
-        conflicts.push(...r.conflicts);
-      } catch (e) {
-        invalidDecisions.push({ key: entry.key, message: messageOf(e) });
-      }
-    }
-    return { draft, conflicts, invalidDecisions };
+    return foldOneByOne(base, entries, asOf);
   }
 }
 
@@ -121,8 +134,11 @@ export function derive(state: WorkflowState, asOf: string): Derived | null {
   if (hit && hit.asOf === asOf) return hit.derived;
   let derived: Derived | null = null;
   if (state.baseDraft) {
-    const { draft, conflicts, invalidDecisions } = applyAll(state.baseDraft, mappingEntries(state));
-    const report = validate(draft, { asOf });
+    const { draft, conflicts, invalidDecisions, report } = applyAll(
+      state.baseDraft,
+      mappingEntries(state),
+      asOf,
+    );
     const gap = gapReport(draft, { report, asOf });
     derived = { draft, conflicts, invalidDecisions, report, gap, asOf };
   }

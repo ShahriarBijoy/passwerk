@@ -22,8 +22,6 @@ import type { Decision } from '../workflow/state.ts';
 import { validateValue } from '../workflow/validateValue.ts';
 import { attributeChoices, compositeLeaves } from './reviewModel.ts';
 
-const WHOLE = '__whole__';
-
 export function AddValueDialog({
   lang,
   category,
@@ -35,7 +33,7 @@ export function AddValueDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [attributeId, setAttributeId] = useState('');
-  const [leaf, setLeaf] = useState(WHOLE);
+  const [leaf, setLeaf] = useState('');
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('');
   const [error, setError] = useState<LangText | null>(null);
@@ -43,8 +41,10 @@ export function AddValueDialog({
   const leaves = attributeId ? compositeLeaves(attributeId) : [];
 
   const submit = () => {
-    if (!attributeId || !value.trim()) return;
-    const path = leaf !== WHOLE ? leaf : undefined;
+    // A composite is only ever entered through one of its sub-fields, so the leaf is required
+    // whenever the attribute has any: there is no "whole value" to type.
+    if (!attributeId || !value.trim() || (leaves.length > 0 && leaf === '')) return;
+    const path = leaf === '' ? undefined : leaf;
     const check = validateValue(attributeId, path, value.trim());
     if (!check.ok) {
       setError(check.message);
@@ -80,7 +80,7 @@ export function AddValueDialog({
             value={attributeId}
             onValueChange={(v) => {
               setAttributeId(v);
-              setLeaf(WHOLE);
+              setLeaf(compositeLeaves(v)[0] ?? '');
             }}
           >
             <SelectTrigger data-testid="add-attribute">
@@ -102,7 +102,6 @@ export function AddValueDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={WHOLE}>{t(lang, 'review.addValue.whole')}</SelectItem>
                   {leaves.map((l) => (
                     <SelectItem key={l} value={l}>
                       {l}

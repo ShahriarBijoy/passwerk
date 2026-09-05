@@ -1,6 +1,7 @@
-import { type BatteryCategory, COMPOSITE_SCHEMAS, type MappingProposal } from '@passwerk/core';
+import type { BatteryCategory, MappingProposal } from '@passwerk/core';
 import { getAttribute, getAttributesForCategory } from '@passwerk/rules';
 import type { LangText, Language } from '../i18n/index.ts';
+import { compositeLeafPaths, isArrayComposite } from '../workflow/compositeSchema.ts';
 import { type Decision, type DecisionKey, decisionKey, proposalKey } from '../workflow/state.ts';
 
 export interface ReviewGroup {
@@ -74,14 +75,18 @@ export function manualEntries(decisions: Record<DecisionKey, Decision>): Decisio
   return Object.values(decisions).filter((d) => d.kind === 'manual');
 }
 
+/** Dotted paths to the scalar sub-fields a composite can be filled in one at a time. */
 export function compositeLeaves(attributeId: string): string[] {
-  const schema = COMPOSITE_SCHEMAS[attributeId];
-  const shape = (schema as { shape?: Record<string, unknown> } | undefined)?.shape;
-  return shape ? Object.keys(shape) : [];
+  return compositeLeafPaths(attributeId);
 }
 
+/**
+ * Attributes a reviewer can type a value for. A composite that is a list of rows is left out:
+ * this slice enters composites field by field, and a list has no fields to name.
+ */
 export function attributeChoices(category: BatteryCategory): { id: string; name: LangText }[] {
   return getAttributesForCategory(category, ['mandatory', 'conditional', 'optional'])
+    .filter((a) => !isArrayComposite(a.id))
     .map((a) => ({ id: a.id, name: a.name }))
     .sort((x, y) => x.id.localeCompare(y.id));
 }

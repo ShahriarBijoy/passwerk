@@ -13,7 +13,7 @@ import {
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decisionsToMappings, derive } from '@/workflow/derive.ts';
 import { reduce } from '@/workflow/reducer.ts';
-import { initialState } from '@/workflow/state.ts';
+import { initialState, type WorkflowState } from '@/workflow/state.ts';
 
 const AT = '2026-09-05T12:00:00Z';
 const FIX = join(
@@ -165,6 +165,35 @@ describe('derive', () => {
       clearName: 'Lithium nickel manganese cobalt oxide',
     });
     expect(d?.draft.attributes['ratedCapacity']).toBeUndefined();
+  });
+
+  it('a decision only validate refuses is reported, not thrown', () => {
+    // A raw string where core expects a list of materials. `applyMappings` waves a whole
+    // composite through (its shape is L1's business), and `validate` then walks the value and
+    // throws. Built straight into the state, the way a stale autosave would arrive.
+    const s: WorkflowState = {
+      ...withProposals,
+      decisions: {
+        criticalRawMaterials: {
+          kind: 'manual',
+          attributeId: 'criticalRawMaterials',
+          value: 'Lithium, Kobalt',
+        },
+        'batteryChemistry#clearName': {
+          kind: 'manual',
+          attributeId: 'batteryChemistry',
+          path: 'clearName',
+          value: 'Lithium nickel manganese cobalt oxide',
+        },
+      },
+    };
+    const d = derive(s, AT);
+    expect(d?.invalidDecisions.map((x) => x.key)).toEqual(['criticalRawMaterials']);
+    expect(d?.draft.attributes['criticalRawMaterials']).toBeUndefined();
+    expect(d?.draft.attributes['batteryChemistry']?.value).toEqual({
+      clearName: 'Lithium nickel manganese cobalt oxide',
+    });
+    expect(d?.report.verdict).toBe('invalid');
   });
 
   it('an imported golden sample validates as core says', () => {

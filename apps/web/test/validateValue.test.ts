@@ -19,8 +19,38 @@ describe('validateValue', () => {
     expect(validateValue('ratedCapacity', undefined, '').ok).toBe(false);
   });
 
-  it('passes a composite leaf through: core exposes no leaf schema', () => {
+  it('rejects a raw string for a whole composite, in both languages', () => {
+    const r = validateValue('manufacturerInformation', undefined, 'Musterwerk GmbH');
+    expect(r.ok).toBe(false);
+    if (r.ok) throw new Error('expected a failure');
+    expect(r.message.de).toContain('feldweise');
+    expect(r.message.en).toContain('field by field');
+  });
+
+  it('rejects a raw string for an array composite too', () => {
+    expect(validateValue('criticalRawMaterials', undefined, 'lithium').ok).toBe(false);
+  });
+
+  it('accepts a nested composite leaf that its schema allows', () => {
+    expect(validateValue('manufacturerInformation', 'name.de', 'Musterwerk')).toEqual({ ok: true });
+    expect(validateValue('manufacturerInformation', 'address.cityTown', 'Aachen')).toEqual({
+      ok: true,
+    });
     expect(validateValue('batteryChemistry', 'clearName', 'NMC')).toEqual({ ok: true });
+  });
+
+  it('rejects a leaf value the leaf schema refuses', () => {
+    const r = validateValue('initialInternalResistance', 'cellOhm', 'ziemlich viel');
+    expect(r.ok).toBe(false);
+    if (r.ok) throw new Error('expected a failure');
+    expect(r.message.en).toContain('decimal');
+    expect(validateValue('manufacturerInformation', 'name.de', '').ok).toBe(false);
+  });
+
+  it('rejects a path the composite does not declare, and one that stops on a sub-object', () => {
+    expect(validateValue('manufacturerInformation', 'nope', 'x').ok).toBe(false);
+    expect(validateValue('manufacturerInformation', 'address', 'Aachen').ok).toBe(false);
+    expect(validateValue('criticalRawMaterials', '0.name', 'Lithium').ok).toBe(false);
   });
 
   it('passes an unknown attribute through', () => {
