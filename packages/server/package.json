@@ -4,7 +4,12 @@
   "description": "MCP server exposing passwerk tools, resources and prompts over stdio and Streamable HTTP",
   "license": "Apache-2.0",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/bin.js"
+  ],
+  "bin": {
+    "passwerk-server": "./dist/bin.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,10 +25,13 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "start": "node dist/bin.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
     "@passwerk/core": "workspace:*",
-    "@passwerk/rules": "workspace:*"
+    "@passwerk/rules": "workspace:*",
+    "zod": "4.5.4"
   }
 }
