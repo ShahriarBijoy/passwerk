@@ -1,0 +1,213 @@
+import type { BatteryCategory, MappingConflict, MappingProposal, Verdict } from '@passwerk/core';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { type Language, pick, t } from '../i18n/index.ts';
+import type { Decision, DecisionKey } from '../workflow/state.ts';
+import { AddValueDialog } from './AddValueDialog.tsx';
+import { ConfidenceBadge } from './parts/ConfidenceBadge.tsx';
+import { SourceRef } from './parts/SourceRef.tsx';
+import { VerdictChip } from './parts/VerdictChip.tsx';
+import { filterGroups, keyOf, type ReviewFilter, type ReviewGroup } from './reviewModel.ts';
+
+export interface ReviewViewProps {
+  lang: Language;
+  category: BatteryCategory;
+  groups: ReviewGroup[];
+  manual: Decision[];
+  conflicts: MappingConflict[];
+  accepted: number;
+  pending: number;
+  verdict: Verdict;
+  onDecide(d: Decision): void;
+  onClear(key: DecisionKey): void;
+  onContinue(): void;
+}
+
+function ProposalRow({
+  lang,
+  group,
+  p,
+  onDecide,
+}: {
+  lang: Language;
+  group: ReviewGroup;
+  p: MappingProposal;
+  onDecide(d: Decision): void;
+}) {
+  const d = group.decision;
+  const chosen = d && d.kind !== 'manual' && d.factId === p.factId ? d.kind : undefined;
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(p.value ?? ''));
+  const [unit, setUnit] = useState(p.unit ?? '');
+  const base = {
+    attributeId: group.attributeId,
+    ...(group.path !== undefined ? { path: group.path } : {}),
+    factId: p.factId,
+  };
+  return (
+    <div
+      className="flex flex-wrap items-center gap-3 border-t py-2"
+      data-testid="proposal"
+      data-fact={p.factId}
+      data-state={chosen ?? 'pending'}
+    >
+      {editing ? (
+        <>
+          <Input
+            className="w-40"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            data-testid="edit-value"
+          />
+          <Input
+            className="w-20"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+            data-testid="edit-unit"
+          />
+          <Button
+            size="sm"
+            onClick={() => {
+              onDecide({ kind: 'edit', ...base, value, ...(unit ? { unit } : {}) });
+              setEditing(false);
+            }}
+          >
+            {t(lang, 'review.save')}
+          </Button>
+        </>
+      ) : (
+        <>
+          <span className="font-mono" data-testid="proposal-value">
+            {chosen === 'edit' && d?.kind === 'edit' ? d.value : String(p.value)}
+          </span>
+          <span className="text-muted-foreground">
+            {chosen === 'edit' && d?.kind === 'edit' ? (d.unit ?? '') : (p.unit ?? '')}
+          </span>
+          {chosen === 'edit' && <span className="text-xs">{t(lang, 'review.edited')}</span>}
+        </>
+      )}
+      <ConfidenceBadge value={p.confidence} />
+      <SourceRef lang={lang} source={p.source} />
+      <span className="text-muted-foreground text-xs">{pick(lang, p.why)}</span>
+      <span className="ml-auto flex gap-1">
+        <Button
+          size="sm"
+          variant={chosen === 'accept' ? 'default' : 'outline'}
+          data-testid="accept"
+          onClick={() => onDecide({ kind: 'accept', ...base })}
+        >
+          {t(lang, 'review.accept')}
+        </Button>
+        <Button
+          size="sm"
+          variant={chosen === 'reject' ? 'destructive' : 'outline'}
+          data-testid="reject"
+          onClick={() => onDecide({ kind: 'reject', ...base })}
+        >
+          {t(lang, 'review.reject')}
+        </Button>
+        <Button size="sm" variant="ghost" data-testid="edit" onClick={() => setEditing((v) => !v)}>
+          {t(lang, 'review.edit')}
+        </Button>
+      </span>
+    </div>
+  );
+}
+
+export function ReviewView(props: ReviewViewProps) {
+  const { lang } = props;
+  const [filter, setFilter] = useState<ReviewFilter>('pending');
+  const [search, setSearch] = useState('');
+  const visible = filterGroups(props.groups, filter, search, lang);
+  return (
+    <div className="grid gap-4">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b bg-background py-2">
+        <h2 className="font-semibold text-lg">{t(lang, 'review.title')}</h2>
+        <span data-testid="review-summary">
+          {t(lang, 'review.summary', { accepted: props.accepted, pending: props.pending })}
+        </span>
+        <VerdictChip lang={lang} verdict={props.verdict} />
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as ReviewFilter)}>
+          <TabsList>
+            {(['pending', 'accepted', 'rejected', 'all'] as const).map((f) => (
+              <TabsTrigger key={f} value={f} data-testid={`filter-${f}`}>
+                {t(lang, `review.filter.${f}`)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <Input
+          className="w-48"
+          placeholder={t(lang, 'review.search')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <AddValueDialog lang={lang} category={props.category} onAdd={props.onDecide} />
+        <Button className="ml-auto" data-testid="to-gaps" onClick={props.onContinue}>
+          {t(lang, 'review.continue')}
+        </Button>
+      </div>
+      {props.conflicts.map((c) => (
+        <p
+          key={`${c.attributeId}${c.path ?? ''}`}
+          className="text-destructive text-sm"
+          data-testid="conflict"
+        >
+          {c.attributeId}
+          {c.path ? `.${c.path}` : ''}:{' '}
+          {t(lang, 'review.conflict', {
+            existing: JSON.stringify(c.existing),
+            incoming: JSON.stringify(c.incoming),
+          })}
+        </p>
+      ))}
+      {props.manual.map((d) => (
+        <Card key={keyOf(d)} data-testid="manual">
+          <CardContent className="flex items-center gap-3 py-3">
+            <span className="font-medium">
+              {d.attributeId}
+              {d.path ? `.${d.path}` : ''}
+            </span>
+            <span className="font-mono">{d.kind === 'manual' ? d.value : ''}</span>
+            <span className="text-xs">{t(lang, 'review.manual')}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto"
+              onClick={() => props.onClear(keyOf(d))}
+            >
+              {t(lang, 'review.clear')}
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+      {visible.length === 0 && <p className="text-muted-foreground">{t(lang, 'review.empty')}</p>}
+      {visible.map((g) => (
+        <Card key={g.key} data-testid="group" data-key={g.key}>
+          <CardHeader className="py-3">
+            <CardTitle className="text-base">
+              {pick(lang, g.name)}
+              {g.path ? ` · ${g.path}` : ''}
+              <span className="ml-2 font-normal text-muted-foreground text-xs">
+                {g.legalRefs.join('; ')}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {g.proposals.map((p) => (
+              <ProposalRow key={p.factId} lang={lang} group={g} p={p} onDecide={props.onDecide} />
+            ))}
+            {g.decision && (
+              <Button size="sm" variant="link" onClick={() => props.onClear(g.key)}>
+                {t(lang, 'review.clear')}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
