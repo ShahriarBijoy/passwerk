@@ -6,8 +6,10 @@
 export const PACKAGE_NAME = '@passwerk/server' as const;
 
 export { SERVER_NAME, SERVER_VERSION, TRANSPORTS } from './meta.js';
+export { PROMPT_NAMES } from './prompts/index.js';
 export { BundleRef, DraftRef, FactsRef, UnknownIdError } from './refs.js';
 export { TOOLS, toolByName } from './registry.js';
+export { STATIC_RESOURCE_URIS, TEMPLATE_RESOURCE_URIS } from './resources/index.js';
 export { createServer, errorResult, type ServerOptions } from './server.js';
 export { contentId, ID_PREFIX, SessionStore, type StoreKind, type StoreStats } from './session.js';
 export type {

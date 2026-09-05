@@ -2,8 +2,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { PassportDraftError } from '@passwerk/core';
 import { z } from 'zod';
 import { SERVER_NAME, SERVER_VERSION } from './meta.js';
+import { registerPrompts } from './prompts/index.js';
 import { UnknownIdError } from './refs.js';
 import { TOOLS } from './registry.js';
+import { registerResources } from './resources/index.js';
 import { SessionStore } from './session.js';
 import {
   type FileSystemAdapter,
@@ -121,6 +123,9 @@ export function createServer(options: ServerOptions = {}): {
       },
     );
   }
+
+  registerResources(server, ctx);
+  registerPrompts(server);
 
   return { server, ctx };
 }
