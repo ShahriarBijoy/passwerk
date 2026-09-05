@@ -126,6 +126,96 @@ describe('reducer', () => {
     expect(s.decisions).toEqual({});
   });
 
+  it('re-uploading a same-named file drops its decisions when the bytes changed', () => {
+    const p = proposal({ factId: 'a.csv#1:0', source: [{ file: 'a.csv', page: 1 }] });
+    const summaries = (sha256: string) => [
+      { name: 'a.csv', size: 1, sha256, format: 'csv', pages: 1, lang: 'de' as const },
+    ];
+    let s = reduce(start(), {
+      type: 'filesIngested',
+      summaries: summaries('sha-400'),
+      facts: facts(['a.csv']),
+      proposals: [p],
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: p.factId },
+      at: AT,
+    });
+    expect(Object.keys(s.decisions)).toEqual(['ratedCapacity']);
+
+    // Same bytes: the reviewer's decision still describes what the document says.
+    const unchanged = reduce(s, {
+      type: 'filesIngested',
+      summaries: summaries('sha-400'),
+      facts: facts(['a.csv']),
+      proposals: [p],
+      at: AT,
+    });
+    expect(Object.keys(unchanged.decisions)).toEqual(['ratedCapacity']);
+
+    // Different bytes behind the same name and the same fact id: the decision is stale.
+    const changed = reduce(s, {
+      type: 'filesIngested',
+      summaries: summaries('sha-450'),
+      facts: facts(['a.csv']),
+      proposals: [{ ...p, value: '90.0' }],
+      at: AT,
+    });
+    expect(changed.decisions).toEqual({});
+  });
+
+  it('a changed re-upload keeps decisions sourced from other files, and manual ones', () => {
+    const a = proposal({ factId: 'a.csv#1:0', source: [{ file: 'a.csv', page: 1 }] });
+    const b = proposal({
+      attributeId: 'nominalVoltage',
+      factId: 'b.csv#1:0',
+      source: [{ file: 'b.csv', page: 1 }],
+    });
+    const file = (name: string, sha256: string) => ({
+      name,
+      size: 1,
+      sha256,
+      format: 'csv',
+      pages: 1,
+      lang: 'de' as const,
+    });
+    let s = reduce(start(), {
+      type: 'filesIngested',
+      summaries: [file('a.csv', 'sha-a'), file('b.csv', 'sha-b')],
+      facts: facts(['a.csv', 'b.csv']),
+      proposals: [a, b],
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'nominalVoltage', factId: b.factId },
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'batteryChemistry',
+        path: 'clearName',
+        value: 'NMC',
+      },
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'filesIngested',
+      summaries: [file('a.csv', 'sha-a2')],
+      facts: facts(['a.csv']),
+      proposals: [a],
+      at: AT,
+    });
+    expect(Object.keys(s.decisions).sort()).toEqual([
+      'batteryChemistry#clearName',
+      'nominalVoltage',
+    ]);
+  });
+
   it('manual decisions survive file removal and clearDecision removes one key', () => {
     let s = start();
     s = reduce(s, {
