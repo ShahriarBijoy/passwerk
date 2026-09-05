@@ -599,3 +599,32 @@ inferred from the meta-model.
 test keeps fresh. The review sheet gains a cross-check section and two rows per flagged entry.
 Findings are review prompts: a reviewer resolves each one in the JSON, never the script. When
 the consortium re-releases, `pnpm artefacts:write` and `pnpm generate` re-pin and re-derive.
+
+## D-031: Phase 6 ships as two PRs; carrier and HTML wait for Phase 7; the CLI reuses the server's registry (2026-09-05)
+
+**Context.** Build plan section 5 fixes the MCP contract, but two of its entries have no core
+module yet (`generate_carrier`, the `html` emit target: both Phase 7), its definition of done
+names a fixture set that does not exist (`./fixtures/lieferant-a/*`), and the Phase 7a slice
+showed that the Musterwerk documents alone cover about a third of the mandatory data points,
+so no document-only run can reach `valid`. Registering tools with placeholder handlers would
+break the rule that a verdict comes only from the validators.
+
+**Decision.** Phase 6 is delivered as two pull requests: 6.1 (`@passwerk/server`, the agent
+skill, install pages, sovereignty coverage) and 6.2 (`@passwerk/cli`, the demo script).
+`generate_carrier` and the `html` target are not registered until Phase 7 adds their core
+modules; the emit targets are `aas-json`, `aasx` and `draft-json` (the plan's `flat-json`).
+Ids are content hashes stored per connection in a bounded LRU, so re-sending the same object
+yields the same id and runs stay byte-identical. Big objects cross the wire with compact
+loose schemas and are validated by core inside the handler, keeping `tools/list` small. The
+definition of done is measured as in Phase 7a: the tool chain on Musterwerk must reproduce
+the recall gate and the gap list, and `valid` is proven on the golden drafts. The CLI depends
+on the server for the tool registry (dependency order `rules`, `core`, `server`, `cli`), so
+`passwerk tools` and `passwerk chat` present exactly the tools an MCP host sees; a `gaps`
+command is added and `explain` is not. The HTTP mode uses plain `node:http`, binds loopback,
+requires `PASSWERK_AUTH_TOKEN` and keeps one server and store per MCP session.
+
+**Consequences.** Build plan section 5 and Phase 6 are amended by this ADR. `index.ts` of
+the server imports nothing from `node:*`, so `createServer` stays usable for the Phase 7b MCP
+App; file access goes through an injected adapter with an optional root. The server surface
+joins the sovereignty proof through a shared network guard. The install pages mark every
+host configuration key not confirmed from the host's own documentation with a verify comment.

@@ -37,8 +37,8 @@ proves zero network calls.
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
 
-Dependency direction is strict: `rules`, then `core`, then `server`, `cli` and `web`.
-Never import upward.
+Dependency direction is strict: `rules`, then `core`, then `server`, then `cli`; `web` depends
+on `core` only. Never import upward. The CLI imports the server's tool registry (ADR D-031).
 
 ## Commands
 
@@ -143,6 +143,13 @@ so no build is needed before `pnpm test`.
   `kb/generated/batterypass-samm.json`; `pnpm review-sheet` joins every attribute to them by DIN
   chapter and IDTA semanticId name and lists unit, type, enum and range disagreements in
   `docs/KB_REVIEW.md` for human review. Dev-time only, never loaded at runtime (ADR D-030).
-- **Next: Phase 6** (MCP server, agent skill, CLI), then Phase 7, 7b, 7c (D-024 order). The
+- **Phase 6.1 (`@passwerk/server`, skill, install docs): done.** Ten MCP tools (ingest, extract,
+  suggest, apply, validate, gap report, emit, obligations, explain, capabilities) over a bounded
+  content-addressed session store, seven resources, three prompts, stdio and Streamable HTTP
+  (`PASSWERK_AUTH_TOKEN`, `/healthz`), an injected file-system adapter with an optional root,
+  and the sovereignty proof over the whole server surface. `skills/passwerk/SKILL.md`,
+  `docs/install/` and the root `.mcp.json`. `generate_carrier` and the `html` target wait for
+  Phase 7 (ADR D-031).
+- **Next: Phase 6.2** (`@passwerk/cli`, demo script), then Phase 7, 7b, 7c (D-024 order). The
   rest of Phase 7a (project screen with obligations, facts screen, HTML sheet, QR, BYOK)
   follows Phase 7.
