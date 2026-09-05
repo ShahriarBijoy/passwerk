@@ -237,7 +237,30 @@ describe('reducer', () => {
   it('reset returns the initial state but keeps the language', () => {
     let s = reduce(start(), { type: 'setLanguage', language: 'en', at: AT });
     s = reduce(s, { type: 'reset', at: AT });
-    expect(s).toEqual({ ...initialState, language: 'en', updatedAt: AT });
+    expect(s).toEqual({ ...initialState, language: 'en', generation: 2, updatedAt: AT });
+  });
+
+  it('the generation counts changes of the active project, and nothing else', () => {
+    expect(initialState.generation).toBe(0);
+    const started = start();
+    expect(started.generation).toBe(1);
+    const imported = reduce(started, {
+      type: 'importDraft',
+      draft: getSample('ev-valid') as PassportDraft,
+      at: AT,
+    });
+    expect(imported.generation).toBe(2);
+    expect(reduce(imported, { type: 'reset', at: AT }).generation).toBe(3);
+
+    const others: Action[] = [
+      { type: 'goTo', step: 'review', at: AT },
+      { type: 'setLanguage', language: 'en', at: AT },
+      { type: 'fileRemoved', name: 'a.csv', at: AT },
+      { type: 'filesIngested', summaries: [], facts: facts([]), proposals: [], at: AT },
+      { type: 'decide', decision: { kind: 'accept', attributeId: 'x', factId: 'y' }, at: AT },
+      { type: 'clearDecision', key: 'x', at: AT },
+    ];
+    expect(others.map((a) => reduce(started, a).generation)).toEqual([1, 1, 1, 1, 1, 1]);
   });
 
   it('every action stamps updatedAt from the action, never from the clock', () => {

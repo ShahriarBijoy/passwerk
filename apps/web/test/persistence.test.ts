@@ -29,6 +29,12 @@ describe('persistence', () => {
     expect(await loadState()).toEqual({ kind: 'version' });
   });
 
+  it('reads a state saved before the generation counter as generation 0', async () => {
+    const { generation: _dropped, ...before } = initialState;
+    db.set('passwerk.web.state', before);
+    expect(await loadState()).toEqual({ kind: 'state', state: { ...before, generation: 0 } });
+  });
+
   it('writes after a dispatch (debounced) and clearState deletes', async () => {
     vi.useFakeTimers();
     const store = createStore(initialState);

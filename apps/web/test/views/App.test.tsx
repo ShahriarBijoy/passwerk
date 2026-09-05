@@ -1,11 +1,35 @@
 /** @vitest-environment jsdom */
-import { fireEvent, screen } from '@testing-library/react';
+
+import { SCHEMA_VERSION } from '@passwerk/core';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '@/app/App.tsx';
 import { ErrorBoundary } from '@/app/ErrorBoundary.tsx';
+import type { IngestOutcome } from '@/workflow/ingest.ts';
 import { initialState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
 import { mount } from './render.tsx';
+
+const { ingestFiles } = vi.hoisted(() => ({ ingestFiles: vi.fn() }));
+vi.mock('@/workflow/ingest.ts', () => ({ ingestFiles }));
+
+const AT = '2026-09-05T12:00:00Z';
+
+const OUTCOME: IngestOutcome = {
+  summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+  facts: { facts: [], tables: [], documents: [] },
+  proposals: [
+    {
+      attributeId: 'ratedCapacity',
+      value: '94.5',
+      factId: 'a.csv#1:0',
+      confidence: 0.9,
+      source: [{ file: 'a.csv', page: 1 }],
+      why: { de: 'x', en: 'x' },
+      checks: { label: 1, matched: 'x', unit: 'match', kind: 'ok' },
+    },
+  ],
+};
 
 describe('App', () => {
   it('starts on the start step, toggles language and starts a project', () => {
@@ -22,6 +46,43 @@ describe('App', () => {
   it('shows the storage notice', () => {
     mount(<App store={createStore(initialState)} storageNotice="version" />);
     expect(screen.getByTestId('storage-notice')).toBeTruthy();
+  });
+
+  it('drops an upload that finishes after the project was replaced', async () => {
+    let finish: (out: IngestOutcome) => void = () => undefined;
+    ingestFiles.mockReturnValueOnce(
+      new Promise<IngestOutcome>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const store = createStore(initialState);
+    mount(<App store={store} />);
+    fireEvent.click(screen.getByTestId('start'));
+    fireEvent.change(screen.getByTestId('file-input'), {
+      target: { files: [new File(['a;b'], 'a.csv', { type: 'text/csv' })] },
+    });
+
+    // The reviewer starts over while the ingest is still running.
+    await act(async () => {
+      store.dispatch({ type: 'reset', at: AT });
+      store.dispatch({
+        type: 'startProject',
+        meta: {
+          schemaVersion: SCHEMA_VERSION,
+          category: 'EV',
+          passportId: 'urn:passwerk:test:2',
+          createdAt: AT,
+        },
+        at: AT,
+      });
+    });
+    await act(async () => {
+      finish(OUTCOME);
+    });
+
+    expect(ingestFiles).toHaveBeenCalledOnce();
+    expect(store.getState().files).toEqual([]);
+    expect(store.getState().proposals).toEqual([]);
   });
 });
 

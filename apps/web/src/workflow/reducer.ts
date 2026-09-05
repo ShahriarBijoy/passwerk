@@ -125,6 +125,7 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
         facts: null,
         proposals: [],
         decisions: {},
+        generation: state.generation + 1,
         step: 'upload',
       };
     case 'importDraft':
@@ -137,6 +138,7 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
         facts: null,
         proposals: [],
         decisions: {},
+        generation: state.generation + 1,
         step: 'review',
       };
     case 'filesIngested': {
@@ -186,6 +188,11 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
     case 'goTo':
       return { ...state, ...stamp, step: action.step };
     case 'reset':
-      return { ...initialState, ...stamp, language: state.language };
+      return {
+        ...initialState,
+        ...stamp,
+        language: state.language,
+        generation: state.generation + 1,
+      };
   }
 }

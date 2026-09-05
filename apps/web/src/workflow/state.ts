@@ -48,6 +48,12 @@ export interface WorkflowState {
   facts: FactSet | null;
   proposals: MappingProposal[];
   decisions: Record<DecisionKey, Decision>;
+  /**
+   * Bumped whenever the active project is replaced. An upload started under one generation is
+   * discarded when it lands under another, so a slow ingest cannot pour its documents into a
+   * project the reviewer has since started over.
+   */
+  generation: number;
   updatedAt: string;
 }
 
@@ -61,6 +67,7 @@ export const initialState: WorkflowState = {
   facts: null,
   proposals: [],
   decisions: {},
+  generation: 0,
   updatedAt: '1970-01-01T00:00:00Z',
 };
 

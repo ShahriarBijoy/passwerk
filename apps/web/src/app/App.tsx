@@ -77,6 +77,10 @@ export function App({ store, storageNotice }: AppProps) {
 
   const onFiles = async (files: File[]) => {
     if (!state.meta || files.length === 0) return;
+    // Read the generation before the awaits: by the time the ingest resolves the reviewer may
+    // have started over or imported a draft, and these documents belong to a project that is
+    // no longer on screen.
+    const generation = store.getState().generation;
     setBusy(true);
     try {
       const inputs = await Promise.all(
@@ -90,6 +94,7 @@ export function App({ store, storageNotice }: AppProps) {
         category: state.meta.category,
         workerSrc: pdfWorkerUrl,
       });
+      if (store.getState().generation !== generation) return;
       dispatch({ type: 'filesIngested', ...out, at: nowIso() });
     } catch (e) {
       fail(e);
