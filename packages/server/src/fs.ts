@@ -17,10 +17,12 @@ export function nodeFileSystem(root?: string): FileSystemAdapter {
   const base = resolvePath(root ?? process.cwd());
   const guard = root === undefined ? undefined : base;
   // The canonical root; falls back to the lexical one when the directory does not exist yet.
+  // `.native` matters: the JS `realpathSync` keeps Windows 8.3 short names (RUNNER~1) while
+  // `fs.promises.realpath` expands them, and the two must agree for `within` to hold.
   const realRoot = (() => {
     if (guard === undefined) return undefined;
     try {
-      return realpathSync(guard);
+      return realpathSync.native(guard);
     } catch {
       return guard;
     }

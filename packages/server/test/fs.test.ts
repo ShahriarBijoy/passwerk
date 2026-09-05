@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -35,6 +36,23 @@ describe('nodeFileSystem', () => {
     expect(await fs.readFile(fs.resolve('out.bin'))).toEqual(new Uint8Array([1, 2, 3]));
     expect(fs.basename(fs.resolve('a.txt'))).toBe('a.txt');
   });
+
+  it.runIf(process.platform === 'win32')(
+    'accepts a root given as a Windows 8.3 short path (CI runner temp dir)',
+    async () => {
+      // `%~sI` yields the short form, e.g. C:\Users\RUNNER~1\...; 8.3 generation may be off.
+      const short = execSync(`for %I in ("${dir}") do @echo %~sI`, {
+        encoding: 'utf8',
+        shell: 'cmd.exe',
+      }).trim();
+      expect(short.toLowerCase()).not.toBe(dir.toLowerCase());
+      const fs = nodeFileSystem(short);
+      expect(await fs.stat(fs.resolve('a.txt'))).toEqual({ kind: 'file' });
+      expect(await fs.readDir(fs.resolve('.'))).toContain('a.txt');
+      await fs.writeFile(fs.join(fs.resolve('.'), 'short.bin'), new Uint8Array([7]));
+      expect(await fs.readFile(fs.resolve('short.bin'))).toEqual(new Uint8Array([7]));
+    },
+  );
 
   it('names files relative to the root with forward slashes', () => {
     const fs = nodeFileSystem(dir);
