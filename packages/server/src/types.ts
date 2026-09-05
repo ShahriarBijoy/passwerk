@@ -49,7 +49,7 @@ export interface ToolContext {
   log: Logger;
 }
 
-export interface ToolResult<O> {
+export interface ToolResult<O extends object = object> {
   structured: O;
   text: LangText;
   isError?: boolean;
@@ -73,14 +73,18 @@ export interface ToolDefinition<I extends z.ZodRawShape, O extends z.ZodRawShape
   inputSchema: I;
   outputSchema: O;
   annotations: ToolAnnotations;
-  handler(input: z.infer<z.ZodObject<I>>, ctx: ToolContext): Promise<ToolResult<ToolOutput<O>>>;
+  /**
+   * `structured` is validated against `outputSchema` by the SDK at call time; it is typed as
+   * `object` here because loose schemas infer index signatures that core's interfaces lack.
+   */
+  handler(input: z.infer<z.ZodObject<I>>, ctx: ToolContext): Promise<ToolResult<object>>;
 }
 
-/** Every structured result may carry `error` and `findings` (the error shape, see server.ts). */
-export type ToolOutput<O extends z.ZodRawShape> = z.infer<z.ZodObject<O>> & {
-  error?: string;
+/** The structured shape of a failed call (see `errorResult` in server.ts). */
+export interface ErrorOutput {
+  error: string;
   findings?: Finding[];
-};
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: heterogeneous registry entries
 export type AnyToolDefinition = ToolDefinition<any, any>;

@@ -1,9 +1,24 @@
 /**
- * @passwerk/server — MCP server (stdio + Streamable HTTP).
- *
- * Phase 0 placeholder. No product code yet.
+ * @passwerk/server: MCP server for passwerk. Adapter only (ADR D-001): every domain rule
+ * lives in `@passwerk/core`. This entry imports nothing from `node:*` so `createServer` can
+ * run wherever core runs; `bin.ts`, `http.ts` and `fs.ts` are the Node-only entry points.
  */
-import { PACKAGE_NAME as CORE_PACKAGE } from '@passwerk/core';
-
 export const PACKAGE_NAME = '@passwerk/server' as const;
-export const DEPENDS_ON = [CORE_PACKAGE] as const;
+
+export { SERVER_NAME, SERVER_VERSION, TRANSPORTS } from './meta.js';
+export { BundleRef, DraftRef, FactsRef, UnknownIdError } from './refs.js';
+export { TOOLS, toolByName } from './registry.js';
+export { createServer, errorResult, type ServerOptions } from './server.js';
+export { contentId, ID_PREFIX, SessionStore, type StoreKind, type StoreStats } from './session.js';
+export type {
+  AnyToolDefinition,
+  FileSystemAdapter,
+  Lang,
+  LangText,
+  Logger,
+  LogLevel,
+  ToolContext,
+  ToolDefinition,
+  ToolResult,
+} from './types.js';
+export { LangSchema, PathOutsideRootError, pick } from './types.js';
