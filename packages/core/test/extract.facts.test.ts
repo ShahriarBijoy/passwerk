@@ -51,6 +51,7 @@ const file = (name: string) => ({
   bytes: new Uint8Array(readFileSync(join(FIX, name))),
 });
 let bundle: DocumentBundle;
+// PDF ingest on the Windows CI runner exceeded Vitest's 10 s default under Node 24 (2026-09-05).
 beforeAll(async () => {
   bundle = await ingest(
     [
@@ -61,7 +62,7 @@ beforeAll(async () => {
       'handover-notes.docx',
     ].map(file),
   );
-});
+}, 60_000);
 
 const find = (facts: ReturnType<typeof extractFacts>['facts'], label: string, fileName?: string) =>
   facts.find((f) => f.label === label && (!fileName || f.source.file === fileName));
