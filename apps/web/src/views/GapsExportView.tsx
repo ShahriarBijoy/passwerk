@@ -22,11 +22,28 @@ export function GapsExportView(props: GapsExportViewProps) {
   const { lang, report, gap } = props;
   const [groupBy, setGroupBy] = useState<GroupBy>('owner');
   const byId = new Map(gap.items.map((i) => [i.attributeId, i]));
-  const groups: { title: string; ids: string[] }[] =
+  const groups: { key: string; title: string; ids: string[] }[] =
     groupBy === 'owner'
-      ? gap.byDataOwner.map((g) => ({ title: pick(lang, g.owner), ids: g.attributeIds }))
-      : gap.bySubmodel.map((g) => ({ title: g.submodelIdShort ?? '—', ids: g.attributeIds }));
+      ? gap.byDataOwner.map((g) => ({
+          key: `owner-${g.owner.en}`,
+          title: pick(lang, g.owner),
+          ids: g.attributeIds,
+        }))
+      : gap.bySubmodel.map((g) => ({
+          key: `part-${g.part ?? 'none'}`,
+          title: g.submodelIdShort ?? '—',
+          ids: g.attributeIds,
+        }));
   const pct = (s: string) => Number(s);
+  const findingKeys = (() => {
+    const seen = new Map<string, number>();
+    return report.findings.map((f) => {
+      const base = `${f.layer}-${f.ruleId}-${f.path}-${f.attributeId ?? ''}`;
+      const n = seen.get(base) ?? 0;
+      seen.set(base, n + 1);
+      return `${base}#${n}`;
+    });
+  })();
 
   return (
     <div className="grid gap-4">
@@ -64,9 +81,9 @@ export function GapsExportView(props: GapsExportViewProps) {
               {t(lang, 'gaps.findings')} ({report.findings.length})
             </summary>
             <ul className="grid gap-1 py-2 text-sm">
-              {report.findings.map((f) => (
+              {report.findings.map((f, i) => (
                 <li
-                  key={`${f.layer}-${f.ruleId}-${f.path}-${f.attributeId ?? ''}`}
+                  key={findingKeys[i] ?? ''}
                   data-testid="finding"
                   data-rule={f.ruleId}
                   data-attribute={f.attributeId ?? ''}
@@ -125,7 +142,7 @@ export function GapsExportView(props: GapsExportViewProps) {
         </TabsList>
       </Tabs>
       {groups.map((g) => (
-        <Card key={g.title}>
+        <Card key={g.key}>
           <CardHeader className="py-3">
             <CardTitle className="text-base">{g.title}</CardTitle>
           </CardHeader>
