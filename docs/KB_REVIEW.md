@@ -43,6 +43,68 @@ faithful. This sheet is not legal advice.
 | `timeInExtremeHighTemperature` | Time spent above the upper temperature boundary | 5 | 87 | 70 | ec |
 | `timeInExtremeLowTemperature` | Time spent below the lower temperature boundary | 5 | 88 | 70 | ec |
 
+## Cross-check against the Battery Pass Data Model (SAMM)
+
+Every attribute is joined to the Battery Pass consortium's SAMM aspect models (v1.2.0, 1.2.1,
+`packages/rules/artefacts/batterypass/samm/`) by the DIN DKE SPEC 99100 chapter the SAMM
+description cites (`din`) and by the local name of the IDTA semanticId the attribute maps to
+(`name`). A MISMATCH means the two sources disagree on unit, data type or range and a human
+must decide which is right; a note is context (an enumeration, a range the attribute does
+not carry, a unit outside the vocabulary). The knowledge base is never changed by this check
+(ADR D-030).
+
+Summary: 54 ok, 16 with notes only, 3 with a mismatch, 20 without a SAMM counterpart; 0 SAMM properties cite a DIN chapter no attribute claims.
+
+A `din` join speaks for the whole attribute and yields mismatches. A `name` join into one of
+several template elements (a value next to its timestamp, a share next to its material) or
+into a composite attribute describes only a part, so it yields notes.
+
+| Attribute | Status | Battery Pass SAMM properties (joined) | Findings |
+|---|---|---|---|
+| `absoluteCarbonFootprint` | mismatch | CarbonFootprint#absoluteCarbonFootprint (din) DIN 6.3.10: Measurement xsd:double kg optional | MISMATCH unit: SAMM gives unit kg; the attribute says tCO2e. |
+| `batteryIdentifier` | unmatched | (none) | (none) |
+| `batteryPassportIdentifier` | unmatched | (none) | (none) |
+| `batteryStatus` | unmatched | (none) | (none) |
+| `cadmiumLeadSymbols` | unmatched | (none) | (none) |
+| `carbonFootprintGeneralInformation` | unmatched | (none) | (none) |
+| `carbonFootprintLabel` | unmatched | (none) | (none) |
+| `criticalRawMaterials` | note | MaterialComposition#batteryMaterialIdentifier (name): Text<br>MaterialComposition#batteryMaterialMass (name): Measurement xsd:float g<br>MaterialComposition#batteryMaterialName (name): Text<br>MaterialComposition#batteryMaterials (din+name) DIN 6.5.3, 6.5.4: List<br>MaterialComposition#isCriticalRawMaterial (name): Boolean | note unit: SAMM gives unit g; the attribute says kg. |
+| `currentSelfDischargeRate` | note | Performance#currentSelfDischargingRate (din) DIN 6.7.4.7: SingleEntity<br>Performance#currentSelfDischargingRateValue (name): Measurement xsd:float %<br>Performance#lastUpdate (name): Timestamp | note unit: SAMM gives unit %; the attribute says %/month. |
+| `dateOfPuttingIntoService` | unmatched | (none) | (none) |
+| `deepDischargeEvents` | note | Performance#lastUpdate (name): Timestamp<br>Performance#negativeEvents (name) DIN 6.7.8.4: List | note chapter: SAMM cites DIN chapter 6.7.8.4; the attribute is DIN 6.7.8.2. |
+| `euDeclarationOfConformity` | unmatched | (none) | (none) |
+| `extinguishingAgent` | unmatched | (none) | (none) |
+| `manufacturerInformation` | unmatched | (none) | (none) |
+| `manufacturingDate` | unmatched | (none) | (none) |
+| `manufacturingPlace` | unmatched | (none) | (none) |
+| `maximumPermittedBatteryPower` | unmatched | (none) | (none) |
+| `meaningOfLabelsAndSymbols` | unmatched | (none) | (none) |
+| `operatorIdentifier` | unmatched | (none) | (none) |
+| `originalPowerCapability` | note | Performance#atSoC (name): Measurement xsd:float %<br>Performance#originalPowerCapability (din) DIN 6.7.3.2: List<br>Performance#powerCapabilityAt (name): Measurement xsd:float %<br>Performance#ratedMaximumPower (din) DIN 6.7.3.2: Measurement xsd:double kW | note unit: SAMM gives unit %; the attribute says W.<br>note unit: SAMM gives unit %; the attribute says W.<br>note unit: SAMM gives unit kW; the attribute says W. |
+| `overchargeEvents` | note | Performance#lastUpdate (name): Timestamp<br>Performance#negativeEvents (name) DIN 6.7.8.4: List | note chapter: SAMM cites DIN chapter 6.7.8.4; the attribute is DIN 6.7.8.3. |
+| `powerToEnergyRatio` | mismatch | Performance#cRate (din) DIN 6.7.3.6: Measurement xsd:float C optional<br>Performance#powerCapabilityRatio (name): Measurement xsd:float % | MISMATCH unit: SAMM gives unit C; the attribute says W/Wh.<br>MISMATCH unit: SAMM gives unit %; the attribute says W/Wh. |
+| `recycledCobaltPostConsumer` | note | Circularity#postConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledCobaltPreConsumer` | note | Circularity#preConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledLeadPostConsumer` | note | Circularity#postConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledLeadPreConsumer` | note | Circularity#preConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledLithiumPostConsumer` | note | Circularity#postConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledLithiumPreConsumer` | note | Circularity#preConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledNickelPostConsumer` | note | Circularity#postConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `recycledNickelPreConsumer` | note | Circularity#preConsumerShare (name): Measurement xsd:float % [0 .. 100]<br>Circularity#recycledContent (din+name) DIN 6.6.2.3, 6.6.2.4, 6.6.2.5, 6.6.2.6, 6.6.2.7, 6.6.2.8, 6.6.2.9, 6.6.2.10: List<br>Circularity#recycledMaterial (name): Enumeration xsd:string {Cobalt \| Nickel \| Lithium \| Lead} | note valueKind: SAMM data type xsd:string (Enumeration) does not fit valueKind percentage.<br>note enum: SAMM enumerates Cobalt \| Nickel \| Lithium \| Lead; the attribute is percentage. |
+| `remainingCapacity` | note | Performance#lastUpdate (name): Timestamp<br>Performance#remainingCapacity (din) DIN 6.7.2.3: SingleEntity<br>Performance#remainingCapacityValue (name): Measurement xsd:float kWh | note unit: SAMM gives unit kWh; the attribute says Ah. |
+| `separateCollectionSymbol` | unmatched | (none) | (none) |
+| `sparePartSources` | note | Circularity#sparePartSources (name) DIN 6.6.1.3: List | note chapter: SAMM cites DIN chapter 6.6.1.3; the attribute is DIN 6.6.1.4. |
+| `supplyChainIndices` | mismatch | SupplyChainDueDiligence#supplyChainIndicies (din) DIN 6.4.4: Quantifiable xsd:float optional | MISMATCH valueKind: SAMM data type xsd:float (Quantifiable) does not fit valueKind text. |
+| `temperatureInformation` | note | Performance#lastUpdate (name): Timestamp<br>Performance#temperatureInformation (name) DIN 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8: SingleEntity | note chapter: SAMM cites DIN chapter 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8; the attribute is DIN 6.7.7.2. |
+| `temperatureRangeIdleLowerBoundary` | unmatched | (none) | (none) |
+| `temperatureRangeIdleUpperBoundary` | unmatched | (none) | (none) |
+| `testReportsProvingCompliance` | unmatched | (none) | (none) |
+| `warrantyPeriod` | unmatched | (none) | (none) |
+
+**SAMM properties citing a DIN chapter that no attribute claims:**
+
+(none)
+
 ## Entries
 
 ### `absoluteCarbonFootprint`: Absolute battery carbon footprint / Absoluter CO2-Fußabdruck der Batterie
@@ -56,6 +118,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (override) | EV: optional<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | CarbonFootprint#absoluteCarbonFootprint (din) DIN 6.3.10: Measurement xsd:double kg optional |
+| Battery Pass SAMM findings | MISMATCH unit: SAMM gives unit kg; the attribute says tCO2e. |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Total carbon footprint of the individual battery in tonnes CO2 equivalent. Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points; the IDTA templates have no element for it.
@@ -77,6 +141,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/CapacityThroughput/CapacityThroughputValue<br>5/CapacityThroughput/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#capacityThroughputValue<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (override) | EV: not_displayed<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#capacityThroughput (din) DIN 6.7.6.8: SingleEntity<br>Performance#capacityThroughputValue (name): Measurement xsd:float Ah<br>Performance#lastUpdate (name): Timestamp |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Cumulative capacity throughput over the battery's life to date (Annex VII Part B (3)). Listed by DIN DKE SPEC 99100 for LMT and stationary batteries; not one of the Commission's 71 data points. Dynamic, with a timestamp.
@@ -98,6 +164,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | (none) |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Article 7(1) requires the carbon footprint declaration to repeat administrative information about the manufacturer and battery model. DIN DKE SPEC 99100 treats this as a cross-reference to chapters 6.1 and 6.2, so there is no separate template element; the data is taken from the Nameplate attributes.
@@ -119,6 +187,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 3 / 3/ProductCarbonFootprints/ProductCarbonFootprint/PerformanceClass |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.carbon_footprint:1.0.0#performanceClass |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | (none) |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** The label showing the carbon footprint performance class (Article 7(2)). The Commission's v2.0 guidance marks it 'not to be filled/displayed as of February 2027' because the implementing act on the format is pending; DIN DKE SPEC 99100 lists it as voluntary. The class value itself is carried in the Carbon Footprint submodel.
@@ -140,6 +210,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 3 / 3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase |
 | Template semanticIds (joined) | 0173-1#02-ABG858#004 |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | CarbonFootprint#carbonFootprintPerLifecycleStage (din) DIN 6.3.3, 6.3.4, 6.3.5, 6.3.6: List |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Share of the total carbon footprint caused by distribution to the point of sale or installation. Phases are listed in the template; the percentage has no dedicated element.
@@ -161,6 +233,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 3 / 3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase |
 | Template semanticIds (joined) | 0173-1#02-ABG858#004 |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | CarbonFootprint#carbonFootprintPerLifecycleStage (din) DIN 6.3.3, 6.3.4, 6.3.5, 6.3.6: List |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Share of the total carbon footprint attributed to end-of-life treatment and recycling. Phases are listed in the template; the percentage has no dedicated element.
@@ -182,6 +256,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 3 / 3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase |
 | Template semanticIds (joined) | 0173-1#02-ABG858#004 |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | CarbonFootprint#carbonFootprintPerLifecycleStage (din) DIN 6.3.3, 6.3.4, 6.3.5, 6.3.6: List |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Share of the total carbon footprint caused by cell and pack manufacturing. Same template limitation as the raw material share: phases are listed, percentages are not modelled.
@@ -203,6 +279,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 3 / 3/ProductCarbonFootprints/ProductCarbonFootprint/LifeCyclePhases/LifeCyclePhase |
 | Template semanticIds (joined) | 0173-1#02-ABG858#004 |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | CarbonFootprint#carbonFootprintPerLifecycleStage (din) DIN 6.3.3, 6.3.4, 6.3.5, 6.3.6: List |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Share of the total carbon footprint caused by raw material acquisition and pre-processing. The IDTA 02035-3 template only lists the life-cycle phases covered (LifeCyclePhase), not a percentage per phase; the share value therefore has no dedicated element yet.
@@ -224,6 +302,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 4 / 4/TechnicalPropertyAreas/CapacityEnergyVoltage/CertifiedUsableBatteryEnergy |
 | Template semanticIds (joined) | 0173-1#02-ABL829#002 |
 | Applicability (override) | EV: optional<br>LMT: not_displayed<br>INDUSTRIAL_GT_2KWH: not_displayed |
+| Battery Pass SAMM properties (joined) | Performance#ratedEnergy (din) DIN 6.7.2.5: Measurement xsd:float kWh |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Usable battery energy determined during vehicle certification per UN GTR No 22. Voluntary for EV batteries in DIN DKE SPEC 99100, not applicable to other categories, not one of the Commission's 71 data points. It is the reference for the state of certified energy.
@@ -245,6 +325,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/CurrentSelfDischargingRate/CurrentSelfDischargingRateValue<br>5/CurrentSelfDischargingRate/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#currentSelfDischargingRateValue<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (override) | EV: not_displayed<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | Performance#currentSelfDischargingRate (din) DIN 6.7.4.7: SingleEntity<br>Performance#currentSelfDischargingRateValue (name): Measurement xsd:float %<br>Performance#lastUpdate (name): Timestamp |
+| Battery Pass SAMM findings | note unit: SAMM gives unit %; the attribute says %/month. |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Self-discharge rate in idle state at the current point of ageing. Voluntary for LMT and stationary batteries in DIN DKE SPEC 99100, dynamic, with a timestamp. Together with the initial rate it yields the Commission's 'evolution of self-discharging rates' (data point 65), which is a separate attribute.
@@ -266,6 +348,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (ec) | EV: mandatory<br>LMT: mandatory<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lifetimeReferenceTest (din) DIN 6.7.6.5: ResourcePath |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** The reference test (standard, procedure and conditions) used to determine the expected cycle life (Annex XIII 1(j)). IDTA 02035-4 v1.0.1 has no dedicated element for the test description, so the value currently has no template home; record it in the passport draft and flag it for the template maintainers.
@@ -287,6 +371,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 1 / 1/DateOfPuttingIntoService |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.digital_nameplate:1.0.0#dateOfPuttingIntoService |
 | Applicability (override) | EV: not_displayed<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | (none) |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Date on which the battery was first put into service. It is a state-of-health parameter (Annex VII Part B) that DIN DKE SPEC 99100 lists for LMT and stationary batteries; it is not one of the Commission's 71 passport data points.
@@ -308,6 +394,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (ec) | EV: not_yet_applicable<br>LMT: not_yet_applicable<br>INDUSTRIAL_GT_2KWH: not_yet_applicable |
+| Battery Pass SAMM properties (joined) | SupplyChainDueDiligence#supplyChainDueDiligenceReport (din) DIN 6.4.2: ResourcePath |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** The public report on the battery due diligence policy under Article 52(3), covering the risk management plan and a summary of the third-party verification. Deferred: Regulation (EU) 2025/1561 moved the obligation to 18 August 2027, so the Commission does not expect it in passports as of February 2027. No template element exists yet; carry it as a document.
@@ -329,6 +417,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/EnergyThroughput/EnergyThroughputValue<br>5/EnergyThroughput/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#energyThroughputValue<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (override) | EV: not_displayed<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#energyThroughput (din) DIN 6.7.6.7: SingleEntity<br>Performance#energyThroughputValue (name): Measurement xsd:float kWh<br>Performance#lastUpdate (name): Timestamp |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Cumulative energy throughput over the battery's life to date (Annex VII Part B (2)). Listed by DIN DKE SPEC 99100 for LMT and stationary batteries; not one of the Commission's 71 data points. Dynamic, with a timestamp.
@@ -350,6 +440,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 4 / 4/TechnicalPropertyAreas/RoundTripEnergyEfficiency/InitialSelfDischargingRate |
 | Template semanticIds (joined) | 0173-1#02-ABL834#002 |
 | Applicability (override) | EV: not_displayed<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | Performance#initialSelfDischarge (din) DIN 6.7.4.6: Measurement xsd:double %/month |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Self-discharge rate in idle state under reference conditions at beginning of life. Voluntary for LMT and stationary batteries in DIN DKE SPEC 99100; not one of the Commission's 71 data points.
@@ -371,6 +463,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 1 / 1/OperatorIdentifier |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.digital_nameplate:1.0.0#operatorIdentifier |
 | Applicability (ec) | EV: mandatory<br>LMT: mandatory<br>INDUSTRIAL_GT_2KWH: mandatory |
+| Battery Pass SAMM properties (joined) | (none) |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Identifies who registers and is responsible for the battery passport. The Commission lists this as mandatory (data point 2); DIN DKE SPEC 99100 marks the operator identifier as voluntary, so the template element is optional. Treat it as required for the passport to be complete.
@@ -392,6 +486,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/NegativeEvents<br>5/NegativeEvents/NegativeEvent/NegativeEventValue<br>5/NegativeEvents/NegativeEvent/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#negativeEvents<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#negativeEventValue<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (ec) | EV: conditional<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#negativeEvents (name) DIN 6.7.8.4: List |
+| Battery Pass SAMM findings | note chapter: SAMM cites DIN chapter 6.7.8.4; the attribute is DIN 6.7.8.3. |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Number of occasions on which the voltage rose above the upper operational limit stated in the passport. Voluntary in DIN DKE SPEC 99100; recorded as a negative event under the Commission's data point 69 where relevant.
@@ -413,6 +509,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 4 / 4/TechnicalPropertyAreas/PowerCapability/RatioNorminalBatteryPowerAndBatteryEnergy |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.technical_data:1.0.0#powerCapabilityRatio |
 | Applicability (override) | EV: optional<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | Performance#cRate (din) DIN 6.7.3.6: Measurement xsd:float C optional<br>Performance#powerCapabilityRatio (name): Measurement xsd:float % |
+| Battery Pass SAMM findings | MISMATCH unit: SAMM gives unit C; the attribute says W/Wh.<br>MISMATCH unit: SAMM gives unit %; the attribute says W/Wh. |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Nominal battery power divided by battery energy (Annex IV Part B (2)). Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points. The template idShort contains the typo 'Norminal' as published.
@@ -434,6 +532,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/RemainingEnergy/RemainingEnergyValue<br>5/RemainingEnergy/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#remainingEnergyValue<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (override) | EV: optional<br>LMT: not_displayed<br>INDUSTRIAL_GT_2KWH: not_displayed |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#remainingEnergy (din) DIN 6.7.2.6: SingleEntity<br>Performance#remainingEnergyValue (name): Measurement xsd:float kWh |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** The usable battery energy at the present point in the battery's life per UN GTR No 22. Voluntary for EV, dynamic, from the BMS with a timestamp; not one of the Commission's 71 data points.
@@ -455,6 +555,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (override) | EV: optional<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | SupplyChainDueDiligence#supplyChainIndicies (din) DIN 6.4.4: Quantifiable xsd:float optional |
+| Battery Pass SAMM findings | MISMATCH valueKind: SAMM data type xsd:float (Quantifiable) does not fit valueKind text. |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Optional indices or scores describing the sustainability performance of the supply chain. Voluntary in DIN DKE SPEC 99100 with no regulation reference and no Commission data point; no template element.
@@ -476,6 +578,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | (none) / (none) |
 | Template semanticIds (joined) | (none) |
 | Applicability (override) | EV: optional<br>LMT: optional<br>INDUSTRIAL_GT_2KWH: optional |
+| Battery Pass SAMM properties (joined) | SupplyChainDueDiligence#thirdPartyAussurances (din) DIN 6.4.3: ResourcePath optional |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Certificates or statements from recognised due diligence schemes that the operator relies on under Article 49(d). Voluntary in DIN DKE SPEC 99100 and not one of the Commission's 71 data points; no template element.
@@ -497,6 +601,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/TemperatureInformation/TimeExtremeHighTempCharging<br>5/TemperatureInformation/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#timeExtremeHighTempCharging<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (ec) | EV: conditional<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#temperatureInformation (din) DIN 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8: SingleEntity<br>Performance#timeExtremeHighTempCharging (name): Measurement xsd:double min |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Aggregated minutes of charging while the temperature exceeded the upper boundary (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.
@@ -518,6 +624,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/TemperatureInformation/TimeExtremeLowTempCharging<br>5/TemperatureInformation/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#timeExtremeLowTempCharging<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (ec) | EV: conditional<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#temperatureInformation (din) DIN 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8: SingleEntity<br>Performance#timeExtremeLowTempCharging (name): Measurement xsd:double min |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Aggregated minutes of charging while the temperature was below the lower boundary (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.
@@ -539,6 +647,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/TemperatureInformation/TimeExtremeHighTemp<br>5/TemperatureInformation/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#timeExtremeHighTemp<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (ec) | EV: conditional<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#temperatureInformation (din) DIN 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8: SingleEntity<br>Performance#timeExtremeHighTemp (name): Measurement xsd:double min |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Aggregated minutes in which the temperature exceeded the upper boundary of the idle temperature range (Annex VII Part B (4)). DIN DKE SPEC 99100 lists it for LMT and industrial batteries; the Commission's data point 70 (periodically recorded operating conditions) is taken as its legal hook.
@@ -560,6 +670,8 @@ faithful. This sheet is not legal advice.
 | IDTA 02035 part / template paths | 5 / 5/TemperatureInformation/TimeExtremeLowTemp<br>5/TemperatureInformation/LastUpdate |
 | Template semanticIds (joined) | urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#timeExtremeLowTemp<br>urn:samm:io.admin-shell.idta.batterypass.product_condition:1.0.2#lastUpdate |
 | Applicability (ec) | EV: conditional<br>LMT: conditional<br>INDUSTRIAL_GT_2KWH: conditional |
+| Battery Pass SAMM properties (joined) | Performance#lastUpdate (name): Timestamp<br>Performance#temperatureInformation (din) DIN 6.7.7.5, 6.7.7.6, 6.7.7.7, 6.7.7.8: SingleEntity<br>Performance#timeExtremeLowTemp (name): Measurement xsd:double min |
+| Battery Pass SAMM findings | (none) |
 | Last verified | 2026-09-03 |
 
 **Explanation (en):** Aggregated minutes in which the temperature fell below the lower boundary of the idle temperature range (Annex VII Part B (4)). Listed for LMT and industrial batteries; anchored to the Commission's data point 70.

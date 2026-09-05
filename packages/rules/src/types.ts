@@ -262,6 +262,59 @@ export interface ArtefactManifest {
   artefacts: ArtefactEntry[];
 }
 
+// ---------------------------------------------------------------------------
+// Battery Pass Data Model (SAMM) index: kb/generated/batterypass-samm.json
+// Dev-time cross-check only; the runtime never loads it (ADR D-030).
+// ---------------------------------------------------------------------------
+
+export interface SammCharacteristic {
+  /** Local name of the characteristic the property points at (a Trait keeps its own name). */
+  name: string | null;
+  /** SAMM characteristic kind after resolving a Trait: Measurement, Enumeration, List, ... */
+  kind: string | null;
+  /** "xsd:float" and friends; null when the data type is an Entity. */
+  dataType: string | null;
+  /** SAMM unit local name (e.g. "percent"), or the symbol of a model-local samm:Unit. */
+  unit: string | null;
+  /** Symbol of a model-local samm:Unit, when the unit is not a SAMM catalogue unit. */
+  unitSymbol: string | null;
+  /** Enumeration values in declaration order, duplicates removed. */
+  values: string[] | null;
+  /** Local name of the Entity data type, when the characteristic is entity-valued. */
+  entity: string | null;
+  /** RangeConstraint bounds as literal strings, from a Trait. */
+  range: { min: string | null; max: string | null } | null;
+}
+
+export interface SammProperty {
+  name: string;
+  urn: string;
+  preferredName: string | null;
+  description: string | null;
+  /** Parsed from the "DIN DKE Spec 99100 chapter reference" sentence of the description. */
+  dinChapters: string[];
+  /** Aspect / entity walk, e.g. "Circularity/sparePartSources/addressOfSupplier". */
+  paths: string[];
+  optional: boolean;
+  characteristic: SammCharacteristic;
+}
+
+export interface SammSection {
+  key: string;
+  version: string;
+  file: string;
+  aspect: string;
+  namespace: string;
+  description: string | null;
+  propertyCount: number;
+  properties: SammProperty[];
+}
+
+export interface SammModel {
+  $comment: string;
+  sections: SammSection[];
+}
+
 /** Minimal shape of an AAS V3.0 JSON Environment as shipped in the templates. */
 export interface AasEnvironment {
   assetAdministrationShells?: unknown[];

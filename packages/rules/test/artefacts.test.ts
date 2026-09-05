@@ -12,7 +12,7 @@ const artefactsDir = resolve(import.meta.dirname, '../artefacts');
 const bundled = manifest.artefacts.filter((a) => a.path !== null);
 
 describe('artefacts/manifest.json', () => {
-  it('pins the seven IDTA 02035 templates (JSON + AASX), two AAS schemas, the EC guidance and the longlist', () => {
+  it('pins the seven IDTA 02035 templates (JSON + AASX), two AAS schemas, the EC guidance, the longlist and the seven SAMM models', () => {
     const ids = new Set(manifest.artefacts.map((a) => a.id));
     for (let part = 1; part <= 7; part += 1) {
       expect(ids.has(`idta-02035-${part}/template.json`)).toBe(true);
@@ -22,7 +22,18 @@ describe('artefacts/manifest.json', () => {
     expect(ids.has('aas-json-schema/3.1.2')).toBe(true);
     expect(ids.has('ec/data-points-by-category')).toBe(true);
     expect(ids.has('batterypass/data-attribute-longlist')).toBe(true);
-    expect(bundled.length).toBe(24);
+    for (const section of [
+      'CarbonFootprint',
+      'Circularity',
+      'GeneralProductInformation',
+      'Labels',
+      'MaterialComposition',
+      'Performance',
+      'SupplyChainDueDiligence',
+    ]) {
+      expect(ids.has(`batterypass/samm/${section}`)).toBe(true);
+    }
+    expect(bundled.length).toBe(31);
   });
 
   it('every entry has an immutable source URL, a sha256 and a licence-bearing source', () => {

@@ -138,6 +138,11 @@ so no build is needed before `pnpm test`.
   Playwright proves browser results equal core's Node results on the Musterwerk fixtures and
   the golden samples, and that no request leaves the origin. `pnpm --filter @passwerk/web dev`
   to run it.
+- **Battery Pass SAMM cross-check: done.** The consortium's seven SAMM aspect models (v1.2.0,
+  Performance 1.2.1) are pinned beside the longlist and indexed into
+  `kb/generated/batterypass-samm.json`; `pnpm review-sheet` joins every attribute to them by DIN
+  chapter and IDTA semanticId name and lists unit, type, enum and range disagreements in
+  `docs/KB_REVIEW.md` for human review. Dev-time only, never loaded at runtime (ADR D-030).
 - **Next: Phase 6** (MCP server, agent skill, CLI), then Phase 7, 7b, 7c (D-024 order). The
   rest of Phase 7a (project screen with obligations, facts screen, HTML sheet, QR, BYOK)
   follows Phase 7.

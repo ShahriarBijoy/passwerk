@@ -15,6 +15,11 @@ official source is *not* stored here but joined at runtime by `@passwerk/rules`:
 | semanticId, cardinality, AAS value type, template unit | `templatePaths[*]` looked up in `kb/generated/template-catalogue.json` |
 | DIN chapter, definition, static/dynamic, granularity, access rights | `din.no` looked up in the longlist |
 
+Not joined at runtime but checked at review time: `pnpm review-sheet` joins every attribute to the
+Battery Pass SAMM aspect models (`kb/generated/batterypass-samm.json`) by DIN chapter and IDTA
+semanticId name and lists unit, data type, enumeration and range disagreements in
+`docs/KB_REVIEW.md` (ADR D-030). Resolve a finding by changing the JSON here, never the script.
+
 ## Entry schema
 
 ```jsonc

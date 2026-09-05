@@ -342,6 +342,76 @@
       "path": "batterypass/2025_Battery_Passport_Data_Attributes_V1.2.xlsx",
       "sha256": "51ecbc9ee2851ec43f400736bd1583b3262d1d8a28ad4245d997bcd6edc564c4",
       "bytes": 202443
+    },
+    {
+      "id": "batterypass/samm/GeneralProductInformation",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: General Product Information aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.GeneralProductInformation/1.2.0/GeneralProductInformation.ttl",
+      "path": "batterypass/samm/GeneralProductInformation-1.2.0.ttl",
+      "sha256": "22d6c3b6308003fe7504995ab664840d24d4f2514c49d595a46011b77de7ff1e",
+      "bytes": 11849
+    },
+    {
+      "id": "batterypass/samm/CarbonFootprint",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: Carbon Footprint aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.CarbonFootprint/1.2.0/CarbonFootprintForBatteries.ttl",
+      "path": "batterypass/samm/CarbonFootprint-1.2.0.ttl",
+      "sha256": "2860e3c00d17d1fc6b1f169c9ab1bcb31764425daaf9a91c2e2a9421f94e5512",
+      "bytes": 5939
+    },
+    {
+      "id": "batterypass/samm/Circularity",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: Circularity aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.Circularity/1.2.0/Circularity.ttl",
+      "path": "batterypass/samm/Circularity-1.2.0.ttl",
+      "sha256": "504a3e10a4f683e4f9887c9202e2a14ac82a6635e1a7b11caaa6341febd8a99b",
+      "bytes": 14764
+    },
+    {
+      "id": "batterypass/samm/MaterialComposition",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: Material Composition aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.MaterialComposition/1.2.0/MaterialComposition.ttl",
+      "path": "batterypass/samm/MaterialComposition-1.2.0.ttl",
+      "sha256": "c9cab4763d3543b4c36426f6a7e00bda19af57f12a161f2b4919077998ff5a17",
+      "bytes": 10591
+    },
+    {
+      "id": "batterypass/samm/Performance",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.1: Performance and Durability aspect model (SAMM Turtle)",
+      "version": "1.2.1",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.Performance/1.2.1/PerformanceAndDurability.ttl",
+      "path": "batterypass/samm/Performance-1.2.1.ttl",
+      "sha256": "cf015f99adf880d3cfc684ecceb2323ecc31cda2b0c4a96a07e301b0621021c3",
+      "bytes": 33856
+    },
+    {
+      "id": "batterypass/samm/Labels",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: Labels and Certification aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.Labels/1.2.0/Labeling.ttl",
+      "path": "batterypass/samm/Labels-1.2.0.ttl",
+      "sha256": "7c886c528cad81d134d8066976f370c0dc75c8c602e00b3dfccadde6040565bb",
+      "bytes": 4645
+    },
+    {
+      "id": "batterypass/samm/SupplyChainDueDiligence",
+      "source": "batterypass",
+      "title": "Battery Pass Data Model 1.2.0: Supply Chain Due Diligence aspect model (SAMM Turtle)",
+      "version": "1.2.0",
+      "url": "https://raw.githubusercontent.com/batterypass/BatteryPassDataModel/8722af2d15c981c63552e50b9cd71a39b213b9fc/BatteryPass/io.BatteryPass.SupplyChainDueDiligence/1.2.0/SupplyChainDueDiligence.ttl",
+      "path": "batterypass/samm/SupplyChainDueDiligence-1.2.0.ttl",
+      "sha256": "67e552fedf12d6aa29c4c4a3d7e655302c1870e4dddfc7d89bb43c6bc3115879",
+      "bytes": 3954
     }
   ]
 }

@@ -9,10 +9,19 @@
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sammJson from '../kb/generated/batterypass-samm.json' with { type: 'json' };
 import { type Attribute, attributes, BATTERY_CATEGORIES } from '../src/index.ts';
+import type { SammModel } from '../src/types.ts';
+import {
+  type AttributeCrossCheck,
+  crossCheck,
+  type SammCrossCheck,
+  type SammMatch,
+} from './lib/samm-crosscheck.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REVIEW_SHEET_PATH = join(here, '..', '..', '..', 'docs', 'KB_REVIEW.md');
+export const sammModel = sammJson as unknown as SammModel;
 
 const cell = (s: string) => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 const list = (xs: readonly string[]) => (xs.length === 0 ? '(none)' : xs.map(cell).join('<br>'));
@@ -22,7 +31,29 @@ function rangeText(a: Attribute): string {
   return `${a.range.min ?? '-inf'} .. ${a.range.max ?? 'inf'}`;
 }
 
-function entry(a: Attribute): string[] {
+function matchText(m: SammMatch): string {
+  const facts = [
+    m.kind ?? 'characteristic',
+    m.dataType ?? '',
+    m.unitMapped ?? m.unit ?? '',
+    m.values ? `{${m.values.join(' | ')}}` : '',
+    m.range ? `[${m.range.min ?? '-inf'} .. ${m.range.max ?? 'inf'}]` : '',
+    m.optional ? 'optional' : '',
+  ].filter((s) => s !== '');
+  const din = m.dinChapters.length === 0 ? '' : ` DIN ${m.dinChapters.join(', ')}`;
+  return `${m.section}#${m.name} (${m.joins.join('+')})${din}: ${facts.join(' ')}`;
+}
+
+function findingsText(c: AttributeCrossCheck): string {
+  const items = c.matches.flatMap((m) =>
+    m.findings.map(
+      (f) => `${f.severity === 'mismatch' ? 'MISMATCH' : 'note'} ${f.code}: ${f.text}`,
+    ),
+  );
+  return items.length === 0 ? '(none)' : list(items);
+}
+
+function entry(a: Attribute, check: AttributeCrossCheck | undefined): string[] {
   const L: string[] = [];
   L.push(`### \`${a.id}\`: ${cell(a.name.en)} / ${cell(a.name.de)}`);
   L.push('');
@@ -45,6 +76,10 @@ function entry(a: Attribute): string[] {
   L.push(
     `| Applicability (${a.applicabilitySource}) | ${BATTERY_CATEGORIES.map((c) => `${c}: ${a.applicability[c].status}`).join('<br>')} |`,
   );
+  L.push(
+    `| Battery Pass SAMM properties (joined) | ${check && check.matches.length > 0 ? list(check.matches.map(matchText)) : '(none)'} |`,
+  );
+  L.push(`| Battery Pass SAMM findings | ${check ? findingsText(check) : '(none)'} |`);
   L.push(`| Last verified | ${a.lastVerified} |`);
   L.push('');
   L.push(`**Explanation (en):** ${cell(a.explanation.en)}`);
@@ -58,10 +93,14 @@ function entry(a: Attribute): string[] {
   return L;
 }
 
-export function renderReviewSheet(all: readonly Attribute[] = attributes): string {
+export function renderReviewSheet(
+  all: readonly Attribute[] = attributes,
+  check: SammCrossCheck = crossCheck(all, sammModel),
+): string {
   const flagged = all
     .filter((a) => a.verify)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const checkById = new Map(check.attributes.map((c) => [c.id, c]));
   const L: string[] = [];
   L.push('# Knowledge-base review sheet: entries marked `verify: true`');
   L.push('');
@@ -92,10 +131,60 @@ export function renderReviewSheet(all: readonly Attribute[] = attributes): strin
     );
   }
   L.push('');
+  L.push(...crossCheckSection(check));
   L.push('## Entries');
   L.push('');
-  for (const a of flagged) L.push(...entry(a));
+  for (const a of flagged) L.push(...entry(a, checkById.get(a.id)));
   return `${L.join('\n')}\n`;
+}
+
+function crossCheckSection(check: SammCrossCheck): string[] {
+  const L: string[] = [];
+  const versions = [...new Set(sammModel.sections.map((s) => s.version))].sort().join(', ');
+  L.push('## Cross-check against the Battery Pass Data Model (SAMM)');
+  L.push('');
+  L.push(
+    `Every attribute is joined to the Battery Pass consortium's SAMM aspect models (v${versions},`,
+    '`packages/rules/artefacts/batterypass/samm/`) by the DIN DKE SPEC 99100 chapter the SAMM',
+    'description cites (`din`) and by the local name of the IDTA semanticId the attribute maps to',
+    '(`name`). A MISMATCH means the two sources disagree on unit, data type or range and a human',
+    'must decide which is right; a note is context (an enumeration, a range the attribute does',
+    'not carry, a unit outside the vocabulary). The knowledge base is never changed by this check',
+    '(ADR D-030).',
+  );
+  L.push('');
+  L.push(
+    `Summary: ${check.summary.ok} ok, ${check.summary.note} with notes only, ${check.summary.mismatch} with a mismatch, ${check.summary.unmatched} without a SAMM counterpart; ${check.summary.unclaimed} SAMM properties cite a DIN chapter no attribute claims.`,
+  );
+  L.push('');
+  L.push(
+    'A `din` join speaks for the whole attribute and yields mismatches. A `name` join into one of',
+    'several template elements (a value next to its timestamp, a share next to its material) or',
+    'into a composite attribute describes only a part, so it yields notes.',
+  );
+  L.push('');
+  const problems = check.attributes.filter((c) => c.status !== 'ok');
+  L.push('| Attribute | Status | Battery Pass SAMM properties (joined) | Findings |');
+  L.push('|---|---|---|---|');
+  for (const c of problems) {
+    L.push(
+      `| \`${c.id}\` | ${c.status} | ${c.matches.length === 0 ? '(none)' : list(c.matches.map(matchText))} | ${findingsText(c)} |`,
+    );
+  }
+  L.push('');
+  L.push('**SAMM properties citing a DIN chapter that no attribute claims:**');
+  L.push('');
+  if (check.unclaimed.length === 0) {
+    L.push('(none)');
+  } else {
+    L.push('| SAMM property | DIN chapters cited |');
+    L.push('|---|---|');
+    for (const u of check.unclaimed) {
+      L.push(`| \`${u.section}#${u.name}\` | ${u.dinChapters.join(', ')} |`);
+    }
+  }
+  L.push('');
+  return L;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

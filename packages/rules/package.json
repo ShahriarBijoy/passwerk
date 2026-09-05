@@ -31,7 +31,9 @@
     "review-sheet": "tsx scripts/review-sheet.ts"
   },
   "devDependencies": {
+    "@types/n3": "1.26.3",
     "fflate": "0.7.5",
+    "n3": "2.7.2",
     "tsx": "4.23.13"
   }
 }
