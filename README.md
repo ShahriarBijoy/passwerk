@@ -52,7 +52,7 @@ CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 |---|---|
 | `@passwerk/rules` | Bundled, checksummed IDTA 02035 templates, AAS schemas, EC data-point matrix, attribute knowledge base (DE/EN), legal timeline |
 | `@passwerk/core` | MCP-free library: ingest, extract, map, validate (4 layers), gap report, emit AAS JSON / AASX / HTML, data carrier (UID, GS1 Digital Link, QR) |
-| `@passwerk/server` | MCP server over stdio and Streamable HTTP |
+| `@passwerk/server` | MCP server over stdio and Streamable HTTP: ten tools, reference resources, workflow prompts; see [docs/install](docs/install/claude-code.md) and [skills/passwerk](skills/passwerk/SKILL.md) |
 | `@passwerk/cli` | `passwerk audit | extract | emit | obligations` with CI-friendly exit codes |
 | `@passwerk/web` | Client-side web app: upload, review, gaps, export; the primary product (ADR D-019) |
 

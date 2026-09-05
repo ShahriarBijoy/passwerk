@@ -12,8 +12,9 @@ afterAll(() => session.close());
 const text = async (name: string, args: Record<string, string>) => {
   const r = await session.client.getPrompt({ name, arguments: args });
   const first = r.messages[0];
-  expect(first?.role).toBe('user');
-  return (first?.content as { text: string }).text;
+  if (!first) throw new Error(`${name}: no message`);
+  expect(first.role).toBe('user');
+  return (first.content as { text: string }).text;
 };
 
 describe('prompts', () => {

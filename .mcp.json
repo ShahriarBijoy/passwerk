@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "passwerk": {
+      "command": "node",
+      "args": ["packages/server/dist/bin.js"],
+      "env": {
+        "PASSWERK_ROOT": "."
+      }
+    }
+  }
+}
