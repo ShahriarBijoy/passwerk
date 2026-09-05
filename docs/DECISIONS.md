@@ -482,3 +482,33 @@ resolves it.
 L2-only. Emitted bytes do not change, only verdicts. Adapters (Phase 6) pass `asOf` once and get
 one answer from every tool. The Phase 5 memory note that L4 "refuses valid when LastUpdate falls
 back to createdAt" now holds for the exporters too.
+
+## D-027: Ingestion is bounded; worksheets are read sparse (2026-09-05)
+
+**Context.** The XLSX reader expanded every coordinate from A1 to the furthest occupied cell
+into a `Cell` with its own provenance object, so one cell at Z1000 cost 26,000 objects and a
+stray note far down a supplier sheet could freeze a browser tab (issue #15). `unzipSync` inflated
+the whole OOXML archive, media included, before the XML parts were picked out. Phase 6 accepts
+inline bytes over HTTP and Phase 7a accepts browser uploads, so the cost of one input has to be
+bounded before either exists.
+
+**Decision.** `IngestLimits` (input bytes, archive entries, inflated XML bytes, occupied cells,
+compacted grid cells, row and column range) with `DEFAULT_INGEST_LIMITS` lives in
+`ingest/types.ts` and is threaded through `ingest(options.limits)`, `readXlsx` and `readDocx`.
+`unzipOoxml` checks the input size first, then walks the zip directory through fflate's
+`filter`, which runs before each entry is inflated: entry count and the declared inflated size
+of the `.xml` / `.rels` parts are bounded there, non-XML parts are never inflated, and the
+actual inflated total is checked again afterwards. Exceeding a limit is
+`IngestFailure('limit_exceeded', ...)`, a new `IngestErrorCode`, which `ingest` turns into the
+document's structured `error` like every other failure. Worksheets are read **sparse**: only
+occupied cells are materialised, rows and columns that are empty everywhere are dropped, every
+cell keeps its original A1 reference and every line keeps its original row number in
+provenance, and the compacted grid (occupied rows x occupied columns) is bounded by
+`maxGridCells`. Out-of-range or malformed coordinates are a `corrupt` file.
+
+**Consequences.** A table that starts at B2 now begins at index 0, which also helps the
+pair-table detection in `extractFacts`. A gap cell survives only when its column is occupied
+elsewhere in the sheet; the Phase 4 edge-case test was updated accordingly. The Musterwerk
+fixtures have no empty rows or columns inside their used range, so their provenance and
+extraction results are unchanged. Phase 7a should still parse in a worker with cancellation;
+that complements the limits, it does not replace them.

@@ -50,7 +50,13 @@ export const Page = z.object({
 });
 export type Page = z.infer<typeof Page>;
 
-export const IngestErrorCode = z.enum(['unsupported', 'encrypted', 'corrupt', 'undecodable']);
+export const IngestErrorCode = z.enum([
+  'unsupported',
+  'encrypted',
+  'corrupt',
+  'undecodable',
+  'limit_exceeded',
+]);
 export type IngestErrorCode = z.infer<typeof IngestErrorCode>;
 
 export const IngestError = z.object({ code: IngestErrorCode, message: z.string().min(1) });
@@ -69,6 +75,42 @@ export type IngestedDocument = z.infer<typeof IngestedDocument>;
 
 export const DocumentBundle = z.object({ documents: z.array(IngestedDocument) });
 export type DocumentBundle = z.infer<typeof DocumentBundle>;
+
+/**
+ * Bounds on what a single input may cost (issue #15). Every limit is checked before the
+ * corresponding allocation, and exceeding one is reported as `limit_exceeded`, never as a
+ * crash. Adapters may tighten them (a browser tab, an HTTP request) but should not need to.
+ */
+export interface IngestLimits {
+  /** Largest accepted input file, in bytes. */
+  maxInputBytes: number;
+  /** Most entries an OOXML zip may list. */
+  maxArchiveEntries: number;
+  /** Most bytes the XML parts of one OOXML package may inflate to, in total. */
+  maxExpandedBytes: number;
+  /** Most occupied cells across all sheets of one workbook. */
+  maxCells: number;
+  /** Most cells in a sheet's compacted grid (occupied rows x occupied columns). */
+  maxGridCells: number;
+  /** Largest accepted row index (Excel's own limit). */
+  maxRows: number;
+  /** Largest accepted column index (Excel's own limit). */
+  maxCols: number;
+}
+
+export const DEFAULT_INGEST_LIMITS: Readonly<IngestLimits> = Object.freeze({
+  maxInputBytes: 64 * 1024 * 1024,
+  maxArchiveEntries: 5_000,
+  maxExpandedBytes: 256 * 1024 * 1024,
+  maxCells: 1_000_000,
+  maxGridCells: 4_000_000,
+  maxRows: 1_048_576,
+  maxCols: 16_384,
+});
+
+export function resolveLimits(limits: Partial<IngestLimits> = {}): IngestLimits {
+  return { ...DEFAULT_INGEST_LIMITS, ...limits };
+}
 
 /** Thrown by readers; `ingest` turns it into `IngestedDocument.error`. */
 export class IngestFailure extends Error {

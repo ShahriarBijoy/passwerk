@@ -5,13 +5,22 @@ import { readDocx } from './docx.js';
 import type { PdfReadOptions } from './pdf.js';
 import { readPdf } from './pdf.js';
 import { readTxt } from './txt.js';
-import type { DocumentBundle, Format, IngestedDocument, InputFile, Page } from './types.js';
+import type {
+  DocumentBundle,
+  Format,
+  IngestedDocument,
+  IngestLimits,
+  InputFile,
+  Page,
+} from './types.js';
 import { IngestFailure } from './types.js';
 import { readXlsx } from './xlsx.js';
 
 export interface IngestOptions {
   /** Forwarded to {@link readPdf}; a browser caller must set `workerSrc` (Phase 7a). */
   pdf?: PdfReadOptions;
+  /** Bounds for OOXML unpacking and worksheet size; see {@link DEFAULT_INGEST_LIMITS}. */
+  limits?: Partial<IngestLimits>;
 }
 
 const CONTENT_TYPES: Record<Exclude<Format, 'unsupported'>, string> = {
@@ -75,9 +84,9 @@ async function readPages(
     case 'pdf':
       return readPdf(file, options);
     case 'xlsx':
-      return readXlsx(file);
+      return readXlsx(file, options?.limits);
     case 'docx':
-      return readDocx(file);
+      return readDocx(file, options?.limits);
     case 'csv':
       return readCsv(file);
     case 'txt':
