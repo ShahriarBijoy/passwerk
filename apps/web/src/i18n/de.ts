@@ -15,6 +15,7 @@ export const de = {
     'Der Browser erlaubt keinen lokalen Speicher. Änderungen gehen beim Neuladen verloren.',
   'app.storage.version':
     'Eine frühere Sitzung konnte nicht wiederhergestellt werden (anderes Datenformat).',
+  'step.nav': 'Schritte',
   'step.start': 'Start',
   'step.upload': 'Dokumente',
   'step.review': 'Prüfen',

@@ -26,10 +26,19 @@ export class ErrorBoundary extends Component<Props, State> {
         <pre className="overflow-auto text-xs">{this.state.error.message}</pre>
         <div className="flex gap-2">
           <Button onClick={() => window.location.reload()}>{t(lang, 'app.error.reload')}</Button>
-          <Button variant="outline" onClick={() => void navigator.clipboard.writeText(details)}>
+          <Button
+            variant="outline"
+            onClick={() => void navigator.clipboard?.writeText(details).catch(() => undefined)}
+          >
             {t(lang, 'app.error.copy')}
           </Button>
-          <Button variant="destructive" onClick={this.props.onReset}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              this.setState({ error: null });
+              this.props.onReset();
+            }}
+          >
             {t(lang, 'app.startOver')}
           </Button>
         </div>

@@ -15,6 +15,7 @@ export const en: Record<keyof typeof de, string> = {
   'app.storage.unavailable':
     'The browser does not allow local storage. Changes will be lost on reload.',
   'app.storage.version': 'A previous session could not be restored (different data format).',
+  'step.nav': 'Steps',
   'step.start': 'Start',
   'step.upload': 'Documents',
   'step.review': 'Review',

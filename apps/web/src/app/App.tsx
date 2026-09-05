@@ -38,12 +38,24 @@ export interface AppProps {
   storageNotice?: 'unavailable' | 'version';
 }
 
+let idCounter = 0;
+
+/** `crypto.randomUUID` when available, otherwise a non-clock, non-crypto fallback. */
+function randomId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  idCounter += 1;
+  return `${Math.random().toString(36).slice(2)}-${idCounter}`;
+}
+
 export function App({ store, storageNotice }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
   const [asOf] = useState(() => nowIso());
+  const [defaultPassportId] = useState(() => `urn:passwerk:draft:${randomId()}`);
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
 
@@ -53,7 +65,7 @@ export function App({ store, storageNotice }: AppProps) {
       description: message,
       action: {
         label: t(lang, 'app.error.copy'),
-        onClick: () => void navigator.clipboard.writeText(message),
+        onClick: () => void navigator.clipboard?.writeText(message).catch(() => undefined),
       },
     });
   };
@@ -115,7 +127,7 @@ export function App({ store, storageNotice }: AppProps) {
         return (
           <StartView
             lang={lang}
-            defaultPassportId={`urn:passwerk:draft:${crypto.randomUUID()}`}
+            defaultPassportId={defaultPassportId}
             {...(state.meta
               ? {
                   resume: {
@@ -196,7 +208,7 @@ export function App({ store, storageNotice }: AppProps) {
       <header className="flex flex-wrap items-center gap-3 border-b pb-3">
         <h1 className="font-bold text-xl">{t(lang, 'app.title')}</h1>
         <span className="text-muted-foreground text-sm">{t(lang, 'app.tagline')}</span>
-        <nav className="flex gap-1" aria-label="steps">
+        <nav className="flex gap-1" aria-label={t(lang, 'step.nav')}>
           {STEPS.map((step) => (
             <Button
               key={step}
