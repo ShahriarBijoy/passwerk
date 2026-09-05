@@ -562,7 +562,8 @@ proposals, decisions); the draft, conflicts, validation report and gap report ar
 every change from base draft plus decisions, so the screen can never show a stale verdict.
 Decisions are keyed by attribute and composite path with one decision per key, and every
 decision carries `override: true` because a user's choice is the resolution. The input state
-autosaves to IndexedDB without document bytes; a version mismatch is reported, never migrated.
+autosaves to IndexedDB: the decisions, the extracted facts and the proposals, but never the
+uploaded files; a version mismatch is reported, never migrated.
 The definition of done has two tracks: the Musterwerk documents must produce in the browser
 the same verdict, findings and gap items core computes in Node for the same inputs and clock,
 and the eight golden samples imported as draft JSON must show core's verdicts. A browser-side
