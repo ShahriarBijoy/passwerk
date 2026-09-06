@@ -28,10 +28,13 @@ export interface LoopOptions {
   onEvent: (e: LoopEvent) => void;
 }
 
-export interface LoopResult {
-  status: 'finished' | 'bound';
-  turns: number;
-}
+export type LoopResult =
+  /** The model ended its turn (`end_turn` or `stop_sequence`). */
+  | { status: 'finished'; turns: number }
+  /** `maxTurns` requests were made and the model still wanted to continue. */
+  | { status: 'bound'; turns: number }
+  /** The response ended for another reason (`max_tokens`, `refusal`, ...): not a finished run. */
+  | { status: 'stopped'; turns: number; stopReason: string };
 
 const MAX_TOKENS = 16000;
 
@@ -52,8 +55,12 @@ export async function runAgentLoop(o: LoopOptions): Promise<LoopResult> {
       else if (block.type === 'tool_use') toolUses.push(block);
     }
     messages.push({ role: 'assistant', content: response.content });
-    if (response.stop_reason !== 'tool_use' || toolUses.length === 0) {
-      return { status: 'finished', turns: turn };
+    const stop = response.stop_reason;
+    if (stop === 'end_turn' || stop === 'stop_sequence') return { status: 'finished', turns: turn };
+    // A server-side pause: re-send the conversation as is and let the model continue.
+    if (stop === 'pause_turn') continue;
+    if (stop !== 'tool_use' || toolUses.length === 0) {
+      return { status: 'stopped', turns: turn, stopReason: String(stop) };
     }
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const use of toolUses) {

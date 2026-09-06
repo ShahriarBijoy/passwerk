@@ -88,6 +88,32 @@ describe('passwerk extract', { timeout: 30000 }, () => {
     expect(partial.out()).toContain('Ingested 1 document(s)');
   });
 
+  it('a document that fails to parse is reported on stderr; all failed is exit 3 (PR #26 review)', async () => {
+    const corrupt = new TextEncoder().encode('not a zip');
+    const only = captureIo({ '/work/bad/stueckliste.xlsx': corrupt });
+    expect(await run(['extract', 'bad/stueckliste.xlsx', '--json'], only)).toBe(3);
+    expect(only.err()).toMatch(/bad\/stueckliste\.xlsx: /);
+    expect(only.out()).toBe('');
+    const mixed = captureIo({ ...files, '/work/bad/stueckliste.xlsx': corrupt });
+    expect(await run(['extract', 'bad/stueckliste.xlsx', 'docs/datasheet-en.csv'], mixed)).toBe(0);
+    expect(mixed.err()).toMatch(/bad\/stueckliste\.xlsx: /);
+    expect(mixed.out()).toContain('Ingested 2 document(s)');
+  });
+
+  it('an unwritable --out is a usage error (3), not a crash (PR #26 review)', async () => {
+    const io = captureIo(files);
+    io.fs.writeFile = async () => {
+      throw new Error("EACCES: permission denied, open '/work/locked/facts.json'");
+    };
+    expect(await run(['extract', 'docs/datasheet-en.csv', '--out', 'locked/facts.json'], io)).toBe(
+      3,
+    );
+    expect(io.err()).toMatch(/locked\/facts\.json.*EACCES/);
+    const outside = captureIo(files);
+    expect(await run(['extract', 'docs/datasheet-en.csv', '--out', '../x.json'], outside)).toBe(3);
+    expect(outside.err()).toMatch(/outside the configured root/);
+  });
+
   it('an unknown category is a usage error (3)', async () => {
     const io = captureIo(files);
     expect(await run(['extract', 'docs', '--category', 'XX'], io)).toBe(3);

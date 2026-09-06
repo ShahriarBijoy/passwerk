@@ -16,7 +16,7 @@ or an install, `passwerk …`.
 | `passwerk gaps <draft.json> [--as-of] [--lang] [--json]` | `gap_report` grouped by who typically has the data, with legal references and the suggested action. Deferred data points (not yet applicable) are counted, not listed | 0 no open `required` item, 1 open required items, 3 usage |
 | `passwerk obligations --type <batteryType> --role <role> [--energy-kwh <decimal>] [--placed-on-market <date>] [--as-of <date>] [--lang] [--json]` | `check_obligations` (Article 77(1) only, not legal advice) | 0 required, 1 not_required, 2 insufficient_input, 3 usage |
 | `passwerk tools [--json]` | the server registry: name, title, description, input keys, annotations | 0 |
-| `passwerk chat -m "<task>" [--model claude-sonnet-5] [--max-turns 20] [--root <dir>] [--lang]` | demo agent loop over the registry; every tool call and its one-line result are printed | 0 finished, 2 turn bound reached, 3 missing key or usage |
+| `passwerk chat -m "<task>" [--model claude-sonnet-5] [--max-turns 20] [--root <dir>] [--lang]` | demo agent loop over the registry; every tool call and its one-line result are printed | 0 the model ended its turn, 2 not finished (turn bound reached, or the response stopped with `max_tokens`, `refusal`, ...), 3 missing key or usage |
 
 `--json` prints the tool's structured result as canonical JSON (sorted keys, byte-identical
 across runs). `--lang` picks the language of the text output; German is `de`.

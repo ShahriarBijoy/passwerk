@@ -155,6 +155,36 @@ describe('passwerk chat', { timeout: 30000 }, () => {
     expect(String(result?.content)).toMatch(/^required: .*\n\n\{/);
   });
 
+  it('a response cut off at max_tokens is not a finished run: exit 2 with a diagnostic (PR #26 review)', async () => {
+    const script = scripted([() => message([text('half an answer')], 'max_tokens')]);
+    const io = captureIo({}, { env, anthropic: script.factory });
+    expect(await run(['chat', '-m', 'x'], io)).toBe(2);
+    expect(script.requests).toHaveLength(1);
+    expect(io.out()).toContain('half an answer');
+    expect(io.err()).toMatch(/max_tokens/);
+  });
+
+  it('a refusal is reported with its stop reason and exits 2', async () => {
+    const script = scripted([() => message([], 'refusal')]);
+    const io = captureIo({}, { env, anthropic: script.factory });
+    expect(await run(['chat', '-m', 'x'], io)).toBe(2);
+    expect(io.err()).toMatch(/refusal/);
+  });
+
+  it('pause_turn is resumed within the turn bound', async () => {
+    const script = scripted([
+      () => message([text('working')], 'pause_turn'),
+      (p) => {
+        expect(p.messages).toHaveLength(2);
+        expect(p.messages[1]?.role).toBe('assistant');
+        return message([text('done')], 'end_turn');
+      },
+    ]);
+    const io = captureIo({}, { env, anthropic: script.factory });
+    expect(await run(['chat', '-m', 'x'], io)).toBe(0);
+    expect(script.requests).toHaveLength(2);
+  });
+
   it('--max-turns bounds the loop (exit 2) and --model is passed through', async () => {
     const script = scripted([() => message([call('list_capabilities', {}, 1)], 'tool_use')]);
     const io = captureIo({}, { env, anthropic: script.factory });

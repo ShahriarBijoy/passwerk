@@ -98,6 +98,13 @@ registerCommand((program, io, exit) => {
         exit(EXIT_BOUND);
         return;
       }
+      if (result.status === 'stopped') {
+        io.stderr.write(
+          `Not finished: the response ended with stop_reason "${result.stopReason}" after ${result.turns} turn(s).\n`,
+        );
+        exit(EXIT_BOUND);
+        return;
+      }
       exit(0);
     });
 });
