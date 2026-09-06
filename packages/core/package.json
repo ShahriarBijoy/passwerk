@@ -30,6 +30,7 @@
     "fast-xml-parser": "5.11.1",
     "fflate": "0.8.3",
     "pdfjs-dist": "6.3.289",
+    "qrcode-generator": "2.0.4",
     "zod": "4.5.4"
   }
 }
