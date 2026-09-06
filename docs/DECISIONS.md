@@ -628,3 +628,33 @@ the server imports nothing from `node:*`, so `createServer` stays usable for the
 App; file access goes through an injected adapter with an optional root. The server surface
 joins the sovereignty proof through a shared network guard. The install pages mark every
 host configuration key not confirmed from the host's own documentation with a verify comment.
+
+## D-032: The CLI runs the registry handlers in-process; the gap exit code follows the `required` bucket (2026-09-06)
+
+**Context.** Phase 6.2 delivers `@passwerk/cli` (ADR D-031). The spec fixes the commands and
+exit codes and asks the CLI to present exactly the tools an MCP host sees. Two things the spec
+left open surfaced while building it. First, "0 when mandatory completeness is 100 %" for
+`gaps` is unreachable on every golden draft: the completeness figure counts deferred data
+points that the same report calls "not a gap" (ADR D-023), and even the AAS-valid drafts keep
+required Commission data points open (`operatorIdentifier`, `substanceImpacts`). Second, the
+Node file system lives in the server package but is not part of its neutral `index.ts`.
+
+**Decision.** Every command parses its input with the tool's own Zod shape and calls the
+registry handler in-process (`invoke` mirrors the server's error mapping), so the CLI has no
+domain code and no second opinion. `gaps` exits 0 when no `required`-bucket item is open and
+1 otherwise; deferred items are counted in the summary line and left out of the to-do list.
+`audit` and `emit` map the verdict to 0, 1, 2 and treat a structurally invalid draft (L1
+findings) as `invalid`; `emit` stays fail-honest and writes the files. `run(argv, io)` takes
+streams, file system, environment and clock by injection; `bin.ts` is the only file that reads
+the process. The Node file system is exported as `@passwerk/server/node` beside the neutral
+entry. `chat` reads the key from `ANTHROPIC_API_KEY` only, imports the SDK lazily, defaults to
+`claude-sonnet-5`, sends the body of `SKILL.md` as its system prompt (a generated copy guarded
+by a test), and is the only command that calls a model. The definition of done is met as
+measured in D-031: the scripted Musterwerk chain applies at least the server's floor of
+mappings and returns the gap list; the golden drafts validate `valid` through `audit` and
+through the loop.
+
+**Consequences.** `--json` output is canonical JSON, byte-identical across runs. The CLI
+joins the sovereignty proof: every command runs under the network guard, `chat` with a fake
+client. The demo script needs a key only for its last step. `packages/cli/src/chat/skill.ts`
+must be regenerated when `SKILL.md` changes.

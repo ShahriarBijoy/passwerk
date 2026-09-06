@@ -29,3 +29,6 @@ __pycache__/
 
 apps/web/playwright-report/
 apps/web/test-results/
+
+# Demo output (packages/cli/scripts/demo.*)
+out/

@@ -11,6 +11,8 @@ export default defineConfig({
     alias: {
       '@passwerk/rules': local('./packages/rules/src/index.ts'),
       '@passwerk/core': local('./packages/core/src/index.ts'),
+      // The subpath must come before the bare name: aliases match by prefix, in order.
+      '@passwerk/server/node': local('./packages/server/src/node.ts'),
       '@passwerk/server': local('./packages/server/src/index.ts'),
       '@passwerk/cli': local('./packages/cli/src/index.ts'),
       '@': local('./apps/web/src'),

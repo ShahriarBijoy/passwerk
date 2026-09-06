@@ -1,9 +1,17 @@
 /**
- * @passwerk/cli — the `passwerk` command-line interface.
- *
- * Phase 0 placeholder. No product code yet.
+ * @passwerk/cli: the `passwerk` command line. Adapter only (ADR D-001, D-031): every command
+ * calls a tool of the server registry in-process, so the CLI presents exactly what an MCP
+ * host sees. `run` takes injected io and returns the exit code; `bin.ts` wires the process.
  */
-import { PACKAGE_NAME as CORE_PACKAGE } from '@passwerk/core';
+import './commands/index.js';
+import type { CliIo } from './io.js';
+import { runProgram } from './program.js';
 
-export const PACKAGE_NAME = '@passwerk/cli' as const;
-export const DEPENDS_ON = [CORE_PACKAGE] as const;
+export type { CreateMessage } from './chat/types.js';
+export type { AnthropicFactory, CliIo, Lang, Writer } from './io.js';
+export { CliInputError, EXIT_USAGE } from './io.js';
+export { CLI_VERSION, PACKAGE_NAME } from './meta.js';
+
+export function run(argv: string[], io: CliIo): Promise<number> {
+  return runProgram(argv, io);
+}
