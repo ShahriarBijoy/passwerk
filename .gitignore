@@ -32,3 +32,6 @@ apps/web/test-results/
 
 # Demo output (packages/cli/scripts/demo.*)
 out/
+
+# Subagent-driven-development scratch (ledger, briefs, review packages)
+.superpowers/
