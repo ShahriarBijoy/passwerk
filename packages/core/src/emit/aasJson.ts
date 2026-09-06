@@ -1,7 +1,7 @@
-import type * as aas from '@aas-core-works/aas-core3.0-typescript';
 import type { Finding, ValidationReport, Verdict } from '../validate/finding.js';
 import { assembleReport, type ValidateOptions } from '../validate/index.js';
 import { validateSchema } from '../validate/schema.js';
+import type * as aas from '../vendor/aasCore.js';
 import { canonicalJson } from './canonical.js';
 import { buildEnvironment, environmentToJsonable } from './environment.js';
 

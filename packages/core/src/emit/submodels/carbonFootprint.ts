@@ -1,7 +1,7 @@
-import type * as aas from '@aas-core-works/aas-core3.0-typescript';
 import { getAttribute } from '@passwerk/rules';
 import type { CarbonFootprintGeneralInformation } from '../../model/composites.js';
 import { type PassportDraft, presentValue } from '../../model/passport.js';
+import type * as aas from '../../vendor/aasCore.js';
 import { collection, list, property } from '../elements.js';
 import type { EmitIds } from '../ids.js';
 import { hasAny, submodelFromTemplate } from './shared.js';

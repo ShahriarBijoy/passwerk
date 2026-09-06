@@ -1,8 +1,8 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
 import { getTemplate } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
 import { getField, type PassportDraft, presentValue } from '../../model/passport.js';
 import { isDecimalString } from '../../model/values.js';
+import * as aas from '../../vendor/aasCore.js';
 import { list, property } from '../elements.js';
 
 const { types, jsonization } = aas;

@@ -20,7 +20,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node scripts/bundle-vendor.mjs",
     "clean": "rimraf dist"
   },
   "dependencies": {
