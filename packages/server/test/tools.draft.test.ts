@@ -3,6 +3,7 @@ import {
   brokenSamples,
   canonicalJson,
   emitAasJson,
+  emitHtml,
   type Finding,
   gapReport,
   getSample,
@@ -276,5 +277,21 @@ describe('emit_passport', () => {
     });
     expect(noFs.isError).toBe(true);
     expect(noFs.text).toMatch(/needs a file system/);
+  });
+
+  it('html target: the sheet in the chosen language, same verdict', async () => {
+    const draft = getSample('ev-valid');
+    const r = await call<{
+      verdict: string;
+      files: { target: string; name: string; bytes: string }[];
+    }>(session.client, 'emit_passport', { draft, targets: ['html'], htmlLang: 'de' });
+    expect(r.isError).toBe(false);
+    expect(r.structured.verdict).toBe('valid');
+    const file = r.structured.files[0];
+    expect(file?.target).toBe('html');
+    expect(file?.name).toMatch(/\.html$/);
+    const html = new TextDecoder().decode(decodeBase64(file?.bytes ?? ''));
+    expect(html).toContain('id="lang-de" checked');
+    expect(html).toBe(emitHtml(draft, { lang: 'de' }).output);
   });
 });

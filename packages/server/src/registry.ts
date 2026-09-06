@@ -4,6 +4,7 @@ import { emitPassportTool } from './tools/emitPassport.js';
 import { explainAttributeTool } from './tools/explainAttribute.js';
 import { extractFactsTool } from './tools/extractFacts.js';
 import { gapReportTool } from './tools/gapReport.js';
+import { generateCarrierTool } from './tools/generateCarrier.js';
 import { ingestDocumentsTool } from './tools/ingestDocuments.js';
 import { listCapabilitiesTool, setToolNames } from './tools/listCapabilities.js';
 import { suggestMappingsTool } from './tools/suggestMappings.js';
@@ -23,6 +24,7 @@ export const TOOLS: readonly AnyToolDefinition[] = [
   validatePassportTool,
   gapReportTool,
   emitPassportTool,
+  generateCarrierTool,
   checkObligationsTool,
   explainAttributeTool,
   listCapabilitiesTool,

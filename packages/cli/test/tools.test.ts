@@ -8,7 +8,7 @@ describe('passwerk tools', () => {
     const io = captureIo();
     expect(await run(['tools'], io)).toBe(0);
     const out = io.out();
-    expect(TOOLS).toHaveLength(10);
+    expect(TOOLS).toHaveLength(11);
     for (const t of TOOLS) {
       expect(out).toContain(t.name);
       expect(out).toContain(t.title);

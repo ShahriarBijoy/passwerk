@@ -92,6 +92,18 @@ describe('sovereignty: the server surface makes no network attempt', () => {
         targets: ['aas-json', 'aasx', 'draft-json'],
         outDir: 'out',
       });
+      await run('emit_passport', {
+        draft: getSample('ev-valid'),
+        targets: ['html'],
+        htmlLang: 'de',
+      });
+      await run('generate_carrier', {
+        draft: getSample('ev-valid'),
+        gs1: { gtin: '4006381333931', serial: 'MW-EV-2026-000123' },
+        resolverBase: 'https://id.musterwerk.example',
+        format: 'png',
+      });
+      await run('generate_carrier', { uid: 'https://passport.example/b/1', outDir: 'out' });
 
       expect([...covered].sort()).toEqual(TOOLS.map((t) => t.name).sort());
 
