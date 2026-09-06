@@ -112,6 +112,8 @@ export const de = {
   'export.aasx': 'AASX',
   'export.draft': 'Entwurf (JSON)',
   'export.gaps': 'Lückenbericht (JSON)',
+  'export.html': 'HTML-Passblatt',
+  'export.qr': 'QR-Code (SVG)',
   'export.verdictNote': 'Die Dateien tragen das Prüfergebnis: {verdict}.',
   'export.failed': 'Export nicht möglich: {reason}',
 } as const;

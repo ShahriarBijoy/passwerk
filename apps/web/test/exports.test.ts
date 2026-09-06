@@ -14,7 +14,7 @@ describe('exports', () => {
     );
     expect(slug('urn:passwerk:draft:abc')).toBe('passwerk-draft-abc');
   });
-  it('produces four files whose AASX contains the same environment as the JSON', () => {
+  it('produces six files whose AASX contains the same environment as the JSON', () => {
     const s = reduce(initialState, {
       type: 'importDraft',
       draft: getSample('ev-valid') as PassportDraft,
@@ -22,7 +22,7 @@ describe('exports', () => {
     });
     const d = derive(s, AT);
     if (!d) throw new Error('no derived');
-    const out = buildExports(d);
+    const out = buildExports(d, 'de');
     if ('error' in out) throw new Error(out.error.en);
     expect(out.verdict).toBe('valid');
     const base = slug(d.draft.meta.passportId);
@@ -31,8 +31,16 @@ describe('exports', () => {
       `${base}.aasx`,
       `${base}.draft.json`,
       `${base}.gaps.json`,
+      `${base}.html`,
+      `${base}.qr.svg`,
     ]);
     const json = JSON.parse(new TextDecoder().decode(out.files[0]?.bytes));
     expect(readAasxEnvironment(out.files[1]?.bytes ?? new Uint8Array())).toEqual(json);
+    const html = new TextDecoder().decode(out.files[4]?.bytes);
+    expect(html).toContain('id="lang-de" checked');
+    expect(html).toContain('<span class="verdict valid">valid</span>');
+    expect(new TextDecoder().decode(out.files[5]?.bytes).startsWith('<svg')).toBe(true);
+    expect(out.files[4]?.type).toBe('text/html');
+    expect(out.files[5]?.type).toBe('image/svg+xml');
   });
 });

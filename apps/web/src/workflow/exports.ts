@@ -1,7 +1,10 @@
 import {
+  CarrierInputError,
   canonicalJson,
   emitAasJson,
   emitAasx,
+  emitHtml,
+  generateCarrier,
   PassportDraftError,
   type Verdict,
 } from '@passwerk/core';
@@ -27,6 +30,7 @@ const utf8 = (s: string) => new TextEncoder().encode(s);
 
 export function buildExports(
   derived: Derived,
+  lang: 'de' | 'en' = 'en',
 ): { files: ExportFile[]; verdict: Verdict } | { error: LangText } {
   const base = slug(derived.draft.meta.passportId);
   try {
@@ -51,9 +55,20 @@ export function buildExports(
           bytes: utf8(canonicalJson(derived.gap)),
           type: 'application/json',
         },
+        {
+          name: `${base}.html`,
+          bytes: utf8(emitHtml(derived.draft, { asOf: derived.asOf, lang }).output),
+          type: 'text/html',
+        },
+        {
+          name: `${base}.qr.svg`,
+          bytes: generateCarrier({ draft: derived.draft }).image,
+          type: 'image/svg+xml',
+        },
       ],
     };
   } catch (e) {
+    if (e instanceof CarrierInputError) return { error: e.text };
     if (e instanceof PassportDraftError) {
       const first = e.findings[0];
       return { error: first?.message ?? { de: e.message, en: e.message } };

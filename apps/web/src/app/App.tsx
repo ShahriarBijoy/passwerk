@@ -103,16 +103,16 @@ export function App({ store, storageNotice }: AppProps) {
     }
   };
 
-  const onExport = (kind: 'aasJson' | 'aasx' | 'draft' | 'gaps') => {
+  const onExport = (kind: 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr') => {
     if (!derived) return;
     try {
-      const out = buildExports(derived);
+      const out = buildExports(derived, lang);
       if ('error' in out) {
         setExportError(out.error);
         return;
       }
       setExportError(undefined);
-      const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3 }[kind];
+      const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3, html: 4, qr: 5 }[kind];
       const file = out.files[index];
       if (file) downloadFile(file);
     } catch (e) {
