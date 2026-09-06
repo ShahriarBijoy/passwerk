@@ -140,7 +140,7 @@ function attributeSections(draft: PassportDraft): string {
     const rows = attributeRows(draft, t.part);
     if (rows === '') continue;
     out.push(
-      `<h2>${escapeHtml(`IDTA ${t.idta} ${t.version}: ${t.submodelIdShort}`)}</h2><table>${header}${rows}</table>`,
+      `<h2>${escapeHtml(`${t.idta} ${t.version}: ${t.submodelIdShort}`)}</h2><table>${header}${rows}</table>`,
     );
   }
   const other = attributeRows(draft, null);
@@ -200,9 +200,7 @@ function renderSheet(
   const qr = renderQrSvg(qrMatrix(uid)).trim();
   const caps = listCapabilities();
   const generated =
-    options.asOf !== undefined
-      ? `<dt>${both(T.generated)}</dt><dd>${escapeHtml(options.asOf)}</dd>`
-      : '';
+    options.asOf !== undefined ? `<p>${both(T.generated)}: ${escapeHtml(options.asOf)}</p>` : '';
   return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -224,7 +222,6 @@ function renderSheet(
 <dt>${both(T.identifier)}</dt><dd><a href="${escapeHtml(uid)}"><code>${escapeHtml(uid)}</code></a></dd>
 <dt>${both(T.category)}</dt><dd>${both(CATEGORY[draft.meta.category])} (<code>${escapeHtml(draft.meta.category)}</code>)</dd>
 <dt>${both(T.created)}</dt><dd>${escapeHtml(draft.meta.createdAt)}</dd>
-${generated}
 </dl>
 </div>
 <figure class="qr"><figcaption>${both(T.qr)}</figcaption>${qr}</figure>
@@ -236,6 +233,7 @@ ${gapSection(gap)}
 <p>${both(T.notLegal)}</p>
 <p>${both(T.sources)}: ${gap.sources.map(escapeHtml).join('; ')}</p>
 <p>${both(T.kb)} ${escapeHtml(caps.artefactsRetrievedAt)}. ${both(T.generator)}.</p>
+${generated}
 </footer>
 </main>
 </body>
