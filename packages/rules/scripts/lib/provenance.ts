@@ -49,6 +49,9 @@ export function renderProvenance(manifest: ArtefactManifest): string {
   lines.push(
     '- The **IDTA specification PDFs** are recorded above with checksums for reference but not bundled; the machine-readable JSON and AASX files are.',
   );
+  lines.push(
+    '- **GS1 Digital Link URI syntax** and **ISO/IEC 15459** are not bundled. The carrier module builds `/01/{gtin14}/21/{serial}` and `/8004/{giai}` URIs from the patterns in `kb/carrier.json`, which were transcribed from the build plan and carry `verify: true` (see `docs/KB_REVIEW.md`).',
+  );
   lines.push('');
   return `${lines.join('\n')}`;
 }
