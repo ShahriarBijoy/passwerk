@@ -38,10 +38,19 @@ const call = (name: string, input: unknown, n: number): Anthropic.ToolUseBlock =
   caller: { type: 'direct' },
 });
 
+/** The first block of a user turn, when it is a tool result. */
+const firstResult = (
+  m: Anthropic.MessageParam | undefined,
+): Anthropic.ToolResultBlockParam | undefined => {
+  if (!m || typeof m.content === 'string') return undefined;
+  const block = m.content[0];
+  return block?.type === 'tool_result' ? block : undefined;
+};
+
 /** Tool results the loop sent back on the latest user turn, parsed from the JSON tail. */
 function lastToolResults(params: Params): Record<string, unknown>[] {
   const last = params.messages.at(-1);
-  if (!last || last.role !== 'user' || typeof last.content === 'string') return [];
+  if (last?.role !== 'user' || typeof last.content === 'string') return [];
   return last.content.flatMap((b) => {
     if (b.type !== 'tool_result' || typeof b.content !== 'string') return [];
     const idx = b.content.indexOf('\n\n{');
@@ -140,7 +149,7 @@ describe('passwerk chat', { timeout: 30000 }, () => {
     // Tool results are one user message with the text summary and the structured JSON.
     const second = script.requests[1] as Params;
     expect(second.messages).toHaveLength(3);
-    const result = (second.messages[2]?.content as Anthropic.ToolResultBlockParam[])[0];
+    const result = firstResult(second.messages[2]);
     expect(result?.type).toBe('tool_result');
     expect(result?.tool_use_id).toBe('toolu_1');
     expect(String(result?.content)).toMatch(/^required: .*\n\n\{/);
@@ -162,7 +171,7 @@ describe('passwerk chat', { timeout: 30000 }, () => {
       () =>
         message([call('validate_passport', { draft: { draftId: 'drf_missing' } }, 1)], 'tool_use'),
       (p) => {
-        const r = (p.messages.at(-1)?.content as Anthropic.ToolResultBlockParam[])[0];
+        const r = firstResult(p.messages.at(-1));
         expect(r?.is_error).toBe(true);
         return message([text('done')], 'end_turn');
       },
@@ -254,7 +263,7 @@ describe('passwerk chat', { timeout: 30000 }, () => {
         );
       },
       (_p, r) => {
-        gapOwners = (r[0]?.['byDataOwner'] as unknown[]).length;
+        gapOwners = ((r[0]?.['byDataOwner'] as unknown[] | undefined) ?? []).length;
         return message([text('Hier ist die Lückenliste.')], 'end_turn');
       },
     ]);
@@ -291,7 +300,7 @@ describe('passwerk chat', { timeout: 30000 }, () => {
     const script = scripted([
       () => message([call('ingest_documents', { paths: ['../secret.txt'] }, 1)], 'tool_use'),
       (p) => {
-        const r = (p.messages.at(-1)?.content as Anthropic.ToolResultBlockParam[])[0];
+        const r = firstResult(p.messages.at(-1));
         expect(String(r?.content)).toMatch(/outside the configured root/);
         return message([text('refused')], 'end_turn');
       },
