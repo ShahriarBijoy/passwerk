@@ -2,7 +2,7 @@ import { PACKAGE_NAME, run } from '@passwerk/cli';
 import { describe, expect, it } from 'vitest';
 import { captureIo } from './harness.ts';
 
-const COMMANDS = ['audit', 'extract', 'emit', 'gaps', 'obligations', 'tools', 'chat'];
+const COMMANDS = ['audit', 'extract', 'emit', 'carrier', 'gaps', 'obligations', 'tools', 'chat'];
 
 describe('@passwerk/cli', () => {
   it('exposes its package name', () => {

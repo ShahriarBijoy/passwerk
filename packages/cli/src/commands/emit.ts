@@ -3,7 +3,7 @@ import { CliInputError, EXIT_USAGE } from '../io.js';
 import { registerCommand } from '../program.js';
 import { invokeOnDraft } from './draft.js';
 
-const TARGETS = ['aas-json', 'aasx', 'draft-json'] as const;
+const TARGETS = ['aas-json', 'aasx', 'draft-json', 'html'] as const;
 type Target = (typeof TARGETS)[number];
 
 interface Options {
@@ -39,7 +39,9 @@ registerCommand((program, io, exit) => {
   withOutputOptions(
     program
       .command('emit')
-      .description('write the passport files (AAS JSON, AASX, draft JSON) and re-validate them')
+      .description(
+        'write the passport files (AAS JSON, AASX, draft JSON, HTML sheet) and re-validate them',
+      )
       .argument('<draft.json>', 'the PassportDraft file')
       .requiredOption('--out <dir>', 'directory to write into')
       .option('--targets <list>', `comma-separated: ${TARGETS.join(', ')}`, TARGETS.join(','))
@@ -50,6 +52,7 @@ registerCommand((program, io, exit) => {
     const { result, verdict, findings } = await invokeOnDraft(io, 'emit_passport', path, {
       targets,
       outDir: options.out,
+      htmlLang: lang,
       ...(options.asOf !== undefined ? { asOf: options.asOf } : {}),
     });
     if (verdict === undefined) {

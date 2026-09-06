@@ -40,6 +40,7 @@ describe('sovereignty: the CLI makes no network attempt', { timeout: 60000 }, ()
       ['audit', 'samples/ev-valid.json'],
       ['gaps', 'samples/lmt-valid.json'],
       ['emit', 'samples/industrial-valid.json', '--out', 'out'],
+      ['carrier', 'samples/ev-valid.json', '--out', 'out/qr.svg'],
       ['extract', 'docs', '--category', 'EV'],
     ];
     for (const argv of runs) {

@@ -29,6 +29,9 @@ $PASSWERK gaps "$SAMPLES/lmt-missing-state-of-charge.json"; show
 step "5. Emit the valid EV passport (AAS JSON, AASX, draft JSON) and re-validate"
 $PASSWERK emit "$SAMPLES/ev-valid.json" --out "$OUT"; show
 
+step "5b. Write the QR data carrier of the passport identifier"
+$PASSWERK carrier "$SAMPLES/ev-valid.json" --out "$OUT/passport.qr.svg"; show
+
 step "6. Chat demo (needs ANTHROPIC_API_KEY)"
 if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
   $PASSWERK chat --lang de --root . -m "Erstelle einen Batteriepass aus $DOCS und gib mir die Lückenliste."; show

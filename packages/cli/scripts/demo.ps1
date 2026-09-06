@@ -27,6 +27,9 @@ node $Passwerk gaps "$Samples/lmt-missing-state-of-charge.json"; Show
 Step '5. Emit the valid EV passport (AAS JSON, AASX, draft JSON) and re-validate'
 node $Passwerk emit "$Samples/ev-valid.json" --out $Out; Show
 
+Step '5b. Write the QR data carrier of the passport identifier'
+node $Passwerk carrier "$Samples/ev-valid.json" --out "$Out/passport.qr.svg"; Show
+
 Step '6. Chat demo (needs ANTHROPIC_API_KEY)'
 if ($env:ANTHROPIC_API_KEY) {
   node $Passwerk chat --lang de --root . -m "Erstelle einen Batteriepass aus $Docs und gib mir die Lückenliste."; Show
