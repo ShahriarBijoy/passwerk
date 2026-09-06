@@ -72,6 +72,15 @@ describe('generate_carrier', () => {
     expect(gtin.isError).toBe(true);
     expect(gtin.text).toMatch(/Prüfziffer/);
   });
+  it('both draft and uid is an error, not a silently dropped uid', async () => {
+    const draft = getSample('ev-valid');
+    const both = await call<{ error: string }>(session.client, 'generate_carrier', {
+      draft,
+      uid: 'https://passport.example/other',
+    });
+    expect(both.isError).toBe(true);
+    expect(both.text).toMatch(/uid/);
+  });
   it('accepts a draftId it returned earlier', async () => {
     const draft = getSample('lmt-valid');
     const a = await call<Out>(session.client, 'generate_carrier', { draft });

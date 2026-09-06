@@ -2,7 +2,7 @@ import { CarrierInputError, type CarrierResult, generateCarrier } from '@passwer
 import { z } from 'zod';
 import { encodeBase64 } from '../base64.js';
 import { DraftRef, resolveDraft } from '../refs.js';
-import { out, type ToolDefinition } from '../types.js';
+import { noFileSystemResult, out, type ToolDefinition } from '../types.js';
 import { slug } from './emitPassport.js';
 
 const inputSchema = {
@@ -61,27 +61,15 @@ export const generateCarrierTool: ToolDefinition<typeof inputSchema, typeof outp
     openWorldHint: false,
   },
   async handler(input, ctx) {
-    if (input.outDir !== undefined && !ctx.fs) {
-      const message =
-        'File output needs a file system; this server was started without one. Omit outDir to receive bytes inline.';
-      return {
-        isError: true,
-        structured: { error: message },
-        text: {
-          de: 'Dateiausgabe braucht ein Dateisystem; dieser Server wurde ohne eines gestartet. outDir weglassen, um die Bytes inline zu erhalten.',
-          en: message,
-        },
-      };
-    }
+    if (input.outDir !== undefined && !ctx.fs) return noFileSystemResult();
     let draftId: string | undefined;
-    let carrierInput: Parameters<typeof generateCarrier>[0];
+    const carrierInput: Parameters<typeof generateCarrier>[0] = {};
     if (input.draft !== undefined) {
       const resolved = await resolveDraft(input.draft, ctx);
       draftId = resolved.draftId;
-      carrierInput = { draft: resolved.draft };
-    } else {
-      carrierInput = input.uid !== undefined ? { uid: input.uid } : {};
+      carrierInput.draft = resolved.draft;
     }
+    if (input.uid !== undefined) carrierInput.uid = input.uid;
     if (input.gs1 !== undefined) carrierInput.gs1 = input.gs1;
     if (input.resolverBase !== undefined) carrierInput.resolverBase = input.resolverBase;
     if (input.format !== undefined) carrierInput.format = input.format;

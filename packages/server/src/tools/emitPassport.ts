@@ -10,7 +10,7 @@ import {
 import { z } from 'zod';
 import { encodeBase64 } from '../base64.js';
 import { DraftRef, resolveDraft } from '../refs.js';
-import { FindingSchema, out, type ToolDefinition } from '../types.js';
+import { FindingSchema, noFileSystemResult, out, type ToolDefinition } from '../types.js';
 
 export const EMIT_TARGETS = ['aas-json', 'aasx', 'draft-json', 'html'] as const;
 export type EmitTarget = (typeof EMIT_TARGETS)[number];
@@ -76,18 +76,7 @@ export const emitPassportTool: ToolDefinition<typeof inputSchema, typeof outputS
     openWorldHint: false,
   },
   async handler(input, ctx) {
-    if (input.outDir !== undefined && !ctx.fs) {
-      const message =
-        'File output needs a file system; this server was started without one. Omit outDir to receive bytes inline.';
-      return {
-        isError: true,
-        structured: { error: message },
-        text: {
-          de: 'Dateiausgabe braucht ein Dateisystem; dieser Server wurde ohne eines gestartet. outDir weglassen, um die Bytes inline zu erhalten.',
-          en: message,
-        },
-      };
-    }
+    if (input.outDir !== undefined && !ctx.fs) return noFileSystemResult();
     const { draft, draftId } = await resolveDraft(input.draft, ctx);
     const opts = input.asOf !== undefined ? { asOf: input.asOf } : {};
     const base = slug(draft.meta.passportId);

@@ -93,6 +93,20 @@ export interface ErrorOutput {
   findings?: Finding[];
 }
 
+/** The fail-honest result every tool returns when `outDir` is given but no file system was injected. */
+export function noFileSystemResult(): ToolResult<ErrorOutput> {
+  const message =
+    'File output needs a file system; this server was started without one. Omit outDir to receive bytes inline.';
+  return {
+    isError: true,
+    structured: { error: message },
+    text: {
+      de: 'Dateiausgabe braucht ein Dateisystem; dieser Server wurde ohne eines gestartet. outDir weglassen, um die Bytes inline zu erhalten.',
+      en: message,
+    },
+  };
+}
+
 // biome-ignore lint/suspicious/noExplicitAny: heterogeneous registry entries
 export type AnyToolDefinition = ToolDefinition<any, any>;
 
