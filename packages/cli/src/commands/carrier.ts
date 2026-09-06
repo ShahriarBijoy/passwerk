@@ -1,5 +1,5 @@
 import { decodeBase64 } from '@passwerk/server';
-import { parseLang, printJson, readJsonFile, withOutputOptions } from '../format.js';
+import { parseLang, printJson, readJsonFile, withOutputOptions, writeOut } from '../format.js';
 import { invoke, toolContext } from '../invoke.js';
 import { CliInputError, EXIT_USAGE } from '../io.js';
 import { registerCommand } from '../program.js';
@@ -80,11 +80,10 @@ registerCommand((program, io, exit) => {
     }
     const out = result.structured as unknown as CarrierOut;
     const bytes = decodeBase64(out.image.bytes ?? '');
-    const target = io.fs.resolve(options.out);
-    await io.fs.writeFile(target, bytes);
+    const target = await writeOut(io, options.out, bytes);
     if (options.json) {
       const { image, ...rest } = out;
-      printJson(io, { ...rest, path: target, size: image.size, mediaType: out.mediaType });
+      printJson(io, { ...rest, path: target, size: image.size });
     } else {
       const L =
         lang === 'de'

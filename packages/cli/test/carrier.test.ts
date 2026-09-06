@@ -103,4 +103,13 @@ describe('passwerk carrier', () => {
     expect(io.err()).toMatch(/check digit/);
     expect(io.fs.written.size).toBe(0);
   });
+  it('an unwritable --out is a usage error (exit 3), nothing written', async () => {
+    const io = captureIo(files);
+    io.fs.writeFile = async () => {
+      throw new Error('EACCES: permission denied');
+    };
+    expect(await run(['carrier', 'samples/ev-valid.json', '--out', 'out/qr.svg'], io)).toBe(3);
+    expect(io.err()).toMatch(/Cannot write|EACCES/);
+    expect(io.fs.written.size).toBe(0);
+  });
 });
