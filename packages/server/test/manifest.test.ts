@@ -18,8 +18,10 @@ const manifest = JSON.parse(readFileSync(join(here, 'server.json'), 'utf8')) as 
   repository: { url: string; source: string };
   packages: {
     registryType: string;
+    registryBaseUrl: string;
     identifier: string;
     version: string;
+    runtimeHint: string;
     transport: { type: string };
   }[];
 };
@@ -36,8 +38,10 @@ describe('MCP registry manifest (packages/server/server.json)', () => {
     expect(manifest.packages).toHaveLength(1);
     expect(manifest.packages[0]).toMatchObject({
       registryType: 'npm',
+      registryBaseUrl: 'https://registry.npmjs.org',
       identifier: pkg.name,
       version: pkg.version,
+      runtimeHint: 'npx',
       transport: { type: 'stdio' },
     });
     expect(manifest.repository.url).toBe('https://github.com/ShahriarBijoy/passwerk');
@@ -52,5 +56,7 @@ describe('MCP registry manifest (packages/server/server.json)', () => {
       expect(other.version, p).toBe(pkg.version);
       expect(other.publishConfig?.access, p).toBe('public');
     }
+    const cliMeta = readFileSync(join(here, '..', 'cli', 'src', 'meta.ts'), 'utf8');
+    expect(cliMeta).toContain(`CLI_VERSION = '${pkg.version}'`);
   });
 });
