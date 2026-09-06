@@ -1,7 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BROKEN_SAMPLE_NAMES, getSample, VALID_SAMPLE_NAMES, validate } from '@passwerk/core';
+import {
+  BROKEN_SAMPLE_NAMES,
+  getSample,
+  VALID_SAMPLE_NAMES,
+  validate,
+  validateSchema,
+} from '@passwerk/core';
 import { expect, test } from '@playwright/test';
 import { CLOCK, pinClock } from './helpers.ts';
 
@@ -23,7 +29,7 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
     expect(shown).toEqual(expected.findings.map((f) => f.ruleId).sort());
 
-    if (expected.verdict !== 'invalid' || expected.findings.every((f) => f.layer !== 'L1')) {
+    if (validateSchema(draft).draft !== undefined) {
       const [download] = await Promise.all([
         page.waitForEvent('download'),
         page.getByTestId('export-html').click(),
