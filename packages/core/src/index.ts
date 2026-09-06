@@ -10,6 +10,7 @@ export const PACKAGE_NAME = '@passwerk/core' as const;
 
 export * from './carrier/error.js';
 export * from './carrier/gs1DigitalLink.js';
+export * from './carrier/index.js';
 export * from './carrier/qr.js';
 export * from './emit/aasJson.js';
 export * from './emit/aasx.js';
