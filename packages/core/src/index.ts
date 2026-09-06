@@ -8,6 +8,8 @@
  */
 export const PACKAGE_NAME = '@passwerk/core' as const;
 
+export * from './carrier/error.js';
+export * from './carrier/gs1DigitalLink.js';
 export * from './emit/aasJson.js';
 export * from './emit/aasx.js';
 export * from './emit/canonical.js';
