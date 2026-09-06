@@ -3,6 +3,7 @@ import {
   brokenSamples,
   emitAasJson,
   emitAasx,
+  emitHtml,
   samples,
   VALID_SAMPLE_NAMES,
   validate,
@@ -15,6 +16,7 @@ describe('Phase 2 definition of done', () => {
       expect(emitAasJson(samples[name]).verdict, `${name} json`).toBe('valid');
       expect(emitAasx(samples[name]).verdict, `${name} aasx`).toBe('valid');
       expect(validate(samples[name]).verdict, `${name} validate`).toBe('valid');
+      expect(emitHtml(samples[name]).verdict, `${name} html`).toBe('valid');
     }
   });
   it('every broken sample yields exactly its documented finding ids (as a set)', () => {
