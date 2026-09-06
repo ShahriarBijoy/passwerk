@@ -20,7 +20,15 @@ describe('passwerk obligations', () => {
   it('not_required exits 1', async () => {
     const io = captureIo();
     const code = await run(
-      ['obligations', '--type', 'PORTABLE', '--role', 'importer', '--placed-on-market', '2027-06-01'],
+      [
+        'obligations',
+        '--type',
+        'PORTABLE',
+        '--role',
+        'importer',
+        '--placed-on-market',
+        '2027-06-01',
+      ],
       io,
     );
     expect(code).toBe(1);
@@ -38,7 +46,17 @@ describe('passwerk obligations', () => {
   it('--energy-kwh settles the industrial threshold', async () => {
     const io = captureIo();
     const code = await run(
-      ['obligations', '--type', 'INDUSTRIAL', '--role', 'importer', '--energy-kwh', '5', '--placed-on-market', '2027-06-01'],
+      [
+        'obligations',
+        '--type',
+        'INDUSTRIAL',
+        '--role',
+        'importer',
+        '--energy-kwh',
+        '5',
+        '--placed-on-market',
+        '2027-06-01',
+      ],
       io,
     );
     expect(code).toBe(0);
@@ -56,7 +74,11 @@ describe('passwerk obligations', () => {
   it('--json carries the result; asOf defaults to the injected clock', async () => {
     const io = captureIo();
     await run(['obligations', '--type', 'EV', '--role', 'manufacturer', '--json'], io);
-    const parsed = JSON.parse(io.out()) as { asOf: string; isNotLegalAdvice: boolean; sources: string[] };
+    const parsed = JSON.parse(io.out()) as {
+      asOf: string;
+      isNotLegalAdvice: boolean;
+      sources: string[];
+    };
     expect(parsed.asOf).toBe(TEST_CLOCK);
     expect(parsed.isNotLegalAdvice).toBe(true);
     expect(parsed.sources.length).toBeGreaterThan(0);

@@ -150,6 +150,13 @@ so no build is needed before `pnpm test`.
   and the sovereignty proof over the whole server surface. `skills/passwerk/SKILL.md`,
   `docs/install/` and the root `.mcp.json`. `generate_carrier` and the `html` target wait for
   Phase 7 (ADR D-031).
-- **Next: Phase 6.2** (`@passwerk/cli`, demo script), then Phase 7, 7b, 7c (D-024 order). The
+- **Phase 6.2 (`@passwerk/cli`, demo script): done.** `passwerk audit | extract | emit | gaps |
+  obligations | tools | chat` over the server registry, run in-process with injected io
+  (`run(argv, io)`), exit codes per spec section 5, canonical `--json`, DE/EN text. `chat` is
+  a manual Anthropic tool loop with an injected client (default `claude-sonnet-5`, key from
+  `ANTHROPIC_API_KEY` only, SDK imported lazily, system prompt synced from `SKILL.md`); the
+  scripted Musterwerk chain and the golden drafts prove the definition of done in CI, and the
+  demo scripts run it for real. Sovereignty proof over every command. See ADR D-032.
+- **Next: Phase 7** (carrier, HTML sheet, Docker, release), then 7b, 7c (D-024 order). The
   rest of Phase 7a (project screen with obligations, facts screen, HTML sheet, QR, BYOK)
   follows Phase 7.

@@ -434,7 +434,7 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - `skills/passwerk/SKILL.md`; install docs for Claude Code (`.mcp.json`), Codex (`config.toml` + `AGENTS.md`), OpenCode (`opencode.json`), Cursor, Claude Desktop; MCP Inspector CLI examples.
 - CLI: `audit` (exit codes 0/1/2), `extract`, `emit`, `obligations`, `tools`; optional `chat` (Anthropic SDK agent loop, prints every tool call).
 - DoD: end-to-end demo script: `passwerk chat -m "Erstelle einen Batteriepass aus ./fixtures/lieferant-a/*"` reaches `valid` on the valid fixture set and produces a correct gap list on the broken set.
-- **Amended by D-031 (2026-09-05).** Two PRs: 6.1 server + skill + install docs (done), 6.2 CLI + demo. `generate_carrier` and the `html` target move to Phase 7. The DoD is measured as in Phase 7a: the tool chain on the Musterwerk fixtures reproduces the recall gate and the gap list; `valid` is proven on the golden drafts. Design: `docs/superpowers/specs/2026-09-05-phase-6-mcp-server-skill-cli-design.md`.
+- **Amended by D-031 (2026-09-05).** Two PRs: 6.1 server + skill + install docs (done), 6.2 CLI + demo (done, ADR D-032). `generate_carrier` and the `html` target move to Phase 7. The DoD is measured as in Phase 7a: the tool chain on the Musterwerk fixtures reproduces the recall gate and the gap list; `valid` is proven on the golden drafts. Design: `docs/superpowers/specs/2026-09-05-phase-6-mcp-server-skill-cli-design.md`.
 
 ### Phase 7 — Carrier, HTML sheet, Docker, release (2–3 days)
 - UID + GS1 Digital Link + QR; HTML passport sheet; Dockerfile (non-root, multi-arch), compose; `site/` static docs; README with GIF demo; publish `@passwerk/*` to npm; submit to the Official MCP Registry.

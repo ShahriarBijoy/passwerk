@@ -43,8 +43,9 @@ sovereignty test plus a `--network none` Docker job prove zero network calls. Ma
 unseen supplier documents is measured, not asserted: `docs/EVALUATION.md` scores the pipeline on
 six documents transcribed from public datasheets (recall, precision and correction effort next to
 the authored-fixture gate). `apps/web` runs the same pipeline in the browser as a first slice of
-Phase 7a (upload, review, gaps, export; ADR D-029). Next: Phase 6, the MCP server, agent skill and
-CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
+Phase 7a (upload, review, gaps, export; ADR D-029). Phase 6 added the MCP server, the agent skill
+and the `passwerk` command line. Next: Phase 7 (carrier, HTML sheet, Docker, release). See
+`docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 
@@ -53,8 +54,28 @@ CLI. See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 | `@passwerk/rules` | Bundled, checksummed IDTA 02035 templates, AAS schemas, EC data-point matrix, attribute knowledge base (DE/EN), legal timeline |
 | `@passwerk/core` | MCP-free library: ingest, extract, map, validate (4 layers), gap report, emit AAS JSON / AASX / HTML, data carrier (UID, GS1 Digital Link, QR) |
 | `@passwerk/server` | MCP server over stdio and Streamable HTTP: ten tools, reference resources, workflow prompts; see [docs/install](docs/install/claude-code.md) and [skills/passwerk](skills/passwerk/SKILL.md) |
-| `@passwerk/cli` | `passwerk audit | extract | emit | obligations` with CI-friendly exit codes |
+| `@passwerk/cli` | `passwerk audit \| extract \| emit \| gaps \| obligations \| tools \| chat` with CI-friendly exit codes; see [the CLI reference](skills/passwerk/references/cli.md) |
 | `@passwerk/web` | Client-side web app: upload, review, gaps, export; the primary product (ADR D-019) |
+
+## Command line
+
+`@passwerk/cli` runs the same tools as the MCP server, in-process and offline, with exit codes
+a CI job can gate on (`audit`: 0 valid, 1 warnings, 2 invalid; `gaps`: 0 when no required
+data point is open).
+
+```sh
+pnpm build
+node packages/cli/dist/bin.js obligations --type EV --role manufacturer --placed-on-market 2027-06-01
+node packages/cli/dist/bin.js extract ./supplier-docs --category EV --out facts.json
+node packages/cli/dist/bin.js audit passport.draft.json
+node packages/cli/dist/bin.js gaps passport.draft.json --lang de
+node packages/cli/dist/bin.js emit passport.draft.json --out ./passport
+```
+
+`passwerk chat -m "…"` is the optional demo agent loop; it is the only command that calls a
+model and needs `ANTHROPIC_API_KEY`. `packages/cli/scripts/demo.sh` (or `demo.ps1`) runs the
+whole Phase 6 definition of done. The full command table is in
+[skills/passwerk/references/cli.md](skills/passwerk/references/cli.md).
 
 ## Development
 
