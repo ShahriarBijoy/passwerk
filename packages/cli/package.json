@@ -1,9 +1,30 @@
 {
   "name": "@passwerk/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The passwerk command line: audit, extract, emit, gaps, obligations, tools and the chat demo",
   "license": "Apache-2.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShahriarBijoy/passwerk.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/ShahriarBijoy/passwerk#readme",
+  "bugs": {
+    "url": "https://github.com/ShahriarBijoy/passwerk/issues"
+  },
+  "keywords": [
+    "battery-passport",
+    "digital-product-passport",
+    "aas",
+    "idta-02035",
+    "eu-2023-1542",
+    "mcp",
+    "cli"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": [
     "./dist/bin.js"
   ],

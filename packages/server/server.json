@@ -1,0 +1,34 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.shahriarbijoy/passwerk",
+  "title": "passwerk",
+  "description": "Offline EU Digital Battery Passport toolkit: ingest supplier documents, map, validate (AAS / IDTA 02035), gap report, emit AASX. No network, no model calls.",
+  "websiteUrl": "https://github.com/ShahriarBijoy/passwerk#readme",
+  "repository": { "url": "https://github.com/ShahriarBijoy/passwerk", "source": "github" },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@passwerk/server",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "PASSWERK_ROOT",
+          "description": "Directory ingest_documents may read and emit_passport may write (default: the working directory)",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "PASSWERK_LOG_LEVEL",
+          "description": "info (default) or debug; JSON lines on stderr",
+          "isRequired": false,
+          "isSecret": false,
+          "choices": ["info", "debug"]
+        }
+      ]
+    }
+  ]
+}
