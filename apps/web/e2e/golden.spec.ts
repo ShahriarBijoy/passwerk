@@ -29,6 +29,8 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
     expect(shown).toEqual(expected.findings.map((f) => f.ruleId).sort());
 
+    // Assumes the samples' https identifiers; the QR export would report a carrierError for a
+    // urn: id instead of exporting a QR file (the HTML sheet itself needs no https id).
     if (validateSchema(draft).draft !== undefined) {
       const [download] = await Promise.all([
         page.waitForEvent('download'),

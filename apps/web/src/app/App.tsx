@@ -111,9 +111,18 @@ export function App({ store, storageNotice }: AppProps) {
         setExportError(out.error);
         return;
       }
-      setExportError(undefined);
       const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3, html: 4, qr: 5 }[kind];
       const file = out.files[index];
+      if (kind === 'qr' && !file) {
+        setExportError(
+          out.carrierError ?? {
+            de: 'QR-Code konnte nicht erzeugt werden.',
+            en: 'The QR code could not be generated.',
+          },
+        );
+        return;
+      }
+      setExportError(undefined);
       if (file) downloadFile(file);
     } catch (e) {
       fail(e);

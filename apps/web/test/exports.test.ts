@@ -43,4 +43,27 @@ describe('exports', () => {
     expect(out.files[4]?.type).toBe('text/html');
     expect(out.files[5]?.type).toBe('image/svg+xml');
   });
+  it('omits the QR file and reports a carrierError for a non-https passport id', () => {
+    const sample = structuredClone(getSample('ev-valid')) as PassportDraft;
+    sample.meta.passportId = 'urn:passwerk:draft:test';
+    (sample.attributes as Record<string, { value?: unknown }>)['batteryPassportIdentifier'] = {
+      ...(sample.attributes as Record<string, { value?: unknown }>)['batteryPassportIdentifier'],
+      value: 'urn:passwerk:draft:test',
+    };
+    const s = reduce(initialState, { type: 'importDraft', draft: sample, at: AT });
+    const d = derive(s, AT);
+    if (!d) throw new Error('no derived');
+    const out = buildExports(d, 'de');
+    if ('error' in out) throw new Error(out.error.en);
+    const base = slug(d.draft.meta.passportId);
+    expect(out.files.map((f) => f.name)).toEqual([
+      `${base}.aas.json`,
+      `${base}.aasx`,
+      `${base}.draft.json`,
+      `${base}.gaps.json`,
+      `${base}.html`,
+    ]);
+    expect(out.carrierError?.de).toBeTruthy();
+    expect(out.carrierError?.en).toBeTruthy();
+  });
 });
