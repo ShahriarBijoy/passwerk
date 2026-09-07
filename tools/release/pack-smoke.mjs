@@ -3,6 +3,7 @@
  * Proves the published packages work outside the monorepo (spec section 8.3): pack the four
  * packages, install the tarballs into an empty temp project, then run the server binary,
  * a stdio tools/list, `passwerk audit` and `passwerk carrier`. Exit 1 on the first failure.
+ * The temp project is always removed, success or failure.
  *
  *   pnpm build && pnpm release:pack && node tools/release/pack-smoke.mjs
  *
@@ -14,7 +15,14 @@
  * the next one is installed, so npm resolves the workspace dependency locally instead.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -23,16 +31,17 @@ const PACK = join(ROOT, 'out', 'pack');
 const VERSION = JSON.parse(
   readFileSync(join(ROOT, 'packages', 'server', 'package.json'), 'utf8'),
 ).version;
-const shell = process.platform === 'win32';
 
+class SmokeError extends Error {}
 function fail(msg) {
-  console.error(`FAIL: ${msg}`);
-  process.exit(1);
+  throw new SmokeError(msg);
 }
-function sh(cmd, args, cwd) {
+
+/** `npm`/`npx` are `.cmd` shims on Windows and need a shell to be found on PATH. */
+function shShell(cmd, args, cwd) {
   const r = spawnSync(cmd, args, {
     cwd,
-    shell,
+    shell: true,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -40,85 +49,143 @@ function sh(cmd, args, cwd) {
   return r.stdout;
 }
 
-// Dependency order matters: each tarball must already be installed before the next one's
-// `npm install` runs, so npm resolves the unpublished `@passwerk/*` deps from node_modules
-// instead of the registry.
-const ORDER = ['rules', 'core', 'server', 'cli'];
-const tarballs = ORDER.map((name) => join(PACK, `passwerk-${name}-${VERSION}.tgz`));
-for (const t of tarballs) {
+/** Direct node invocation: no shell, so paths with spaces are passed through untouched. */
+function shNode(args, cwd) {
+  const r = spawnSync(process.execPath, args, {
+    cwd,
+    shell: false,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (r.status !== 0)
+    fail(`${process.execPath} ${args.join(' ')} exited ${r.status}\n${r.stdout}\n${r.stderr}`);
+  return r.stdout;
+}
+
+/**
+ * Talks the stdio JSON-RPC handshake to the freshly installed server: initialize, then
+ * tools/list. Frames newline-delimited JSON correctly across `data` chunks (keeps only the
+ * trailing partial line in the buffer) and always kills the child before settling, on every
+ * path: success, a malformed line, a process error or the timeout.
+ */
+async function listTools(serverBin, cwd) {
+  return await new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn(process.execPath, [serverBin], {
+      cwd,
+      shell: false,
+      stdio: ['pipe', 'pipe', 'inherit'],
+    });
+    let buf = '';
+    let settled = false;
+    const timer = setTimeout(
+      () => settle(rejectPromise, new SmokeError('tools/list timed out')),
+      30000,
+    );
+    timer.unref();
+
+    function settle(fn, arg) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.kill();
+      fn(arg);
+    }
+
+    child.stdout.on('data', (d) => {
+      if (settled) return;
+      buf += d.toString();
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        let msg;
+        try {
+          msg = JSON.parse(line);
+        } catch (err) {
+          settle(rejectPromise, new SmokeError(`could not parse stdio line: ${line}\n${err}`));
+          return;
+        }
+        if (msg.id === 2) {
+          settle(
+            resolvePromise,
+            msg.result.tools.map((t) => t.name),
+          );
+          return;
+        }
+      }
+    });
+    child.on('error', (err) => settle(rejectPromise, err));
+
+    const send = (m) => child.stdin.write(`${JSON.stringify(m)}\n`);
+    send({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'smoke', version: '0' },
+      },
+    });
+    send({ jsonrpc: '2.0', method: 'notifications/initialized' });
+    send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
+  });
+}
+
+async function main() {
+  // Dependency order matters: each tarball must already be installed before the next one's
+  // `npm install` runs, so npm resolves the unpublished `@passwerk/*` deps from node_modules
+  // instead of the registry.
+  const ORDER = ['rules', 'core', 'server', 'cli'];
+  const tarballs = ORDER.map((name) => join(PACK, `passwerk-${name}-${VERSION}.tgz`));
+  for (const t of tarballs) {
+    if (!existsSync(t)) fail(`expected tarball ${t}, not found (run pnpm release:pack first)`);
+  }
+
+  const dir = mkdtempSync(join(tmpdir(), 'passwerk-smoke-'));
   try {
-    readFileSync(t);
-  } catch {
-    fail(`expected tarball ${t}, not found (run pnpm release:pack first)`);
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'smoke', private: true }));
+    console.log(`installing ${tarballs.length} tarballs into ${dir}`);
+    for (const t of tarballs) {
+      shShell('npm', ['install', '--no-audit', '--no-fund', '--loglevel=error', t], dir);
+    }
+
+    const serverBin = join(dir, 'node_modules', '@passwerk', 'server', 'dist', 'bin.js');
+    const cliBin = join(dir, 'node_modules', '@passwerk', 'cli', 'dist', 'bin.js');
+
+    // 1. version through npx (the DoD command shape)
+    const v = shShell('npx', ['--no-install', 'passwerk-server', '--version'], dir).trim();
+    if (v !== VERSION) fail(`passwerk-server --version printed "${v}", expected ${VERSION}`);
+    console.log(`ok: passwerk-server --version = ${v}`);
+
+    // 2. stdio initialize + tools/list
+    const tools = await listTools(serverBin, dir);
+    if (tools.length !== 11 || !tools.includes('generate_carrier'))
+      fail(`tools/list: ${tools.join(', ')}`);
+    console.log(`ok: tools/list -> ${tools.length} tools`);
+
+    // 3. audit a golden draft
+    copyFileSync(
+      join(ROOT, 'packages', 'core', 'src', 'samples', 'ev-valid.json'),
+      join(dir, 'ev-valid.json'),
+    );
+    const audit = shNode([cliBin, 'audit', 'ev-valid.json'], dir);
+    if (!audit.startsWith('Verdict: valid.')) fail(`audit: ${audit}`);
+    console.log('ok: passwerk audit ev-valid.json -> valid');
+
+    // 4. carrier
+    shNode([cliBin, 'carrier', 'ev-valid.json', '--out', 'qr.svg'], dir);
+    if (!readFileSync(join(dir, 'qr.svg'), 'utf8').startsWith('<svg'))
+      fail('carrier did not write an SVG');
+    console.log('ok: passwerk carrier -> qr.svg');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 
-const dir = mkdtempSync(join(tmpdir(), 'passwerk-smoke-'));
-writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'smoke', private: true }));
-console.log(`installing ${tarballs.length} tarballs into ${dir}`);
-for (const t of tarballs) {
-  sh('npm', ['install', '--no-audit', '--no-fund', '--loglevel=error', t], dir);
-}
-
-const serverBin = join(dir, 'node_modules', '@passwerk', 'server', 'dist', 'bin.js');
-const cliBin = join(dir, 'node_modules', '@passwerk', 'cli', 'dist', 'bin.js');
-
-// 1. version through npx (the DoD command shape)
-const v = sh('npx', ['--no-install', 'passwerk-server', '--version'], dir).trim();
-if (v !== VERSION) fail(`passwerk-server --version printed "${v}", expected ${VERSION}`);
-console.log(`ok: passwerk-server --version = ${v}`);
-
-// 2. stdio initialize + tools/list
-const tools = await new Promise((resolvePromise) => {
-  const child = spawn(process.execPath, [serverBin], {
-    cwd: dir,
-    stdio: ['pipe', 'pipe', 'inherit'],
+main()
+  .then(() => console.log('pack smoke: OK'))
+  .catch((err) => {
+    console.error(`FAIL: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
   });
-  let buf = '';
-  child.stdout.on('data', (d) => {
-    buf += d.toString();
-    for (const line of buf.split('\n')) {
-      if (!line.trim()) continue;
-      const msg = JSON.parse(line);
-      if (msg.id === 2) {
-        child.kill();
-        resolvePromise(msg.result.tools.map((t) => t.name));
-      }
-    }
-  });
-  const send = (m) => child.stdin.write(`${JSON.stringify(m)}\n`);
-  send({
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'initialize',
-    params: {
-      protocolVersion: '2025-06-18',
-      capabilities: {},
-      clientInfo: { name: 'smoke', version: '0' },
-    },
-  });
-  send({ jsonrpc: '2.0', method: 'notifications/initialized' });
-  send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-  setTimeout(() => fail('tools/list timed out'), 30000).unref();
-});
-if (tools.length !== 11 || !tools.includes('generate_carrier'))
-  fail(`tools/list: ${tools.join(', ')}`);
-console.log(`ok: tools/list -> ${tools.length} tools`);
-
-// 3. audit a golden draft
-copyFileSync(
-  join(ROOT, 'packages', 'core', 'src', 'samples', 'ev-valid.json'),
-  join(dir, 'ev-valid.json'),
-);
-const audit = sh(process.execPath, [cliBin, 'audit', 'ev-valid.json'], dir);
-if (!audit.startsWith('Verdict: valid.')) fail(`audit: ${audit}`);
-console.log('ok: passwerk audit ev-valid.json -> valid');
-
-// 4. carrier
-sh(process.execPath, [cliBin, 'carrier', 'ev-valid.json', '--out', 'qr.svg'], dir);
-if (!readFileSync(join(dir, 'qr.svg'), 'utf8').startsWith('<svg'))
-  fail('carrier did not write an SVG');
-console.log('ok: passwerk carrier -> qr.svg');
-
-rmSync(dir, { recursive: true, force: true });
-console.log('pack smoke: OK');
