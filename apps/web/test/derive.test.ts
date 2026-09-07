@@ -6,14 +6,20 @@ import {
   type FactSet,
   getSample,
   ingest,
+  type MappingProposal,
   type PassportDraft,
   suggestMappings,
 } from '@passwerk/core';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { derive } from '@/workflow/derive/index.ts';
+import { decisionsToMappings, derive } from '@/workflow/derive/index.ts';
 import { defaultProject } from '@/workflow/project.ts';
 import { reduce } from '@/workflow/reducer.ts';
-import { initialState, type WorkflowState } from '@/workflow/state.ts';
+import {
+  type Decision,
+  type DecisionKey,
+  initialState,
+  type WorkflowState,
+} from '@/workflow/state.ts';
 
 const AT = '2026-09-05T12:00:00Z';
 const FIX = join(
@@ -77,8 +83,17 @@ describe('derive', () => {
     expect(d.draft.meta).toEqual(d.meta);
   });
   it('a battery type change re-proposes; a stranded decision is ignored and revived', () => {
-    const first = must(derive(withFacts, AT)).proposals[0];
-    if (!first) throw new Error('expected proposals');
+    const evProposals = must(derive(withFacts, AT)).proposals;
+    const lmtProposals = suggestMappings(facts, { category: 'LMT' });
+    // An EV-only proposal (no equivalent attributeId/factId/path under LMT), so accepting it and
+    // then switching to LMT genuinely strands the decision instead of merely re-proposing it.
+    const first = evProposals.find(
+      (p) =>
+        !lmtProposals.some(
+          (q) => q.attributeId === p.attributeId && q.factId === p.factId && q.path === p.path,
+        ),
+    );
+    if (!first) throw new Error('expected an EV-only proposal not shared with LMT');
     const decided = reduce(withFacts, {
       type: 'decide',
       decision: {
@@ -98,6 +113,10 @@ describe('derive', () => {
     const dl = must(derive(lmt, AT));
     expect(dl.proposals).toEqual(suggestMappings(facts, { category: 'LMT' }));
     expect(dl.invalidDecisions).toEqual([]);
+    // "Ignored" is pinned, not just "not blamed": under LMT the decision's proposal is gone
+    // (`toMapping` drops it silently), so the attribute is not present in the draft either.
+    const stranded = dl.draft.attributes[first.attributeId] as { status?: string } | undefined;
+    expect(stranded === undefined || stranded.status !== 'present').toBe(true);
     const back = reduce(lmt, {
       type: 'setProject',
       project: { ...PROJECT, batteryType: 'EV' },
@@ -130,6 +149,67 @@ describe('derive', () => {
     const field = d.draft.attributes[first.attributeId] as { value?: unknown } | undefined;
     expect(field?.value).toBe('42');
   });
+  it(
+    'an edit decision overrides value and unit but inherits source and confidence from the ' +
+      'proposal; a reviewer-supplied recordedAt reaches the draft and satisfies PW-PLAUS-011',
+    () => {
+      const p = must(derive(withFacts, AT)).proposals.find(
+        (x) => x.confidence >= 0.7 && x.path === undefined,
+      );
+      if (!p) throw new Error('need a proposal');
+      const edited = reduce(withFacts, {
+        type: 'decide',
+        decision: {
+          kind: 'edit',
+          attributeId: p.attributeId,
+          factId: p.factId,
+          value: '1',
+          unit: 'kg',
+        },
+        at: AT,
+      });
+      const de = must(derive(edited, AT));
+      const mapping = decisionsToMappings(edited.decisions, de.proposals, de.facts).find(
+        (m) => m.attributeId === p.attributeId,
+      );
+      expect(mapping).toMatchObject({
+        value: '1',
+        unit: 'kg',
+        source: p.source,
+        confidence: p.confidence,
+        override: true,
+      });
+
+      // A dynamic attribute's plausibility rule (PW-PLAUS-011) needs a reviewer-supplied
+      // recordedAt; the app never invents one from the clock.
+      const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
+      delete (draft.attributes as Record<string, unknown>)['stateOfCharge'];
+      const base = reduce(initialState, { type: 'importDraft', draft, at: AT });
+      const decision = { kind: 'manual', attributeId: 'stateOfCharge', value: '80' } as const;
+
+      const unstamped = reduce(base, { type: 'decide', decision, at: AT });
+      expect(must(derive(unstamped, AT)).report.findings.map((f) => f.ruleId)).toContain(
+        'PW-PLAUS-011',
+      );
+
+      const stamped = reduce(base, {
+        type: 'decide',
+        decision: { ...decision, recordedAt: '2026-09-04T10:00:00.000Z' },
+        at: AT,
+      });
+      const sd = must(derive(stamped, AT));
+      expect(decisionsToMappings(stamped.decisions, sd.proposals, sd.facts)).toEqual([
+        {
+          attributeId: 'stateOfCharge',
+          value: '80',
+          recordedAt: '2026-09-04T10:00:00.000Z',
+          override: true,
+        },
+      ]);
+      expect(sd.draft.attributes['stateOfCharge']?.recordedAt).toBe('2026-09-04T10:00:00.000Z');
+      expect(sd.report.findings.map((f) => f.ruleId)).not.toContain('PW-PLAUS-011');
+    },
+  );
   it("a manual decision with a factId carries that fact's provenance", () => {
     const fact = facts.facts[0];
     if (!fact) throw new Error('expected facts');
@@ -191,6 +271,39 @@ describe('derive', () => {
     expect(d.report.layers.L1.ran).toBe(true);
     expect(d.report.layers.L4.ran).toBe(false);
   });
+  it('blames a decision that breaks a state an earlier decision had repaired', () => {
+    // Decisions fold in sorted key order: `criticalRawMaterials` repairs the base, and
+    // `hazardousSubstances` then breaks validation again. The second one is blameable
+    // precisely because the first one made the draft validatable.
+    const sample = structuredClone(getSample('ev-valid')) as PassportDraft;
+    const repaired = (sample.attributes as Record<string, { value: unknown }>)[
+      'criticalRawMaterials'
+    ]?.value;
+    const s: WorkflowState = {
+      ...reduce(initialState, { type: 'importDraft', draft: brokenBase(), at: AT }),
+      decisions: {
+        criticalRawMaterials: {
+          kind: 'manual',
+          attributeId: 'criticalRawMaterials',
+          // Core's mapping value is `unknown`; only the UI is limited to strings.
+          value: repaired as string,
+        },
+        hazardousSubstances: {
+          kind: 'manual',
+          attributeId: 'hazardousSubstances',
+          value: 'kaputt',
+        },
+      },
+    };
+    const d = must(derive(s, AT));
+    expect(d.invalidDecisions.map((x) => x.key)).toEqual(['hazardousSubstances']);
+    expect(d.draft.attributes['criticalRawMaterials']?.value).toEqual(repaired);
+    // The blamed decision's draft is discarded, not merged behind a stale report.
+    expect(d.draft.attributes['hazardousSubstances']?.value).not.toBe('kaputt');
+    expect(Array.isArray(d.draft.attributes['hazardousSubstances']?.value)).toBe(true);
+    expect(d.report.verdict).toBe('valid');
+    expect(d.report.layers.L2.ran).toBe(true);
+  });
   it('is byte-identical on re-run and reuses every object across a language toggle', () => {
     const a = must(derive(withFacts, AT));
     const b = must(derive({ ...withFacts, decisions: { ...withFacts.decisions } }, AT));
@@ -206,5 +319,53 @@ describe('derive', () => {
     expect(c.report).toBe(a2.report);
     expect(c.gap).toBe(a2.gap);
     expect(c.proposals).toBe(a2.proposals);
+  });
+});
+
+describe('decisionsToMappings', () => {
+  it('returns accept/edit/manual mappings in sorted key order, skipping rejects and stranded decisions', () => {
+    const proposal = (over: Partial<MappingProposal>): MappingProposal => ({
+      attributeId: 'x',
+      value: '1',
+      factId: 'f1',
+      confidence: 0.9,
+      source: [{ file: 'a.pdf', page: 1 }],
+      why: { de: 'x', en: 'x' },
+      checks: { label: 1, matched: 'x', unit: 'match', kind: 'ok' },
+      ...over,
+    });
+    const proposals: MappingProposal[] = [
+      proposal({ attributeId: 'zAttr', factId: 'f-z' }),
+      proposal({ attributeId: 'aAttr', factId: 'f-a' }),
+    ];
+    const emptyFacts: FactSet = { facts: [], tables: [], documents: [] };
+    // Insertion order is deliberately not sorted, to prove `decisionsToMappings` sorts by key.
+    const decisions: Record<DecisionKey, Decision> = {
+      zAttr: { kind: 'accept', attributeId: 'zAttr', factId: 'f-z' },
+      aAttr: { kind: 'edit', attributeId: 'aAttr', factId: 'f-a', value: '2' },
+      rejected: { kind: 'reject', attributeId: 'rejected', factId: 'f-r' },
+      manualAttr: { kind: 'manual', attributeId: 'manualAttr', value: 'hand-typed' },
+      // No proposal matches this factId/attributeId under the current category: stranded.
+      stranded: { kind: 'edit', attributeId: 'stranded', factId: 'gone', value: 'x' },
+    };
+    const mappings = decisionsToMappings(decisions, proposals, emptyFacts);
+    expect(mappings.map((m) => m.attributeId)).toEqual(['aAttr', 'manualAttr', 'zAttr']);
+    expect(mappings.find((m) => m.attributeId === 'aAttr')).toMatchObject({
+      value: '2',
+      source: proposals[1]?.source,
+      confidence: proposals[1]?.confidence,
+      override: true,
+    });
+    expect(mappings.find((m) => m.attributeId === 'zAttr')).toMatchObject({
+      value: '1',
+      source: proposals[0]?.source,
+      confidence: proposals[0]?.confidence,
+      override: true,
+    });
+    expect(mappings.find((m) => m.attributeId === 'manualAttr')).toEqual({
+      attributeId: 'manualAttr',
+      value: 'hand-typed',
+      override: true,
+    });
   });
 });

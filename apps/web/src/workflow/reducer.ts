@@ -186,6 +186,7 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
       };
     }
     case 'clearFactEdit': {
+      if (!(action.factId in state.factEdits)) return state;
       const { [action.factId]: _dropped, ...rest } = state.factEdits;
       return { ...state, ...stamp, factEdits: rest };
     }

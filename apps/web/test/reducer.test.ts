@@ -104,6 +104,7 @@ describe('reducer: facts and edits', () => {
     expect(e.factEdits).toEqual({ 'a.pdf#1:0': { value: '2', unit: 'kWh' } });
     expect(reduce(e, { type: 'clearFactEdit', factId: 'a.pdf#1:0', at: AT }).factEdits).toEqual({});
     expect(reduce(s, { type: 'editFact', factId: 'nope', edit: { value: '2' }, at: AT })).toBe(s);
+    expect(reduce(s, { type: 'clearFactEdit', factId: 'nope', at: AT })).toBe(s);
   });
   it('fileRemoved drops the file, its facts, its edits and its non-manual decisions', () => {
     let s = withFile(withFile(start(), 'a.pdf'), 'b.pdf');

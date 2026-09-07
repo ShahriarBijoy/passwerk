@@ -63,9 +63,10 @@ export interface WorkflowState {
   factEdits: Record<string, FactEdit>;
   decisions: Record<DecisionKey, Decision>;
   /**
-   * Bumped whenever the active project is replaced. An upload started under one generation is
-   * discarded when it lands under another, so a slow ingest cannot pour its documents into a
-   * project the reviewer has since started over.
+   * Bumped when a project is created or replaced (the first `setProject` from `null`,
+   * `importDraft`, or `reset`) — not on every edit of an already-active project. An upload
+   * started under one generation is discarded when it lands under another, so a slow ingest
+   * cannot pour its documents into a project the reviewer has since started over.
    */
   generation: number;
   updatedAt: string;
