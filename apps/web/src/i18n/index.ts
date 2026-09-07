@@ -20,3 +20,8 @@ export function pick(lang: Language, text: LangText): string {
 export function verdictKey(verdict: 'valid' | 'valid_with_warnings' | 'invalid'): Key {
   return `gaps.verdict.${verdict}`;
 }
+
+/** '1 row' / '1 Zeile' for a single row, `rows.count` otherwise. */
+export function rowsCount(lang: Language, count: number): string {
+  return count === 1 ? t(lang, 'rows.count.one') : t(lang, 'rows.count', { count });
+}

@@ -82,6 +82,7 @@ export const en: Record<keyof typeof de, string> = {
   'rows.save': 'Save rows',
   'rows.cancel': 'Cancel',
   'rows.count': '{count} rows',
+  'rows.count.one': '1 row',
   'rows.edit': 'Edit rows',
   'rows.list.hint': 'Comma-separated',
   'rows.required': 'required',

@@ -13,17 +13,23 @@ function RowFields({
   leaves,
   row,
   prefix,
+  domPrefix,
   onChange,
 }: {
   lang: Language;
   leaves: ElementLeaf[];
   row: RowDraft;
-  /** '' at the top level; `<path>-<index>` inside a nested editor (keeps test ids unique). */
+  /** '' at the top level; `<path>-<index>` inside a nested editor (keeps test ids unique per
+   * the data-testid contract — stable across row add/remove, not per-row unique). */
   prefix: string;
+  /** Chain of `-r<index>` per row level (outer row, then each nested row), so the DOM `id`
+   * (unlike the `data-testid`) is unique per row even though rows share the same schema path. */
+  domPrefix: string;
   onChange(row: RowDraft): void;
 }) {
-  const id = (path: string) =>
+  const testId = (path: string) =>
     prefix === '' ? `rows-field-${path}` : `rows-field-${prefix}-${path}`;
+  const domId = (path: string) => `${testId(path)}${domPrefix}`;
   return (
     <div className="grid gap-2 md:grid-cols-2">
       {leaves.map((leaf) =>
@@ -41,6 +47,7 @@ function RowFields({
                   leaves={leaf.rows ?? []}
                   row={sub}
                   prefix={prefix === '' ? `${leaf.path}-${i}` : `${prefix}-${leaf.path}-${i}`}
+                  domPrefix={`${domPrefix}-r${i}`}
                   onChange={(next) => {
                     const list = [...(row.nested[leaf.path] ?? [])];
                     list[i] = next;
@@ -79,14 +86,14 @@ function RowFields({
           </div>
         ) : (
           <div key={leaf.path} className="grid gap-1">
-            <Label htmlFor={id(leaf.path)}>
+            <Label htmlFor={domId(leaf.path)}>
               {leaf.path}
               {leaf.required ? ` (${t(lang, 'rows.required')})` : ''}
               {leaf.kind === 'list' ? ` · ${t(lang, 'rows.list.hint')}` : ''}
             </Label>
             <Input
-              id={id(leaf.path)}
-              data-testid={id(leaf.path)}
+              id={domId(leaf.path)}
+              data-testid={testId(leaf.path)}
               value={row.fields[leaf.path] ?? ''}
               onChange={(e) =>
                 onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })
@@ -146,13 +153,20 @@ export function RowEditor({
             leaves={leaves}
             row={row}
             prefix=""
-            onChange={(next) => setRows(rows.map((r, j) => (j === i ? next : r)))}
+            domPrefix={`-r${i}`}
+            onChange={(next) => {
+              setRows(rows.map((r, j) => (j === i ? next : r)));
+              setErrors([]);
+            }}
           />
           <Button
             size="sm"
             variant="ghost"
             data-testid="rows-remove"
-            onClick={() => setRows(rows.filter((_, j) => j !== i))}
+            onClick={() => {
+              setRows(rows.filter((_, j) => j !== i));
+              setErrors([]);
+            }}
           >
             {t(lang, 'rows.remove')}
           </Button>

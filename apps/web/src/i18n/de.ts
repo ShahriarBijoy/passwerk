@@ -84,6 +84,7 @@ export const de = {
   'rows.save': 'Zeilen speichern',
   'rows.cancel': 'Abbrechen',
   'rows.count': '{count} Zeilen',
+  'rows.count.one': '1 Zeile',
   'rows.edit': 'Zeilen bearbeiten',
   'rows.list.hint': 'Kommagetrennt',
   'rows.required': 'erforderlich',

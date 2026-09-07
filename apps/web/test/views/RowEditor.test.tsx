@@ -22,11 +22,28 @@ describe('RowEditor', () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByTestId('rows-error').textContent).toMatch(/Row 2/);
     fireEvent.change(field(1, 'identifier'), { target: { value: '7440-48-4' } });
+    // Fixing the failing row's field clears the error immediately, before saving again.
+    expect(screen.queryByTestId('rows-error')).toBeNull();
     fireEvent.click(screen.getByTestId('rows-save'));
     expect(onSave).toHaveBeenCalledWith([
       { name: 'Lithium', identifier: '7439-93-2' },
       { name: 'Cobalt', identifier: '7440-48-4' },
     ]);
+  });
+  it('gives each row a unique DOM id, so a label resolves to its own row only', () => {
+    mount(<RowEditor lang="en" attributeId="criticalRawMaterials" onSave={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('rows-add'));
+    const inputs = screen.getAllByTestId('rows-field-name') as HTMLInputElement[];
+    expect(inputs).toHaveLength(2);
+    const [row0, row1] = inputs;
+    expect(row0?.id).not.toBe(row1?.id);
+    // A duplicate id would make `getElementById` (and a real browser's label click-forwarding,
+    // which resolves `for` the same way) resolve to the wrong row's input.
+    expect(document.getElementById(row1?.id ?? '')).toBe(row1);
+    const label1 = document.querySelector(`label[for="${row1?.id}"]`);
+    expect(label1?.closest('[data-testid="rows-row"]')).toBe(
+      row1?.closest('[data-testid="rows-row"]'),
+    );
   });
   it('prefills from an existing value and removes a row', () => {
     const onSave = vi.fn();

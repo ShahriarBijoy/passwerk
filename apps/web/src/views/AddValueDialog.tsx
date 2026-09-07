@@ -29,10 +29,14 @@ export function AddValueDialog({
   lang,
   category,
   onAdd,
+  arrayRows,
 }: {
   lang: Language;
   category: BatteryCategory;
   onAdd(d: Decision): void;
+  /** Existing rows for an array composite, so picking one that already holds data prefills
+   * the row editor instead of silently replacing it. */
+  arrayRows?(attributeId: string): unknown;
 }) {
   const [open, setOpen] = useState(false);
   const [attributeId, setAttributeId] = useState('');
@@ -80,7 +84,7 @@ export function AddValueDialog({
           {t(lang, 'review.addValue')}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t(lang, 'review.addValue')}</DialogTitle>
         </DialogHeader>
@@ -110,6 +114,7 @@ export function AddValueDialog({
               key={attributeId}
               lang={lang}
               attributeId={attributeId}
+              initial={arrayRows?.(attributeId)}
               onSave={(rows) => {
                 onAdd({ kind: 'manual', attributeId, value: rows });
                 setOpen(false);

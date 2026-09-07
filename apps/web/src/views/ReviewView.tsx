@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type LangText, type Language, pick, t } from '../i18n/index.ts';
+import { type LangText, type Language, pick, rowsCount, t } from '../i18n/index.ts';
 import type { InvalidDecision } from '../workflow/derive/index.ts';
 import type { Decision, DecisionKey } from '../workflow/state.ts';
 import { validateValue } from '../workflow/validateValue.ts';
@@ -196,7 +196,12 @@ export function ReviewView(props: ReviewViewProps) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <AddValueDialog lang={lang} category={props.category} onAdd={props.onDecide} />
+        <AddValueDialog
+          lang={lang}
+          category={props.category}
+          onAdd={props.onDecide}
+          arrayRows={props.arrayRows}
+        />
         <Button className="ml-auto" data-testid="to-gaps" onClick={props.onContinue}>
           {t(lang, 'review.continue')}
         </Button>
@@ -233,7 +238,7 @@ export function ReviewView(props: ReviewViewProps) {
             <span className="font-mono">
               {d.kind === 'manual'
                 ? Array.isArray(d.value)
-                  ? t(lang, 'rows.count', { count: d.value.length })
+                  ? rowsCount(lang, d.value.length)
                   : d.value
                 : ''}
             </span>
@@ -256,7 +261,7 @@ export function ReviewView(props: ReviewViewProps) {
             <Card key={a.attributeId} data-testid="array-entry" data-attribute={a.attributeId}>
               <CardContent className="flex items-center gap-3 py-3">
                 <span className="font-medium">{pick(lang, a.name)}</span>
-                <span className="font-mono">{t(lang, 'rows.count', { count: a.rows })}</span>
+                <span className="font-mono">{rowsCount(lang, a.rows)}</span>
                 {a.origin === 'manual' && (
                   <span className="text-xs">{t(lang, 'review.manual')}</span>
                 )}

@@ -222,7 +222,7 @@ describe('ReviewView', () => {
           {
             attributeId: 'criticalRawMaterials',
             name: { de: 'Kritische Rohstoffe', en: 'Critical raw materials' },
-            rows: 2,
+            rows: 3,
             origin: 'draft',
           },
         ]}
@@ -232,10 +232,38 @@ describe('ReviewView', () => {
       />,
     );
     const entry = screen.getByTestId('array-entry');
-    expect(entry.textContent).toContain('2 rows');
+    expect(entry.textContent).toContain('3 rows');
     fireEvent.click(screen.getByTestId('array-edit'));
-    // The dialog prefills from arrayRows, decoupled from the `arrays` prop's own count above:
-    // the ev-valid sample's criticalRawMaterials actually holds three materials.
     expect(screen.getAllByTestId('rows-row')).toHaveLength(3);
+  });
+
+  it('uses the singular form for a single row', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={[]}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        arrays={[
+          {
+            attributeId: 'criticalRawMaterials',
+            name: { de: 'Kritische Rohstoffe', en: 'Critical raw materials' },
+            rows: 1,
+            origin: 'draft',
+          },
+        ]}
+        arrayRows={() => []}
+      />,
+    );
+    const entry = screen.getByTestId('array-entry');
+    expect(entry.textContent).toContain('1 row');
+    expect(entry.textContent).not.toContain('1 rows');
   });
 });

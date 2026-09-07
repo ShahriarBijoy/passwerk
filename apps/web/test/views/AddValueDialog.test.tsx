@@ -84,6 +84,19 @@ describe('AddValueDialog', () => {
     });
   });
 
+  it('prefills the row editor from arrayRows so existing rows are not silently replaced', () => {
+    const onAdd = vi.fn();
+    const arrayRows = vi.fn(() => [
+      { name: 'Lithium', identifier: '7439-93-2' },
+      { name: 'Cobalt', identifier: '7440-48-4' },
+    ]);
+    mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} arrayRows={arrayRows} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('criticalRawMaterials');
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(2);
+    expect(arrayRows).toHaveBeenCalledWith('criticalRawMaterials');
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
