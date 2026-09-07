@@ -8,7 +8,8 @@ export type LangText = { de: string; en: string };
 const DICT: Record<Language, Record<Key, string>> = { de, en };
 
 export function t(lang: Language, key: Key, params: Record<string, string | number> = {}): string {
-  const template = DICT[lang][key];
+  // A missing template (a key cast from data) renders as the key rather than throwing mid-render.
+  const template = DICT[lang][key] ?? key;
   return template.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? `{${name}}`));
 }
 

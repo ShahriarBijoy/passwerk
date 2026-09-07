@@ -105,6 +105,8 @@ export const en: Record<keyof typeof de, string> = {
   'gaps.legalRefs': 'Legal basis',
   'gaps.nextAction': 'Next action',
   'gaps.verify': 'Entry not yet reviewed by a domain expert',
+  'project.identifier.https.invalid': 'Must be an absolute https URI.',
+  'project.identifier.draft.invalid': 'Must be a URI, for example urn:...',
   'export.title': 'Export',
   'export.aasJson': 'AAS JSON',
   'export.aasx': 'AASX',

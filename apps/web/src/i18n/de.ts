@@ -107,6 +107,8 @@ export const de = {
   'gaps.legalRefs': 'Rechtsgrundlage',
   'gaps.nextAction': 'Nächster Schritt',
   'gaps.verify': 'Eintrag noch nicht fachlich geprüft',
+  'project.identifier.https.invalid': 'Muss eine absolute https-URI sein.',
+  'project.identifier.draft.invalid': 'Muss eine URI sein, zum Beispiel urn:...',
   'export.title': 'Export',
   'export.aasJson': 'AAS JSON',
   'export.aasx': 'AASX',
