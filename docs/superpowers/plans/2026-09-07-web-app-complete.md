@@ -1809,7 +1809,9 @@ import { deriveProject } from '@/workflow/derive/project.ts';
 import { defaultProject, type Project } from '@/workflow/project.ts';
 import { mount } from './render.tsx';
 
-const AT = '2026-09-07T12:00:00Z';
+// After the 2027-02-18 obligation start, so an EV manufacturer reads "required".
+const AT = '2027-09-07T12:00:00Z';
+const EARLY = '2026-09-07T12:00:00Z';
 const base = defaultProject('urn:passwerk:draft:1', AT);
 
 function view(project: Project, over: Partial<Parameters<typeof ProjectView>[0]> = {}) {
@@ -1839,6 +1841,15 @@ describe('ProjectView', () => {
     expect(screen.getByTestId('obligation-category').textContent).toContain('Electric vehicle (EV)');
     expect(screen.queryByTestId('manual-category')).toBeNull();
     expect(screen.getAllByTestId('timeline-entry').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByTestId('project-continue'));
+    expect(onContinue).toHaveBeenCalled();
+  });
+  it('before the start date: not required, category still derived, Continue enabled', () => {
+    const { onContinue } = view(base, { derived: deriveProject(base, EARLY) });
+    expect(screen.getByTestId('obligation-verdict').getAttribute('data-verdict')).toBe('not_required');
+    expect(screen.getByTestId('obligation-reason').textContent).toContain('2027-02-18');
+    expect(screen.getByTestId('obligation-category').textContent).toContain('Electric vehicle (EV)');
+    expect(screen.queryByTestId('manual-category')).toBeNull();
     fireEvent.click(screen.getByTestId('project-continue'));
     expect(onContinue).toHaveBeenCalled();
   });
@@ -3195,9 +3206,11 @@ test('industrial battery: threshold, voluntary category, timeline as core', asyn
   await page.getByRole('option', { name: /2 kWh/ }).click();
   await expect(page.getByTestId('project-continue')).toBeEnabled();
   await page.getByTestId('energy-kwh').fill('3');
-  await expect(page.getByTestId('obligation-verdict')).toHaveAttribute('data-verdict', 'required');
+  await expect(page.getByTestId('obligation-verdict')).toHaveAttribute('data-verdict', 'not_required'); // before 2027-02-18
   await expect(page.getByTestId('obligation-category')).toContainText('2 kWh');
-  const expected = checkObligations({ batteryType: 'INDUSTRIAL', role: 'manufacturer', energyKwh: '3', asOf: CLOCK });
+  await page.getByTestId('placed-on-market').fill('2027-03-01');
+  await expect(page.getByTestId('obligation-verdict')).toHaveAttribute('data-verdict', 'required');
+  const expected = checkObligations({ batteryType: 'INDUSTRIAL', role: 'manufacturer', energyKwh: '3', placedOnMarketDate: '2027-03-01', asOf: CLOCK });
   const ids = await page.getByTestId('timeline-entry').evaluateAll((els) => els.map((e) => e.getAttribute('data-id')));
   expect(ids).toEqual(expected.timeline.map((e) => e.id));
 });
