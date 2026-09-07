@@ -1,4 +1,3 @@
-import { isHttpsUri } from '@passwerk/core';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -17,15 +16,16 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { type LangText, type Language, t } from '../i18n/index.ts';
 import { GapsExportView } from '../views/GapsExportView.tsx';
+import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
 import { buildGroups, manualEntries } from '../views/reviewModel.ts';
-import { StartView } from '../views/StartView.tsx';
 import { UploadView } from '../views/UploadView.tsx';
 import { derive } from '../workflow/derive/index.ts';
+import { deriveProject } from '../workflow/derive/project.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
 import { buildExports, type ExportKind } from '../workflow/exports.ts';
 import { ingestFiles } from '../workflow/ingest.ts';
-import { BATTERY_TYPE_OF, defaultProject } from '../workflow/project.ts';
+import { defaultProject, type Project } from '../workflow/project.ts';
 import { type Decision, type DecisionKey, STEPS, type Step } from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
 import { nowIso } from './clock.ts';
@@ -56,9 +56,22 @@ export function App({ store, storageNotice }: AppProps) {
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
   const [asOf] = useState(() => nowIso());
-  const [defaultPassportId] = useState(() => `urn:passwerk:draft:${randomId()}`);
+  const [localProject, setLocalProject] = useState(() =>
+    defaultProject(`urn:passwerk:draft:${randomId()}`, ''),
+  );
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
+  const project = state.project ?? localProject;
+  const projectDerived = deriveProject(project, asOf);
+  const onProjectChange = (p: Project) => {
+    if (state.project) dispatch({ type: 'setProject', project: p, at: nowIso() });
+    else setLocalProject(p);
+  };
+  const onProjectContinue = () => {
+    const at = nowIso();
+    if (!state.project) dispatch({ type: 'setProject', project: localProject, at });
+    dispatch({ type: 'goTo', step: 'upload', at });
+  };
 
   const fail = (e: unknown) => {
     const message = e instanceof Error ? e.message : String(e);
@@ -128,6 +141,7 @@ export function App({ store, storageNotice }: AppProps) {
 
   const reachable = (step: Step): boolean => {
     if (step === 'project') return true;
+    if (step === 'upload') return projectDerived.meta !== null;
     if (step === 'facts') return state.facts !== null;
     return derived !== null;
   };
@@ -140,47 +154,25 @@ export function App({ store, storageNotice }: AppProps) {
     switch (state.step) {
       case 'project':
         return (
-          <StartView
+          <ProjectView
             lang={lang}
-            defaultPassportId={defaultPassportId}
+            project={project}
+            derived={projectDerived}
+            isNew={state.project === null}
             {...(state.project
-              ? {
-                  resume: {
-                    category: derived?.meta.category ?? 'EV',
-                    files: state.files.map((f) => f.name),
-                    updatedAt: state.updatedAt,
-                  },
-                }
+              ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
               : {})}
-            onStart={({ category, passportId }) => {
-              const at = nowIso();
-              const p = defaultProject(passportId, at);
-              dispatch({
-                type: 'setProject',
-                project: {
-                  ...p,
-                  batteryType: BATTERY_TYPE_OF[category],
-                  ...(category === 'INDUSTRIAL_GT_2KWH' ? { energyKwh: '3' } : {}),
-                  identifier: isHttpsUri(passportId)
-                    ? { mode: 'https', uri: passportId }
-                    : { mode: 'draft', urn: passportId },
-                },
-                at,
-              });
-              dispatch({ type: 'goTo', step: 'upload', at });
-            }}
+            onChange={onProjectChange}
+            onContinue={onProjectContinue}
             onImport={(text) => {
               const r = importDraftJson(text);
               if (r.ok) dispatch({ type: 'importDraft', draft: r.draft, at: nowIso() });
               return r.ok ? { ok: true } : { ok: false, message: r.message };
             }}
-            onResume={() =>
-              dispatch({
-                type: 'goTo',
-                step: state.files.length ? 'review' : 'upload',
-                at: nowIso(),
-              })
-            }
+            onResume={() => {
+              const step = derived === null ? 'project' : state.files.length ? 'review' : 'upload';
+              if (step !== 'project') dispatch({ type: 'goTo', step, at: nowIso() });
+            }}
             onReset={reset}
           />
         );

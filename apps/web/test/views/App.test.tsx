@@ -24,10 +24,10 @@ describe('App', () => {
   it('starts on the project step, toggles language and starts a project', () => {
     const store = createStore(initialState);
     mount(<App store={store} />);
-    expect(screen.getByText('Batteriekategorie')).toBeTruthy();
+    expect(screen.getByText('Batterietyp')).toBeTruthy();
     fireEvent.click(screen.getByTestId('lang-toggle'));
-    expect(screen.getByText('Battery category')).toBeTruthy();
-    fireEvent.click(screen.getByTestId('start'));
+    expect(screen.getByText('Battery type')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('project-continue'));
     expect(store.getState().step).toBe('upload');
     expect(store.getState().project?.batteryType).toBe('EV');
     expect(screen.getByText('Upload documents')).toBeTruthy();
@@ -46,7 +46,7 @@ describe('App', () => {
     );
     const store = createStore(initialState);
     mount(<App store={store} />);
-    fireEvent.click(screen.getByTestId('start'));
+    fireEvent.click(screen.getByTestId('project-continue'));
     fireEvent.change(screen.getByTestId('file-input'), {
       target: { files: [new File(['a;b'], 'a.csv', { type: 'text/csv' })] },
     });
