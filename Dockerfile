@@ -7,7 +7,7 @@ WORKDIR /src
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
-RUN pnpm --filter @passwerk/server --prod deploy --legacy /out && mkdir -p /data
+RUN pnpm --filter @passwerk/server --prod deploy --legacy /out && mkdir -p /data/documents /data/output
 
 FROM gcr.io/distroless/nodejs22-debian12:nonroot
 LABEL org.opencontainers.image.title="passwerk" \

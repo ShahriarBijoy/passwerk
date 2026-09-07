@@ -13,3 +13,5 @@ tools/oracle/.venv
 **/*.tsbuildinfo
 docs/research-passwerk.md
 docs/media
+.env
+.env.*

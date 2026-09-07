@@ -5,6 +5,8 @@ set -euo pipefail
 IMAGE="${1:-passwerk:smoke}"
 TOKEN="smoke-$(date +%s)"
 OUTDIR=$(mktemp -d)
+DOCS=$(mktemp -d)
+cp "$(dirname "$0")/../../packages/core/test/fixtures/musterwerk/"* "$DOCS/"
 # MSYS_NO_PATHCONV scoped to these commands: Git Bash on Windows otherwise rewrites the
 # POSIX-looking `-v host:/data/output` argument before handing it to native docker.exe (MSYS
 # path conversion), mangling both sides of the bind mount. No-op on Linux/macOS. Left unset
@@ -13,17 +15,26 @@ OUTDIR=$(mktemp -d)
 # (65532); a throwaway container (reusing the already-pulled build-stage base, no extra pull)
 # opens it up so the passwerk container below can write into it. True on Linux CI too, not
 # just this Windows Docker Desktop bind-mount quirk.
-MSYS_NO_PATHCONV=1 docker run --rm -v "$OUTDIR:/data/output" node:22-bookworm-slim chmod 777 /data/output
-ID=$(MSYS_NO_PATHCONV=1 docker run -d --rm -e PASSWERK_AUTH_TOKEN="$TOKEN" -p 127.0.0.1:3777:3777 -v "$OUTDIR:/data/output" "$IMAGE")
+# Even with MSYS_NO_PATHCONV=1 (which stops the container-side path from being rewritten),
+# Docker Desktop on Windows still needs a real Windows path for the host side of a bind mount;
+# an MSYS-style `/tmp/...` path silently mounts an empty/throwaway directory instead. `cygpath
+# -w` converts it; on Linux/macOS cygpath does not exist, so fall back to the POSIX path as-is.
+winpath() { command -v cygpath >/dev/null 2>&1 && cygpath -w "$1" || printf '%s' "$1"; }
+MSYS_NO_PATHCONV=1 docker run --rm -v "$(winpath "$OUTDIR"):/data/output" node:22-bookworm-slim chmod 777 /data/output
+# Mirrors docker-compose.yml exactly: read-only root filesystem, documents mounted read-only,
+# output mounted read-write, so this proves the compose mount layout, not just the image.
+ID=$(MSYS_NO_PATHCONV=1 docker run -d --rm --read-only -e PASSWERK_AUTH_TOKEN="$TOKEN" -p 127.0.0.1:3777:3777 -v "$(winpath "$DOCS"):/data/documents:ro" -v "$(winpath "$OUTDIR"):/data/output" "$IMAGE")
 cleanup() {
   docker rm -f "$ID" >/dev/null 2>&1 || true
   # $OUTDIR is chmod 777 so the host user can delete it directly; if it still fails (e.g. a
   # Linux host where files the container wrote as UID 65532 block the removal), fall back to
   # emptying it from inside a container first.
   rm -rf "$OUTDIR" 2>/dev/null || {
-    MSYS_NO_PATHCONV=1 docker run --rm -v "$OUTDIR:/data/output" node:22-bookworm-slim rm -rf /data/output/* >/dev/null 2>&1 || true
+    MSYS_NO_PATHCONV=1 docker run --rm -v "$(winpath "$OUTDIR"):/data/output" node:22-bookworm-slim rm -rf /data/output/* >/dev/null 2>&1 || true
     rm -rf "$OUTDIR" 2>/dev/null || true
   }
+  rm -rf "$DOCS" 2>/dev/null || true
+  rm -f "${HEADERS:-}" 2>/dev/null || true
 }
 trap cleanup EXIT
 for i in $(seq 1 30); do
@@ -49,6 +60,12 @@ LIST=$(curl -sS -X POST http://127.0.0.1:3777/mcp \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
 echo "$LIST" | grep -q '"generate_carrier"' || { echo "tools/list lacks generate_carrier: $LIST"; exit 1; }
 echo "ok: authenticated tools/list"
+INGEST=$(curl -sS -X POST http://127.0.0.1:3777/mcp \
+  -H "Authorization: Bearer $TOKEN" -H "Mcp-Session-Id: $SESSION" -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"ingest_documents","arguments":{"paths":["documents"]}}}')
+echo "$INGEST" | grep -q 'stueckliste\.xlsx' || { echo "ingest_documents lacks stueckliste.xlsx: $INGEST"; exit 1; }
+echo "ok: ingest_documents reads the read-only /data/documents mount"
 CARRIER=$(curl -sS -X POST http://127.0.0.1:3777/mcp \
   -H "Authorization: Bearer $TOKEN" -H "Mcp-Session-Id: $SESSION" -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
