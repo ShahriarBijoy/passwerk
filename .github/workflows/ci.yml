@@ -107,6 +107,15 @@ jobs:
           path: out/pack/*.tgz
           retention-days: 14
 
+  docker:
+    name: Docker image smoke
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t passwerk:smoke .
+      - run: tools/release/docker-smoke.sh passwerk:smoke
+
   # Credibility gate 1 (ADR D-012): every emitted golden passport is replayed through the
   # official Python aas-test-engines; the verdict must agree with passwerk's L2 verdict, and
   # the committed report and badge must match the fresh run (only the Generated: line may differ).
