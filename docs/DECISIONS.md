@@ -658,3 +658,53 @@ through the loop.
 joins the sovereignty proof: every command runs under the network guard, `chat` with a fake
 client. The demo script needs a key only for its last step. `packages/cli/src/chat/skill.ts`
 must be regenerated when `SKILL.md` changes.
+
+## D-033: Carrier and HTML sheet conventions (2026-09-06)
+
+**Context.** Build plan section 2.2 ends the pipeline with a data carrier (UID, GS1 Digital
+Link, QR) and section 3 names an HTML sheet. No GS1 or ISO/IEC 15459 artefact is bundled, and
+the plan's `qrcode` package depends on `pngjs` and `yargs`, which do not belong in the
+browser-safe core. The sheet must not become a second source of verdicts.
+
+**Decision.** The unique identifier is `meta.passportId`, accepted only as an absolute https
+URI, the rule PW-PLAUS-008 already applies; the carrier creates no new rule id and reports
+input problems as a typed `CarrierInputError` with DE/EN text. The GS1 Digital Link builder
+implements `/01/{gtin14}/21/{serial}` and `/8004/{giai}` with a mod-10 GTIN check; the syntax
+and the length limits are transcribed into `kb/carrier.json` with `verify: true` and appear in
+`docs/KB_REVIEW.md` until confirmed against the GS1 standard. The QR encodes the Digital Link
+when GS1 data is given, else the identifier; the matrix comes from `qrcode-generator` (pure
+JavaScript) and SVG and PNG are rendered in-house (PNG: greyscale, filter 0, `fflate`), so the
+bytes are identical everywhere and an independent decoder (`jsqr`, dev-only) proves them in
+tests. `emitHtml` is one more fail-honest emitter: it builds the AAS environment, runs
+`assembleReport` and `gapReport`, and renders one self-contained file with inline CSS, no
+JavaScript, both languages inside and a CSS-only toggle; the generation time is printed only
+when `asOf` is given.
+
+**Consequences.** `generate_carrier` and the `html` target join the server, the CLI gains
+`passwerk carrier`, and the web export lists the sheet and the QR. The sheet's SVG namespace is
+the only `http://` text in the file, and a test pins that. The rest of Phase 7a (QR preview
+panel, project and facts screens, BYOK) still follows.
+
+## D-034: Release: bundled SDK, trusted publishing, distroless image, registry (2026-09-06)
+
+**Context.** The AAS SDK's ESM build has extensionless imports that only this repository's
+pnpm patch fixes (D-011); a consumer of `@passwerk/core` from npm would load the unpatched
+build. The `@passwerk` npm scope was unclaimed and the repository private. The Official MCP
+Registry validates npm ownership through an `mcpName` field and grants `io.github.<owner>/*`
+to GitHub authentication, including OIDC from GitHub Actions.
+
+**Decision.** Core imports the SDK only through `src/vendor/aasCore.ts`; after `tsc`, an
+`esbuild` step inlines the SDK into `dist/vendor/aasCore.js` (the SDK stays a dependency for
+its types). A CI job packs the four packages, installs the tarballs into an empty project and
+runs the server and the CLI there, which is the proof the bundle works. The four packages share
+one version (`0.1.0` first) and are published from `pnpm pack` tarballs with `npm publish`
+under npm trusted publishing; the workflow skips versions already on npm so the owner's manual
+first publish and the tag do not collide. The Docker image is multi-stage on distroless Node
+22, non-root, HTTP mode only, labelled with the registry name; the release pushes amd64 and
+arm64 to GHCR. The registry manifest lives in `packages/server/server.json` and is published
+with `mcp-publisher login github-oidc`. The repository becomes public at release.
+
+**Consequences.** `npx -y @passwerk/server` is the primary install path in the README and the
+install pages; building from source stays documented. The owner steps live in
+`docs/RELEASE.md`. The web app and the oracle now consume core's `dist`, so they exercise the
+bundle on every CI run.
