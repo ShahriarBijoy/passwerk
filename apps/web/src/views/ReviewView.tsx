@@ -14,13 +14,21 @@ import { AddValueDialog } from './AddValueDialog.tsx';
 import { ConfidenceBadge } from './parts/ConfidenceBadge.tsx';
 import { SourceRef } from './parts/SourceRef.tsx';
 import { VerdictChip } from './parts/VerdictChip.tsx';
-import { filterGroups, keyOf, type ReviewFilter, type ReviewGroup } from './reviewModel.ts';
+import { RowEditorDialog } from './RowEditor.tsx';
+import {
+  type ArrayEntry,
+  filterGroups,
+  keyOf,
+  type ReviewFilter,
+  type ReviewGroup,
+} from './reviewModel.ts';
 
 export interface ReviewViewProps {
   lang: Language;
   category: BatteryCategory;
   groups: ReviewGroup[];
   manual: Decision[];
+  arrays: ArrayEntry[];
   conflicts: MappingConflict[];
   invalidDecisions?: InvalidDecision[];
   accepted: number;
@@ -29,6 +37,7 @@ export interface ReviewViewProps {
   onDecide(d: Decision): void;
   onClear(key: DecisionKey): void;
   onContinue(): void;
+  arrayRows(attributeId: string): unknown;
 }
 
 function ProposalRow({
@@ -162,6 +171,7 @@ export function ReviewView(props: ReviewViewProps) {
   const { lang } = props;
   const [filter, setFilter] = useState<ReviewFilter>('pending');
   const [search, setSearch] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
   const visible = filterGroups(props.groups, filter, search, lang);
   return (
     <div className="grid gap-4">
@@ -222,9 +232,9 @@ export function ReviewView(props: ReviewViewProps) {
             </span>
             <span className="font-mono">
               {d.kind === 'manual'
-                ? typeof d.value === 'string'
-                  ? d.value
-                  : JSON.stringify(d.value)
+                ? Array.isArray(d.value)
+                  ? t(lang, 'rows.count', { count: d.value.length })
+                  : d.value
                 : ''}
             </span>
             <span className="text-xs">{t(lang, 'review.manual')}</span>
@@ -239,6 +249,31 @@ export function ReviewView(props: ReviewViewProps) {
           </CardContent>
         </Card>
       ))}
+      {props.arrays.length > 0 && (
+        <div className="grid gap-2">
+          <h3 className="font-medium text-sm">{t(lang, 'review.arrays')}</h3>
+          {props.arrays.map((a) => (
+            <Card key={a.attributeId} data-testid="array-entry" data-attribute={a.attributeId}>
+              <CardContent className="flex items-center gap-3 py-3">
+                <span className="font-medium">{pick(lang, a.name)}</span>
+                <span className="font-mono">{t(lang, 'rows.count', { count: a.rows })}</span>
+                {a.origin === 'manual' && (
+                  <span className="text-xs">{t(lang, 'review.manual')}</span>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto"
+                  data-testid="array-edit"
+                  onClick={() => setEditing(a.attributeId)}
+                >
+                  {t(lang, 'rows.edit')}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
       {visible.length === 0 && <p className="text-muted-foreground">{t(lang, 'review.empty')}</p>}
       {visible.map((g) => (
         <Card key={g.key} data-testid="group" data-key={g.key}>
@@ -263,6 +298,18 @@ export function ReviewView(props: ReviewViewProps) {
           </CardContent>
         </Card>
       ))}
+      <RowEditorDialog
+        lang={lang}
+        attributeId={editing ?? ''}
+        initial={editing ? props.arrayRows(editing) : undefined}
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null);
+        }}
+        onSave={(rows) => {
+          if (editing) props.onDecide({ kind: 'manual', attributeId: editing, value: rows });
+        }}
+      />
     </div>
   );
 }

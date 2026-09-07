@@ -67,6 +67,23 @@ describe('AddValueDialog', () => {
     });
   });
 
+  it('enters an array composite through the row editor, not the plain value input', () => {
+    const onAdd = vi.fn();
+    mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('criticalRawMaterials');
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(1);
+    expect(screen.queryByTestId('add-value-input')).toBeNull();
+    fireEvent.change(screen.getByTestId('rows-field-name'), { target: { value: 'Li' } });
+    fireEvent.change(screen.getByTestId('rows-field-identifier'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'criticalRawMaterials',
+      value: [{ name: 'Li', identifier: 'x' }],
+    });
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);

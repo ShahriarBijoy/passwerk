@@ -18,7 +18,7 @@ import { type LangText, type Language, t } from '../i18n/index.ts';
 import { GapsExportView } from '../views/GapsExportView.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
-import { buildGroups, manualEntries } from '../views/reviewModel.ts';
+import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
 import { UploadView } from '../views/UploadView.tsx';
 import { derive } from '../workflow/derive/index.ts';
 import { deriveProject } from '../workflow/derive/project.ts';
@@ -198,6 +198,8 @@ export function App({ store, storageNotice }: AppProps) {
             category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
+            arrays={arrayEntries(derived.meta.category, derived.draft, state.decisions)}
+            arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
             conflicts={derived.conflicts}
             invalidDecisions={derived.invalidDecisions}
             accepted={accepted}

@@ -1,0 +1,66 @@
+/** @vitest-environment jsdom */
+import { fireEvent, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { RowEditor } from '@/views/RowEditor.tsx';
+import { mount } from './render.tsx';
+
+describe('RowEditor', () => {
+  it('starts with one empty row, refuses a blank required leaf per row, then saves typed rows', () => {
+    const onSave = vi.fn();
+    mount(<RowEditor lang="en" attributeId="criticalRawMaterials" onSave={onSave} />);
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(1);
+    fireEvent.click(screen.getByTestId('rows-add'));
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(2);
+    const field = (row: number, path: string) =>
+      screen
+        .getAllByTestId('rows-row')
+        [row]?.querySelector(`[data-testid="rows-field-${path}"]`) as HTMLInputElement;
+    fireEvent.change(field(0, 'name'), { target: { value: 'Lithium' } });
+    fireEvent.change(field(0, 'identifier'), { target: { value: '7439-93-2' } });
+    fireEvent.change(field(1, 'name'), { target: { value: 'Cobalt' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByTestId('rows-error').textContent).toMatch(/Row 2/);
+    fireEvent.change(field(1, 'identifier'), { target: { value: '7440-48-4' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).toHaveBeenCalledWith([
+      { name: 'Lithium', identifier: '7439-93-2' },
+      { name: 'Cobalt', identifier: '7440-48-4' },
+    ]);
+  });
+  it('prefills from an existing value and removes a row', () => {
+    const onSave = vi.fn();
+    mount(
+      <RowEditor
+        lang="de"
+        attributeId="componentPartNumbers"
+        initial={[
+          { partName: 'Cell', partNumber: 'C-1' },
+          { partName: 'Module', partNumber: 'M-1' },
+        ]}
+        onSave={onSave}
+      />,
+    );
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(2);
+    fireEvent.click(screen.getAllByTestId('rows-remove')[1] as HTMLElement);
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).toHaveBeenCalledWith([{ partName: 'Cell', partNumber: 'C-1' }]);
+    expect(screen.getByText('Zeile hinzufügen')).toBeTruthy();
+  });
+  it('edits nested rows', () => {
+    const onSave = vi.fn();
+    mount(<RowEditor lang="en" attributeId="sparePartSources" onSave={onSave} />);
+    fireEvent.change(screen.getByTestId('rows-field-name.en'), { target: { value: 'Plant' } });
+    fireEvent.click(screen.getByTestId('rows-add-components'));
+    fireEvent.change(screen.getByTestId('rows-field-components-0-partName'), {
+      target: { value: 'Cell' },
+    });
+    fireEvent.change(screen.getByTestId('rows-field-components-0-partNumber'), {
+      target: { value: 'C-1' },
+    });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).toHaveBeenCalledWith([
+      { name: { en: 'Plant' }, components: [{ partName: 'Cell', partNumber: 'C-1' }] },
+    ]);
+  });
+});

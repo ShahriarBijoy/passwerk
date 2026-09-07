@@ -62,4 +62,22 @@ describe('rows', () => {
     ]);
     expect(good).toEqual({ ok: true, value: [{ name: 'Li', identifier: 'x' }] });
   });
+  it('reports a nested row issue attributed to its outer row, with the nested path in the reason', () => {
+    const bad = checkRows('sparePartSources', [
+      {
+        fields: { 'name.de': 'Werk' },
+        nested: {
+          components: [
+            { fields: { partName: 'Cell', partNumber: 'C-1' }, nested: {} },
+            { fields: { partName: '', partNumber: 'C-2' }, nested: {} },
+          ],
+        },
+      },
+    ]);
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) {
+      expect(bad.errors[0]?.row).toBe(0);
+      expect(bad.errors[0]?.reason).toMatch(/^components\.1\.partName/);
+    }
+  });
 });

@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import { getSample, type PassportDraft } from '@passwerk/core';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ReviewView } from '@/views/ReviewView.tsx';
@@ -21,6 +22,8 @@ const groups = buildGroups(
   {},
 );
 
+const noArrays = { arrays: [], arrayRows: () => undefined };
+
 describe('ReviewView', () => {
   it('renders a group and dispatches accept', () => {
     const onDecide = vi.fn();
@@ -37,6 +40,7 @@ describe('ReviewView', () => {
         onDecide={onDecide}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     expect(screen.getByText('94.5')).toBeTruthy();
@@ -63,6 +67,7 @@ describe('ReviewView', () => {
         onDecide={onDecide}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     fireEvent.click(screen.getByTestId('edit'));
@@ -87,6 +92,7 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={onClear}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     const row = screen.getByTestId('invalid-decision');
@@ -117,6 +123,7 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     const conflict = screen.getByTestId('conflict');
@@ -152,6 +159,7 @@ describe('ReviewView', () => {
       verdict: 'invalid' as const,
       onClear: () => undefined,
       onContinue: () => undefined,
+      ...noArrays,
     };
 
     const { unmount } = mount(<ReviewView {...props} groups={groups} onDecide={onDecide} />);
@@ -190,8 +198,44 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     expect(screen.getByText('0 übernommen, 1 offen')).toBeTruthy();
+  });
+
+  it('lists array values and opens the row editor from an array-edit button', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={[]}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        arrays={[
+          {
+            attributeId: 'criticalRawMaterials',
+            name: { de: 'Kritische Rohstoffe', en: 'Critical raw materials' },
+            rows: 2,
+            origin: 'draft',
+          },
+        ]}
+        arrayRows={() =>
+          (getSample('ev-valid') as PassportDraft).attributes['criticalRawMaterials']?.value
+        }
+      />,
+    );
+    const entry = screen.getByTestId('array-entry');
+    expect(entry.textContent).toContain('2 rows');
+    fireEvent.click(screen.getByTestId('array-edit'));
+    // The dialog prefills from arrayRows, decoupled from the `arrays` prop's own count above:
+    // the ev-valid sample's criticalRawMaterials actually holds three materials.
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(3);
   });
 });
