@@ -83,6 +83,30 @@ jobs:
       - run: pnpm build
       - run: pnpm test
 
+  # Phase 7 (ADR D-034): the packed tarballs must work outside the monorepo, where the pnpm
+  # patch of the AAS SDK does not exist. Installs them into an empty project and runs the
+  # server (stdio tools/list) and the CLI (audit, carrier).
+  pack:
+    name: Pack and install smoke
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm release:pack
+      - run: pnpm release:smoke
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tarballs
+          path: out/pack/*.tgz
+          retention-days: 14
+
   # Credibility gate 1 (ADR D-012): every emitted golden passport is replayed through the
   # official Python aas-test-engines; the verdict must agree with passwerk's L2 verdict, and
   # the committed report and badge must match the fresh run (only the Generated: line may differ).
