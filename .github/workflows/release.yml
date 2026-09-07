@@ -3,6 +3,12 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: boolean
+        default: true
+        description: "Run verify and the image build without publishing anything"
 
 permissions:
   contents: write
@@ -27,9 +33,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - id: v
-        name: Tag must equal the package versions
+        name: Determine version; on a tag push it must equal every package version
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(node -p "require('./packages/server/package.json').version")
+          fi
           for p in rules core server cli; do
             PV=$(node -p "require('./packages/$p/package.json').version")
             [ "$PV" = "$VERSION" ] || { echo "packages/$p is $PV, tag is $VERSION"; exit 1; }
@@ -57,12 +67,13 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@11
+      - run: npm install -g npm@11.19.1
       - uses: actions/download-artifact@v8
         with:
           name: tarballs
           path: out/pack
       - name: Publish each package unless that version already exists
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         env:
           VERSION: ${{ needs.verify.outputs.version }}
         run: |
@@ -84,6 +95,7 @@ jobs:
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -95,11 +107,12 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
+            type=ref,event=branch
       - uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -109,14 +122,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install mcp-publisher
+      - name: Install mcp-publisher (pinned v1.8.1, released 2026-08-06)
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-      - run: ./mcp-publisher login github-oidc
+          curl -fsSL -o mcp-publisher.tar.gz "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz"
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tar.gz" | sha256sum -c
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          chmod +x mcp-publisher
+      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        run: ./mcp-publisher login github-oidc
       - name: Publish (retry while npm propagates the new version)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        working-directory: packages/server
         run: |
           for i in 1 2 3 4 5 6; do
-            ./mcp-publisher publish packages/server/server.json && exit 0
+            ../../mcp-publisher publish && exit 0
             echo "attempt $i failed; waiting 30 s"; sleep 30
           done
           exit 1
@@ -124,6 +143,7 @@ jobs:
   github-release:
     name: GitHub release
     needs: [verify, npm, image]
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
