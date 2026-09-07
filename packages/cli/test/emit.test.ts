@@ -1,4 +1,5 @@
 import { run } from '@passwerk/cli';
+import { getSample } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 import { captureIo, sampleFiles, utf8 } from './harness.ts';
 
@@ -6,6 +7,21 @@ const files = sampleFiles();
 const written = (io: ReturnType<typeof captureIo>) => [...io.fs.written.keys()].sort();
 
 describe('passwerk emit', () => {
+  it('writes the default formats even when the HTML QR exceeds capacity', async () => {
+    const draft = structuredClone(getSample('ev-valid'));
+    draft.meta.passportId = `https://example.com/${'界'.repeat(900)}`;
+    draft.attributes['batteryPassportIdentifier'] = {
+      ...draft.attributes['batteryPassportIdentifier'],
+      value: draft.meta.passportId,
+      status: 'present',
+      source: [],
+    };
+    const io = captureIo({ '/work/long.json': new TextEncoder().encode(JSON.stringify(draft)) });
+    expect(await run(['emit', 'long.json', '--out', 'out'], io)).toBe(0);
+    expect(written(io)).toHaveLength(4);
+    const html = [...io.fs.written.entries()].find(([path]) => path.endsWith('.html'));
+    expect(utf8(html?.[1] ?? new Uint8Array())).toContain('too long for a QR code');
+  });
   it('writes AAS JSON, AASX, draft JSON and the HTML sheet into --out and exits by the re-validation verdict', async () => {
     const io = captureIo(files);
     expect(await run(['emit', 'samples/ev-valid.json', '--out', 'out'], io)).toBe(0);

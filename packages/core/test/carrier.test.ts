@@ -16,6 +16,13 @@ const decode = (png: Uint8Array) => {
 const RESOLVER = 'https://id.musterwerk.example';
 
 describe('generateCarrier', () => {
+  it.each(['svg', 'png'] as const)('returns a typed capacity error for %s', (format) => {
+    expect(() =>
+      generateCarrier({ uid: `https://example.com/${'界'.repeat(900)}`, format }),
+    ).toThrow(CarrierInputError);
+    // A failed encoder call must not affect later requests.
+    expect(generateCarrier({ draft: samples['ev-valid'], format }).image.length).toBeGreaterThan(0);
+  });
   it.each(VALID_SAMPLE_NAMES)('%s: encodes the passport identifier as SVG by default', (name) => {
     const r = generateCarrier({ draft: samples[name] });
     expect(r.uid).toBe(samples[name].meta.passportId);

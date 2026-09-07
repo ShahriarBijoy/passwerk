@@ -711,3 +711,17 @@ bundle on every CI run. A consumer that imports both `@passwerk/core` and
 `@aas-core-works/aas-core3.0-typescript` directly gets two independent copies of the SDK's
 classes (core's bundled one and the consumer's own), so `instanceof` across that boundary
 fails, e.g. on `EmitResult.environment`.
+
+## D-035: QR capacity does not determine passport exportability (2026-09-07)
+
+**Context.** A schema-valid identifier can exceed the QR encoder's byte capacity. Invalid
+drafts can also contain executable URI schemes and must remain exportable for review.
+
+**Decision.** The HTML sheet activates only https identifier links; other identifiers remain
+escaped text. QR capacity failures become `CarrierInputError` with DE/EN guidance. The sheet
+prints that guidance in place of the QR without changing the validators' verdict, and the
+web export keeps every document format while reporting the unavailable carrier separately.
+Standalone carrier requests return the typed input error through the existing adapters.
+
+**Consequences.** A missing QR never suppresses the passport or its gap report. GS1 keys
+equal to `.` or `..` are rejected because URL normalization removes those path segments.

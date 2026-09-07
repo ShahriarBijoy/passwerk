@@ -51,6 +51,19 @@ describe('normaliseGtin', () => {
 });
 
 describe('buildGs1DigitalLink', () => {
+  it.each(['.', '..'])('rejects URL dot segment %s in both key forms', (key) => {
+    expect(() => buildGs1DigitalLink('https://id.example.com', { giai: key })).toThrow(
+      CarrierInputError,
+    );
+    expect(() =>
+      buildGs1DigitalLink('https://id.example.com', { gtin: '96385074', serial: key }),
+    ).toThrow(CarrierInputError);
+  });
+  it.each(['...', 'A.B', '%2e', './A'])('preserves other dot-containing keys: %s', (key) => {
+    const link = buildGs1DigitalLink('https://id.example.com', { giai: key });
+    expect(new URL(link).href).toBe(link);
+    expect(decodeURIComponent(new URL(link).pathname.split('/').at(-1) ?? '')).toBe(key);
+  });
   it('builds the GTIN + serial form', () => {
     expect(
       buildGs1DigitalLink('https://id.musterwerk.example', {

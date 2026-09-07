@@ -8,6 +8,31 @@ import { initialState } from '@/workflow/state.ts';
 const AT = '2026-09-05T12:00:00Z';
 
 describe('exports', () => {
+  it('keeps all five document exports when the QR exceeds byte capacity', () => {
+    const draft = structuredClone(getSample('ev-valid')) as PassportDraft;
+    draft.meta.passportId = `https://example.com/${'界'.repeat(900)}`;
+    draft.attributes['batteryPassportIdentifier'] = {
+      ...draft.attributes['batteryPassportIdentifier'],
+      value: draft.meta.passportId,
+      status: 'present',
+      source: [],
+    };
+    const d = derive(reduce(initialState, { type: 'importDraft', draft, at: AT }), AT);
+    if (!d) throw new Error('no derived');
+    const out = buildExports(d);
+    if ('error' in out) throw new Error(out.error.en);
+    expect(out.verdict).toBe('valid');
+    expect(out.files).toHaveLength(5);
+    expect(out.files.map((file) => file.name.split('.').at(-1))).toEqual([
+      'json',
+      'aasx',
+      'json',
+      'json',
+      'html',
+    ]);
+    expect(out.carrierError?.en).toContain('too long for a QR code');
+    expect(out.carrierError?.de).toBeTruthy();
+  });
   it('slug keeps letters, digits, dot and dash', () => {
     expect(slug('https://passport.musterwerk.example/battery/MW-EV-2026-000123')).toBe(
       'passport.musterwerk.example-battery-mw-ev-2026-000123',

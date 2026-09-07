@@ -5,6 +5,7 @@
  */
 import { zlibSync } from 'fflate';
 import qrcode from 'qrcode-generator';
+import { CarrierInputError } from './error.js';
 
 export interface QrMatrix {
   size: number;
@@ -35,6 +36,14 @@ export function qrMatrix(payload: string): QrMatrix {
       modules.push(row);
     }
     return { size, modules };
+  } catch (error) {
+    if (String(error).startsWith('code length overflow.')) {
+      throw new CarrierInputError({
+        de: 'Die Kennung ist zu lang für einen QR-Code. Verwenden Sie eine kürzere URI.',
+        en: 'The identifier is too long for a QR code. Use a shorter URI.',
+      });
+    }
+    throw error;
   } finally {
     qrcode.stringToBytes = previousStringToBytes;
   }

@@ -71,6 +71,12 @@ function resolverPrefix(resolverBase: string): string {
 }
 
 function checkKey(value: string, label: { de: string; en: string }, max: number): string {
+  if (value === '.' || value === '..') {
+    throw new CarrierInputError({
+      de: `${label.de} darf nicht "." oder ".." sein: URL-Normalisierung entfernt diese Segmente.`,
+      en: `${label.en} must not be "." or "..": URL normalization removes these segments.`,
+    });
+  }
   if (value.length === 0 || value.length > max || !KEY_CHARS.test(value)) {
     throw new CarrierInputError({
       de: `${label.de} muss 1 bis ${max} druckbare ASCII-Zeichen haben.`,

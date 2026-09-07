@@ -3,6 +3,8 @@
  * `passwerk-server`: stdio by default, `--http [port]` for Streamable HTTP.
  * The only place the wall clock and process environment are read.
  */
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { nodeFileSystem } from './fs.js';
 import { startHttp } from './http.js';
@@ -112,9 +114,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
 }
 
 const invokedDirectly =
-  process.argv[1] !== undefined &&
-  (import.meta.url.endsWith('/bin.js') || import.meta.url.endsWith('/bin.ts')) &&
-  /[\\/]bin\.(js|ts)$/.test(process.argv[1]);
+  process.argv[1] !== undefined && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (invokedDirectly) {
   main().then((code) => {

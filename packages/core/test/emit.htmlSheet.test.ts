@@ -17,6 +17,34 @@ function links(html: string): string[] {
 }
 
 describe('emitHtml', () => {
+  it.each(['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>', 'urn:passwerk:1'])(
+    'renders an unsafe identifier as text: %s',
+    (uid) => {
+      const draft = structuredClone(samples['ev-valid']);
+      draft.meta.passportId = uid;
+      const html = emitHtml(draft).output;
+      expect(links(html)).toEqual([]);
+      expect(html).not.toContain('<script>');
+      expect(html).toContain('<dd><code>');
+    },
+  );
+  it('retains the report and verdict when the identifier exceeds QR byte capacity', () => {
+    const draft = structuredClone(samples['ev-valid']);
+    draft.meta.passportId = `https://example.com/${'界'.repeat(900)}`;
+    draft.attributes['batteryPassportIdentifier'] = {
+      ...draft.attributes['batteryPassportIdentifier'],
+      value: draft.meta.passportId,
+      status: 'present',
+      source: [],
+    };
+    const result = emitHtml(draft);
+    expect(result.verdict).toBe('valid');
+    expect(result.findings).toEqual(validate(draft).findings);
+    expect(result.output).not.toContain('<svg');
+    expect(result.output).toContain('too long for a QR code');
+    expect(result.output).toContain('zu lang für einen QR-Code');
+    expect(result.output).toContain('</html>');
+  });
   for (const name of VALID_SAMPLE_NAMES) {
     it(`${name}: valid, both languages, snapshot in de and en`, () => {
       const de = emitHtml(samples[name], { lang: 'de' });

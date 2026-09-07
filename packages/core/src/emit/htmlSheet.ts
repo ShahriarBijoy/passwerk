@@ -6,6 +6,8 @@
  * printed only when asOf is given).
  */
 import { attributes, type BatteryCategory, listCapabilities, templates } from '@passwerk/rules';
+import { CarrierInputError } from '../carrier/error.js';
+import { isHttpsUri } from '../carrier/gs1DigitalLink.js';
 import { qrMatrix, renderQrSvg } from '../carrier/qr.js';
 import { type GapItem, type GapReport, gapReport } from '../gap/report.js';
 import type { AnyFieldValue } from '../model/field.js';
@@ -197,7 +199,17 @@ function renderSheet(
 ): string {
   const lang = options.lang ?? 'en';
   const uid = draft.meta.passportId;
-  const qr = renderQrSvg(qrMatrix(uid)).trim();
+  let qr: string;
+  try {
+    qr = renderQrSvg(qrMatrix(uid)).trim();
+  } catch (error) {
+    if (!(error instanceof CarrierInputError)) throw error;
+    qr = `<p>${both(error.text)}</p>`;
+  }
+  const identifier = `<code>${escapeHtml(uid)}</code>`;
+  const identifierLink = isHttpsUri(uid)
+    ? `<a href="${escapeHtml(uid)}">${identifier}</a>`
+    : identifier;
   const caps = listCapabilities();
   const generated =
     options.asOf !== undefined ? `<p>${both(T.generated)}: ${escapeHtml(options.asOf)}</p>` : '';
@@ -219,7 +231,7 @@ function renderSheet(
 <h1>${both(T.title)}</h1>
 <p>${both(T.subtitle)}</p>
 <dl class="meta">
-<dt>${both(T.identifier)}</dt><dd><a href="${escapeHtml(uid)}"><code>${escapeHtml(uid)}</code></a></dd>
+<dt>${both(T.identifier)}</dt><dd>${identifierLink}</dd>
 <dt>${both(T.category)}</dt><dd>${both(CATEGORY[draft.meta.category])} (<code>${escapeHtml(draft.meta.category)}</code>)</dd>
 <dt>${both(T.created)}</dt><dd>${escapeHtml(draft.meta.createdAt)}</dd>
 </dl>

@@ -22,6 +22,15 @@ beforeAll(async () => {
 afterAll(() => session.close());
 
 describe('generate_carrier', () => {
+  it('reports QR overflow as a readable tool input error', async () => {
+    const r = await call<{ error: string }>(session.client, 'generate_carrier', {
+      uid: `https://example.com/${'界'.repeat(900)}`,
+      lang: 'de',
+    });
+    expect(r.isError).toBe(true);
+    expect(r.structured.error).toContain('too long for a QR code');
+    expect(r.text).toContain('zu lang für einen QR-Code');
+  });
   it('a draft yields an SVG of its identifier inline, with a draft id', async () => {
     const draft = getSample('ev-valid');
     const r = await call<Out>(session.client, 'generate_carrier', { draft });

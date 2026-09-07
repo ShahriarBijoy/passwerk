@@ -6,7 +6,10 @@ IMAGE="${1:-passwerk:smoke}"
 TOKEN="smoke-$(date +%s)"
 OUTDIR=$(mktemp -d)
 DOCS=$(mktemp -d)
-cp "$(dirname "$0")/../../packages/core/test/fixtures/musterwerk/"* "$DOCS/"
+cp "$(dirname "$0")/../../packages/core/test/fixtures/musterwerk/"*.{pdf,xlsx,docx,csv} "$DOCS/"
+# mktemp creates mode 700; the non-root container needs to traverse and read this mount.
+chmod 755 "$DOCS"
+chmod 644 "$DOCS/"*
 # MSYS_NO_PATHCONV scoped to these commands: Git Bash on Windows otherwise rewrites the
 # POSIX-looking `-v host:/data/output` argument before handing it to native docker.exe (MSYS
 # path conversion), mangling both sides of the bind mount. No-op on Linux/macOS. Left unset
