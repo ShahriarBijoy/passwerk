@@ -38,8 +38,10 @@ curl http://127.0.0.1:3777/healthz
 
 The image (`ghcr.io/shahriarbijoy/passwerk`, amd64 and arm64) runs the server in HTTP mode on
 port 3777 as a non-root user on a distroless Node 22 base; documents are read from `/data`
-(`PASSWERK_ROOT`). Build locally with `docker build -t passwerk .`. The same privacy note
-applies: HTTP mode is a convenience mode, never described as offline.
+(`PASSWERK_ROOT`, mounted read-only from `./documents`), and tools that take `outDir` write
+under `/data/output` (mounted from `./output`), e.g. `"outDir": "output"`. Build locally with
+`docker build -t passwerk .`. The same privacy note applies: HTTP mode is a convenience mode,
+never described as offline.
 
 ## Privacy
 
