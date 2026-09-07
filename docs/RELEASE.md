@@ -26,6 +26,18 @@ packages already on npm at that version are skipped, so the first publish can be
    mcp-publisher login github && mcp-publisher publish packages/server/server.json
    ```
 
+## Dry run (after the first merge)
+
+GitHub registers `workflow_dispatch` only for workflows on the default branch, so once
+`release.yml` is on `main`, run it once without publishing:
+
+```sh
+gh workflow run release.yml -f dry_run=true && gh run watch
+```
+
+It runs the checks, packs and smoke-tests the tarballs, builds the image for both platforms
+and downloads and checksums `mcp-publisher`, but publishes nothing.
+
 ## Every release
 
 1. Bump the version in the four `package.json` files, `packages/server/server.json`,
