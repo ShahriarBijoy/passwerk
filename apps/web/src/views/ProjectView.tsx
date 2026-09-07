@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Key, type LangText, type Language, pick, t } from '../i18n/index.ts';
 import type { ProjectDerived } from '../workflow/derive/project.ts';
 import {
@@ -30,6 +29,8 @@ export interface ProjectViewProps {
   derived: ProjectDerived;
   /** True until the project has been saved once: the primary button reads "Create project". */
   isNew: boolean;
+  /** The placeholder draft URN generated at mount; reused when switching back into draft mode. */
+  draftUrn: string;
   resume?: { files: string[]; updatedAt: string };
   onChange(project: Project): void;
   onContinue(): void;
@@ -38,13 +39,23 @@ export interface ProjectViewProps {
   onReset(): void;
 }
 
-/** "1,5" -> "1.5"; whitespace trimmed; an empty field means "not given". */
+/**
+ * "1,5" -> "1.5"; whitespace trimmed; an empty field means "not given". Only the first comma is
+ * replaced: a second one is not a thousands or decimal separator here, so it is left as typed and
+ * core reports the whole string as an unparsable energy value (insufficient input) rather than
+ * this function silently discarding part of what the reviewer entered.
+ */
 export function normaliseEnergy(raw: string): string | undefined {
   const s = raw.trim().replace(',', '.');
   return s === '' ? undefined : s;
 }
 
-function emptyIdentifier(mode: IdentifierMode, previous: Identifier): Identifier {
+/**
+ * An empty identifier for `mode`: the resolver base survives a switch between the two GS1 modes,
+ * and switching into draft reuses the project's existing draft URN (or, when there was none yet,
+ * the placeholder generated at mount) rather than blanking it.
+ */
+function emptyIdentifier(mode: IdentifierMode, previous: Identifier, draftUrn: string): Identifier {
   const resolverBase = 'resolverBase' in previous ? previous.resolverBase : '';
   switch (mode) {
     case 'gs1':
@@ -54,8 +65,28 @@ function emptyIdentifier(mode: IdentifierMode, previous: Identifier): Identifier
     case 'https':
       return { mode, uri: '' };
     case 'draft':
-      return { mode, urn: '' };
+      return { mode, urn: previous.mode === 'draft' ? previous.urn : draftUrn };
   }
+}
+
+/** One labelled identifier input; every mode's fields (including the shared resolver base) use it. */
+function IdField({
+  id,
+  label,
+  value,
+  onValue,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onValue: (value: string) => void;
+}) {
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} data-testid={id} value={value} onChange={(e) => onValue(e.target.value)} />
+    </div>
+  );
 }
 
 export function ProjectView(props: ProjectViewProps) {
@@ -64,6 +95,7 @@ export function ProjectView(props: ProjectViewProps) {
     project,
     derived,
     isNew,
+    draftUrn,
     resume,
     onChange,
     onContinue,
@@ -86,7 +118,7 @@ export function ProjectView(props: ProjectViewProps) {
   };
 
   const onIdentifierModeChange = (mode: IdentifierMode) => {
-    onChange({ ...project, identifier: emptyIdentifier(mode, project.identifier) });
+    onChange({ ...project, identifier: emptyIdentifier(mode, identifier, draftUrn) });
   };
 
   // `void onFile(...)` in the change handler has nowhere to report a rejection, so every failure
@@ -105,6 +137,8 @@ export function ProjectView(props: ProjectViewProps) {
 
   return (
     <div className="grid gap-4">
+      <h2 className="font-semibold text-lg">{t(lang, 'project.title')}</h2>
+
       {resume && (
         <Card data-testid="resume-card">
           <CardHeader>
@@ -210,130 +244,95 @@ export function ProjectView(props: ProjectViewProps) {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-3">
-            <Tabs
-              value={identifier.mode}
-              onValueChange={(m) => onIdentifierModeChange(m as IdentifierMode)}
+            <div
+              role="radiogroup"
+              aria-label={t(lang, 'project.identifier.title')}
+              className="flex flex-wrap gap-2"
             >
-              <TabsList>
-                {IDENTIFIER_MODES.map((mode) => (
-                  <TabsTrigger
+              {IDENTIFIER_MODES.map((mode) => {
+                const active = mode === identifier.mode;
+                return (
+                  <Button
                     key={mode}
-                    value={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    variant={active ? 'default' : 'outline'}
+                    size="sm"
                     data-testid={`identifier-mode-${mode}`}
-                    // Radix's TabsTrigger switches on mousedown/keydown/focus, not click; a
-                    // plain onClick keeps a synthetic click (as fired by tests, and by browsers
-                    // that do not focus a button on click) working the same way.
-                    onClick={() => onIdentifierModeChange(mode)}
+                    onClick={() => {
+                      if (mode !== identifier.mode) onIdentifierModeChange(mode);
+                    }}
                   >
                     {t(lang, `project.identifier.mode.${mode}` as Key)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+                  </Button>
+                );
+              })}
+            </div>
             {identifier.mode === 'gs1' && (
               <>
-                <div className="grid gap-2">
-                  <Label htmlFor="identifier-resolver">
-                    {t(lang, 'project.identifier.resolverBase')}
-                  </Label>
-                  <Input
-                    id="identifier-resolver"
-                    data-testid="identifier-resolver"
-                    value={identifier.resolverBase}
-                    onChange={(e) =>
-                      onChange({
-                        ...project,
-                        identifier: { ...identifier, resolverBase: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="identifier-gtin">{t(lang, 'project.identifier.gtin')}</Label>
-                  <Input
-                    id="identifier-gtin"
-                    data-testid="identifier-gtin"
-                    value={identifier.gtin}
-                    onChange={(e) =>
-                      onChange({ ...project, identifier: { ...identifier, gtin: e.target.value } })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="identifier-serial">{t(lang, 'project.identifier.serial')}</Label>
-                  <Input
-                    id="identifier-serial"
-                    data-testid="identifier-serial"
-                    value={identifier.serial}
-                    onChange={(e) =>
-                      onChange({
-                        ...project,
-                        identifier: { ...identifier, serial: e.target.value },
-                      })
-                    }
-                  />
-                </div>
+                <IdField
+                  id="identifier-resolver"
+                  label={t(lang, 'project.identifier.resolverBase')}
+                  value={identifier.resolverBase}
+                  onValue={(v) =>
+                    onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
+                  }
+                />
+                <IdField
+                  id="identifier-gtin"
+                  label={t(lang, 'project.identifier.gtin')}
+                  value={identifier.gtin}
+                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, gtin: v } })}
+                />
+                <IdField
+                  id="identifier-serial"
+                  label={t(lang, 'project.identifier.serial')}
+                  value={identifier.serial}
+                  onValue={(v) =>
+                    onChange({ ...project, identifier: { ...identifier, serial: v } })
+                  }
+                />
               </>
             )}
             {identifier.mode === 'gs1-giai' && (
               <>
-                <div className="grid gap-2">
-                  <Label htmlFor="identifier-resolver">
-                    {t(lang, 'project.identifier.resolverBase')}
-                  </Label>
-                  <Input
-                    id="identifier-resolver"
-                    data-testid="identifier-resolver"
-                    value={identifier.resolverBase}
-                    onChange={(e) =>
-                      onChange({
-                        ...project,
-                        identifier: { ...identifier, resolverBase: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="identifier-giai">{t(lang, 'project.identifier.giai')}</Label>
-                  <Input
-                    id="identifier-giai"
-                    data-testid="identifier-giai"
-                    value={identifier.giai}
-                    onChange={(e) =>
-                      onChange({ ...project, identifier: { ...identifier, giai: e.target.value } })
-                    }
-                  />
-                </div>
+                <IdField
+                  id="identifier-resolver"
+                  label={t(lang, 'project.identifier.resolverBase')}
+                  value={identifier.resolverBase}
+                  onValue={(v) =>
+                    onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
+                  }
+                />
+                <IdField
+                  id="identifier-giai"
+                  label={t(lang, 'project.identifier.giai')}
+                  value={identifier.giai}
+                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, giai: v } })}
+                />
               </>
             )}
             {identifier.mode === 'https' && (
-              <div className="grid gap-2">
-                <Label htmlFor="identifier-uri">{t(lang, 'project.identifier.uri')}</Label>
-                <Input
-                  id="identifier-uri"
-                  data-testid="identifier-uri"
-                  value={identifier.uri}
-                  onChange={(e) =>
-                    onChange({ ...project, identifier: { ...identifier, uri: e.target.value } })
-                  }
-                />
-              </div>
+              <IdField
+                id="identifier-uri"
+                label={t(lang, 'project.identifier.uri')}
+                value={identifier.uri}
+                onValue={(v) => onChange({ ...project, identifier: { ...identifier, uri: v } })}
+              />
             )}
             {identifier.mode === 'draft' && (
-              <div className="grid gap-2">
-                <Label htmlFor="identifier-urn">{t(lang, 'project.identifier.urn')}</Label>
-                <Input
+              <>
+                <IdField
                   id="identifier-urn"
-                  data-testid="identifier-urn"
+                  label={t(lang, 'project.identifier.urn')}
                   value={identifier.urn}
-                  onChange={(e) =>
-                    onChange({ ...project, identifier: { ...identifier, urn: e.target.value } })
-                  }
+                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, urn: v } })}
                 />
                 <p className="text-muted-foreground text-xs">
                   {t(lang, 'project.identifier.draft.hint')}
                 </p>
-              </div>
+              </>
             )}
             {!derived.identifier.ok && (
               <p className="text-destructive text-sm" data-testid="identifier-error">

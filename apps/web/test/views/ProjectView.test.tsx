@@ -11,6 +11,8 @@ const AT = '2027-09-07T12:00:00Z';
 const EARLY = '2026-09-07T12:00:00Z';
 const base = defaultProject('urn:passwerk:draft:1', AT);
 
+const DRAFT_URN = 'urn:passwerk:draft:placeholder';
+
 function view(project: Project, over: Partial<Parameters<typeof ProjectView>[0]> = {}) {
   const onChange = vi.fn();
   const onContinue = vi.fn();
@@ -20,6 +22,7 @@ function view(project: Project, over: Partial<Parameters<typeof ProjectView>[0]>
       project={project}
       derived={deriveProject(project, AT)}
       isNew
+      draftUrn={DRAFT_URN}
       onChange={onChange}
       onContinue={onContinue}
       onImport={() => ({ ok: true })}
@@ -108,6 +111,26 @@ describe('ProjectView', () => {
     fireEvent.click(screen.getByTestId('identifier-mode-https'));
     expect(onChange).toHaveBeenCalledWith({ ...base, identifier: { mode: 'https', uri: '' } });
   });
+  it('clicking the already-active identifier mode does not dispatch (would wipe the typed value)', () => {
+    const p: Project = {
+      ...base,
+      identifier: {
+        mode: 'gs1',
+        resolverBase: 'https://id.example.com',
+        gtin: '96385074',
+        serial: 'S1',
+      },
+    };
+    const { onChange } = view(p);
+    fireEvent.click(screen.getByTestId('identifier-mode-gs1'));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+  it('switching into draft mode reuses the placeholder URN instead of blanking it', () => {
+    const p: Project = { ...base, identifier: { mode: 'https', uri: 'https://example.com/x' } };
+    const { onChange } = view(p);
+    fireEvent.click(screen.getByTestId('identifier-mode-draft'));
+    expect(onChange).toHaveBeenCalledWith({ ...p, identifier: { mode: 'draft', urn: DRAFT_URN } });
+  });
   it('renders German chrome', () => {
     mount(
       <ProjectView
@@ -115,6 +138,7 @@ describe('ProjectView', () => {
         project={base}
         derived={deriveProject(base, AT)}
         isNew
+        draftUrn={DRAFT_URN}
         onChange={() => undefined}
         onContinue={() => undefined}
         onImport={() => ({ ok: true })}
@@ -123,6 +147,30 @@ describe('ProjectView', () => {
       />,
     );
     expect(screen.getByText('Batterietyp')).toBeTruthy();
+  });
+  it('shows the resume card and wires its buttons', () => {
+    const onResume = vi.fn();
+    const onReset = vi.fn();
+    mount(
+      <ProjectView
+        lang="en"
+        project={base}
+        derived={deriveProject(base, AT)}
+        isNew={false}
+        draftUrn={DRAFT_URN}
+        resume={{ files: ['a.pdf'], updatedAt: '2026-09-05T12:00:00Z' }}
+        onChange={() => undefined}
+        onContinue={() => undefined}
+        onImport={() => ({ ok: true })}
+        onResume={onResume}
+        onReset={onReset}
+      />,
+    );
+    expect(screen.getByTestId('resume-card')).toBeTruthy();
+    fireEvent.click(screen.getByText('Resume'));
+    expect(onResume).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByText('Start over'));
+    expect(onReset).toHaveBeenCalledOnce();
   });
 
   it('reports a throwing import instead of letting the rejection escape', async () => {

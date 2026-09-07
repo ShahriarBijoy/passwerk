@@ -56,9 +56,8 @@ export function App({ store, storageNotice }: AppProps) {
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
   const [asOf] = useState(() => nowIso());
-  const [localProject, setLocalProject] = useState(() =>
-    defaultProject(`urn:passwerk:draft:${randomId()}`, ''),
-  );
+  const [draftUrn] = useState(() => `urn:passwerk:draft:${randomId()}`);
+  const [localProject, setLocalProject] = useState(() => defaultProject(draftUrn, ''));
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
   const project = state.project ?? localProject;
@@ -159,6 +158,7 @@ export function App({ store, storageNotice }: AppProps) {
             project={project}
             derived={projectDerived}
             isNew={state.project === null}
+            draftUrn={draftUrn}
             {...(state.project
               ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
               : {})}

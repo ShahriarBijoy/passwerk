@@ -67,6 +67,53 @@ describe('App', () => {
     expect(ingestFiles).toHaveBeenCalledOnce();
     expect(store.getState().files).toEqual([]);
   });
+
+  it('resumes to review when the project is valid and files exist', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:1', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    mount(<App store={store} />);
+    // Default state language is 'de'.
+    fireEvent.click(screen.getByText('Fortsetzen'));
+    expect(store.getState().step).toBe('review');
+  });
+
+  it('resumes to upload when the project is valid but no files exist', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:2', AT),
+      at: AT,
+    });
+    mount(<App store={store} />);
+    // Default state language is 'de'.
+    fireEvent.click(screen.getByText('Fortsetzen'));
+    expect(store.getState().step).toBe('upload');
+  });
+
+  it('resume stays on the project step when the derived meta is null', () => {
+    const store = createStore(initialState);
+    // PORTABLE resolves no obligations category and the project has no manual category either,
+    // so `derive` returns null: nothing to resume into.
+    const project = {
+      ...defaultProject('urn:passwerk:test:3', AT),
+      batteryType: 'PORTABLE' as const,
+    };
+    store.dispatch({ type: 'setProject', project, at: AT });
+    mount(<App store={store} />);
+    // Default state language is 'de'.
+    fireEvent.click(screen.getByText('Fortsetzen'));
+    expect(store.getState().step).toBe('project');
+  });
 });
 
 describe('ErrorBoundary', () => {
