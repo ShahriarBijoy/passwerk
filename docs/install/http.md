@@ -32,6 +32,7 @@ claude mcp add --transport http passwerk http://127.0.0.1:3777/mcp --header "Aut
 
 ```sh
 cp .env.example .env && echo "PASSWERK_AUTH_TOKEN=$(openssl rand -hex 32)" > .env
+mkdir -p documents output && chmod 777 output   # or: sudo chown 65532:65532 output (stricter)
 docker compose up -d          # or: docker run -e PASSWERK_AUTH_TOKEN=… -p 127.0.0.1:3777:3777 -v ./documents:/data:ro ghcr.io/shahriarbijoy/passwerk
 curl http://127.0.0.1:3777/healthz
 ```
@@ -40,8 +41,11 @@ The image (`ghcr.io/shahriarbijoy/passwerk`, amd64 and arm64) runs the server in
 port 3777 as a non-root user on a distroless Node 22 base; documents are read from `/data`
 (`PASSWERK_ROOT`, mounted read-only from `./documents`), and tools that take `outDir` write
 under `/data/output` (mounted from `./output`), e.g. `"outDir": "output"`. Build locally with
-`docker build -t passwerk .`. The same privacy note applies: HTTP mode is a convenience mode,
-never described as offline.
+`docker build -t passwerk .`. The container runs as the distroless `nonroot` user (UID 65532);
+because the root filesystem is `read_only: true` and `./output` is a bind mount that keeps its
+host owner, `./output` must be made writable by that user before the first `outDir` write, as
+in the `chmod`/`chown` step above. The same privacy note applies: HTTP mode is a convenience
+mode, never described as offline.
 
 ## Privacy
 

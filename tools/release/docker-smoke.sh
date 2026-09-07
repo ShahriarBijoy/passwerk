@@ -15,7 +15,17 @@ OUTDIR=$(mktemp -d)
 # just this Windows Docker Desktop bind-mount quirk.
 MSYS_NO_PATHCONV=1 docker run --rm -v "$OUTDIR:/data/output" node:22-bookworm-slim chmod 777 /data/output
 ID=$(MSYS_NO_PATHCONV=1 docker run -d --rm -e PASSWERK_AUTH_TOKEN="$TOKEN" -p 127.0.0.1:3777:3777 -v "$OUTDIR:/data/output" "$IMAGE")
-trap 'docker rm -f "$ID" >/dev/null 2>&1 || true' EXIT
+cleanup() {
+  docker rm -f "$ID" >/dev/null 2>&1 || true
+  # $OUTDIR is chmod 777 so the host user can delete it directly; if it still fails (e.g. a
+  # Linux host where files the container wrote as UID 65532 block the removal), fall back to
+  # emptying it from inside a container first.
+  rm -rf "$OUTDIR" 2>/dev/null || {
+    MSYS_NO_PATHCONV=1 docker run --rm -v "$OUTDIR:/data/output" node:22-bookworm-slim rm -rf /data/output/* >/dev/null 2>&1 || true
+    rm -rf "$OUTDIR" 2>/dev/null || true
+  }
+}
+trap cleanup EXIT
 for i in $(seq 1 30); do
   if curl -fsS http://127.0.0.1:3777/healthz >/dev/null 2>&1; then break; fi
   sleep 1
