@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify tag and run checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - id: v
+        name: Tag must equal the package versions
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for p in rules core server cli; do
+            PV=$(node -p "require('./packages/$p/package.json').version")
+            [ "$PV" = "$VERSION" ] || { echo "packages/$p is $PV, tag is $VERSION"; exit 1; }
+          done
+          MV=$(node -p "require('./packages/server/server.json').version")
+          [ "$MV" = "$VERSION" ] || { echo "server.json is $MV, tag is $VERSION"; exit 1; }
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
+      - run: pnpm release:pack
+      - run: pnpm release:smoke
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tarballs
+          path: out/pack/*.tgz
+
+  npm:
+    name: Publish to npm (trusted publishing)
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11
+      - uses: actions/download-artifact@v8
+        with:
+          name: tarballs
+          path: out/pack
+      - name: Publish each package unless that version already exists
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          for p in rules core server cli; do
+            NAME="@passwerk/$p"
+            if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+              echo "skip $NAME@$VERSION: already published"
+              continue
+            fi
+            npm publish "out/pack/passwerk-$p-$VERSION.tgz" --access public
+          done
+
+  image:
+    name: Push the image to GHCR
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/shahriarbijoy/passwerk
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  registry:
+    name: Publish to the MCP Registry
+    needs: [verify, npm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+      - run: ./mcp-publisher login github-oidc
+      - name: Publish (retry while npm propagates the new version)
+        run: |
+          for i in 1 2 3 4 5 6; do
+            ./mcp-publisher publish packages/server/server.json && exit 0
+            echo "attempt $i failed; waiting 30 s"; sleep 30
+          done
+          exit 1
+
+  github-release:
+    name: GitHub release
+    needs: [verify, npm, image]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v8
+        with:
+          name: tarballs
+          path: out/pack
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: out/pack/*.tgz
+          generate_release_notes: true
