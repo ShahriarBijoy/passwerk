@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { PACKAGE_NAME, run } from '@passwerk/cli';
 import { describe, expect, it } from 'vitest';
-import { captureIo } from './harness.ts';
+import { captureIo, ROOT } from './harness.ts';
 
 const COMMANDS = ['audit', 'extract', 'emit', 'carrier', 'gaps', 'obligations', 'tools', 'chat'];
 
@@ -32,6 +34,9 @@ describe('@passwerk/cli', () => {
   it('--version prints the package version', async () => {
     const io = captureIo();
     expect(await run(['--version'], io)).toBe(0);
-    expect(io.out().trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'packages', 'cli', 'package.json'), 'utf8')) as {
+      version: string;
+    };
+    expect(io.out().trim()).toBe(pkg.version);
   });
 });
