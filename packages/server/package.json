@@ -1,9 +1,32 @@
 {
   "name": "@passwerk/server",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MCP server exposing passwerk tools, resources and prompts over stdio and Streamable HTTP",
   "license": "Apache-2.0",
   "type": "module",
+  "mcpName": "io.github.shahriarbijoy/passwerk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShahriarBijoy/passwerk.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://github.com/ShahriarBijoy/passwerk#readme",
+  "bugs": {
+    "url": "https://github.com/ShahriarBijoy/passwerk/issues"
+  },
+  "keywords": [
+    "battery-passport",
+    "digital-product-passport",
+    "aas",
+    "idta-02035",
+    "eu-2023-1542",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": [
     "./dist/bin.js"
   ],

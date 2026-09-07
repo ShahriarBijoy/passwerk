@@ -129,6 +129,14 @@ describe('sovereignty: zero network attempts', () => {
     for (const attribute of rules.attributes) core.explainAttribute(attribute.id);
     for (const rule of rules.plausibilityRules) core.explainRule(rule.id);
 
+    core.emitHtml(core.samples['ev-valid'], { lang: 'de' });
+    core.generateCarrier({ draft: core.samples['ev-valid'], format: 'png' });
+    core.generateCarrier({
+      uid: 'https://passport.example/b/1',
+      gs1: { giai: 'A1' },
+      resolverBase: 'https://id.example.com',
+    });
+
     expect(attempts).toEqual([]);
   });
 });

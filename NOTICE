@@ -9,3 +9,7 @@ Licensed under the Apache License, Version 2.0. See LICENSE.
 Bundled third-party artefacts (IDTA submodel templates, AAS schemas, EC data-point
 matrices) are documented with their sources, versions, checksums and licences in
 packages/rules/PROVENANCE.md.
+
+The published @passwerk/core bundles @aas-core-works/aas-core3.0-typescript
+(MIT, Copyright Marko Ristin-Kaufmann and the aas-core-works contributors) inside
+dist/vendor/aasCore.js; the licence text ships with the package in node_modules.

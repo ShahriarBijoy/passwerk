@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { attributes } from '@passwerk/rules';
+import { attributes, carrierSchemes } from '@passwerk/rules';
 import { describe, expect, it } from 'vitest';
 import { REVIEW_SHEET_PATH, renderReviewSheet } from '../scripts/review-sheet.ts';
 
@@ -21,6 +21,13 @@ describe('docs/KB_REVIEW.md', () => {
       expect(e).toContain('**Explanation (en):**');
       expect(e).toContain('**Erklärung (de):**');
       expect(e).toContain('**Reviewer decision:**');
+    }
+  });
+  it('lists every carrier scheme marked verify', () => {
+    const sheet = renderReviewSheet();
+    expect(sheet).toContain('## Carrier schemes');
+    for (const s of carrierSchemes.filter((s) => s.verify)) {
+      expect(sheet).toContain(`| \`${s.id}\` |`);
     }
   });
 });

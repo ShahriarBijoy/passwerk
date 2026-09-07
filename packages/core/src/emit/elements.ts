@@ -1,5 +1,5 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
 import { type CatalogueElement, getTemplateElement } from '@passwerk/rules';
+import * as aas from '../vendor/aasCore.js';
 
 const { types, stringification } = aas;
 

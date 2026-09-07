@@ -1,0 +1,18 @@
+services:
+  passwerk:
+    image: ghcr.io/shahriarbijoy/passwerk:latest
+    build: .
+    env_file: .env
+    environment:
+      PASSWERK_ROOT: /data
+    ports:
+      - "127.0.0.1:3777:3777"
+    volumes:
+      - ./documents:/data/documents:ro
+      - ./output:/data/output
+    read_only: true
+    healthcheck:
+      test: ["CMD", "/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3777/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -1,6 +1,6 @@
-import type * as aas from '@aas-core-works/aas-core3.0-typescript';
 import type { SparePartComponent, SparePartSupplier } from '../../model/composites.js';
 import { type PassportDraft, presentValue } from '../../model/passport.js';
+import type * as aas from '../../vendor/aasCore.js';
 import { collection, list, multiLanguageProperty, property } from '../elements.js';
 import type { EmitIds } from '../ids.js';
 import { documentIds, hasAny, submodelFromTemplate } from './shared.js';

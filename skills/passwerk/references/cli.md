@@ -12,7 +12,8 @@ or an install, `passwerk …`.
 |---|---|---|
 | `passwerk audit <draft.json> [--as-of <iso>] [--lang de\|en] [--json]` | `validate_passport`: all four layers, every finding with rule id, path, fix hint and legal reference | 0 valid, 1 valid_with_warnings, 2 invalid, 3 usage or unreadable input |
 | `passwerk extract <files or dirs...> [--category EV\|LMT\|INDUSTRIAL_GT_2KWH] [--out facts.json] [--lang] [--json]` | `ingest_documents` and `extract_facts`; with a category also `suggest_mappings` (all proposals, the `>= 0.7` count in the summary) | 0; 3 when no document could be read or the category is unknown |
-| `passwerk emit <draft.json> --out <dir> [--targets aas-json,aasx,draft-json] [--as-of] [--lang] [--json]` | `emit_passport`: writes the files and re-validates them. Fail-honest: files are written even when the verdict is `invalid` | as `audit` |
+| `passwerk emit <draft.json> --out <dir> [--targets aas-json,aasx,draft-json,html] [--as-of] [--lang] [--json]` | `emit_passport`: writes the files and re-validates them. Fail-honest: files are written even when the verdict is `invalid` | as `audit` |
+| `passwerk carrier [draft.json] [--uid <https>] [--gtin <d> --serial <s> \| --giai <g>] [--resolver-base <https>] [--format svg\|png] --out <file> [--lang] [--json]` | `generate_carrier`: the QR code of the identifier, or of a GS1 Digital Link | 0; 3 usage or carrier input error (bad GTIN, non-https identifier) |
 | `passwerk gaps <draft.json> [--as-of] [--lang] [--json]` | `gap_report` grouped by who typically has the data, with legal references and the suggested action. Deferred data points (not yet applicable) are counted, not listed | 0 no open `required` item, 1 open required items, 3 usage |
 | `passwerk obligations --type <batteryType> --role <role> [--energy-kwh <decimal>] [--placed-on-market <date>] [--as-of <date>] [--lang] [--json]` | `check_obligations` (Article 77(1) only, not legal advice) | 0 required, 1 not_required, 2 insufficient_input, 3 usage |
 | `passwerk tools [--json]` | the server registry: name, title, description, input keys, annotations | 0 |
@@ -29,6 +30,7 @@ node packages/cli/dist/bin.js extract ./supplier-docs --category EV --out facts.
 node packages/cli/dist/bin.js audit passport.draft.json --lang de
 node packages/cli/dist/bin.js gaps passport.draft.json --json | jq '.byDataOwner'
 node packages/cli/dist/bin.js emit passport.draft.json --out ./dist-passport --targets aas-json,aasx
+node packages/cli/dist/bin.js carrier passport.draft.json --out passport.qr.svg
 ANTHROPIC_API_KEY=… node packages/cli/dist/bin.js chat --lang de --root . -m "Erstelle einen Batteriepass aus ./supplier-docs"
 ```
 

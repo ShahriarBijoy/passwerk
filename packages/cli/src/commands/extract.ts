@@ -1,8 +1,8 @@
 import { canonicalJson } from '@passwerk/core';
 import { BATTERY_CATEGORIES } from '@passwerk/rules';
-import { parseLang, pick, printJson } from '../format.js';
+import { parseLang, pick, printJson, writeOut } from '../format.js';
 import { invoke, toolContext } from '../invoke.js';
-import { CliInputError, type CliIo, EXIT_USAGE } from '../io.js';
+import { CliInputError, EXIT_USAGE } from '../io.js';
 import { registerCommand } from '../program.js';
 
 interface IngestedSummary {
@@ -15,17 +15,6 @@ interface Options {
   out?: string;
   lang: string;
   json?: boolean;
-}
-
-/** Output failures are usage errors (exit 3), like unreadable input (PR #26 review). */
-async function writeOut(io: CliIo, path: string, text: string): Promise<string> {
-  try {
-    const target = io.fs.resolve(path);
-    await io.fs.writeFile(target, new TextEncoder().encode(text));
-    return target;
-  } catch (e) {
-    throw new CliInputError(`Cannot write ${path}: ${e instanceof Error ? e.message : String(e)}`);
-  }
 }
 
 registerCommand((program, io, exit) => {
@@ -107,7 +96,11 @@ registerCommand((program, io, exit) => {
         };
       }
       if (options.out !== undefined) {
-        const target = await writeOut(io, options.out, canonicalJson(result));
+        const target = await writeOut(
+          io,
+          options.out,
+          new TextEncoder().encode(canonicalJson(result)),
+        );
         texts.push(lang === 'de' ? `Geschrieben: ${target}` : `Wrote ${target}`);
       }
       if (options.json) printJson(io, result);

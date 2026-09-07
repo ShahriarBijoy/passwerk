@@ -1,0 +1,62 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index d341eb77ee4a70a8bf10e0ea680b43ab35bce9b4..586352e5912465f8462326f26477f0e0bde1ddcd 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,23 +1,37 @@
+ import { Chunks } from "./decoder/decodeData";
+ import { Point } from "./locator";
+-export interface QRCode {
+-    binaryData: number[];
+-    data: string;
+-    chunks: Chunks;
+-    version: number;
+-    location: {
+-        topRightCorner: Point;
+-        topLeftCorner: Point;
+-        bottomRightCorner: Point;
+-        bottomLeftCorner: Point;
+-        topRightFinderPattern: Point;
+-        topLeftFinderPattern: Point;
+-        bottomLeftFinderPattern: Point;
+-        bottomRightAlignmentPattern?: Point;
+-    };
++
++// The published .d.ts declared `export default jsQR`, but dist/jsQR.js is a UMD bundle whose
++// CommonJS branch is `module.exports = factory()` (the function itself, no `.default` wrapper).
++// Under NodeNext module resolution that mismatch types the default import as the whole module
++// namespace instead of the function. Patched to `export =`, matching the real runtime shape;
++// QRCode and Options move into a merged namespace since `export =` cannot coexist with other
++// top-level exports.
++declare namespace jsQR {
++    interface QRCode {
++        binaryData: number[];
++        data: string;
++        chunks: Chunks;
++        version: number;
++        location: {
++            topRightCorner: Point;
++            topLeftCorner: Point;
++            bottomRightCorner: Point;
++            bottomLeftCorner: Point;
++            topRightFinderPattern: Point;
++            topLeftFinderPattern: Point;
++            bottomLeftFinderPattern: Point;
++            bottomRightAlignmentPattern?: Point;
++        };
++    }
++    interface Options {
++        inversionAttempts?: "dontInvert" | "onlyInvert" | "attemptBoth" | "invertFirst";
++    }
+ }
+-export interface Options {
+-    inversionAttempts?: "dontInvert" | "onlyInvert" | "attemptBoth" | "invertFirst";
+-}
+-declare function jsQR(data: Uint8ClampedArray, width: number, height: number, providedOptions?: Options): QRCode | null;
+-export default jsQR;
++declare function jsQR(
++    data: Uint8ClampedArray,
++    width: number,
++    height: number,
++    providedOptions?: jsQR.Options,
++): jsQR.QRCode | null;
++export = jsQR;

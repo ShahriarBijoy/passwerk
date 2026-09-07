@@ -29,6 +29,17 @@ export function printJson(io: CliIo, value: unknown): void {
   io.stdout.write(canonicalJson(value));
 }
 
+/** Output failures are usage errors (exit 3), like unreadable input (PR #26 review). */
+export async function writeOut(io: CliIo, path: string, bytes: Uint8Array): Promise<string> {
+  try {
+    const target = io.fs.resolve(path);
+    await io.fs.writeFile(target, bytes);
+    return target;
+  } catch (e) {
+    throw new CliInputError(`Cannot write ${path}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 function countBySeverity(findings: readonly Finding[]): { errors: number; warnings: number } {
   let errors = 0;
   let warnings = 0;

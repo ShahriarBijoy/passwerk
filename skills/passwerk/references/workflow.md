@@ -71,3 +71,14 @@ by a domain expert; say so.
 Without `outDir` the files come back as base64 in `files[].bytes`. Read: `verdict` (the
 re-validation of the emitted output), `findings[]`, `files[]` (`target`, `name`, `size`,
 `path` or `bytes`).
+
+## 7. generate_carrier
+
+```json
+{ "draft": { "draftId": "drf_…" }, "format": "svg" }
+{ "uid": "https://passport.example/battery/1", "gs1": { "gtin": "4006381333931", "serial": "MW-EV-2026-000123" }, "resolverBase": "https://id.example.com", "format": "png", "outDir": "./out" }
+```
+
+Read: `uid`, `digitalLink` (when built), `payload` (what the QR encodes), `image` (`name`,
+`size`, `path` or base64 `bytes`), `sources[]`. A wrong GTIN check digit or a non-https
+identifier is an error result with a DE/EN message, never a crash.

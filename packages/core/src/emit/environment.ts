@@ -1,5 +1,5 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
 import type { PassportDraft } from '../model/passport.js';
+import * as aas from '../vendor/aasCore.js';
 import { type EmitOptions, resolveIds } from './ids.js';
 import { emitCarbonFootprint } from './submodels/carbonFootprint.js';
 import { emitCircularity } from './submodels/circularity.js';

@@ -5,6 +5,7 @@
  */
 export const PACKAGE_NAME = '@passwerk/server' as const;
 
+export { decodeBase64, encodeBase64 } from './base64.js';
 export { SERVER_NAME, SERVER_VERSION, TRANSPORTS } from './meta.js';
 export { PROMPT_NAMES } from './prompts/index.js';
 export { BundleRef, DraftRef, FactsRef, UnknownIdError } from './refs.js';

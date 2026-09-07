@@ -13,7 +13,7 @@ export interface GapsExportViewProps {
   report: ValidationReport;
   gap: GapReport;
   exportError?: LangText;
-  onExport(kind: 'aasJson' | 'aasx' | 'draft' | 'gaps'): void;
+  onExport(kind: 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr'): void;
 }
 
 type GroupBy = 'owner' | 'submodel';
@@ -126,6 +126,16 @@ export function GapsExportView(props: GapsExportViewProps) {
             onClick={() => props.onExport('gaps')}
           >
             {t(lang, 'export.gaps')}
+          </Button>
+          <Button
+            variant="outline"
+            data-testid="export-html"
+            onClick={() => props.onExport('html')}
+          >
+            {t(lang, 'export.html')}
+          </Button>
+          <Button variant="outline" data-testid="export-qr" onClick={() => props.onExport('qr')}>
+            {t(lang, 'export.qr')}
           </Button>
           {props.exportError && (
             <p className="w-full text-destructive text-sm">

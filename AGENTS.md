@@ -157,6 +157,24 @@ so no build is needed before `pnpm test`.
   `ANTHROPIC_API_KEY` only, SDK imported lazily, system prompt synced from `SKILL.md`); the
   scripted Musterwerk chain and the golden drafts prove the definition of done in CI, and the
   demo scripts run it for real. Sovereignty proof over every command. See ADR D-032.
-- **Next: Phase 7** (carrier, HTML sheet, Docker, release), then 7b, 7c (D-024 order). The
-  rest of Phase 7a (project screen with obligations, facts screen, HTML sheet, QR, BYOK)
-  follows Phase 7.
+- **Phase 7 (carrier, HTML sheet, release): done.** `packages/core/src/carrier` builds the
+  unique identifier (`meta.passportId`, an absolute https URI, PW-PLAUS-008 already applies),
+  the GS1 Digital Link (`/01/{gtin}/21/{serial}` or `/8004/{giai}`, mod-10 GTIN check,
+  `kb/carrier.json` with `verify: true`, listed in `docs/KB_REVIEW.md`) and the QR code as SVG
+  or PNG (`qrcode-generator`, in-house SVG/PNG rendering, `jsqr` dev-only decode proof).
+  `emitHtml` (`packages/core/src/emit/htmlSheet.ts`) is one more fail-honest emitter: a
+  self-contained DE/EN HTML passport sheet with no JavaScript. `generate_carrier` is the
+  server's eleventh tool, `emit_passport` gains the `html` target and `htmlLang`, the CLI gains
+  `passwerk carrier`, and the web export list gains the HTML sheet and the QR. Core imports the
+  AAS SDK only through `src/vendor/aasCore.ts`, and `packages/core/scripts/bundle-vendor.mjs`
+  inlines the patched SDK into `dist/vendor/aasCore.js` so a published `@passwerk/core` needs no
+  pnpm patch of its own; `pnpm release:pack` and `pnpm release:smoke`
+  (`tools/release/pack-smoke.mjs`) prove the four package tarballs install and run, and CI
+  gained `pack` and `docker` jobs beside the existing `--network none` sovereignty job.
+  `Dockerfile` (distroless Node 22,
+  non-root, HTTP mode only), `docker-compose.yml`, `.github/workflows/release.yml` (npm trusted
+  publishing, GHCR amd64/arm64, `mcp-publisher`) and `packages/server/server.json`
+  (`io.github.shahriarbijoy/passwerk`) are new; the owner's one-time and per-release steps are
+  in `docs/RELEASE.md`. See ADRs D-033 and D-034.
+- **Next:** the rest of Phase 7a (project screen with obligations, facts screen, QR preview
+  panel, BYOK), then Phase 7b, then 7c (D-024 order).

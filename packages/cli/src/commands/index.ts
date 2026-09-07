@@ -2,6 +2,7 @@
 import './audit.js';
 import './extract.js';
 import './emit.js';
+import './carrier.js';
 import './gaps.js';
 import './obligations.js';
 import './tools.js';

@@ -1,9 +1,11 @@
 import {
   attributes,
   BATTERY_CATEGORIES,
+  carrierSchemes,
   getAttribute,
   getAttributesForCategory,
   getAttributesForTemplatePath,
+  getCarrierScheme,
   getEcDataPoint,
   getRule,
   getTemplate,
@@ -107,5 +109,24 @@ describe('@passwerk/rules public API', () => {
     expect(c.knowledgeBase.attributes).toBe(93);
     expect(c.knowledgeBase.dinLonglistRows).toBe(93);
     expect(c.knowledgeBase.languages).toEqual(['de', 'en']);
+  });
+
+  it('bundles the two carrier schemes, both languages, marked verify', () => {
+    expect(carrierSchemes.map((s) => s.id)).toEqual([
+      'gs1-digital-link-gtin-serial',
+      'gs1-digital-link-giai',
+    ]);
+    for (const s of carrierSchemes) {
+      expect(s.verify).toBe(true);
+      expect(s.pattern).toMatch(/^https:\/\/\{resolverBase\}\//);
+      for (const text of [s.name, s.explanation, s.whoTypicallyHasIt]) {
+        expect(text.de.length).toBeGreaterThan(0);
+        expect(text.en.length).toBeGreaterThan(0);
+      }
+    }
+    expect(getCarrierScheme('gs1-digital-link-giai')?.pattern).toBe(
+      'https://{resolverBase}/8004/{giai}',
+    );
+    expect(getCarrierScheme('nope')).toBeUndefined();
   });
 });

@@ -1,14 +1,25 @@
 # Install: Codex CLI
 
-## Prerequisites
+## Server
+
+Add to `~/.codex/config.toml` (user) or the project's `.codex/config.toml`:
+
+```toml
+[mcp_servers.passwerk]
+command = "npx"
+args = ["-y", "@passwerk/server"]
+
+[mcp_servers.passwerk.env]
+PASSWERK_ROOT = "/absolute/path/to/documents"
+```
+
+<!-- verify: the `env` sub-table syntax against the current Codex configuration reference -->
+
+## From source
 
 ```sh
 pnpm install && pnpm build     # Node >= 22.13, pnpm 10
 ```
-
-## Server
-
-Add to `~/.codex/config.toml` (user) or the project's `.codex/config.toml`:
 
 ```toml
 [mcp_servers.passwerk]
@@ -18,8 +29,6 @@ args = ["/absolute/path/to/passwerk/packages/server/dist/bin.js"]
 [mcp_servers.passwerk.env]
 PASSWERK_ROOT = "/absolute/path/to/documents"
 ```
-
-<!-- verify: the `env` sub-table syntax against the current Codex configuration reference -->
 
 ## Skill
 

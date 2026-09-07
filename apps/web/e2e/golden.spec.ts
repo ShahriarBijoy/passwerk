@@ -1,7 +1,13 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BROKEN_SAMPLE_NAMES, getSample, VALID_SAMPLE_NAMES, validate } from '@passwerk/core';
+import {
+  BROKEN_SAMPLE_NAMES,
+  getSample,
+  VALID_SAMPLE_NAMES,
+  validate,
+  validateSchema,
+} from '@passwerk/core';
 import { expect, test } from '@playwright/test';
 import { CLOCK, pinClock } from './helpers.ts';
 
@@ -22,5 +28,18 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
       .getByTestId('finding')
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
     expect(shown).toEqual(expected.findings.map((f) => f.ruleId).sort());
+
+    // Assumes the samples' https identifiers; the QR export would report a carrierError for a
+    // urn: id instead of exporting a QR file (the HTML sheet itself needs no https id).
+    if (validateSchema(draft).draft !== undefined) {
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByTestId('export-html').click(),
+      ]);
+      const html = await download.path().then((p) => (p ? readFileSync(p, 'utf8') : ''));
+      expect(download.suggestedFilename()).toMatch(/\.html$/);
+      expect(html).toContain(`<span class="verdict ${expected.verdict}">`);
+      for (const f of expected.findings) expect(html).toContain(f.ruleId);
+    }
   });
 }

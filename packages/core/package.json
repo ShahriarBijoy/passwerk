@@ -1,9 +1,29 @@
 {
   "name": "@passwerk/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MCP-free core library: ingest, extract, map, validate, gap-report and emit EU Digital Battery Passports",
   "license": "Apache-2.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShahriarBijoy/passwerk.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/ShahriarBijoy/passwerk#readme",
+  "bugs": {
+    "url": "https://github.com/ShahriarBijoy/passwerk/issues"
+  },
+  "keywords": [
+    "battery-passport",
+    "digital-product-passport",
+    "aas",
+    "idta-02035",
+    "eu-2023-1542",
+    "mcp"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "exports": {
     ".": {
@@ -20,7 +40,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node scripts/bundle-vendor.mjs",
     "clean": "rimraf dist"
   },
   "dependencies": {
@@ -30,6 +50,7 @@
     "fast-xml-parser": "5.11.1",
     "fflate": "0.8.3",
     "pdfjs-dist": "6.3.289",
+    "qrcode-generator": "2.0.4",
     "zod": "4.5.4"
   }
 }

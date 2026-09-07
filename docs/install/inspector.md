@@ -1,6 +1,25 @@
 # MCP Inspector
 
-The Inspector exercises the server without an AI host. After `pnpm build`:
+The Inspector exercises the server without an AI host.
+
+```sh
+# interactive UI
+npx @modelcontextprotocol/inspector npx -y @passwerk/server
+
+# CLI: list tools, resources, prompts
+npx @modelcontextprotocol/inspector --cli npx -y @passwerk/server --method tools/list
+```
+
+Set `PASSWERK_ROOT` in the environment to point `ingest_documents` at a document folder:
+
+```sh
+PASSWERK_ROOT=/absolute/path/to/documents npx @modelcontextprotocol/inspector --cli \
+  npx -y @passwerk/server --method tools/call --tool-name list_capabilities --tool-arg lang=de
+```
+
+## From source
+
+After `pnpm build`:
 
 ```sh
 # interactive UI

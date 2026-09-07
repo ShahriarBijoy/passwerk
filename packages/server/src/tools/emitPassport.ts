@@ -2,6 +2,7 @@ import {
   canonicalJson,
   emitAasJson,
   emitAasx,
+  emitHtml,
   type Finding,
   type Verdict,
   validate,
@@ -9,9 +10,9 @@ import {
 import { z } from 'zod';
 import { encodeBase64 } from '../base64.js';
 import { DraftRef, resolveDraft } from '../refs.js';
-import { FindingSchema, out, type ToolDefinition } from '../types.js';
+import { FindingSchema, noFileSystemResult, out, type ToolDefinition } from '../types.js';
 
-export const EMIT_TARGETS = ['aas-json', 'aasx', 'draft-json'] as const;
+export const EMIT_TARGETS = ['aas-json', 'aasx', 'draft-json', 'html'] as const;
 export type EmitTarget = (typeof EMIT_TARGETS)[number];
 
 const inputSchema = {
@@ -20,13 +21,17 @@ const inputSchema = {
     .array(z.enum(EMIT_TARGETS))
     .min(1)
     .describe(
-      'aas-json: AAS v3 JSON environment (IDTA 02035); aasx: AASX package; draft-json: the neutral PassportDraft',
+      'aas-json: AAS v3 JSON environment (IDTA 02035); aasx: AASX package; draft-json: the neutral PassportDraft; html: self-contained HTML passport sheet (DE and EN inside)',
     ),
   outDir: z
     .string()
     .optional()
     .describe('Directory to write into (needs a file system). Omit to receive base64 bytes inline'),
   asOf: z.string().optional().describe('ISO date-time treated as "now" by the re-validation'),
+  htmlLang: z
+    .enum(['de', 'en'])
+    .optional()
+    .describe('Language the html sheet opens in (both are in the file; default en)'),
 };
 
 const outputSchema = out({
@@ -61,7 +66,7 @@ export const emitPassportTool: ToolDefinition<typeof inputSchema, typeof outputS
   name: 'emit_passport',
   title: 'Emit the passport files',
   description:
-    'Emits a PassportDraft as AAS JSON (IDTA 02035 submodels), an AASX package and/or the draft JSON, and re-validates the emitted output. Fail-honest: files are returned even when the verdict is invalid, and the verdict is never better than validate_passport’s. Bytes come back base64 inline unless outDir is given.',
+    'Emits a PassportDraft as AAS JSON (IDTA 02035 submodels), an AASX package, the draft JSON and/or the HTML sheet, and re-validates the emitted output. Fail-honest: files are returned even when the verdict is invalid, and the verdict is never better than validate_passport’s. Bytes come back base64 inline unless outDir is given.',
   inputSchema,
   outputSchema,
   annotations: {
@@ -71,18 +76,7 @@ export const emitPassportTool: ToolDefinition<typeof inputSchema, typeof outputS
     openWorldHint: false,
   },
   async handler(input, ctx) {
-    if (input.outDir !== undefined && !ctx.fs) {
-      const message =
-        'File output needs a file system; this server was started without one. Omit outDir to receive bytes inline.';
-      return {
-        isError: true,
-        structured: { error: message },
-        text: {
-          de: 'Dateiausgabe braucht ein Dateisystem; dieser Server wurde ohne eines gestartet. outDir weglassen, um die Bytes inline zu erhalten.',
-          en: message,
-        },
-      };
-    }
+    if (input.outDir !== undefined && !ctx.fs) return noFileSystemResult();
     const { draft, draftId } = await resolveDraft(input.draft, ctx);
     const opts = input.asOf !== undefined ? { asOf: input.asOf } : {};
     const base = slug(draft.meta.passportId);
@@ -100,6 +94,11 @@ export const emitPassportTool: ToolDefinition<typeof inputSchema, typeof outputS
         verdict ??= r.verdict;
         findings ??= r.findings;
         outputs.push({ target, name: `${base}.aasx`, bytes: r.output });
+      } else if (target === 'html') {
+        const r = emitHtml(draft, { ...opts, lang: input.htmlLang ?? 'en' });
+        verdict ??= r.verdict;
+        findings ??= r.findings;
+        outputs.push({ target, name: `${base}.html`, bytes: utf8(r.output) });
       } else {
         outputs.push({ target, name: `${base}.draft.json`, bytes: utf8(canonicalJson(draft)) });
       }

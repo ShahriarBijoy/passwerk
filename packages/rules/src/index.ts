@@ -25,6 +25,7 @@ import attributes05 from '../kb/attributes/05-materials.json' with { type: 'json
 import attributes06 from '../kb/attributes/06-circularity.json' with { type: 'json' };
 import attributes07 from '../kb/attributes/07-performance-electrical.json' with { type: 'json' };
 import attributes08 from '../kb/attributes/08-performance-lifetime.json' with { type: 'json' };
+import carrierJson from '../kb/carrier.json' with { type: 'json' };
 import ecJson from '../kb/ec-datapoints.json' with { type: 'json' };
 import longlistJson from '../kb/generated/din-longlist.json' with { type: 'json' };
 import catalogueJson from '../kb/generated/template-catalogue.json' with { type: 'json' };
@@ -37,6 +38,8 @@ import type {
   Attribute,
   AttributeFile,
   BatteryCategory,
+  CarrierFile,
+  CarrierScheme,
   CatalogueElement,
   CatalogueTemplate,
   EcDataPoint,
@@ -62,6 +65,7 @@ export const ecDataPoints = ecJson as unknown as EcDataPoints;
 export const dinLonglist = longlistJson as unknown as Longlist;
 export const templateCatalogue = catalogueJson as unknown as TemplateCatalogue;
 export const plausibilityRules = (rulesJson as unknown as RulesFile).rules;
+export const carrierSchemes: CarrierScheme[] = (carrierJson as unknown as CarrierFile).schemes;
 export const timeline = timelineJson as unknown as Timeline;
 
 /** AAS metamodel JSON Schemas, keyed by IDTA-01001 schema version. */
@@ -230,6 +234,10 @@ export function getAttributesForTemplatePath(path: string): Attribute[] {
 
 export function getRule(id: string): PlausibilityRule | undefined {
   return plausibilityRules.find((r) => r.id === id);
+}
+
+export function getCarrierScheme(id: string): CarrierScheme | undefined {
+  return carrierSchemes.find((s) => s.id === id);
 }
 
 /** Timeline events that apply to a category, sorted by date. */

@@ -3,16 +3,32 @@
 Claude Desktop runs the server locally over stdio, so every document stays on the machine.
 Phase 7c will ship a one-click MCPB bundle; until then the JSON configuration below works.
 
-## Prerequisites
-
-```sh
-pnpm install && pnpm build     # Node >= 22.13, pnpm 10
-```
-
 ## Server
 
 Open Settings, Developer, Edit Config. The file is `claude_desktop_config.json`
 (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`).
+
+```json
+{
+  "mcpServers": {
+    "passwerk": {
+      "command": "npx",
+      "args": ["-y", "@passwerk/server"],
+      "env": {
+        "PASSWERK_ROOT": "/absolute/path/to/documents"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop. The hammer icon lists the eleven passwerk tools.
+
+## From source
+
+```sh
+pnpm install && pnpm build     # Node >= 22.13, pnpm 10
+```
 
 ```json
 {
@@ -27,8 +43,6 @@ Open Settings, Developer, Edit Config. The file is `claude_desktop_config.json`
   }
 }
 ```
-
-Restart Claude Desktop. The hammer icon lists the ten passwerk tools.
 
 ## Documents
 

@@ -30,7 +30,8 @@ export function buildPassportInterview(lang: Lang, category?: string): string {
         '3. Vorschläge prüfen: Konfidenz >= 0,7 übernehmen, darunter den Nutzer fragen oder die Quellseite (detail "full") lesen. apply_mappings mit den akzeptierten Entscheidungen; Konflikte dem Nutzer vorlegen, nie still überschreiben.',
         '4. validate_passport. Bei invalid die Befunde lesen, mit apply_mappings korrigieren, erneut prüfen. Höchstens 5 Durchläufe, dann den Stand berichten.',
         '5. gap_report als To-do-Liste, gruppiert nach byDataOwner (wer die Daten typischerweise hat), mit Rechtsgrundlage je Attribut.',
-        '6. emit_passport (aas-json, aasx, draft-json) nur bei valid oder wenn der Nutzer die Warnungen ausdrücklich akzeptiert. Das Ergebnis der Nachvalidierung wörtlich nennen.',
+        '6. emit_passport (aas-json, aasx, draft-json, html) nur bei valid oder wenn der Nutzer die Warnungen ausdrücklich akzeptiert. Das Ergebnis der Nachvalidierung wörtlich nennen.',
+        '7. generate_carrier: QR-Code der Kennung (svg oder png), oder eines GS1 Digital Link, wenn der Nutzer gs1 und resolverBase liefert.',
         '',
         honesty('de'),
       ].join('\n')
@@ -42,7 +43,8 @@ export function buildPassportInterview(lang: Lang, category?: string): string {
         '3. Review proposals: accept confidence >= 0.7, ask the user or read the source page (detail "full") below that. apply_mappings with the accepted decisions; show conflicts to the user, never overwrite silently.',
         '4. validate_passport. On invalid, read the findings, fix through apply_mappings, validate again. At most 5 loops, then report where things stand.',
         '5. gap_report as a to-do list grouped by byDataOwner (who typically has the data), with the legal reference per attribute.',
-        '6. emit_passport (aas-json, aasx, draft-json) only on valid or when the user explicitly accepts the warnings. Quote the re-validation verdict verbatim.',
+        '6. emit_passport (aas-json, aasx, draft-json, html) only on valid or when the user explicitly accepts the warnings. Quote the re-validation verdict verbatim.',
+        '7. generate_carrier: the QR code of the identifier (svg or png), or of a GS1 Digital Link when the user supplies gs1 and resolverBase.',
         '',
         honesty('en'),
       ].join('\n');

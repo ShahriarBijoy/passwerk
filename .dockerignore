@@ -2,9 +2,16 @@
 node_modules
 **/node_modules
 **/dist
+out
 coverage
+apps/web/playwright-report
+apps/web/test-results
 tools/oracle/out
 tools/oracle/.venv
+.venv
 **/__pycache__
-*.tsbuildinfo
+**/*.tsbuildinfo
 docs/research-passwerk.md
+docs/media
+.env
+.env.*

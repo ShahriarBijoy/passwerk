@@ -1,7 +1,7 @@
-import type * as aas from '@aas-core-works/aas-core3.0-typescript';
 import type { ManufacturerInformation } from '../../model/composites.js';
 import { type PassportDraft, presentValue } from '../../model/passport.js';
 import type { DocumentRef, GraphicRef } from '../../model/values.js';
+import type * as aas from '../../vendor/aasCore.js';
 import {
   collection,
   file,

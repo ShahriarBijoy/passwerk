@@ -28,6 +28,28 @@ Client configuration (Claude Code):
 claude mcp add --transport http passwerk http://127.0.0.1:3777/mcp --header "Authorization: Bearer <token>"
 ```
 
+## Docker
+
+```sh
+cp .env.example .env
+printf 'PASSWERK_AUTH_TOKEN=%s\n' "$(openssl rand -hex 32)" > .env
+mkdir -p documents output
+sudo chown 65532:65532 output   # or: chmod 777 output (looser fallback)
+docker compose up -d          # or: docker run -e PASSWERK_AUTH_TOKEN=… -p 127.0.0.1:3777:3777 -v ./documents:/data/documents:ro -v ./output:/data/output ghcr.io/shahriarbijoy/passwerk
+curl http://127.0.0.1:3777/healthz
+```
+
+The image (`ghcr.io/shahriarbijoy/passwerk`, amd64 and arm64) runs the server in HTTP mode on
+port 3777 as a non-root user on a distroless Node 22 base; documents are read from
+`/data/documents` (`PASSWERK_ROOT=/data`, mounted read-only from `./documents`), so paths in
+tool calls are `documents/<file>`, and tools that take `outDir` write under `/data/output`
+(mounted from `./output`), e.g. `"outDir": "output"`. Build locally with
+`docker build -t passwerk .`. The container runs as the distroless `nonroot` user (UID 65532);
+because the root filesystem is `read_only: true` and `./output` is a bind mount that keeps its
+host owner, `./output` must be made writable by that user before the first `outDir` write, as
+in the `chown`/`chmod` step above. The same privacy note applies: HTTP mode is a convenience
+mode, never described as offline.
+
 ## Privacy
 
 The stdio installs and the web app process everything on the user's machine. The HTTP mode

@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '../vendor/aasCore.js';
 import type { Finding } from './finding.js';
 import { message } from './messages.js';
 

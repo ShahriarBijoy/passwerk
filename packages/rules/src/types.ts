@@ -215,6 +215,29 @@ export interface RulesFile {
 }
 
 // ---------------------------------------------------------------------------
+// kb/carrier.json
+// ---------------------------------------------------------------------------
+export type CarrierSchemeId = 'gs1-digital-link-gtin-serial' | 'gs1-digital-link-giai';
+
+export interface CarrierScheme {
+  id: CarrierSchemeId;
+  name: LangText;
+  /** Name of the standard only; no artefact is bundled (PROVENANCE.md). */
+  standard: string;
+  pattern: string;
+  limits: { gtinDigits?: number[]; serialMaxLength?: number; giaiMaxLength?: number };
+  explanation: LangText;
+  whoTypicallyHasIt: LangText;
+  verify: boolean;
+}
+
+export interface CarrierFile {
+  $comment: string;
+  lastVerified: string;
+  schemes: CarrierScheme[];
+}
+
+// ---------------------------------------------------------------------------
 // kb/timeline.json
 // ---------------------------------------------------------------------------
 export type TimelineStatus = 'in_force' | 'scheduled' | 'pending_act' | 'superseded';

@@ -110,6 +110,8 @@ export const en: Record<keyof typeof de, string> = {
   'export.aasx': 'AASX',
   'export.draft': 'Draft (JSON)',
   'export.gaps': 'Gap report (JSON)',
+  'export.html': 'HTML sheet',
+  'export.qr': 'QR code (SVG)',
   'export.verdictNote': 'The files carry the verdict: {verdict}.',
   'export.failed': 'Export failed: {reason}',
 };

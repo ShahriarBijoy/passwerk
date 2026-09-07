@@ -1,0 +1,44 @@
+{
+  "$comment": "Data carrier schemes for the battery passport identifier: the URI patterns and length limits were transcribed from docs/BUILD_PLAN.md (section 3, 'QR / GS1') and the author's recollection of the GS1 General Specifications, not from a bundled artefact. No GS1 or ISO/IEC 15459 document is bundled (PROVENANCE.md). Every entry stays verify: true until a domain expert confirms it against the GS1 Digital Link URI syntax standard.",
+  "lastVerified": "2026-09-06",
+  "schemes": [
+    {
+      "id": "gs1-digital-link-gtin-serial",
+      "name": {
+        "en": "GS1 Digital Link (GTIN + serial number)",
+        "de": "GS1 Digital Link (GTIN + Seriennummer)"
+      },
+      "standard": "GS1 Digital Link URI syntax; GS1 General Specifications, application identifiers 01 and 21",
+      "pattern": "https://{resolverBase}/01/{gtin14}/21/{serial}",
+      "limits": { "gtinDigits": [8, 12, 13, 14], "serialMaxLength": 20 },
+      "explanation": {
+        "en": "The battery model's GTIN (padded to 14 digits, mod-10 check digit verified) and the unit's serial number form the path of a resolver URL. Scanning the QR code opens that URL, which the operator's resolver redirects to the passport.",
+        "de": "Die GTIN des Batteriemodells (auf 14 Stellen aufgefüllt, Mod-10-Prüfziffer geprüft) und die Seriennummer der Einheit bilden den Pfad einer Resolver-URL. Das Scannen des QR-Codes öffnet diese URL, die der Resolver des Betreibers zum Pass weiterleitet."
+      },
+      "whoTypicallyHasIt": {
+        "en": "The pack manufacturer or importer holds the GTIN (assigned through a GS1 member organisation) and the serial number; the resolver domain belongs to the economic operator placing the battery on the market.",
+        "de": "Pack-Hersteller oder Importeur halten die GTIN (über eine GS1-Mitgliedsorganisation vergeben) und die Seriennummer; die Resolver-Domain gehört dem Wirtschaftsakteur, der die Batterie in Verkehr bringt."
+      },
+      "verify": true
+    },
+    {
+      "id": "gs1-digital-link-giai",
+      "name": {
+        "en": "GS1 Digital Link (GIAI, individual asset)",
+        "de": "GS1 Digital Link (GIAI, einzelnes Anlagegut)"
+      },
+      "standard": "GS1 Digital Link URI syntax; GS1 General Specifications, application identifier 8004",
+      "pattern": "https://{resolverBase}/8004/{giai}",
+      "limits": { "giaiMaxLength": 30 },
+      "explanation": {
+        "en": "A Global Individual Asset Identifier names one physical battery without a product GTIN. It suits industrial batteries tracked as assets rather than as serialised products.",
+        "de": "Ein Global Individual Asset Identifier benennt eine einzelne physische Batterie ohne Produkt-GTIN. Er passt zu Industriebatterien, die als Anlagegut statt als serialisiertes Produkt geführt werden."
+      },
+      "whoTypicallyHasIt": {
+        "en": "The asset owner or operator that registered the GIAI with its GS1 company prefix.",
+        "de": "Eigentümer oder Betreiber, der die GIAI unter seinem GS1-Basisnummernkreis vergeben hat."
+      },
+      "verify": true
+    }
+  ]
+}

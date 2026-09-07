@@ -29,8 +29,13 @@ calls; you do the semantic work. Before the first call, read `list_capabilities`
    explains what a finding means and who typically has the data.
 5. **`gap_report`**: present it as a to-do list grouped by `byDataOwner` (who typically has the
    data), each item with its legal reference. Do not estimate missing values.
-6. **`emit_passport`** (`aas-json`, `aasx`, `draft-json`) only when the verdict is `valid` or
-   the user explicitly accepts `valid_with_warnings`. Quote the re-validation verdict.
+6. **`emit_passport`** (`aas-json`, `aasx`, `draft-json`, `html`) only when the verdict is `valid`
+   or the user explicitly accepts `valid_with_warnings`. Quote the re-validation verdict. The
+   `html` target is the human-readable sheet (DE and EN inside; `htmlLang` picks the opening
+   language); the AAS files stay authoritative.
+7. **`generate_carrier`** after the emit: the QR code of the passport identifier (SVG or PNG),
+   or of a GS1 Digital Link when the user supplies `gs1` (GTIN plus serial, or GIAI) and
+   `resolverBase`. It says nothing about validity.
 
 Every tool accepts `lang: "de" | "en"` for its text summary. Pass the user's language.
 

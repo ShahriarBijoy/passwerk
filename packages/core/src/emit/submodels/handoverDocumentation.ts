@@ -1,7 +1,7 @@
-import type * as aas from '@aas-core-works/aas-core3.0-typescript';
 import { attributes, getAttribute } from '@passwerk/rules';
 import { type PassportDraft, presentValue } from '../../model/passport.js';
 import type { DocumentRef } from '../../model/values.js';
+import type * as aas from '../../vendor/aasCore.js';
 import { collection, file, list, multiLanguageProperty, property } from '../elements.js';
 import type { EmitIds } from '../ids.js';
 import { push, submodelFromTemplate } from './shared.js';

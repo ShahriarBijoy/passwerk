@@ -174,7 +174,7 @@ export function registerResources(server: McpServer, ctx: ToolContext): void {
       list: async () => ({
         resources: templateCatalogue.templates.map((t) => ({
           uri: `passwerk://reference/template/${t.part}`,
-          name: `IDTA ${t.idta} ${t.submodelIdShort}`,
+          name: `${t.idta} ${t.submodelIdShort}`,
           mimeType: JSON_MIME,
         })),
       }),
