@@ -26,9 +26,9 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -52,7 +52,7 @@ jobs:
       - run: pnpm build
       - run: pnpm release:pack
       - run: pnpm release:smoke
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tarballs
           path: out/pack/*.tgz
@@ -62,18 +62,18 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm install -g npm@11.19.1
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: tarballs
           path: out/pack
       - name: Publish each package unless that version already exists
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         env:
           VERSION: ${{ needs.verify.outputs.version }}
         run: |
@@ -91,28 +91,28 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v4
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v4
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ghcr.io/shahriarbijoy/passwerk
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
             type=ref,event=branch
-      - uses: docker/build-push-action@v7
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+          push: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -121,17 +121,17 @@ jobs:
     needs: [verify, npm]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Install mcp-publisher (pinned v1.8.1, released 2026-08-06)
         run: |
           curl -fsSL -o mcp-publisher.tar.gz "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz"
           echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tar.gz" | sha256sum -c
           tar xzf mcp-publisher.tar.gz mcp-publisher
           chmod +x mcp-publisher
-      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+      - if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         run: ./mcp-publisher login github-oidc
       - name: Publish (retry while npm propagates the new version)
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         working-directory: packages/server
         run: |
           for i in 1 2 3 4 5 6; do
@@ -143,15 +143,15 @@ jobs:
   github-release:
     name: GitHub release
     needs: [verify, npm, image]
-    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+    if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: tarballs
           path: out/pack
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: out/pack/*.tgz
           generate_release_notes: true
