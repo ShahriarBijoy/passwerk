@@ -106,6 +106,10 @@ async function listTools(serverBin, cwd) {
           return;
         }
         if (msg.id === 2) {
+          if (msg.error) {
+            settle(rejectPromise, new SmokeError(`tools/list error: ${JSON.stringify(msg.error)}`));
+            return;
+          }
           settle(
             resolvePromise,
             msg.result.tools.map((t) => t.name),

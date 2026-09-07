@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { qrMatrix, renderQrPng, renderQrSvg } from '@passwerk/core';
 import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
+import qrcode from 'qrcode-generator';
 import { describe, expect, it } from 'vitest';
 
 const PAYLOAD = 'https://passport.musterwerk.example/battery/MW-EV-2026-000123';
@@ -23,6 +24,12 @@ describe('qrMatrix', () => {
     expect(m.modules[0]?.[m.size - 1]).toBe(true);
     expect(m.modules[m.size - 1]?.[0]).toBe(true);
     expect(qrMatrix(PAYLOAD)).toEqual(m);
+  });
+
+  it('does not leave qrcode-generator globally mutated', () => {
+    const before = qrcode.stringToBytes;
+    qrMatrix(PAYLOAD);
+    expect(qrcode.stringToBytes).toBe(before);
   });
 });
 

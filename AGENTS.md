@@ -170,7 +170,8 @@ so no build is needed before `pnpm test`.
   inlines the patched SDK into `dist/vendor/aasCore.js` so a published `@passwerk/core` needs no
   pnpm patch of its own; `pnpm release:pack` and `pnpm release:smoke`
   (`tools/release/pack-smoke.mjs`) prove the four package tarballs install and run, and CI
-  gained `pack` and `docker` (`--network none`) jobs. `Dockerfile` (distroless Node 22,
+  gained `pack` and `docker` jobs beside the existing `--network none` sovereignty job.
+  `Dockerfile` (distroless Node 22,
   non-root, HTTP mode only), `docker-compose.yml`, `.github/workflows/release.yml` (npm trusted
   publishing, GHCR amd64/arm64, `mcp-publisher`) and `packages/server/server.json`
   (`io.github.shahriarbijoy/passwerk`) are new; the owner's one-time and per-release steps are

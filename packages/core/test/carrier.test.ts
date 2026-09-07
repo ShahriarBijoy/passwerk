@@ -56,6 +56,11 @@ describe('generateCarrier', () => {
       CarrierInputError,
     );
   });
+  it('rejects an unsupported format', () => {
+    expect(() =>
+      generateCarrier({ uid: 'https://passport.example/b/1', format: 'jpeg' as never }),
+    ).toThrow(CarrierInputError);
+  });
   it('a structurally invalid draft throws PassportDraftError', () => {
     expect(() => generateCarrier({ draft: { meta: { category: 'EV' } } })).toThrow(
       PassportDraftError,

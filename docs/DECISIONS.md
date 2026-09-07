@@ -707,4 +707,7 @@ with `mcp-publisher login github-oidc`. The repository becomes public at release
 **Consequences.** `npx -y @passwerk/server` is the primary install path in the README and the
 install pages; building from source stays documented. The owner steps live in
 `docs/RELEASE.md`. The web app and the oracle now consume core's `dist`, so they exercise the
-bundle on every CI run.
+bundle on every CI run. A consumer that imports both `@passwerk/core` and
+`@aas-core-works/aas-core3.0-typescript` directly gets two independent copies of the SDK's
+classes (core's bundled one and the consumer's own), so `instanceof` across that boundary
+fails, e.g. on `EmitResult.environment`.

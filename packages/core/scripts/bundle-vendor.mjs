@@ -4,7 +4,7 @@
  * inlines @aas-core-works/aas-core3.0-typescript, so consumers installing @passwerk/core
  * from npm never load the SDK's unpatched ESM build (ADR D-034). Run after `tsc -b`.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -32,4 +32,7 @@ await build({
   },
   logLevel: 'warning',
 });
+// tsc's one-line re-export it replaces left a stale sourcemap pointing at that old file; the
+// bundle above doesn't produce one (sourcemap is off), so drop any leftover.
+rmSync(`${outfile}.map`, { force: true });
 console.log(`bundled ${sdk.name} ${sdk.version} into ${outfile}`);

@@ -12,7 +12,10 @@ const inputSchema = {
     .optional()
     .describe('The passport identifier (absolute https URI) when no draft is given'),
   gs1: z
-    .union([z.object({ gtin: z.string(), serial: z.string() }), z.object({ giai: z.string() })])
+    .union([
+      z.object({ gtin: z.string(), serial: z.string() }).strict(),
+      z.object({ giai: z.string() }).strict(),
+    ])
     .optional()
     .describe('GS1 key: GTIN (8, 12, 13 or 14 digits) plus serial, or a GIAI'),
   resolverBase: z

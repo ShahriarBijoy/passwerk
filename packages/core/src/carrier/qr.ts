@@ -6,9 +6,6 @@
 import { zlibSync } from 'fflate';
 import qrcode from 'qrcode-generator';
 
-// Byte mode over UTF-8 bytes (the library's default is Latin-1).
-qrcode.stringToBytes = (s: string) => Array.from(new TextEncoder().encode(s));
-
 export interface QrMatrix {
   size: number;
   modules: boolean[][];
@@ -22,17 +19,25 @@ export interface QrRenderOptions {
 }
 
 export function qrMatrix(payload: string): QrMatrix {
-  const qr = qrcode(0, 'M');
-  qr.addData(payload, 'Byte');
-  qr.make();
-  const size = qr.getModuleCount();
-  const modules: boolean[][] = [];
-  for (let r = 0; r < size; r++) {
-    const row: boolean[] = [];
-    for (let c = 0; c < size; c++) row.push(qr.isDark(r, c));
-    modules.push(row);
+  // Byte mode over UTF-8 bytes (the library's default is Latin-1). Swapped in for the call and
+  // restored after, rather than mutated at module load, so this stays a local effect.
+  const previousStringToBytes = qrcode.stringToBytes;
+  qrcode.stringToBytes = (s: string) => Array.from(new TextEncoder().encode(s));
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(payload, 'Byte');
+    qr.make();
+    const size = qr.getModuleCount();
+    const modules: boolean[][] = [];
+    for (let r = 0; r < size; r++) {
+      const row: boolean[] = [];
+      for (let c = 0; c < size; c++) row.push(qr.isDark(r, c));
+      modules.push(row);
+    }
+    return { size, modules };
+  } finally {
+    qrcode.stringToBytes = previousStringToBytes;
   }
-  return { size, modules };
 }
 
 export function renderQrSvg(m: QrMatrix, opts: QrRenderOptions = {}): string {

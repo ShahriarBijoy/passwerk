@@ -81,6 +81,18 @@ describe('generate_carrier', () => {
     expect(both.isError).toBe(true);
     expect(both.text).toMatch(/uid/);
   });
+  it('a mixed gs1 key (gtin, serial and giai together) is a validation error', async () => {
+    // Both union branches are now .strict(), so the extra key is rejected instead of silently
+    // dropped. The MCP SDK validates tool input before the handler runs, so this fails as a
+    // protocol-level input-validation error (no structuredContent), naming the failing field.
+    const mixed = await call<{ error: string }>(session.client, 'generate_carrier', {
+      uid: 'https://passport.example/1',
+      gs1: { gtin: '4006381333931', serial: 'S1', giai: 'A1' },
+      resolverBase: 'https://id.example.com',
+    });
+    expect(mixed.isError).toBe(true);
+    expect(mixed.text).toMatch(/gs1/i);
+  });
   it('accepts a draftId it returned earlier', async () => {
     const draft = getSample('lmt-valid');
     const a = await call<Out>(session.client, 'generate_carrier', { draft });

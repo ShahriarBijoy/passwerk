@@ -58,6 +58,12 @@ function identifierFrom(input: CarrierInput): string {
 }
 
 export function generateCarrier(input: CarrierInput): CarrierResult {
+  if (input.format !== undefined && input.format !== 'svg' && input.format !== 'png') {
+    throw new CarrierInputError({
+      de: `format "${String(input.format)}" muss "svg" oder "png" sein.`,
+      en: `format "${String(input.format)}" must be "svg" or "png".`,
+    });
+  }
   const uid = identifierFrom(input);
   if (!isHttpsUri(uid)) {
     throw new CarrierInputError({

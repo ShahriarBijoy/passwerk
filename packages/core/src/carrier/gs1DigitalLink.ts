@@ -11,7 +11,7 @@ export type Gs1Key = { gtin: string; serial: string } | { giai: string };
 
 const SERIAL_MAX = getCarrierScheme('gs1-digital-link-gtin-serial')?.limits.serialMaxLength ?? 20;
 const GIAI_MAX = getCarrierScheme('gs1-digital-link-giai')?.limits.giaiMaxLength ?? 30;
-/** Printable ASCII without space; the GS1 character set is a subset (verify). */
+/** Printable ASCII including space; the GS1 character set is a subset (verify). */
 const KEY_CHARS = /^[\x21-\x7E ]+$/;
 
 /** Mod-10 check digit for the digits before it: weights 3,1,3,1,... counted from the right. */
