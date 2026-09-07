@@ -5,6 +5,8 @@ import { memoLast } from '@/workflow/derive/memo.ts';
 import { deriveProject } from '@/workflow/derive/project.ts';
 import { defaultProject, type Project } from '@/workflow/project.ts';
 
+const EARLY = '2026-09-07T12:00:00Z';
+// After the 2027-02-18 obligation start (packages/core/src/obligations/check.ts), so EV reads "required".
 const AT = '2027-09-07T12:00:00Z';
 const base = defaultProject('urn:passwerk:draft:1', AT);
 
@@ -115,5 +117,13 @@ describe('deriveProject', () => {
     const p = { ...base };
     expect(deriveProject(p, AT)).toBe(deriveProject(p, AT));
     expect(deriveProject({ ...p }, AT)).not.toBe(deriveProject(p, AT));
+  });
+  it('before the obligation date: verdict not_required, but category and meta exist', () => {
+    const d = deriveProject(base, EARLY);
+    expect(d.obligations.verdict).toBe('not_required');
+    expect(d.category).toBe('EV');
+    expect(d.meta).not.toBeNull();
+    expect(d.meta?.category).toBe('EV');
+    expect(d.obligations.reason.en).toContain('2027-02-18');
   });
 });

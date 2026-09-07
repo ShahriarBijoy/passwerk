@@ -2,6 +2,7 @@ import { buildGs1DigitalLink, SCHEMA_VERSION } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 import { defaultProject, metaOf, passportIdOf, projectFromMeta } from '@/workflow/project.ts';
 
+// After the 2027-02-18 obligation start (packages/core/src/obligations/check.ts), so EV reads "required".
 const AT = '2027-09-07T12:00:00Z';
 
 describe('passportIdOf', () => {
