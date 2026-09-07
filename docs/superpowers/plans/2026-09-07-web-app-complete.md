@@ -3177,7 +3177,7 @@ The default language is German; the labels above must match the German `project.
 
 - [ ] **Step 2: Adapt `musterwerk.spec.ts`**
 
-After the upload assertions, click `continue` (now leads to facts), assert `facts-count` contains the number of facts core extracted (`expected.facts.facts.length`, expose `facts` from the helper), click `facts-continue`, then the existing review and gaps assertions. Before the upload, assert `obligation-verdict` had `data-verdict="required"` on the project screen (do it inside `startProject` when `batteryType` is `EV`: `await expect(page.getByTestId('obligation-verdict')).toHaveAttribute('data-verdict', 'required')`).
+After the upload assertions, click `continue` (now leads to facts), assert `facts-count` contains the number of facts core extracted (`expected.facts.facts.length`, expose `facts` from the helper), click `facts-continue`, then the existing review and gaps assertions. Before the upload, assert the derived category on the project screen (inside `startProject` when `batteryType` is `EV` or unset: `await expect(page.getByTestId('obligation-category')).toContainText('EV')`). The pinned CLOCK (2026-09-05) is before the 2027-02-18 start, so the verdict reads `not_required` while the category is still derived; `project.spec.ts` proves `required` with a placed-on-market date in 2027.
 
 - [ ] **Step 3: Adapt `golden.spec.ts`, `persistence.spec.ts`, `sovereignty.spec.ts`**
 
