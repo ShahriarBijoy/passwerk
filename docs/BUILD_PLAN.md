@@ -439,6 +439,7 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 ### Phase 7 — Carrier, HTML sheet, Docker, release (2–3 days)
 - UID + GS1 Digital Link + QR; HTML passport sheet; Dockerfile (non-root, multi-arch), compose; `site/` static docs; README with GIF demo; publish `@passwerk/*` to npm; submit to the Official MCP Registry.
 - DoD: `npx -y @passwerk/server` works from a clean machine; registry listing live.
+- **Done (2026-09-06):** carrier (UID, GS1 Digital Link, QR SVG/PNG), HTML sheet, Docker image, release workflow, registry manifest; site/ dropped per D-006; see ADRs D-033, D-034.
 
 ### Phase 7a — Web app (D-006, D-019, D-024: runs before Phase 6) (3–4 days)
 - First slice (D-024): upload, mapping review, gap report, export. Everything below completes the app afterwards.

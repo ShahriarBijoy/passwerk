@@ -1,14 +1,32 @@
 # Install: OpenCode
 
-## Prerequisites
+## Server
+
+Add to `opencode.json` in the project (or `~/.config/opencode/opencode.json`):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "passwerk": {
+      "type": "local",
+      "command": ["npx", "-y", "@passwerk/server"],
+      "enabled": true,
+      "environment": {
+        "PASSWERK_ROOT": "/absolute/path/to/documents"
+      }
+    }
+  }
+}
+```
+
+<!-- verify: key names (`type`, `command` as an array, `environment`) against the current OpenCode MCP documentation -->
+
+## From source
 
 ```sh
 pnpm install && pnpm build     # Node >= 22.13, pnpm 10
 ```
-
-## Server
-
-Add to `opencode.json` in the project (or `~/.config/opencode/opencode.json`):
 
 ```json
 {
@@ -25,8 +43,6 @@ Add to `opencode.json` in the project (or `~/.config/opencode/opencode.json`):
   }
 }
 ```
-
-<!-- verify: key names (`type`, `command` as an array, `environment`) against the current OpenCode MCP documentation -->
 
 ## Skill
 

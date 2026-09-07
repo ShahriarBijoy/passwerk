@@ -14,6 +14,20 @@ declarations). Get back a conformant Digital Battery Passport in the official AA
 Cursor and Claude Desktop, a scriptable CLI, a plain TypeScript library, and a client-side
 web app with QR preview.
 
+## Quick start
+
+```sh
+npx -y @passwerk/server            # MCP server over stdio, offline, no keys
+claude mcp add passwerk -- npx -y @passwerk/server
+npx -y @passwerk/cli audit passport.draft.json
+docker run -e PASSWERK_AUTH_TOKEN=$(openssl rand -hex 32) -p 127.0.0.1:3777:3777 ghcr.io/shahriarbijoy/passwerk
+```
+
+Host snippets for Claude Desktop, Codex, Cursor and OpenCode are in
+[docs/install](docs/install/claude-code.md). Packages publish to npm and the server registers
+with the Official MCP Registry as `io.github.shahriarbijoy/passwerk` from tagged releases; see
+[docs/RELEASE.md](docs/RELEASE.md) for the current publish status.
+
 ## Why
 
 Regulation (EU) 2023/1542, Art. 77: from **18 February 2027** every EV, light-means-of-transport
@@ -30,7 +44,7 @@ proves zero network calls.
 
 ## Status
 
-**Phases 0 to 5b and the Phase 7a first slice are done; Phase 6 is next.**
+**Phases 0 to 7 are done.**
 `@passwerk/rules` (artefacts and knowledge base, now with 24 plausibility rules as reviewable
 JSON) and `@passwerk/core` (model, AAS JSON and AASX emitters for all seven IDTA 02035 parts,
 validation L1 to L4, readers for PDF, XLSX, CSV, DOCX and TXT, fact extraction,
@@ -44,7 +58,11 @@ unseen supplier documents is measured, not asserted: `docs/EVALUATION.md` scores
 six documents transcribed from public datasheets (recall, precision and correction effort next to
 the authored-fixture gate). `apps/web` runs the same pipeline in the browser as a first slice of
 Phase 7a (upload, review, gaps, export; ADR D-029). Phase 6 added the MCP server, the agent skill
-and the `passwerk` command line. Next: Phase 7 (carrier, HTML sheet, Docker, release). See
+and the `passwerk` command line. Phase 7 added the data carrier (UID, GS1 Digital Link, QR SVG
+and PNG), the self-contained HTML passport sheet, a publishable build (`npx -y @passwerk/server`
+runs the bundled AAS SDK from a clean install), the Docker image and the Official MCP Registry
+entry (`io.github.shahriarbijoy/passwerk`; see `docs/RELEASE.md` for the publish status). Next:
+the rest of Phase 7a (project screen, facts screen, QR preview panel, BYOK), then 7b and 7c. See
 `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
@@ -53,7 +71,7 @@ and the `passwerk` command line. Next: Phase 7 (carrier, HTML sheet, Docker, rel
 |---|---|
 | `@passwerk/rules` | Bundled, checksummed IDTA 02035 templates, AAS schemas, EC data-point matrix, attribute knowledge base (DE/EN), legal timeline |
 | `@passwerk/core` | MCP-free library: ingest, extract, map, validate (4 layers), gap report, emit AAS JSON / AASX / HTML, data carrier (UID, GS1 Digital Link, QR) |
-| `@passwerk/server` | MCP server over stdio and Streamable HTTP: ten tools, reference resources, workflow prompts; see [docs/install](docs/install/claude-code.md) and [skills/passwerk](skills/passwerk/SKILL.md) |
+| `@passwerk/server` | MCP server over stdio and Streamable HTTP: eleven tools, reference resources, workflow prompts; see [docs/install](docs/install/claude-code.md) and [skills/passwerk](skills/passwerk/SKILL.md) |
 | `@passwerk/cli` | `passwerk audit \| extract \| emit \| gaps \| obligations \| tools \| chat` with CI-friendly exit codes; see [the CLI reference](skills/passwerk/references/cli.md) |
 | `@passwerk/web` | Client-side web app: upload, review, gaps, export; the primary product (ADR D-019) |
 
@@ -70,6 +88,7 @@ node packages/cli/dist/bin.js extract ./supplier-docs --category EV --out facts.
 node packages/cli/dist/bin.js audit passport.draft.json
 node packages/cli/dist/bin.js gaps passport.draft.json --lang de
 node packages/cli/dist/bin.js emit passport.draft.json --out ./passport
+node packages/cli/dist/bin.js carrier passport.draft.json --out passport.qr.svg
 ```
 
 `passwerk chat -m "…"` is the optional demo agent loop; it is the only command that calls a
@@ -97,6 +116,8 @@ report pipeline as `@passwerk/core` in the browser: upload supplier documents, r
 proposed mappings, see the gap report and export the passport. Documents never leave the
 browser, and the autosave to IndexedDB keeps your decisions, the extracted facts and the
 proposals, but never the uploaded files.
+
+![passwerk web app: upload, review, gaps, export](docs/media/passwerk-web.gif)
 
 ```sh
 pnpm install

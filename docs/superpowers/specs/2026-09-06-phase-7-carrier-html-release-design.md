@@ -168,7 +168,8 @@ a manual field; the sovereignty regex test above.
 
 - `emit_passport`: target enum gains `html`; file name `${slug}.html`; the sheet's verdict
   feeds the shared verdict the same way the AAS targets do. The tool input gains an optional
-  `lang` (`de` | `en`, default `en`) that only the sheet uses.
+  `htmlLang` (`de` | `en`, default `en`) that only the sheet uses (named apart from `lang`
+  because the wrapper reserves `lang`).
 - New tool `generate_carrier` (build plan section 5.1):
 
   input `{ draft?: DraftRef, uid?: string, gs1?, resolverBase?, format?, outDir? }`;
@@ -186,7 +187,8 @@ a manual field; the sovereignty regex test above.
 - `emit --targets` accepts `html`.
 - `passwerk carrier <draft.json> [--gtin <n> --serial <s> | --giai <g>] [--resolver-base <https://…>] [--format svg|png] --out <file> [--json] [--lang]`.
   Prints the identifier, the Digital Link when built, the payload and the written path; exit 0,
-  or 2 on a usage or input error. `--uid <https://…>` replaces the draft argument.
+  or 3 on a usage or carrier input error, like every other usage error. `--uid <https://…>`
+  replaces the draft argument.
 - `skills/passwerk/references/cli.md` and the skill sync test are updated.
 
 ## 7. Web app (`apps/web`)

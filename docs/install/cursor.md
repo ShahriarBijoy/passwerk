@@ -1,14 +1,30 @@
 # Install: Cursor
 
-## Prerequisites
+## Server
+
+Project: `.cursor/mcp.json`. User: `~/.cursor/mcp.json`.
+
+```json
+{
+  "mcpServers": {
+    "passwerk": {
+      "command": "npx",
+      "args": ["-y", "@passwerk/server"],
+      "env": {
+        "PASSWERK_ROOT": "/absolute/path/to/documents"
+      }
+    }
+  }
+}
+```
+
+Enable the server under Settings, MCP. The eleven tools appear in the agent's tool list.
+
+## From source
 
 ```sh
 pnpm install && pnpm build     # Node >= 22.13, pnpm 10
 ```
-
-## Server
-
-Project: `.cursor/mcp.json`. User: `~/.cursor/mcp.json`.
 
 ```json
 {
@@ -23,8 +39,6 @@ Project: `.cursor/mcp.json`. User: `~/.cursor/mcp.json`.
   }
 }
 ```
-
-Enable the server under Settings, MCP. The ten tools appear in the agent's tool list.
 
 ## Skill
 

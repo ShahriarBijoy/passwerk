@@ -1,12 +1,20 @@
 # Install: Claude Code
 
-## Prerequisites
+## User-scoped server (any directory)
+
+```sh
+claude mcp add passwerk -- npx -y @passwerk/server
+```
+
+Add `-e PASSWERK_ROOT=/absolute/path/to/documents` to restrict file access.
+
+## From source
 
 ```sh
 pnpm install && pnpm build     # Node >= 22.13, pnpm 10
 ```
 
-## Project-scoped server (this repository)
+### Project-scoped server (this repository)
 
 The root `.mcp.json` registers the built server for anyone who opens the repository:
 
@@ -25,7 +33,7 @@ The root `.mcp.json` registers the built server for anyone who opens the reposit
 Claude Code asks once whether to trust the project's servers. `PASSWERK_ROOT` limits which
 paths `ingest_documents` may read and `emit_passport` may write.
 
-## User-scoped server (any directory)
+### User-scoped server (any directory), built from source
 
 ```sh
 claude mcp add passwerk -- node /absolute/path/to/passwerk/packages/server/dist/bin.js
