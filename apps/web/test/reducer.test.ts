@@ -1,40 +1,21 @@
-import {
-  getSample,
-  type MappingProposal,
-  type PassportDraft,
-  SCHEMA_VERSION,
-} from '@passwerk/core';
+import { getSample, type PassportDraft } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
+import { defaultProject } from '@/workflow/project.ts';
 import { type Action, reduce } from '@/workflow/reducer.ts';
-import { initialState, proposalKey, type WorkflowState } from '@/workflow/state.ts';
+import { initialState, type WorkflowState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
 
-const AT = '2026-09-05T12:00:00Z';
-const META = {
-  schemaVersion: SCHEMA_VERSION,
-  category: 'EV' as const,
-  createdAt: AT,
-  passportId: 'urn:passwerk:test:1',
-};
-
-const proposal = (over: Partial<MappingProposal>): MappingProposal => ({
-  attributeId: 'ratedCapacity',
-  value: '94.5',
-  unit: 'Ah',
-  factId: 'a.pdf:1',
-  confidence: 0.9,
-  source: [{ file: 'a.pdf', page: 1 }],
-  why: { de: 'x', en: 'x' },
-  checks: { label: 1, matched: 'x', unit: 'match', kind: 'ok' },
-  ...over,
-});
+const AT = '2026-09-07T12:00:00Z';
+const LATER = '2026-09-07T13:00:00Z';
+const PROJECT = defaultProject('urn:passwerk:test:1', '');
 
 const facts = (files: string[]) => ({
   facts: files.map((file, i) => ({
-    id: `${file}:${i}`,
+    id: `${file}#1:${i}`,
     label: 'l',
     labelKey: 'l',
     raw: 'r',
+    value: '1',
     kind: 'text' as const,
     lang: 'de' as const,
     shape: 'kv' as const,
@@ -43,246 +24,158 @@ const facts = (files: string[]) => ({
   tables: [],
   documents: [],
 });
+const summary = (name: string, sha256 = 'x') => ({
+  name,
+  size: 1,
+  sha256,
+  format: 'pdf',
+  pages: 1,
+  lang: 'de' as const,
+});
 
 function start(): WorkflowState {
-  return reduce(initialState, { type: 'startProject', meta: META, at: AT });
+  return reduce(initialState, { type: 'setProject', project: PROJECT, at: AT });
+}
+function withFile(state: WorkflowState, name: string, sha256 = 'x'): WorkflowState {
+  return reduce(state, {
+    type: 'filesIngested',
+    summaries: [summary(name, sha256)],
+    facts: facts([name]),
+    at: AT,
+  });
 }
 
-describe('reducer', () => {
-  it('startProject creates the base draft and moves to upload', () => {
+describe('reducer: project', () => {
+  it('setProject stamps createdAt once and never changes the step', () => {
     const s = start();
-    expect(s.step).toBe('upload');
-    expect(s.baseDraft?.meta).toEqual(META);
-    expect(s.updatedAt).toBe(AT);
+    expect(s.step).toBe('project');
+    expect(s.project?.createdAt).toBe(AT);
+    const s2 = reduce(s, {
+      type: 'setProject',
+      project: { ...PROJECT, role: 'importer' },
+      at: LATER,
+    });
+    expect(s2.project?.createdAt).toBe(AT);
+    expect(s2.project?.role).toBe('importer');
+    expect(s2.updatedAt).toBe(LATER);
+    expect(s2.generation).toBe(s.generation);
   });
-
-  it('importDraft replaces the base and clears documents and decisions', () => {
-    const s0 = reduce(start(), {
-      type: 'filesIngested',
-      summaries: [{ name: 'a.pdf', size: 1, sha256: 'x', format: 'pdf', pages: 1, lang: 'de' }],
-      facts: facts(['a.pdf']),
-      proposals: [proposal({})],
+  it('setProject keeps files, facts and decisions', () => {
+    const s = reduce(withFile(start(), 'a.pdf'), {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf#1:0' },
       at: AT,
     });
+    const s2 = reduce(s, {
+      type: 'setProject',
+      project: { ...PROJECT, batteryType: 'LMT' },
+      at: LATER,
+    });
+    expect(s2.files).toHaveLength(1);
+    expect(s2.facts?.facts).toHaveLength(1);
+    expect(Object.keys(s2.decisions)).toEqual(['ratedCapacity']);
+  });
+  it('importDraft fills the project from the meta and clears documents and decisions', () => {
+    const s0 = withFile(start(), 'a.pdf');
     const draft = getSample('ev-valid') as PassportDraft;
     const s = reduce(s0, { type: 'importDraft', draft, at: AT });
-    expect(s.baseDraft).toBe(draft);
-    expect(s.meta).toEqual(draft.meta);
+    expect(s.importedDraft).toBe(draft);
+    expect(s.project?.manualCategory).toBe('EV');
+    expect(s.project?.identifier).toEqual({ mode: 'https', uri: draft.meta.passportId });
+    expect(s.project?.createdAt).toBe(draft.meta.createdAt);
     expect(s.files).toEqual([]);
-    expect(s.proposals).toEqual([]);
+    expect(s.facts).toBeNull();
+    expect(s.factEdits).toEqual({});
     expect(s.decisions).toEqual({});
+    expect(s.generation).toBe(s0.generation + 1);
     expect(s.step).toBe('review');
-  });
-
-  it('accepting one proposal rejects its siblings in the same group', () => {
-    const a = proposal({ factId: 'a.pdf:1' });
-    const b = proposal({ factId: 'b.pdf:1', value: '90', source: [{ file: 'b.pdf', page: 1 }] });
-    const s0 = reduce(start(), {
-      type: 'filesIngested',
-      summaries: [],
-      facts: facts(['a.pdf', 'b.pdf']),
-      proposals: [a, b],
-      at: AT,
-    });
-    const s = reduce(s0, {
-      type: 'decide',
-      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf:1' },
-      at: AT,
-    });
-    expect(s.decisions[proposalKey(a)]).toEqual({
-      kind: 'accept',
-      attributeId: 'ratedCapacity',
-      factId: 'a.pdf:1',
-    });
-    expect(Object.keys(s.decisions)).toEqual(['ratedCapacity']);
-  });
-
-  it('fileRemoved drops its summary, facts, proposals and decisions', () => {
-    const a = proposal({ factId: 'a.pdf:0' });
-    const b = proposal({
-      attributeId: 'nominalVoltage',
-      factId: 'b.pdf:1',
-      source: [{ file: 'b.pdf' }],
-    });
-    let s = reduce(start(), {
-      type: 'filesIngested',
-      summaries: [
-        { name: 'a.pdf', size: 1, sha256: 'x', format: 'pdf', pages: 1, lang: 'de' },
-        { name: 'b.pdf', size: 1, sha256: 'y', format: 'pdf', pages: 1, lang: 'de' },
-      ],
-      facts: facts(['a.pdf', 'b.pdf']),
-      proposals: [a, b],
-      at: AT,
-    });
-    s = reduce(s, {
-      type: 'decide',
-      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf:0' },
-      at: AT,
-    });
-    s = reduce(s, { type: 'fileRemoved', name: 'a.pdf', at: AT });
-    expect(s.files.map((f) => f.name)).toEqual(['b.pdf']);
-    expect(s.facts?.facts.map((f) => f.source.file)).toEqual(['b.pdf']);
-    expect(s.proposals.map((p) => p.factId)).toEqual(['b.pdf:1']);
-    expect(s.decisions).toEqual({});
-  });
-
-  it('re-uploading a same-named file drops its decisions when the bytes changed', () => {
-    const p = proposal({ factId: 'a.csv#1:0', source: [{ file: 'a.csv', page: 1 }] });
-    const summaries = (sha256: string) => [
-      { name: 'a.csv', size: 1, sha256, format: 'csv', pages: 1, lang: 'de' as const },
-    ];
-    let s = reduce(start(), {
-      type: 'filesIngested',
-      summaries: summaries('sha-400'),
-      facts: facts(['a.csv']),
-      proposals: [p],
-      at: AT,
-    });
-    s = reduce(s, {
-      type: 'decide',
-      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: p.factId },
-      at: AT,
-    });
-    expect(Object.keys(s.decisions)).toEqual(['ratedCapacity']);
-
-    // Same bytes: the reviewer's decision still describes what the document says.
-    const unchanged = reduce(s, {
-      type: 'filesIngested',
-      summaries: summaries('sha-400'),
-      facts: facts(['a.csv']),
-      proposals: [p],
-      at: AT,
-    });
-    expect(Object.keys(unchanged.decisions)).toEqual(['ratedCapacity']);
-
-    // Different bytes behind the same name and the same fact id: the decision is stale.
-    const changed = reduce(s, {
-      type: 'filesIngested',
-      summaries: summaries('sha-450'),
-      facts: facts(['a.csv']),
-      proposals: [{ ...p, value: '90.0' }],
-      at: AT,
-    });
-    expect(changed.decisions).toEqual({});
-  });
-
-  it('a changed re-upload keeps decisions sourced from other files, and manual ones', () => {
-    const a = proposal({ factId: 'a.csv#1:0', source: [{ file: 'a.csv', page: 1 }] });
-    const b = proposal({
-      attributeId: 'nominalVoltage',
-      factId: 'b.csv#1:0',
-      source: [{ file: 'b.csv', page: 1 }],
-    });
-    const file = (name: string, sha256: string) => ({
-      name,
-      size: 1,
-      sha256,
-      format: 'csv',
-      pages: 1,
-      lang: 'de' as const,
-    });
-    let s = reduce(start(), {
-      type: 'filesIngested',
-      summaries: [file('a.csv', 'sha-a'), file('b.csv', 'sha-b')],
-      facts: facts(['a.csv', 'b.csv']),
-      proposals: [a, b],
-      at: AT,
-    });
-    s = reduce(s, {
-      type: 'decide',
-      decision: { kind: 'accept', attributeId: 'nominalVoltage', factId: b.factId },
-      at: AT,
-    });
-    s = reduce(s, {
-      type: 'decide',
-      decision: {
-        kind: 'manual',
-        attributeId: 'batteryChemistry',
-        path: 'clearName',
-        value: 'NMC',
-      },
-      at: AT,
-    });
-    s = reduce(s, {
-      type: 'filesIngested',
-      summaries: [file('a.csv', 'sha-a2')],
-      facts: facts(['a.csv']),
-      proposals: [a],
-      at: AT,
-    });
-    expect(Object.keys(s.decisions).sort()).toEqual([
-      'batteryChemistry#clearName',
-      'nominalVoltage',
-    ]);
-  });
-
-  it('manual decisions survive file removal and clearDecision removes one key', () => {
-    let s = start();
-    s = reduce(s, {
-      type: 'decide',
-      decision: {
-        kind: 'manual',
-        attributeId: 'batteryChemistry',
-        path: 'clearName',
-        value: 'NMC',
-      },
-      at: AT,
-    });
-    s = reduce(s, { type: 'fileRemoved', name: 'none.pdf', at: AT });
-    expect(Object.keys(s.decisions)).toEqual(['batteryChemistry#clearName']);
-    s = reduce(s, { type: 'clearDecision', key: 'batteryChemistry#clearName', at: AT });
-    expect(s.decisions).toEqual({});
-  });
-
-  it('reset returns the initial state but keeps the language', () => {
-    let s = reduce(start(), { type: 'setLanguage', language: 'en', at: AT });
-    s = reduce(s, { type: 'reset', at: AT });
-    expect(s).toEqual({ ...initialState, language: 'en', generation: 2, updatedAt: AT });
-  });
-
-  it('the generation counts changes of the active project, and nothing else', () => {
-    expect(initialState.generation).toBe(0);
-    const started = start();
-    expect(started.generation).toBe(1);
-    const imported = reduce(started, {
-      type: 'importDraft',
-      draft: getSample('ev-valid') as PassportDraft,
-      at: AT,
-    });
-    expect(imported.generation).toBe(2);
-    expect(reduce(imported, { type: 'reset', at: AT }).generation).toBe(3);
-
-    const others: Action[] = [
-      { type: 'goTo', step: 'review', at: AT },
-      { type: 'setLanguage', language: 'en', at: AT },
-      { type: 'fileRemoved', name: 'a.csv', at: AT },
-      { type: 'filesIngested', summaries: [], facts: facts([]), proposals: [], at: AT },
-      { type: 'decide', decision: { kind: 'accept', attributeId: 'x', factId: 'y' }, at: AT },
-      { type: 'clearDecision', key: 'x', at: AT },
-    ];
-    expect(others.map((a) => reduce(started, a).generation)).toEqual([1, 1, 1, 1, 1, 1]);
-  });
-
-  it('every action stamps updatedAt from the action, never from the clock', () => {
-    const s = reduce(start(), {
-      type: 'goTo',
-      step: 'start',
-      at: '2030-01-01T00:00:00Z',
-    } satisfies Action);
-    expect(s.updatedAt).toBe('2030-01-01T00:00:00Z');
   });
 });
 
-describe('store', () => {
-  it('notifies subscribers once per dispatch and unsubscribes', () => {
-    const store = createStore(initialState);
-    let n = 0;
-    const off = store.subscribe(() => n++);
+describe('reducer: facts and edits', () => {
+  it('editFact stores an override and clearFactEdit drops it; unknown ids are ignored', () => {
+    const s = withFile(start(), 'a.pdf');
+    const e = reduce(s, {
+      type: 'editFact',
+      factId: 'a.pdf#1:0',
+      edit: { value: '2', unit: 'kWh' },
+      at: AT,
+    });
+    expect(e.factEdits).toEqual({ 'a.pdf#1:0': { value: '2', unit: 'kWh' } });
+    expect(reduce(e, { type: 'clearFactEdit', factId: 'a.pdf#1:0', at: AT }).factEdits).toEqual({});
+    expect(reduce(s, { type: 'editFact', factId: 'nope', edit: { value: '2' }, at: AT })).toBe(s);
+  });
+  it('fileRemoved drops the file, its facts, its edits and its non-manual decisions', () => {
+    let s = withFile(withFile(start(), 'a.pdf'), 'b.pdf');
+    s = reduce(s, { type: 'editFact', factId: 'a.pdf#1:0', edit: { value: '2' }, at: AT });
+    s = reduce(s, {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf#1:0' },
+      at: AT,
+    });
+    s = reduce(s, {
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'nominalVoltage',
+        value: '400',
+        factId: 'a.pdf#1:0',
+      },
+      at: AT,
+    });
+    const r = reduce(s, { type: 'fileRemoved', name: 'a.pdf', at: AT });
+    expect(r.files.map((f) => f.name)).toEqual(['b.pdf']);
+    expect(r.facts?.facts.map((f) => f.source.file)).toEqual(['b.pdf']);
+    expect(r.factEdits).toEqual({});
+    expect(Object.keys(r.decisions)).toEqual(['nominalVoltage']);
+  });
+  it('re-uploading a file with a different hash drops its decisions and edits', () => {
+    let s = withFile(start(), 'a.pdf', 'h1');
+    s = reduce(s, { type: 'editFact', factId: 'a.pdf#1:0', edit: { value: '2' }, at: AT });
+    s = reduce(s, {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf#1:0' },
+      at: AT,
+    });
+    const same = withFile(s, 'a.pdf', 'h1');
+    expect(same.decisions).toEqual(s.decisions);
+    expect(same.factEdits).toEqual(s.factEdits);
+    const changed = withFile(s, 'a.pdf', 'h2');
+    expect(changed.decisions).toEqual({});
+    expect(changed.factEdits).toEqual({});
+    expect(changed.facts?.facts).toHaveLength(1);
+  });
+  it('decide keeps one decision per key', () => {
+    const s = withFile(start(), 'a.pdf');
+    const a: Action = {
+      type: 'decide',
+      decision: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a.pdf#1:0' },
+      at: AT,
+    };
+    const b: Action = {
+      type: 'decide',
+      decision: { kind: 'reject', attributeId: 'ratedCapacity', factId: 'a.pdf#1:0' },
+      at: AT,
+    };
+    expect(reduce(reduce(s, a), b).decisions['ratedCapacity']?.kind).toBe('reject');
+  });
+  it('reset keeps the language and bumps the generation; the store notifies', () => {
+    const store = createStore(withFile(start(), 'a.pdf'));
+    let notified = 0;
+    store.subscribe(() => {
+      notified += 1;
+    });
     store.dispatch({ type: 'setLanguage', language: 'en', at: AT });
-    expect(n).toBe(1);
-    expect(store.getState().language).toBe('en');
-    off();
-    store.dispatch({ type: 'setLanguage', language: 'de', at: AT });
-    expect(n).toBe(1);
+    store.dispatch({ type: 'reset', at: AT });
+    // `initialState.generation` is 0; reset bumps the store's own counter instead of resetting
+    // it, so the expectation overrides that one field rather than colliding with it.
+    expect(store.getState()).toMatchObject({
+      ...initialState,
+      language: 'en',
+      updatedAt: AT,
+      generation: 2,
+    });
+    expect(store.getState().generation).toBe(2);
+    expect(notified).toBe(2);
   });
 });

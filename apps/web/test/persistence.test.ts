@@ -29,6 +29,11 @@ describe('persistence', () => {
     expect(await loadState()).toEqual({ kind: 'version' });
   });
 
+  it('rejects a state saved under the previous version (v1)', async () => {
+    db.set('passwerk.web.state', { ...initialState, version: 1 });
+    expect(await loadState()).toEqual({ kind: 'version' });
+  });
+
   it('reads a state saved before the generation counter as generation 0', async () => {
     const { generation: _dropped, ...before } = initialState;
     db.set('passwerk.web.state', before);

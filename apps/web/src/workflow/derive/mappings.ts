@@ -2,16 +2,16 @@ import {
   type ApplyResult,
   applyMappings,
   buildReport,
-  type GapReport,
-  gapReport,
+  type FactSet,
   type MappingConflict,
   type MappingDecision,
+  type MappingProposal,
   type PassportDraft,
   type ValidationReport,
   validate,
   validateSchema,
 } from '@passwerk/core';
-import type { Decision, DecisionKey, WorkflowState } from './state.ts';
+import type { Decision, DecisionKey } from '../state.ts';
 
 /** A decision core refused to apply, kept out of the draft and reported to the reviewer. */
 export interface InvalidDecision {
@@ -19,31 +19,34 @@ export interface InvalidDecision {
   message: string;
 }
 
-export interface Derived {
-  draft: PassportDraft;
-  conflicts: MappingConflict[];
-  invalidDecisions: InvalidDecision[];
-  report: ValidationReport;
-  gap: GapReport;
-  asOf: string;
+export interface MappingEntry {
+  key: DecisionKey;
+  mapping: MappingDecision;
 }
 
-function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
+function toMapping(
+  d: Decision,
+  proposals: MappingProposal[],
+  facts: FactSet,
+): MappingDecision | null {
   const path = d.path !== undefined ? { path: d.path } : {};
   if (d.kind === 'reject') return null;
   if (d.kind === 'manual') {
+    const fact = d.factId !== undefined ? facts.facts.find((f) => f.id === d.factId) : undefined;
     return {
       attributeId: d.attributeId,
       ...path,
       value: d.value,
       ...(d.unit ? { unit: d.unit } : {}),
       ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
+      ...(fact ? { source: [fact.source] } : {}),
       override: true,
     };
   }
-  const p = state.proposals.find(
+  const p = proposals.find(
     (x) => x.factId === d.factId && x.attributeId === d.attributeId && x.path === d.path,
   );
+  // No proposal under the current category: the decision waits until its proposal is back.
   if (!p) return null;
   const value = d.kind === 'edit' ? d.value : p.value;
   const unit = d.kind === 'edit' ? d.unit : p.unit;
@@ -59,27 +62,21 @@ function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
   };
 }
 
-interface MappingEntry {
-  key: DecisionKey;
-  mapping: MappingDecision;
-}
-
 /** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
-function mappingEntries(state: WorkflowState): MappingEntry[] {
-  return Object.keys(state.decisions)
+export function mappingEntries(
+  decisions: Record<DecisionKey, Decision>,
+  proposals: MappingProposal[],
+  facts: FactSet,
+): MappingEntry[] {
+  return Object.keys(decisions)
     .sort()
-    .map((key) => ({ key, decision: state.decisions[key] }))
+    .map((key) => ({ key, decision: decisions[key] }))
     .filter((e): e is { key: DecisionKey; decision: Decision } => e.decision !== undefined)
-    .map((e) => ({ key: e.key, mapping: toMapping(state, e.decision) }))
+    .map((e) => ({ key: e.key, mapping: toMapping(e.decision, proposals, facts) }))
     .filter((e): e is MappingEntry => e.mapping !== null);
 }
 
-/** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
-export function decisionsToMappings(state: WorkflowState): MappingDecision[] {
-  return mappingEntries(state).map((e) => e.mapping);
-}
-
-interface Applied {
+export interface Applied {
   draft: PassportDraft;
   conflicts: MappingConflict[];
   invalidDecisions: InvalidDecision[];
@@ -168,7 +165,7 @@ function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string
  * happy path is one batch apply and one validate; only when that pair throws does the fold
  * above isolate the offending decisions and keep the rest.
  */
-function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
+export function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   try {
     const r = applyMappings(
       base,
@@ -179,23 +176,4 @@ function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): A
   } catch {
     return foldOneByOne(base, entries, asOf);
   }
-}
-
-const cache = new WeakMap<WorkflowState, { asOf: string; derived: Derived | null }>();
-
-export function derive(state: WorkflowState, asOf: string): Derived | null {
-  const hit = cache.get(state);
-  if (hit && hit.asOf === asOf) return hit.derived;
-  let derived: Derived | null = null;
-  if (state.baseDraft) {
-    const { draft, conflicts, invalidDecisions, report } = applyAll(
-      state.baseDraft,
-      mappingEntries(state),
-      asOf,
-    );
-    const gap = gapReport(draft, { report, asOf });
-    derived = { draft, conflicts, invalidDecisions, report, gap, asOf };
-  }
-  cache.set(state, { asOf, derived });
-  return derived;
 }

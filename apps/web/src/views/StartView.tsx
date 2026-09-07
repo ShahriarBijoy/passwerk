@@ -76,7 +76,7 @@ export function StartView(props: StartViewProps) {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>{t(lang, 'step.start')}</CardTitle>
+          <CardTitle>{t(lang, 'step.project')}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">

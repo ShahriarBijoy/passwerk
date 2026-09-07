@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from '@passwerk/core';
+import { isHttpsUri } from '@passwerk/core';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -21,10 +21,11 @@ import { ReviewView } from '../views/ReviewView.tsx';
 import { buildGroups, manualEntries } from '../views/reviewModel.ts';
 import { StartView } from '../views/StartView.tsx';
 import { UploadView } from '../views/UploadView.tsx';
-import { derive } from '../workflow/derive.ts';
+import { derive } from '../workflow/derive/index.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
-import { buildExports } from '../workflow/exports.ts';
+import { buildExports, type ExportKind } from '../workflow/exports.ts';
 import { ingestFiles } from '../workflow/ingest.ts';
+import { BATTERY_TYPE_OF, defaultProject } from '../workflow/project.ts';
 import { type Decision, type DecisionKey, STEPS, type Step } from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
 import { nowIso } from './clock.ts';
@@ -76,7 +77,7 @@ export function App({ store, storageNotice }: AppProps) {
   };
 
   const onFiles = async (files: File[]) => {
-    if (!state.meta || files.length === 0) return;
+    if (!derived || files.length === 0) return;
     // Read the generation before the awaits: by the time the ingest resolves the reviewer may
     // have started over or imported a draft, and these documents belong to a project that is
     // no longer on screen.
@@ -90,10 +91,7 @@ export function App({ store, storageNotice }: AppProps) {
           size: f.size,
         })),
       );
-      const out = await ingestFiles(inputs, {
-        category: state.meta.category,
-        workerSrc: pdfWorkerUrl,
-      });
+      const out = await ingestFiles(inputs, { workerSrc: pdfWorkerUrl });
       if (store.getState().generation !== generation) return;
       dispatch({ type: 'filesIngested', ...out, at: nowIso() });
     } catch (e) {
@@ -103,7 +101,7 @@ export function App({ store, storageNotice }: AppProps) {
     }
   };
 
-  const onExport = (kind: 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr') => {
+  const onExport = (kind: ExportKind) => {
     if (!derived) return;
     try {
       const out = buildExports(derived, lang);
@@ -111,8 +109,7 @@ export function App({ store, storageNotice }: AppProps) {
         setExportError(out.error);
         return;
       }
-      const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3, html: 4, qr: 5 }[kind];
-      const file = out.files[index];
+      const file = out.files[kind];
       if (kind === 'qr' && !file) {
         setExportError(
           out.carrierError ?? {
@@ -130,26 +127,26 @@ export function App({ store, storageNotice }: AppProps) {
   };
 
   const reachable = (step: Step): boolean => {
-    if (step === 'start') return true;
-    if (step === 'upload') return state.meta !== null;
-    return state.baseDraft !== null;
+    if (step === 'project') return true;
+    if (step === 'facts') return state.facts !== null;
+    return derived !== null;
   };
 
   const accepted = Object.values(state.decisions).filter((d) => d.kind !== 'reject').length;
-  const groups = buildGroups(state.proposals, state.decisions);
+  const groups = buildGroups(derived?.proposals ?? [], state.decisions);
   const pending = groups.filter((g) => !g.decision).length;
 
   const view = (() => {
     switch (state.step) {
-      case 'start':
+      case 'project':
         return (
           <StartView
             lang={lang}
             defaultPassportId={defaultPassportId}
-            {...(state.meta
+            {...(state.project
               ? {
                   resume: {
-                    category: state.meta.category,
+                    category: derived?.meta.category ?? 'EV',
                     files: state.files.map((f) => f.name),
                     updatedAt: state.updatedAt,
                   },
@@ -157,11 +154,20 @@ export function App({ store, storageNotice }: AppProps) {
               : {})}
             onStart={({ category, passportId }) => {
               const at = nowIso();
+              const p = defaultProject(passportId, at);
               dispatch({
-                type: 'startProject',
-                meta: { schemaVersion: SCHEMA_VERSION, category, passportId, createdAt: at },
+                type: 'setProject',
+                project: {
+                  ...p,
+                  batteryType: BATTERY_TYPE_OF[category],
+                  ...(category === 'INDUSTRIAL_GT_2KWH' ? { energyKwh: '3' } : {}),
+                  identifier: isHttpsUri(passportId)
+                    ? { mode: 'https', uri: passportId }
+                    : { mode: 'draft', urn: passportId },
+                },
                 at,
               });
+              dispatch({ type: 'goTo', step: 'upload', at });
             }}
             onImport={(text) => {
               const r = importDraftJson(text);
@@ -171,7 +177,7 @@ export function App({ store, storageNotice }: AppProps) {
             onResume={() =>
               dispatch({
                 type: 'goTo',
-                step: state.baseDraft ? (state.files.length ? 'review' : 'upload') : 'upload',
+                step: state.files.length ? 'review' : 'upload',
                 at: nowIso(),
               })
             }
@@ -184,18 +190,20 @@ export function App({ store, storageNotice }: AppProps) {
             lang={lang}
             files={state.files}
             busy={busy}
-            proposalCount={state.proposals.length}
+            proposalCount={derived?.proposals.length ?? 0}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
           />
         );
+      case 'facts':
+        return <p data-testid="facts-placeholder">{t(lang, 'step.facts')}</p>;
       case 'review':
-        if (!state.meta || !derived) return null;
+        if (!derived) return null;
         return (
           <ReviewView
             lang={lang}
-            category={state.meta.category}
+            category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
             conflicts={derived.conflicts}
@@ -252,7 +260,7 @@ export function App({ store, storageNotice }: AppProps) {
           >
             {lang === 'de' ? 'EN' : 'DE'}
           </Button>
-          {state.meta && (
+          {state.project && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="ghost" data-testid="start-over">

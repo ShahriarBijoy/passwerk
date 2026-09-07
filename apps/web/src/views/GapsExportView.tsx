@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Key, type LangText, type Language, pick, t, verdictKey } from '../i18n/index.ts';
+import type { ExportKind } from '../workflow/exports.ts';
 import { VerdictChip } from './parts/VerdictChip.tsx';
 
 export interface GapsExportViewProps {
@@ -13,7 +14,7 @@ export interface GapsExportViewProps {
   report: ValidationReport;
   gap: GapReport;
   exportError?: LangText;
-  onExport(kind: 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr'): void;
+  onExport(kind: ExportKind): void;
 }
 
 type GroupBy = 'owner' | 'submodel';

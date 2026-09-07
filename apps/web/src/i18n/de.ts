@@ -16,8 +16,9 @@ export const de = {
   'app.storage.version':
     'Eine frühere Sitzung konnte nicht wiederhergestellt werden (anderes Datenformat).',
   'step.nav': 'Schritte',
-  'step.start': 'Start',
+  'step.project': 'Projekt',
   'step.upload': 'Dokumente',
+  'step.facts': 'Fakten',
   'step.review': 'Prüfen',
   'step.gaps': 'Lücken & Export',
   'start.category': 'Batteriekategorie',

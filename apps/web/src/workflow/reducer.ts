@@ -1,13 +1,13 @@
-import type { FactSet, MappingProposal, PassportDraft, PassportMeta } from '@passwerk/core';
-import { newDraft } from '@passwerk/core';
+import type { Fact, FactSet, PassportDraft } from '@passwerk/core';
 import type { Language } from '../i18n/index.ts';
+import { type Project, projectFromMeta } from './project.ts';
 import {
   type Decision,
   type DecisionKey,
   decisionKey,
+  type FactEdit,
   type FileSummary,
   initialState,
-  proposalKey,
   type Step,
   type WorkflowState,
 } from './state.ts';
@@ -18,15 +18,12 @@ interface Stamped {
 
 export type Action = Stamped &
   (
-    | { type: 'startProject'; meta: PassportMeta }
+    | { type: 'setProject'; project: Project }
     | { type: 'importDraft'; draft: PassportDraft }
-    | {
-        type: 'filesIngested';
-        summaries: FileSummary[];
-        facts: FactSet;
-        proposals: MappingProposal[];
-      }
+    | { type: 'filesIngested'; summaries: FileSummary[]; facts: FactSet }
     | { type: 'fileRemoved'; name: string }
+    | { type: 'editFact'; factId: string; edit: FactEdit }
+    | { type: 'clearFactEdit'; factId: string }
     | { type: 'decide'; decision: Decision }
     | { type: 'clearDecision'; key: DecisionKey }
     | { type: 'setLanguage'; language: Language }
@@ -45,52 +42,75 @@ function mergeFacts(a: FactSet | null, b: FactSet): FactSet {
   };
 }
 
-function withoutFile(facts: FactSet | null, name: string): FactSet | null {
+function withoutFiles(facts: FactSet | null, names: Set<string>): FactSet | null {
   if (!facts) return null;
   return {
-    facts: facts.facts.filter((f) => f.source.file !== name),
-    tables: facts.tables.filter((t) => t.source.file !== name),
-    documents: facts.documents.filter((d) => d.name !== name),
+    facts: facts.facts.filter((f) => !names.has(f.source.file)),
+    tables: facts.tables.filter((t) => !names.has(t.source.file)),
+    documents: facts.documents.filter((d) => !names.has(d.name)),
   };
 }
 
-/** Drops accept/reject/edit decisions whose proposal no longer exists; manual ones stay. */
+const factIds = (facts: FactSet | null): Set<string> =>
+  new Set((facts ?? EMPTY_FACTS).facts.map((f) => f.id));
+
+/**
+ * Drops accept/reject/edit decisions whose fact no longer exists; manual ones stay (a value the
+ * reviewer typed does not vanish with a document; its provenance is simply gone).
+ */
 function pruneDecisions(
   decisions: Record<DecisionKey, Decision>,
-  proposals: MappingProposal[],
+  facts: FactSet | null,
 ): Record<DecisionKey, Decision> {
-  const live = new Set(proposals.map((p) => `${proposalKey(p)}|${p.factId}`));
+  const live = factIds(facts);
   const out: Record<DecisionKey, Decision> = {};
   for (const [key, d] of Object.entries(decisions)) {
-    if (d.kind === 'manual' || live.has(`${key}|${d.factId}`)) out[key] = d;
+    if (d.kind === 'manual' || live.has(d.factId)) out[key] = d;
   }
   return out;
+}
+
+function pruneEdits(
+  edits: Record<string, FactEdit>,
+  facts: FactSet | null,
+): Record<string, FactEdit> {
+  const live = factIds(facts);
+  return Object.fromEntries(Object.entries(edits).filter(([id]) => live.has(id)));
 }
 
 /**
  * Fact ids are `${document}#${page}:${ordinal}` with no content hash, so re-uploading a file
- * under the same name regenerates the very ids the reviewer already decided on. `pruneDecisions`
- * therefore keeps a decision that now describes a value nobody looked at. The document hash is
- * the only thing that can tell the two apart: when it changed, every non-manual decision that
- * came from that file goes, matched against the proposals as they were *before* the re-upload.
+ * under the same name regenerates the very ids the reviewer already decided on. The document
+ * hash is the only thing that can tell the two apart: when it changed, every non-manual decision
+ * and every edit that came from that file goes, matched against the facts as they were *before*
+ * the re-upload.
  */
+function fileOfFact(facts: FactSet | null, factId: string): string | undefined {
+  return (facts ?? EMPTY_FACTS).facts.find((f: Fact) => f.id === factId)?.source.file;
+}
+
 function withoutChangedFiles(
-  decisions: Record<DecisionKey, Decision>,
-  previousProposals: MappingProposal[],
+  state: WorkflowState,
   changed: Set<string>,
-): Record<DecisionKey, Decision> {
-  if (changed.size === 0) return decisions;
-  const out: Record<DecisionKey, Decision> = {};
-  for (const [key, d] of Object.entries(decisions)) {
+): { decisions: Record<DecisionKey, Decision>; factEdits: Record<string, FactEdit> } {
+  if (changed.size === 0) return { decisions: state.decisions, factEdits: state.factEdits };
+  const decisions: Record<DecisionKey, Decision> = {};
+  for (const [key, d] of Object.entries(state.decisions)) {
     if (d.kind === 'manual') {
-      out[key] = d;
+      decisions[key] = d;
       continue;
     }
-    const from = previousProposals.find((p) => p.factId === d.factId && proposalKey(p) === key);
-    if (from?.source.some((s) => changed.has(s.file))) continue;
-    out[key] = d;
+    const file = fileOfFact(state.facts, d.factId);
+    if (file !== undefined && changed.has(file)) continue;
+    decisions[key] = d;
   }
-  return out;
+  const factEdits = Object.fromEntries(
+    Object.entries(state.factEdits).filter(([id]) => {
+      const file = fileOfFact(state.facts, id);
+      return file === undefined || !changed.has(file);
+    }),
+  );
+  return { decisions, factEdits };
 }
 
 /** Names present before and after the upload whose document hash is not the same one. */
@@ -106,76 +126,68 @@ function changedFiles(before: FileSummary[], incoming: FileSummary[]): Set<strin
 
 function decide(state: WorkflowState, decision: Decision): Record<DecisionKey, Decision> {
   const key = decisionKey(decision.attributeId, decision.path);
-  const next = { ...state.decisions };
   // One decision per key: the group's other proposals are implicitly rejected by not being chosen.
-  next[key] = decision;
-  return next;
+  return { ...state.decisions, [key]: decision };
 }
 
 export function reduce(state: WorkflowState, action: Action): WorkflowState {
   const stamp = { updatedAt: action.at };
   switch (action.type) {
-    case 'startProject':
+    case 'setProject':
       return {
         ...state,
         ...stamp,
-        meta: action.meta,
-        baseDraft: newDraft(action.meta),
-        files: [],
-        facts: null,
-        proposals: [],
-        decisions: {},
-        generation: state.generation + 1,
-        step: 'upload',
+        project: { ...action.project, createdAt: state.project?.createdAt ?? action.at },
+        generation: state.project === null ? state.generation + 1 : state.generation,
       };
     case 'importDraft':
       return {
         ...state,
         ...stamp,
-        meta: action.draft.meta,
-        baseDraft: action.draft,
+        project: projectFromMeta(action.draft.meta),
+        importedDraft: action.draft,
         files: [],
         facts: null,
-        proposals: [],
+        factEdits: {},
         decisions: {},
         generation: state.generation + 1,
         step: 'review',
       };
     case 'filesIngested': {
       const replaced = new Set(action.summaries.map((s) => s.name));
-      let facts = state.facts;
-      for (const name of replaced) facts = withoutFile(facts, name);
-      const merged = mergeFacts(facts, action.facts);
-      const keptProposals = state.proposals.filter(
-        (p) => !p.source.some((s) => replaced.has(s.file)),
-      );
-      const proposals = [...keptProposals, ...action.proposals];
-      const kept = withoutChangedFiles(
-        state.decisions,
-        state.proposals,
-        changedFiles(state.files, action.summaries),
-      );
+      const merged = mergeFacts(withoutFiles(state.facts, replaced), action.facts);
+      const kept = withoutChangedFiles(state, changedFiles(state.files, action.summaries));
       return {
         ...state,
         ...stamp,
         files: [...state.files.filter((f) => !replaced.has(f.name)), ...action.summaries],
         facts: merged,
-        proposals,
-        decisions: pruneDecisions(kept, proposals),
+        factEdits: pruneEdits(kept.factEdits, merged),
+        decisions: pruneDecisions(kept.decisions, merged),
       };
     }
     case 'fileRemoved': {
-      const proposals = state.proposals.filter(
-        (p) => !p.source.some((s) => s.file === action.name),
-      );
+      const facts = withoutFiles(state.facts, new Set([action.name]));
       return {
         ...state,
         ...stamp,
         files: state.files.filter((f) => f.name !== action.name),
-        facts: withoutFile(state.facts, action.name),
-        proposals,
-        decisions: pruneDecisions(state.decisions, proposals),
+        facts,
+        factEdits: pruneEdits(state.factEdits, facts),
+        decisions: pruneDecisions(state.decisions, facts),
       };
+    }
+    case 'editFact': {
+      if (!factIds(state.facts).has(action.factId)) return state;
+      return {
+        ...state,
+        ...stamp,
+        factEdits: { ...state.factEdits, [action.factId]: action.edit },
+      };
+    }
+    case 'clearFactEdit': {
+      const { [action.factId]: _dropped, ...rest } = state.factEdits;
+      return { ...state, ...stamp, factEdits: rest };
     }
     case 'decide':
       return { ...state, ...stamp, decisions: decide(state, action.decision) };

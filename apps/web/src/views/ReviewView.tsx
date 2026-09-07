@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type LangText, type Language, pick, t } from '../i18n/index.ts';
-import type { InvalidDecision } from '../workflow/derive.ts';
+import type { InvalidDecision } from '../workflow/derive/index.ts';
 import type { Decision, DecisionKey } from '../workflow/state.ts';
 import { validateValue } from '../workflow/validateValue.ts';
 import { AddValueDialog } from './AddValueDialog.tsx';
@@ -220,7 +220,13 @@ export function ReviewView(props: ReviewViewProps) {
               {d.attributeId}
               {d.path ? `.${d.path}` : ''}
             </span>
-            <span className="font-mono">{d.kind === 'manual' ? d.value : ''}</span>
+            <span className="font-mono">
+              {d.kind === 'manual'
+                ? typeof d.value === 'string'
+                  ? d.value
+                  : JSON.stringify(d.value)
+                : ''}
+            </span>
             <span className="text-xs">{t(lang, 'review.manual')}</span>
             <Button
               size="sm"
