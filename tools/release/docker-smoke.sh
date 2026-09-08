@@ -62,6 +62,8 @@ LIST=$(curl -sS -X POST http://127.0.0.1:3777/mcp \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
 echo "$LIST" | grep -q '"generate_carrier"' || { echo "tools/list lacks generate_carrier: $LIST"; exit 1; }
+# Phase 7b (ADR D-037): the image carries the MCP App workbench the review_passport tool points at.
+echo "$LIST" | grep -q '"resourceUri":"ui://passwerk/workbench.html"' || { echo "review_passport lacks its ui resourceUri: $LIST"; exit 1; }
 echo "ok: authenticated tools/list"
 INGEST=$(curl -sS -X POST http://127.0.0.1:3777/mcp \
   -H "Authorization: Bearer $TOKEN" -H "Mcp-Session-Id: $SESSION" -H "Content-Type: application/json" \

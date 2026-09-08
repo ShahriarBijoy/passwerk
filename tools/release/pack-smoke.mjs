@@ -2,10 +2,11 @@
 /**
  * Proves the published packages work outside the monorepo (spec section 8.3): pack the four
  * packages, install the tarballs into an empty temp project, then run the server binary,
- * a stdio tools/list, `passwerk audit` and `passwerk carrier`. Exit 1 on the first failure.
+ * a stdio tools/list plus the workbench resource, `passwerk audit` and `passwerk carrier`.
+ * Exit 1 on the first failure.
  * The temp project is always removed, success or failure.
  *
- *   pnpm build && pnpm release:pack && node tools/release/pack-smoke.mjs
+ *   pnpm build && pnpm build:mcp-app && pnpm release:pack && node tools/release/pack-smoke.mjs
  *
  * Adjustment vs. the brief's single `npm install <tarball...>`: the `@passwerk` scope is not
  * published to the registry yet, so npm cannot resolve `@passwerk/core`'s dependency on
@@ -64,11 +65,12 @@ function shNode(args, cwd) {
 
 /**
  * Talks the stdio JSON-RPC handshake to the freshly installed server: initialize, then
- * tools/list. Frames newline-delimited JSON correctly across `data` chunks (keeps only the
- * trailing partial line in the buffer) and always kills the child before settling, on every
- * path: success, a malformed line, a process error or the timeout.
+ * tools/list (id 2) and a resources/read of the MCP App workbench (id 3, ADR D-037). Frames
+ * newline-delimited JSON correctly across `data` chunks (keeps only the trailing partial line
+ * in the buffer) and always kills the child before settling, on every path: success, a
+ * malformed line, a process error or the timeout. Resolves `{ tools, workbench }`.
  */
-async function listTools(serverBin, cwd) {
+async function stdioSurface(serverBin, cwd) {
   return await new Promise((resolvePromise, rejectPromise) => {
     const child = spawn(process.execPath, [serverBin], {
       cwd,
@@ -77,8 +79,9 @@ async function listTools(serverBin, cwd) {
     });
     let buf = '';
     let settled = false;
+    const result = {};
     const timer = setTimeout(
-      () => settle(rejectPromise, new SmokeError('tools/list timed out')),
+      () => settle(rejectPromise, new SmokeError('stdio tools/list + resources/read timed out')),
       30000,
     );
     timer.unref();
@@ -110,10 +113,19 @@ async function listTools(serverBin, cwd) {
             settle(rejectPromise, new SmokeError(`tools/list error: ${JSON.stringify(msg.error)}`));
             return;
           }
-          settle(
-            resolvePromise,
-            msg.result.tools.map((t) => t.name),
-          );
+          result.tools = msg.result.tools;
+        } else if (msg.id === 3) {
+          if (msg.error) {
+            settle(
+              rejectPromise,
+              new SmokeError(`resources/read workbench error: ${JSON.stringify(msg.error)}`),
+            );
+            return;
+          }
+          result.workbench = msg.result.contents[0];
+        }
+        if (result.tools && result.workbench) {
+          settle(resolvePromise, result);
           return;
         }
       }
@@ -133,6 +145,12 @@ async function listTools(serverBin, cwd) {
     });
     send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
+    send({
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'resources/read',
+      params: { uri: 'ui://passwerk/workbench.html' },
+    });
   });
 }
 
@@ -162,11 +180,22 @@ async function main() {
     if (v !== VERSION) fail(`passwerk-server --version printed "${v}", expected ${VERSION}`);
     console.log(`ok: passwerk-server --version = ${v}`);
 
-    // 2. stdio initialize + tools/list
-    const tools = await listTools(serverBin, dir);
-    if (tools.length !== 11 || !tools.includes('generate_carrier'))
-      fail(`tools/list: ${tools.join(', ')}`);
-    console.log(`ok: tools/list -> ${tools.length} tools`);
+    // 2. stdio initialize + tools/list + the MCP App workbench resource (ADR D-037)
+    const { tools, workbench } = await stdioSurface(serverBin, dir);
+    const names = tools.map((t) => t.name);
+    if (names.length !== 12 || !names.includes('generate_carrier'))
+      fail(`tools/list: ${names.join(', ')}`);
+    const review = tools.find((t) => t.name === 'review_passport');
+    if (review?._meta?.ui?.resourceUri !== 'ui://passwerk/workbench.html')
+      fail(`review_passport lacks _meta.ui.resourceUri: ${JSON.stringify(review?._meta)}`);
+    console.log(`ok: tools/list -> ${names.length} tools, review_passport carries the workbench`);
+    if (workbench.mimeType !== 'text/html;profile=mcp-app')
+      fail(`workbench mime is ${workbench.mimeType}`);
+    if (typeof workbench.text !== 'string' || workbench.text.length < 100000)
+      fail(
+        'workbench missing from the server tarball (run pnpm build:mcp-app before release:pack)',
+      );
+    console.log(`ok: ui://passwerk/workbench.html -> ${workbench.text.length} bytes`);
 
     // 3. audit a golden draft
     copyFileSync(
