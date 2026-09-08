@@ -6,13 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Key, type LangText, type Language, pick, t, verdictKey } from '../i18n/index.ts';
+import type { CarrierView } from '../workflow/derive/carrier.ts';
 import type { ExportKind } from '../workflow/exports.ts';
+import { QrPreview } from './parts/QrPreview.tsx';
 import { VerdictChip } from './parts/VerdictChip.tsx';
 
 export interface GapsExportViewProps {
   lang: Language;
   report: ValidationReport;
   gap: GapReport;
+  carrier: CarrierView;
   exportError?: LangText;
   onExport(kind: ExportKind): void;
 }
@@ -107,42 +110,42 @@ export function GapsExportView(props: GapsExportViewProps) {
             {t(lang, 'export.verdictNote', { verdict: t(lang, verdictKey(report.verdict)) })}
           </span>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button data-testid="export-aasJson" onClick={() => props.onExport('aasJson')}>
-            {t(lang, 'export.aasJson')}
-          </Button>
-          <Button data-testid="export-aasx" onClick={() => props.onExport('aasx')}>
-            {t(lang, 'export.aasx')}
-          </Button>
-          <Button
-            variant="outline"
-            data-testid="export-draft"
-            onClick={() => props.onExport('draft')}
-          >
-            {t(lang, 'export.draft')}
-          </Button>
-          <Button
-            variant="outline"
-            data-testid="export-gaps"
-            onClick={() => props.onExport('gaps')}
-          >
-            {t(lang, 'export.gaps')}
-          </Button>
-          <Button
-            variant="outline"
-            data-testid="export-html"
-            onClick={() => props.onExport('html')}
-          >
-            {t(lang, 'export.html')}
-          </Button>
-          <Button variant="outline" data-testid="export-qr" onClick={() => props.onExport('qr')}>
-            {t(lang, 'export.qr')}
-          </Button>
-          {props.exportError && (
-            <p className="w-full text-destructive text-sm">
-              {t(lang, 'export.failed', { reason: pick(lang, props.exportError) })}
-            </p>
-          )}
+        <CardContent className="grid gap-4 md:grid-cols-[1fr_auto]">
+          <div className="flex flex-wrap gap-2">
+            <Button data-testid="export-aasJson" onClick={() => props.onExport('aasJson')}>
+              {t(lang, 'export.aasJson')}
+            </Button>
+            <Button data-testid="export-aasx" onClick={() => props.onExport('aasx')}>
+              {t(lang, 'export.aasx')}
+            </Button>
+            <Button
+              variant="outline"
+              data-testid="export-draft"
+              onClick={() => props.onExport('draft')}
+            >
+              {t(lang, 'export.draft')}
+            </Button>
+            <Button
+              variant="outline"
+              data-testid="export-gaps"
+              onClick={() => props.onExport('gaps')}
+            >
+              {t(lang, 'export.gaps')}
+            </Button>
+            <Button
+              variant="outline"
+              data-testid="export-html"
+              onClick={() => props.onExport('html')}
+            >
+              {t(lang, 'export.html')}
+            </Button>
+            {props.exportError && (
+              <p className="w-full text-destructive text-sm">
+                {t(lang, 'export.failed', { reason: pick(lang, props.exportError) })}
+              </p>
+            )}
+          </div>
+          <QrPreview lang={lang} carrier={props.carrier} onDownload={() => props.onExport('qr')} />
         </CardContent>
       </Card>
 

@@ -259,6 +259,7 @@ export function App({ store, storageNotice }: AppProps) {
             lang={lang}
             report={derived.report}
             gap={derived.gap}
+            carrier={derived.carrier}
             {...(exportError ? { exportError } : {})}
             onExport={onExport}
           />
