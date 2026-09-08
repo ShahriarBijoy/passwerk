@@ -23,7 +23,8 @@ Usage: passwerk-server [--http [port]] [--host <host>] [--root <dir>]
   --root <dir>      restrict ingest paths and emit outDir to this directory (default: cwd, unrestricted)
   --version, --help
 
-Environment: PASSWERK_AUTH_TOKEN, PASSWERK_ROOT, PASSWERK_LOG_LEVEL=info|debug, PASSWERK_LOG_PAYLOADS=1
+Environment: PASSWERK_AUTH_TOKEN, PASSWERK_ROOT, PASSWERK_LOG_LEVEL=info|debug, PASSWERK_LOG_PAYLOADS=1,
+             PASSWERK_CLOCK=<ISO date-time> (fixed "now" for tests)
 `;
 
 interface Args {
@@ -81,6 +82,9 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   // The MCP App (ADR D-037): `pnpm build:mcp-app` writes packages/server/ui/workbench.html,
   // which ships in the tarball beside dist/. Read per request so a rebuild needs no restart.
   const ui = { html: () => readFile(new URL('../ui/workbench.html', import.meta.url), 'utf8') };
+  // A fixed clock lets the Playwright suites compare the server with core in Node (D-029).
+  const fixedClock = env['PASSWERK_CLOCK'];
+  const clock = (): string => fixedClock ?? new Date().toISOString();
 
   if (args.http) {
     const token = env['PASSWERK_AUTH_TOKEN'] ?? '';
@@ -98,6 +102,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
       log,
       logPayloads,
       ui,
+      clock,
     });
     const stop = () => {
       void handle.close().then(() => process.exit(0));
@@ -109,7 +114,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
 
   const { server } = createServer({
     fs: nodeFileSystem(args.root),
-    clock: new Date().toISOString(),
+    clock: clock(),
     log,
     logPayloads,
     ui,

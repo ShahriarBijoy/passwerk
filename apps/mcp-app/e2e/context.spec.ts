@@ -1,0 +1,67 @@
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { getSample, validateSchema } from '@passwerk/core';
+import { expect, test } from '@playwright/test';
+import { SERVER_URL, TOKEN } from '../playwright.config.ts';
+import { lastContext, openWorkbench } from './helpers.ts';
+
+/**
+ * The model-context track: after a decision in the workbench, the draft id the workbench pushed
+ * through updateModelContext resolves, in the same MCP session, to the draft the screen shows.
+ * A second client attaches to the browser's session id, as the host's model would.
+ */
+test('the model learns the draft id the workbench synced, in the same session', async ({
+  page,
+}) => {
+  const frame = await openWorkbench(page, 'ev-valid');
+  const first = await lastContext(page);
+  expect(first.structuredContent.verdict).toBe('valid');
+
+  // Change the draft: a manual nominal voltage the sample does not have.
+  await frame.getByTestId('add-value').click();
+  await frame.getByTestId('add-attribute').click();
+  await frame.getByRole('option', { name: /nominalVoltage/ }).click();
+  await frame.getByTestId('add-value-input').fill('401');
+  await frame.getByTestId('add-unit-input').fill('V');
+  await frame.getByTestId('add-submit').click();
+  await expect
+    .poll(async () => (await lastContext(page)).structuredContent.draftId, { timeout: 20_000 })
+    .not.toBe(first.structuredContent.draftId);
+  const second = await lastContext(page);
+
+  const sessionId = (await page.getByTestId('host-session').textContent()) ?? '';
+  expect(sessionId).not.toBe('');
+  const client = new Client({ name: 'passwerk-e2e-model', version: '0' });
+  // The SDK's client transport type and exactOptionalPropertyTypes disagree on sessionId.
+  const transport = new StreamableHTTPClientTransport(new URL(`${SERVER_URL}/mcp`), {
+    sessionId,
+    requestInit: { headers: { authorization: `Bearer ${TOKEN}` } },
+  }) as unknown as Transport;
+  await client.connect(transport);
+  try {
+    const gap = await client.callTool({
+      name: 'gap_report',
+      arguments: { draft: { draftId: second.structuredContent.draftId } },
+    });
+    const structured = gap.structuredContent as {
+      draftId: string;
+      completeness: { mandatory: { percent: string } };
+      items: { attributeId: string; status: string }[];
+    };
+    expect(structured.draftId).toBe(second.structuredContent.draftId);
+    expect(structured.completeness.mandatory.percent).toBe(
+      second.structuredContent.mandatoryCompleteness,
+    );
+    // The stored draft carries the workbench's change, not the sample's value.
+    const stored = await client.readResource({
+      uri: `passwerk://session/draft/${second.structuredContent.draftId}`,
+    });
+    const draft = validateSchema(JSON.parse((stored.contents[0] as { text: string }).text)).draft;
+    expect(draft?.attributes['nominalVoltage']?.value).toBe('401');
+    const sample = validateSchema(getSample('ev-valid')).draft;
+    expect(sample?.attributes['nominalVoltage']?.value).not.toBe('401');
+  } finally {
+    await client.close();
+  }
+});
