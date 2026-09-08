@@ -1,16 +1,10 @@
-import type {
-  BatteryCategory,
-  FactSet,
-  IngestError,
-  MappingProposal,
-  PassportDraft,
-  PassportMeta,
-} from '@passwerk/core';
+import type { FactSet, IngestError, MappingProposal, PassportDraft } from '@passwerk/core';
 import type { Language } from '../i18n/index.ts';
+import type { Project } from './project.ts';
 
-export const STATE_VERSION = 1 as const;
-export type Step = 'start' | 'upload' | 'review' | 'gaps';
-export const STEPS: readonly Step[] = ['start', 'upload', 'review', 'gaps'];
+export const STATE_VERSION = 2 as const;
+export type Step = 'project' | 'upload' | 'facts' | 'review' | 'gaps';
+export const STEPS: readonly Step[] = ['project', 'upload', 'facts', 'review', 'gaps'];
 
 export interface FileSummary {
   name: string;
@@ -20,6 +14,12 @@ export interface FileSummary {
   pages: number;
   lang: 'de' | 'en';
   error?: IngestError;
+}
+
+/** A reviewer's correction of one extracted fact; applied before proposals are derived. */
+export interface FactEdit {
+  value: string;
+  unit?: string;
 }
 
 /** `attributeId` alone, or `attributeId#path` for a composite leaf. */
@@ -42,7 +42,10 @@ export type Decision =
       kind: 'manual';
       attributeId: string;
       path?: string;
-      value: string;
+      /** Set when the value was mapped from a fact on the facts screen: keeps its provenance. */
+      factId?: string;
+      /** A string for scalars and composite leaves; an array of rows for an array composite. */
+      value: string | unknown[];
       unit?: string;
       /** ISO-8601. The reviewer's LastUpdate for a dynamic value; never synthesised. */
       recordedAt?: string;
@@ -52,16 +55,18 @@ export interface WorkflowState {
   version: typeof STATE_VERSION;
   step: Step;
   language: Language;
-  meta: PassportMeta | null;
-  baseDraft: PassportDraft | null;
+  project: Project | null;
+  /** A draft imported as JSON; its meta is replaced by the project's on derivation. */
+  importedDraft: PassportDraft | null;
   files: FileSummary[];
   facts: FactSet | null;
-  proposals: MappingProposal[];
+  factEdits: Record<string, FactEdit>;
   decisions: Record<DecisionKey, Decision>;
   /**
-   * Bumped whenever the active project is replaced. An upload started under one generation is
-   * discarded when it lands under another, so a slow ingest cannot pour its documents into a
-   * project the reviewer has since started over.
+   * Bumped when a project is created or replaced (the first `setProject` from `null`,
+   * `importDraft`, or `reset`) — not on every edit of an already-active project. An upload
+   * started under one generation is discarded when it lands under another, so a slow ingest
+   * cannot pour its documents into a project the reviewer has since started over.
    */
   generation: number;
   updatedAt: string;
@@ -69,13 +74,13 @@ export interface WorkflowState {
 
 export const initialState: WorkflowState = {
   version: STATE_VERSION,
-  step: 'start',
+  step: 'project',
   language: 'de',
-  meta: null,
-  baseDraft: null,
+  project: null,
+  importedDraft: null,
   files: [],
   facts: null,
-  proposals: [],
+  factEdits: {},
   decisions: {},
   generation: 0,
   updatedAt: '1970-01-01T00:00:00Z',
@@ -87,8 +92,4 @@ export function decisionKey(attributeId: string, path?: string): DecisionKey {
 
 export function proposalKey(p: MappingProposal): DecisionKey {
   return decisionKey(p.attributeId, p.path);
-}
-
-export function categoryOf(state: WorkflowState): BatteryCategory | undefined {
-  return state.meta?.category;
 }

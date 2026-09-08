@@ -1,7 +1,7 @@
 import { valueSchemaFor } from '@passwerk/core';
 import { type Attribute, getAttribute } from '@passwerk/rules';
 import { type LangText, t } from '../i18n/index.ts';
-import { leafSchemaAt } from './compositeSchema.ts';
+import { compositeSchemaOf, isArrayComposite, leafSchemaAt } from './compositeSchema.ts';
 
 export type ValueCheck = { ok: true } | { ok: false; message: LangText };
 
@@ -28,6 +28,12 @@ const reasonOf = (issues: { message: string }[]): string => issues.map((i) => i.
  * and only blows up later inside `validate`. So the whole value is refused here, and a leaf
  * is checked against the schema its dotted path resolves to.
  *
+ * For an array composite, a parsed array value can be passed directly for validation. There is
+ * no production caller of this branch today: the row editor validates each row through
+ * `checkRows` before it ever builds a decision, so a bad row never reaches here. The branch is
+ * kept anyway because it guards the decision-level contract (whatever hands `validateValue` an
+ * already-parsed array, now or later, gets the same schema check the row editor relies on).
+ *
  * `recordedAt` is the reviewer's LastUpdate for a dynamic value, as the browser's
  * `datetime-local` input spells it. Only its parsability is checked; whether the instant is
  * plausible is L4's call (PW-PLAUS-011).
@@ -35,7 +41,7 @@ const reasonOf = (issues: { message: string }[]): string => issues.map((i) => i.
 export function validateValue(
   attributeId: string,
   path: string | undefined,
-  value: string,
+  value: string | unknown[],
   recordedAt?: string,
 ): ValueCheck {
   if (recordedAt !== undefined && Number.isNaN(new Date(recordedAt).getTime())) {
@@ -50,6 +56,13 @@ export function validateValue(
   const attribute = getAttribute(attributeId);
   if (!attribute) return OK;
   if (attribute.valueKind === 'composite') {
+    if (path === undefined && Array.isArray(value)) {
+      const schema = compositeSchemaOf(attributeId);
+      if (!schema || !isArrayComposite(attributeId))
+        return invalid(attribute, 'not a list composite');
+      const parsed = schema.safeParse(value);
+      return parsed.success ? OK : invalid(attribute, reasonOf(parsed.error.issues));
+    }
     if (path === undefined) {
       return {
         ok: false,
@@ -61,10 +74,11 @@ export function validateValue(
     }
     const leaf = leafSchemaAt(attributeId, path);
     if (!leaf) return invalid(attribute, `"${path}" is not a sub-field of this composite`);
-    const parsed = leaf.safeParse(value);
+    const parsed = leaf.safeParse(value as string);
     return parsed.success ? OK : invalid(attribute, reasonOf(parsed.error.issues));
   }
   if (path !== undefined) return OK;
+  if (Array.isArray(value)) return invalid(attribute, 'expected a single value');
   const result = valueSchemaFor(attribute).safeParse(value);
   return result.success ? OK : invalid(attribute, reasonOf(result.error.issues));
 }

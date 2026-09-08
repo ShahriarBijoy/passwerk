@@ -1,4 +1,4 @@
-import type { BatteryCategory, MappingProposal } from '@passwerk/core';
+import type { BatteryCategory, MappingProposal, PassportDraft } from '@passwerk/core';
 import { getAttribute, getAttributesForCategory } from '@passwerk/rules';
 import type { LangText, Language } from '../i18n/index.ts';
 import { compositeLeafPaths, isArrayComposite } from '../workflow/compositeSchema.ts';
@@ -81,16 +81,55 @@ export function compositeLeaves(attributeId: string): string[] {
 }
 
 /**
- * Attributes a reviewer can type a value for. A composite that is a list of rows is left out:
- * this slice enters composites field by field, and a list has no fields to name.
+ * Attributes a reviewer can enter a value for. An array composite is included: it is entered
+ * through the row editor rather than field by field or as a single scalar.
  */
 export function attributeChoices(category: BatteryCategory): { id: string; name: LangText }[] {
   return getAttributesForCategory(category, ['mandatory', 'conditional', 'optional'])
-    .filter((a) => !isArrayComposite(a.id))
     .map((a) => ({ id: a.id, name: a.name }))
     .sort((x, y) => x.id.localeCompare(y.id));
 }
 
 export function keyOf(d: Decision): DecisionKey {
   return decisionKey(d.attributeId, d.path);
+}
+
+export interface ArrayEntry {
+  attributeId: string;
+  name: LangText;
+  rows: number;
+  origin: 'draft' | 'manual';
+}
+
+/** Array composites that currently hold rows: from a manual decision first, else from the draft. */
+export function arrayEntries(
+  category: BatteryCategory,
+  draft: PassportDraft,
+  decisions: Record<DecisionKey, Decision>,
+): ArrayEntry[] {
+  return getAttributesForCategory(category, ['mandatory', 'conditional', 'optional'])
+    .filter((a) => isArrayComposite(a.id))
+    .flatMap((a): ArrayEntry[] => {
+      const d = decisions[a.id];
+      if (d?.kind === 'manual' && Array.isArray(d.value)) {
+        return [{ attributeId: a.id, name: a.name, rows: d.value.length, origin: 'manual' }];
+      }
+      const value = (draft.attributes as Record<string, { value?: unknown } | undefined>)[a.id]
+        ?.value;
+      return Array.isArray(value)
+        ? [{ attributeId: a.id, name: a.name, rows: value.length, origin: 'draft' }]
+        : [];
+    })
+    .sort((x, y) => x.attributeId.localeCompare(y.attributeId));
+}
+
+/** The rows an editor should open with for an array composite. */
+export function currentRows(
+  attributeId: string,
+  draft: PassportDraft,
+  decisions: Record<DecisionKey, Decision>,
+): unknown {
+  const d = decisions[attributeId];
+  if (d?.kind === 'manual' && Array.isArray(d.value)) return d.value;
+  return (draft.attributes as Record<string, { value?: unknown } | undefined>)[attributeId]?.value;
 }

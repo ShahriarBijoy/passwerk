@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from '@passwerk/core';
+import type { Fact } from '@passwerk/core';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -16,16 +16,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { type LangText, type Language, t } from '../i18n/index.ts';
+import { AddValueDialog } from '../views/AddValueDialog.tsx';
+import { FactsView } from '../views/FactsView.tsx';
 import { GapsExportView } from '../views/GapsExportView.tsx';
+import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
-import { buildGroups, manualEntries } from '../views/reviewModel.ts';
-import { StartView } from '../views/StartView.tsx';
+import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
 import { UploadView } from '../views/UploadView.tsx';
-import { derive } from '../workflow/derive.ts';
+import { type Derived, derive } from '../workflow/derive/index.ts';
+import { deriveProject } from '../workflow/derive/project.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
-import { buildExports } from '../workflow/exports.ts';
+import { buildExports, type ExportKind } from '../workflow/exports.ts';
+import { factStatuses } from '../workflow/factsModel.ts';
 import { ingestFiles } from '../workflow/ingest.ts';
-import { type Decision, type DecisionKey, STEPS, type Step } from '../workflow/state.ts';
+import { defaultProject, type Project } from '../workflow/project.ts';
+import {
+  type Decision,
+  type DecisionKey,
+  STEPS,
+  type Step,
+  type WorkflowState,
+} from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
 import { nowIso } from './clock.ts';
 import { downloadFile } from './download.ts';
@@ -49,13 +60,73 @@ function randomId(): string {
   return `${Math.random().toString(36).slice(2)}-${idCounter}`;
 }
 
+/**
+ * Owns the project screen's local draft state: the placeholder draft URN generated at mount
+ * and the in-progress project shown before "Create project" commits it to `state.project`.
+ * Keyed on `state.generation` by the caller so that a reset or an imported draft (both bump
+ * the generation) remounts this component and re-seeds a fresh URN and an empty project,
+ * instead of reusing the previous battery's identifier.
+ */
+function ProjectStep({
+  lang,
+  state,
+  asOf,
+  derived,
+  dispatch,
+  onImport,
+  onReset,
+}: {
+  lang: Language;
+  state: WorkflowState;
+  asOf: string;
+  derived: Derived | null;
+  dispatch: Store['dispatch'];
+  onImport(text: string): { ok: true } | { ok: false; message: LangText };
+  onReset(): void;
+}) {
+  const [draftUrn] = useState(() => `urn:passwerk:draft:${randomId()}`);
+  const [localProject, setLocalProject] = useState(() => defaultProject(draftUrn, ''));
+  const project = state.project ?? localProject;
+  const projectDerived = deriveProject(project, asOf);
+  const onChange = (p: Project) => {
+    if (state.project) dispatch({ type: 'setProject', project: p, at: nowIso() });
+    else setLocalProject(p);
+  };
+  const onContinue = () => {
+    const at = nowIso();
+    if (!state.project) dispatch({ type: 'setProject', project: localProject, at });
+    dispatch({ type: 'goTo', step: 'upload', at });
+  };
+
+  return (
+    <ProjectView
+      lang={lang}
+      project={project}
+      derived={projectDerived}
+      isNew={state.project === null}
+      draftUrn={draftUrn}
+      {...(state.project
+        ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
+        : {})}
+      onChange={onChange}
+      onContinue={onContinue}
+      onImport={onImport}
+      onResume={() => {
+        const step = derived === null ? 'project' : state.files.length ? 'review' : 'upload';
+        if (step !== 'project') dispatch({ type: 'goTo', step, at: nowIso() });
+      }}
+      onReset={onReset}
+    />
+  );
+}
+
 export function App({ store, storageNotice }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
+  const [mapFact, setMapFact] = useState<Fact | null>(null);
   const [asOf] = useState(() => nowIso());
-  const [defaultPassportId] = useState(() => `urn:passwerk:draft:${randomId()}`);
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
 
@@ -76,7 +147,7 @@ export function App({ store, storageNotice }: AppProps) {
   };
 
   const onFiles = async (files: File[]) => {
-    if (!state.meta || files.length === 0) return;
+    if (!derived || files.length === 0) return;
     // Read the generation before the awaits: by the time the ingest resolves the reviewer may
     // have started over or imported a draft, and these documents belong to a project that is
     // no longer on screen.
@@ -90,10 +161,7 @@ export function App({ store, storageNotice }: AppProps) {
           size: f.size,
         })),
       );
-      const out = await ingestFiles(inputs, {
-        category: state.meta.category,
-        workerSrc: pdfWorkerUrl,
-      });
+      const out = await ingestFiles(inputs, { workerSrc: pdfWorkerUrl });
       if (store.getState().generation !== generation) return;
       dispatch({ type: 'filesIngested', ...out, at: nowIso() });
     } catch (e) {
@@ -103,7 +171,7 @@ export function App({ store, storageNotice }: AppProps) {
     }
   };
 
-  const onExport = (kind: 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr') => {
+  const onExport = (kind: ExportKind) => {
     if (!derived) return;
     try {
       const out = buildExports(derived, lang);
@@ -111,8 +179,7 @@ export function App({ store, storageNotice }: AppProps) {
         setExportError(out.error);
         return;
       }
-      const index = { aasJson: 0, aasx: 1, draft: 2, gaps: 3, html: 4, qr: 5 }[kind];
-      const file = out.files[index];
+      const file = out.files[kind];
       if (kind === 'qr' && !file) {
         setExportError(
           out.carrierError ?? {
@@ -130,51 +197,33 @@ export function App({ store, storageNotice }: AppProps) {
   };
 
   const reachable = (step: Step): boolean => {
-    if (step === 'start') return true;
-    if (step === 'upload') return state.meta !== null;
-    return state.baseDraft !== null;
+    if (step === 'project') return true;
+    if (step === 'upload')
+      return state.project !== null && deriveProject(state.project, asOf).meta !== null;
+    if (step === 'facts') return state.facts !== null && derived !== null;
+    return derived !== null;
   };
 
   const accepted = Object.values(state.decisions).filter((d) => d.kind !== 'reject').length;
-  const groups = buildGroups(state.proposals, state.decisions);
+  const groups = buildGroups(derived?.proposals ?? [], state.decisions);
   const pending = groups.filter((g) => !g.decision).length;
 
   const view = (() => {
     switch (state.step) {
-      case 'start':
+      case 'project':
         return (
-          <StartView
+          <ProjectStep
+            key={state.generation}
             lang={lang}
-            defaultPassportId={defaultPassportId}
-            {...(state.meta
-              ? {
-                  resume: {
-                    category: state.meta.category,
-                    files: state.files.map((f) => f.name),
-                    updatedAt: state.updatedAt,
-                  },
-                }
-              : {})}
-            onStart={({ category, passportId }) => {
-              const at = nowIso();
-              dispatch({
-                type: 'startProject',
-                meta: { schemaVersion: SCHEMA_VERSION, category, passportId, createdAt: at },
-                at,
-              });
-            }}
+            state={state}
+            asOf={asOf}
+            derived={derived}
+            dispatch={dispatch}
             onImport={(text) => {
               const r = importDraftJson(text);
               if (r.ok) dispatch({ type: 'importDraft', draft: r.draft, at: nowIso() });
               return r.ok ? { ok: true } : { ok: false, message: r.message };
             }}
-            onResume={() =>
-              dispatch({
-                type: 'goTo',
-                step: state.baseDraft ? (state.files.length ? 'review' : 'upload') : 'upload',
-                at: nowIso(),
-              })
-            }
             onReset={reset}
           />
         );
@@ -184,20 +233,61 @@ export function App({ store, storageNotice }: AppProps) {
             lang={lang}
             files={state.files}
             busy={busy}
-            proposalCount={state.proposals.length}
+            proposalCount={derived?.proposals.length ?? 0}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
-            onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            onContinue={() => dispatch({ type: 'goTo', step: 'facts', at: nowIso() })}
           />
         );
+      case 'facts':
+        if (!derived) return null;
+        return (
+          <>
+            <FactsView
+              lang={lang}
+              facts={derived.facts.facts}
+              documents={state.files.map((f) => f.name)}
+              edits={state.factEdits}
+              statuses={factStatuses(derived.facts.facts, derived.proposals, state.decisions)}
+              onEdit={(factId, edit) => dispatch({ type: 'editFact', factId, edit, at: nowIso() })}
+              onClearEdit={(factId) => dispatch({ type: 'clearFactEdit', factId, at: nowIso() })}
+              onMap={setMapFact}
+              onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            />
+            {mapFact && (
+              <AddValueDialog
+                key={mapFact.id}
+                lang={lang}
+                category={derived.meta.category}
+                arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
+                open
+                hideTrigger
+                prefill={{
+                  factId: mapFact.id,
+                  value: mapFact.value ?? mapFact.raw,
+                  ...(mapFact.unit ? { unit: mapFact.unit } : {}),
+                }}
+                onOpenChange={(o) => {
+                  if (!o) setMapFact(null);
+                }}
+                onAdd={(d) => {
+                  dispatch({ type: 'decide', decision: d, at: nowIso() });
+                  setMapFact(null);
+                }}
+              />
+            )}
+          </>
+        );
       case 'review':
-        if (!state.meta || !derived) return null;
+        if (!derived) return null;
         return (
           <ReviewView
             lang={lang}
-            category={state.meta.category}
+            category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
+            arrays={arrayEntries(derived.meta.category, derived.draft, state.decisions)}
+            arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
             conflicts={derived.conflicts}
             invalidDecisions={derived.invalidDecisions}
             accepted={accepted}
@@ -215,6 +305,7 @@ export function App({ store, storageNotice }: AppProps) {
             lang={lang}
             report={derived.report}
             gap={derived.gap}
+            carrier={derived.carrier}
             {...(exportError ? { exportError } : {})}
             onExport={onExport}
           />
@@ -252,7 +343,7 @@ export function App({ store, storageNotice }: AppProps) {
           >
             {lang === 'de' ? 'EN' : 'DE'}
           </Button>
-          {state.meta && (
+          {state.project && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="ghost" data-testid="start-over">

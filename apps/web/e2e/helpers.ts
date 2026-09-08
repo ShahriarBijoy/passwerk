@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { BatteryCategory } from '@passwerk/core';
 import {
   applyMappings,
   extractFacts,
@@ -11,7 +10,7 @@ import {
   suggestMappings,
   validate,
 } from '@passwerk/core';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export const CLOCK = '2026-09-05T12:00:00.000Z';
 export const FIXTURES = join(
@@ -40,19 +39,32 @@ export async function pinClock(page: Page): Promise<void> {
   }, CLOCK);
 }
 
-export async function startProject(
-  page: Page,
-  opts: { category: BatteryCategory; passportId: string },
-): Promise<void> {
+export interface StartOptions {
+  identifier:
+    | { mode: 'https'; uri: string }
+    | { mode: 'gs1'; resolverBase: string; gtin: string; serial: string };
+}
+
+/**
+ * Fill the project screen and continue to the upload step. The default battery type is EV, so
+ * every caller gets the EV category assertion; a spec that needs a different battery type or
+ * energy value drives the `battery-type` / `energy-kwh` selects directly (see project.spec.ts).
+ */
+export async function startProject(page: Page, opts: StartOptions): Promise<void> {
   await page.goto('/');
-  if (opts.category !== 'EV') {
-    await page.getByTestId('category').click();
-    await page
-      .getByRole('option', { name: new RegExp(opts.category === 'LMT' ? 'LMT' : '2 kWh') })
-      .click();
+  // The pinned CLOCK is before 2027-02-18, so the derived category is always shown (verdict
+  // not_required) for the default EV battery type.
+  await expect(page.getByTestId('obligation-category')).toContainText('EV');
+  await page.getByTestId(`identifier-mode-${opts.identifier.mode}`).click();
+  if (opts.identifier.mode === 'https') {
+    await page.getByTestId('identifier-uri').fill(opts.identifier.uri);
+  } else {
+    await page.getByTestId('identifier-resolver').fill(opts.identifier.resolverBase);
+    await page.getByTestId('identifier-gtin').fill(opts.identifier.gtin);
+    await page.getByTestId('identifier-serial').fill(opts.identifier.serial);
   }
-  await page.getByTestId('passport-id').fill(opts.passportId);
-  await page.getByTestId('start').click();
+  await page.getByTestId('project-continue').click();
+  await expect(page.getByTestId('file-input')).toBeVisible();
 }
 
 export function fixturePaths(): string[] {
@@ -98,5 +110,5 @@ export async function expectedMusterwerk() {
   );
   const report = validate(applied.draft, { asOf: CLOCK });
   const gap = gapReport(applied.draft, { report, asOf: CLOCK });
-  return { bundle, proposals, decisions, report, gap };
+  return { bundle, facts, proposals, decisions, report, gap };
 }

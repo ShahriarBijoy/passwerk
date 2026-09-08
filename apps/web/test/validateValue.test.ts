@@ -67,4 +67,13 @@ describe('validateValue', () => {
   it('passes an unknown attribute through', () => {
     expect(validateValue('notAnAttribute', undefined, 'x')).toEqual({ ok: true });
   });
+
+  it('accepts a parsed array for an array composite and still refuses a raw string', () => {
+    expect(
+      validateValue('criticalRawMaterials', undefined, [{ name: 'Li', identifier: 'x' }]).ok,
+    ).toBe(true);
+    expect(validateValue('criticalRawMaterials', undefined, [{ name: '' }]).ok).toBe(false);
+    expect(validateValue('criticalRawMaterials', undefined, 'lithium').ok).toBe(false);
+    expect(validateValue('ratedCapacity', undefined, ['1']).ok).toBe(false);
+  });
 });

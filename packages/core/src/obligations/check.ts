@@ -211,7 +211,7 @@ export function checkObligations(input: ObligationInput): ObligationResult {
     return result(
       {
         verdict: 'not_required',
-        category: null,
+        category,
         reason: {
           en: `The battery passport obligation starts on ${event.date} (${event.legalRef}). A battery placed on the market on ${gateDate} is before that date.`,
           de: `Die Batteriepass-Pflicht beginnt am ${event.date} (${event.legalRef}). Eine am ${gateDate} in Verkehr gebrachte Batterie liegt davor.`,

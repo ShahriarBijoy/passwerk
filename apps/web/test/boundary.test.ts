@@ -21,6 +21,11 @@ function imports(file: string): string[] {
   return [...text.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1] ?? '');
 }
 
+// A relative import can climb any number of directories (`../../views/x`, from
+// `workflow/derive/` or `views/parts/`), not just one, so the leading-`../` part matches one or
+// more repetitions rather than the fixed `\.\.?\/` that only ever caught a single hop.
+const RELATIVE = (name: string) => new RegExp(`^(\\./|(\\.\\./)+)${name}`);
+
 const FORBIDDEN: Record<string, RegExp[]> = {
   workflow: [
     /^react/,
@@ -28,9 +33,9 @@ const FORBIDDEN: Record<string, RegExp[]> = {
     /^@\/app/,
     /^@\/components/,
     /^idb-keyval/,
-    /^\.\.?\/(views|app|components)/,
+    RELATIVE('(views|app|components)'),
   ],
-  views: [/^@\/app/, /^idb-keyval/, /^\.\.?\/app/, /main\.tsx$/],
+  views: [/^@\/app/, /^idb-keyval/, RELATIVE('app'), /main\.tsx$/],
   i18n: [/^react/, /^@\/(views|app|workflow|components)/],
 };
 
@@ -54,5 +59,17 @@ describe('import boundaries (spec section 3)', () => {
   it('nothing under src imports node:*', () => {
     const bad = files.filter((f) => imports(f).some((s) => s.startsWith('node:')));
     expect(bad.map((f) => relative(SRC, f))).toEqual([]);
+  });
+  it('the relative-import patterns catch a two-level climb, not just one', () => {
+    // A file two directories deep (e.g. `workflow/derive/x.ts` or `views/parts/x.tsx`) reaches
+    // a forbidden layer with `../../`, not `../`. Run the actual matcher over a synthetic
+    // import list to prove the pattern still rejects it.
+    const workflowRules = FORBIDDEN['workflow'] ?? [];
+    const viewsRules = FORBIDDEN['views'] ?? [];
+    const specs = ['../../views/X.tsx', './sibling.ts', '@passwerk/core'];
+    const workflowBad = specs.filter((spec) => workflowRules.some((r) => r.test(spec)));
+    expect(workflowBad).toEqual(['../../views/X.tsx']);
+    const viewsBad = ['../../app/store.ts'].filter((spec) => viewsRules.some((r) => r.test(spec)));
+    expect(viewsBad).toEqual(['../../app/store.ts']);
   });
 });

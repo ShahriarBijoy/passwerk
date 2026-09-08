@@ -94,8 +94,8 @@ describe('checkObligations', () => {
       placedOnMarketDate: '2026-11-01',
     });
     expect(r.verdict).toBe('not_required');
-    expect(r.category).toBeNull();
-    expect(r.mandatoryAttributes).toEqual([]);
+    expect(r.category).toBe('EV');
+    expect(r.mandatoryAttributes.length).toBeGreaterThan(0);
     expect(r.reason.en).toContain('2027-02-18');
   });
 

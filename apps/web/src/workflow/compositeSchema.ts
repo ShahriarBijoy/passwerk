@@ -7,7 +7,9 @@ import { COMPOSITE_SCHEMAS } from '@passwerk/core';
 export interface LeafSchema {
   safeParse(
     value: unknown,
-  ): { success: true } | { success: false; error: { issues: { message: string }[] } };
+  ):
+    | { success: true }
+    | { success: false; error: { issues: { message: string; path?: PropertyKey[] }[] } };
 }
 
 /**
@@ -109,4 +111,76 @@ export function compositeLeafPaths(attributeId: string): string[] {
 export function isArrayComposite(attributeId: string): boolean {
   const schema = COMPOSITE_SCHEMAS[attributeId];
   return schema !== undefined && unwrap(schema).def.type === 'array';
+}
+
+export interface ElementLeaf {
+  /** Dotted path inside one row. */
+  path: string;
+  /** `scalar`: one input; `list`: a newline-separated string array; `rows`: a nested row editor. */
+  kind: 'scalar' | 'list' | 'rows';
+  /** False when the leaf, or any object above it, is optional. */
+  required: boolean;
+  rows?: ElementLeaf[];
+  /** True for a scalar leaf generated from a `record` (multilingual) field: `de`/`en` by
+   * schema. A value can carry further language keys the schema does not enumerate; see
+   * `expandLeaves` in `rows.ts`, which uses this marker to find the ones to add. */
+  lang?: true;
+}
+
+/** The whole composite schema (an array for a row composite), for parsing a complete value. */
+export function compositeSchemaOf(attributeId: string): LeafSchema | null {
+  const schema = COMPOSITE_SCHEMAS[attributeId];
+  return schema ? (schema as unknown as LeafSchema) : null;
+}
+
+function isOptional(node: unknown): boolean {
+  const type = defOf(node).type;
+  return type === 'optional' || type === 'nullable' || type === 'default';
+}
+
+function leavesOfObject(
+  node: unknown,
+  prefix: string,
+  requiredAbove: boolean,
+  depth: number,
+): ElementLeaf[] {
+  if (depth > MAX_DEPTH) return [];
+  const out: ElementLeaf[] = [];
+  const { def } = unwrap(node);
+  for (const [key, child] of Object.entries(def.shape ?? {})) {
+    const path = prefix === '' ? key : `${prefix}.${key}`;
+    const required = requiredAbove && !isOptional(child);
+    const inner = unwrap(child);
+    if (inner.def.type === 'object') {
+      out.push(...leavesOfObject(inner.node, path, required, depth + 1));
+    } else if (inner.def.type === 'record') {
+      for (const lang of LANGUAGE_KEYS)
+        out.push({ path: `${path}.${lang}`, kind: 'scalar', required: false, lang: true });
+    } else if (inner.def.type === 'array') {
+      const element = unwrap(inner.def.element);
+      if (element.def.type === 'object') {
+        out.push({
+          path,
+          kind: 'rows',
+          required,
+          rows: leavesOfObject(element.node, '', true, depth + 1),
+        });
+      } else {
+        out.push({ path, kind: 'list', required });
+      }
+    } else if (!CONTAINERS.has(inner.def.type)) {
+      out.push({ path, kind: 'scalar', required });
+    }
+  }
+  return out;
+}
+
+/** The leaves of one row of an array composite; empty for anything else. */
+export function arrayElementLeaves(attributeId: string): ElementLeaf[] {
+  const schema = COMPOSITE_SCHEMAS[attributeId];
+  if (!schema) return [];
+  const { def } = unwrap(schema);
+  if (def.type !== 'array') return [];
+  const element = unwrap(def.element);
+  return element.def.type === 'object' ? leavesOfObject(element.node, '', true, 0) : [];
 }

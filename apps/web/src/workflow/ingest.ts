@@ -1,11 +1,4 @@
-import {
-  type BatteryCategory,
-  extractFacts,
-  type FactSet,
-  ingest,
-  type MappingProposal,
-  suggestMappings,
-} from '@passwerk/core';
+import { extractFacts, type FactSet, ingest } from '@passwerk/core';
 import type { FileSummary } from './state.ts';
 
 export interface IngestInput {
@@ -21,12 +14,12 @@ export interface IngestInput {
 export interface IngestOutcome {
   summaries: FileSummary[];
   facts: FactSet;
-  proposals: MappingProposal[];
 }
 
+/** Bytes in, summaries and facts out. Proposals are derived later from facts and category. */
 export async function ingestFiles(
   inputs: IngestInput[],
-  options: { category: BatteryCategory; workerSrc?: string },
+  options: { workerSrc?: string } = {},
 ): Promise<IngestOutcome> {
   const bundle = await ingest(
     inputs.map(({ name, bytes }) => ({ name, bytes })),
@@ -42,7 +35,5 @@ export async function ingestFiles(
     lang: d.lang,
     ...(d.error ? { error: d.error } : {}),
   }));
-  const facts = extractFacts(bundle);
-  const proposals = suggestMappings(facts, { category: options.category });
-  return { summaries, facts, proposals };
+  return { summaries, facts: extractFacts(bundle) };
 }

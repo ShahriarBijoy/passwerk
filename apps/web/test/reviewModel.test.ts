@@ -1,6 +1,7 @@
-import type { MappingProposal } from '@passwerk/core';
+import { getSample, type MappingProposal, type PassportDraft } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 import {
+  arrayEntries,
   attributeChoices,
   buildGroups,
   compositeLeaves,
@@ -66,15 +67,38 @@ describe('review model', () => {
     expect(leaves).not.toContain('name');
   });
 
-  it('skips repeated rows: a composite made of an array has no leaves and no choice', () => {
+  it('skips repeated rows in field-by-field entry: a composite made of an array has no leaves', () => {
     expect(compositeLeaves('hazardousSubstances')).toEqual([]);
     expect(compositeLeaves('carbonFootprintGeneralInformation')).toEqual([
       'referenceImpactUnit',
       'quantityOfMeasure',
     ]);
     const ids = attributeChoices('EV').map((a) => a.id);
-    expect(ids).not.toContain('criticalRawMaterials');
-    expect(ids).not.toContain('hazardousSubstances');
     expect(ids).toContain('manufacturerInformation');
+  });
+
+  it('attributeChoices includes array composites', () => {
+    expect(attributeChoices('EV').map((c) => c.id)).toContain('criticalRawMaterials');
+  });
+  it('arrayEntries lists array values from the draft and from manual decisions', () => {
+    const draft = getSample('ev-valid') as PassportDraft;
+    const fromDraft = arrayEntries('EV', draft, {});
+    expect(fromDraft.find((e) => e.attributeId === 'criticalRawMaterials')).toMatchObject({
+      origin: 'draft',
+    });
+    expect(fromDraft.every((e) => e.rows > 0)).toBe(true);
+    const withManual = arrayEntries('EV', draft, {
+      criticalRawMaterials: {
+        kind: 'manual',
+        attributeId: 'criticalRawMaterials',
+        value: [{ name: 'Li', identifier: 'x' }],
+      },
+    });
+    expect(withManual.find((e) => e.attributeId === 'criticalRawMaterials')).toEqual({
+      attributeId: 'criticalRawMaterials',
+      name: expect.objectContaining({ de: expect.any(String), en: expect.any(String) }),
+      rows: 1,
+      origin: 'manual',
+    });
   });
 });

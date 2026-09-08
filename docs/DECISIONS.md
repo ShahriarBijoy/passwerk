@@ -725,3 +725,48 @@ Standalone carrier requests return the typed input error through the existing ad
 
 **Consequences.** A missing QR never suppresses the passport or its gap report. GS1 keys
 equal to `.` or `..` are rejected because URL normalization removes those path segments.
+
+## D-036: Proposals are derived; project inputs and fact edits are state; the QR is a derivation (2026-09-07)
+
+**Context.** The first web slice stored proposals as inputs, computed once at upload with the
+category chosen on the start screen. The project screen makes the battery type editable and
+derives the category from `checkObligations`, so stored proposals would strand the moment the
+type changed. Reviewers also asked to correct extracted values before mapping (a mis-read
+decimal on a datasheet), and array composites had no entry path at all (#23). The QR needs an
+absolute https identifier, which the start screen could not help with. Separately, running
+`checkObligations` for a battery placed on the market before 2027-02-18 returned `category:
+null`: the date gate answers whether the duty has attached yet, but the passport's attribute
+sets are a property of the battery type, not of the date, and a supplier preparing ahead of
+the deadline still needs to know which data set applies. Returning `null` sent every pre-2027
+user straight to the voluntary-category fallback.
+
+**Decision.** State v2 keeps only inputs: `project` (battery type, role, energy, placed-on-market
+date, an optional hand-picked category in `manualCategory`, the identifier in one of four modes,
+`createdAt`), `importedDraft`, files, facts, `factEdits` keyed by fact id, and decisions.
+Proposals, the obligations result, the passport meta, the base draft, the validation and the QR
+are derived by memoised pure functions keyed on their own inputs, so a language toggle
+recomputes nothing and a battery type change re-proposes. A decision whose proposal is absent
+under the current category is ignored and returns with it. A fact edit is an override applied
+before `suggestMappings`; the marker is looked up at render time and never written into a fact.
+`checkObligations` now names the battery type's passport category (and its mandatory/conditional
+attribute sets) for a pre-2027-02-18 battery too, with verdict `not_required` and the existing
+"obligation starts on 2027-02-18" reason; `packages/core/test/obligations.test.ts` pins this.
+The project's `category` is therefore `obligations.category ?? project.manualCategory`: a derived
+category always wins, and the hand-picked one applies only when the check derives none (a truly
+voluntary passport, or before the obligations result exists). Array composites are entered as
+rows validated against core's composite schema before dispatch as one manual decision carrying
+the whole array. The QR is a derivation of the passport identifier, shown on the project and
+export screens; a non-https identifier shows core's reason (D-035 stands). A stored v1 session
+is reported as not restorable, never migrated.
+
+**Consequences.** `ingestFiles` returns summaries and facts only. `Decision.manual` gains an
+optional `factId` so a value mapped from the facts screen keeps provenance, stripped when that
+fact goes away. Chrome labels for core's battery types and roles live in the app dictionary;
+every legal string still comes from core. Issue #23 closes. The bring-your-own-key mode ships
+in its own PR with its own ADR. `setProject` never changes the step: it fires on every keystroke
+of the project form (so the form can hold an in-progress edit before it is ever committed to
+`state.project`), and navigation to `upload` happens only on Continue — the design spec's "step
+becomes upload on the first call" line describes an earlier intent, not the built behaviour. The
+QR panel on the project and export screens shows the payload URL the code carries but not the
+GS1 link's parsed parts (GTIN, serial, resolver), a deliberate simplification of design spec
+section 5.4.

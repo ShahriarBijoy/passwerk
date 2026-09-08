@@ -67,6 +67,83 @@ describe('AddValueDialog', () => {
     });
   });
 
+  it('enters an array composite through the row editor, not the plain value input', () => {
+    const onAdd = vi.fn();
+    mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('criticalRawMaterials');
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(1);
+    expect(screen.queryByTestId('add-value-input')).toBeNull();
+    fireEvent.change(screen.getByTestId('rows-field-name'), { target: { value: 'Li' } });
+    fireEvent.change(screen.getByTestId('rows-field-identifier'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'criticalRawMaterials',
+      value: [{ name: 'Li', identifier: 'x' }],
+    });
+  });
+
+  it('prefills the row editor from arrayRows so existing rows are not silently replaced', () => {
+    const onAdd = vi.fn();
+    const arrayRows = vi.fn(() => [
+      { name: 'Lithium', identifier: '7439-93-2' },
+      { name: 'Cobalt', identifier: '7440-48-4' },
+    ]);
+    mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} arrayRows={arrayRows} />);
+    fireEvent.click(screen.getByTestId('add-value'));
+    chooseAttribute('criticalRawMaterials');
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(2);
+    expect(arrayRows).toHaveBeenCalledWith('criticalRawMaterials');
+  });
+
+  it('prefills from a mapped fact and keeps the factId on the manual decision', () => {
+    const onAdd = vi.fn();
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={onAdd}
+        open
+        prefill={{ factId: 'a.pdf#1:0', value: '400', unit: 'V' }}
+        hideTrigger
+      />,
+    );
+    chooseAttribute('nominalVoltage');
+    fireEvent.click(screen.getByTestId('add-submit'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'nominalVoltage',
+      value: '400',
+      unit: 'V',
+      factId: 'a.pdf#1:0',
+    });
+  });
+
+  it('keeps the prefill factId on an array-composite decision, so the mapped fact shows as mapped', () => {
+    const onAdd = vi.fn();
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={onAdd}
+        open
+        prefill={{ factId: 'a.pdf#1:0', value: 'Li' }}
+        hideTrigger
+      />,
+    );
+    chooseAttribute('criticalRawMaterials');
+    fireEvent.change(screen.getByTestId('rows-field-name'), { target: { value: 'Li' } });
+    fireEvent.change(screen.getByTestId('rows-field-identifier'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'criticalRawMaterials',
+      factId: 'a.pdf#1:0',
+      value: [{ name: 'Li', identifier: 'x' }],
+    });
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);

@@ -1,6 +1,6 @@
 import { getSample, type PassportDraft, readAasxEnvironment } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
-import { derive } from '@/workflow/derive.ts';
+import { derive } from '@/workflow/derive/index.ts';
 import { buildExports, slug } from '@/workflow/exports.ts';
 import { reduce } from '@/workflow/reducer.ts';
 import { initialState } from '@/workflow/state.ts';
@@ -22,14 +22,8 @@ describe('exports', () => {
     const out = buildExports(d);
     if ('error' in out) throw new Error(out.error.en);
     expect(out.verdict).toBe('valid');
-    expect(out.files).toHaveLength(5);
-    expect(out.files.map((file) => file.name.split('.').at(-1))).toEqual([
-      'json',
-      'aasx',
-      'json',
-      'json',
-      'html',
-    ]);
+    expect(Object.keys(out.files).sort()).toEqual(['aasJson', 'aasx', 'draft', 'gaps', 'html']);
+    expect(out.files.qr).toBeUndefined();
     expect(out.carrierError?.en).toContain('too long for a QR code');
     expect(out.carrierError?.de).toBeTruthy();
   });
@@ -51,22 +45,28 @@ describe('exports', () => {
     if ('error' in out) throw new Error(out.error.en);
     expect(out.verdict).toBe('valid');
     const base = slug(d.draft.meta.passportId);
-    expect(out.files.map((f) => f.name)).toEqual([
-      `${base}.aas.json`,
-      `${base}.aasx`,
-      `${base}.draft.json`,
-      `${base}.gaps.json`,
-      `${base}.html`,
-      `${base}.qr.svg`,
+    expect(Object.keys(out.files).sort()).toEqual([
+      'aasJson',
+      'aasx',
+      'draft',
+      'gaps',
+      'html',
+      'qr',
     ]);
-    const json = JSON.parse(new TextDecoder().decode(out.files[0]?.bytes));
-    expect(readAasxEnvironment(out.files[1]?.bytes ?? new Uint8Array())).toEqual(json);
-    const html = new TextDecoder().decode(out.files[4]?.bytes);
+    expect(out.files.aasJson?.name).toBe(`${base}.aas.json`);
+    expect(out.files.aasx?.name).toBe(`${base}.aasx`);
+    expect(out.files.draft?.name).toBe(`${base}.draft.json`);
+    expect(out.files.gaps?.name).toBe(`${base}.gaps.json`);
+    expect(out.files.html?.name).toBe(`${base}.html`);
+    expect(out.files.qr?.name).toBe(`${base}.qr.svg`);
+    const json = JSON.parse(new TextDecoder().decode(out.files.aasJson?.bytes));
+    expect(readAasxEnvironment(out.files.aasx?.bytes ?? new Uint8Array())).toEqual(json);
+    const html = new TextDecoder().decode(out.files.html?.bytes);
     expect(html).toContain('id="lang-de" checked');
     expect(html).toContain('<span class="verdict valid">valid</span>');
-    expect(new TextDecoder().decode(out.files[5]?.bytes).startsWith('<svg')).toBe(true);
-    expect(out.files[4]?.type).toBe('text/html');
-    expect(out.files[5]?.type).toBe('image/svg+xml');
+    expect(new TextDecoder().decode(out.files.qr?.bytes).startsWith('<svg')).toBe(true);
+    expect(out.files.html?.type).toBe('text/html');
+    expect(out.files.qr?.type).toBe('image/svg+xml');
   });
   it('omits the QR file and reports a carrierError for a non-https passport id', () => {
     const sample = structuredClone(getSample('ev-valid')) as PassportDraft;
@@ -81,13 +81,8 @@ describe('exports', () => {
     const out = buildExports(d, 'de');
     if ('error' in out) throw new Error(out.error.en);
     const base = slug(d.draft.meta.passportId);
-    expect(out.files.map((f) => f.name)).toEqual([
-      `${base}.aas.json`,
-      `${base}.aasx`,
-      `${base}.draft.json`,
-      `${base}.gaps.json`,
-      `${base}.html`,
-    ]);
+    expect(Object.keys(out.files).sort()).toEqual(['aasJson', 'aasx', 'draft', 'gaps', 'html']);
+    expect(out.files.aasJson?.name).toBe(`${base}.aas.json`);
     expect(out.carrierError?.de).toBeTruthy();
     expect(out.carrierError?.en).toBeTruthy();
   });

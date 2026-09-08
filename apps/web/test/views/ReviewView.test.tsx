@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import { getSample, type PassportDraft } from '@passwerk/core';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ReviewView } from '@/views/ReviewView.tsx';
@@ -21,6 +22,8 @@ const groups = buildGroups(
   {},
 );
 
+const noArrays = { arrays: [], arrayRows: () => undefined };
+
 describe('ReviewView', () => {
   it('renders a group and dispatches accept', () => {
     const onDecide = vi.fn();
@@ -37,6 +40,7 @@ describe('ReviewView', () => {
         onDecide={onDecide}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     expect(screen.getByText('94.5')).toBeTruthy();
@@ -63,6 +67,7 @@ describe('ReviewView', () => {
         onDecide={onDecide}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     fireEvent.click(screen.getByTestId('edit'));
@@ -87,6 +92,7 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={onClear}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     const row = screen.getByTestId('invalid-decision');
@@ -94,6 +100,51 @@ describe('ReviewView', () => {
     expect(row.textContent).toContain('expected a decimal string');
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(onClear).toHaveBeenCalledWith('ratedCapacity');
+  });
+
+  it('renders a bilingual invalid-decision message in the current language', () => {
+    const bilingual = { de: 'Erwartet eine Dezimalzahl', en: 'Expected a decimal number' };
+    const { unmount } = mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        invalidDecisions={[{ key: 'ratedCapacity', message: bilingual }]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('invalid-decision').textContent).toContain(
+      'Expected a decimal number',
+    );
+    unmount();
+    mount(
+      <ReviewView
+        lang="de"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        invalidDecisions={[{ key: 'ratedCapacity', message: bilingual }]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('invalid-decision').textContent).toContain(
+      'Erwartet eine Dezimalzahl',
+    );
   });
 
   it('renders a mapping conflict with both values', () => {
@@ -117,6 +168,7 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     const conflict = screen.getByTestId('conflict');
@@ -152,6 +204,7 @@ describe('ReviewView', () => {
       verdict: 'invalid' as const,
       onClear: () => undefined,
       onContinue: () => undefined,
+      ...noArrays,
     };
 
     const { unmount } = mount(<ReviewView {...props} groups={groups} onDecide={onDecide} />);
@@ -190,8 +243,72 @@ describe('ReviewView', () => {
         onDecide={() => undefined}
         onClear={() => undefined}
         onContinue={() => undefined}
+        {...noArrays}
       />,
     );
     expect(screen.getByText('0 übernommen, 1 offen')).toBeTruthy();
+  });
+
+  it('lists array values and opens the row editor from an array-edit button', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={[]}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        arrays={[
+          {
+            attributeId: 'criticalRawMaterials',
+            name: { de: 'Kritische Rohstoffe', en: 'Critical raw materials' },
+            rows: 3,
+            origin: 'draft',
+          },
+        ]}
+        arrayRows={() =>
+          (getSample('ev-valid') as PassportDraft).attributes['criticalRawMaterials']?.value
+        }
+      />,
+    );
+    const entry = screen.getByTestId('array-entry');
+    expect(entry.textContent).toContain('3 rows');
+    fireEvent.click(screen.getByTestId('array-edit'));
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(3);
+  });
+
+  it('uses the singular form for a single row', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={[]}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        arrays={[
+          {
+            attributeId: 'criticalRawMaterials',
+            name: { de: 'Kritische Rohstoffe', en: 'Critical raw materials' },
+            rows: 1,
+            origin: 'draft',
+          },
+        ]}
+        arrayRows={() => []}
+      />,
+    );
+    const entry = screen.getByTestId('array-entry');
+    expect(entry.textContent).toContain('1 row');
+    expect(entry.textContent).not.toContain('1 rows');
   });
 });

@@ -2,84 +2,128 @@ import {
   type ApplyResult,
   applyMappings,
   buildReport,
-  type GapReport,
-  gapReport,
+  type FactSet,
   type MappingConflict,
   type MappingDecision,
+  type MappingProposal,
   type PassportDraft,
   type ValidationReport,
   validate,
   validateSchema,
 } from '@passwerk/core';
-import type { Decision, DecisionKey, WorkflowState } from './state.ts';
+import type { LangText } from '../../i18n/index.ts';
+import type { Decision, DecisionKey, FactEdit } from '../state.ts';
+import { validateValue } from '../validateValue.ts';
 
 /** A decision core refused to apply, kept out of the draft and reported to the reviewer. */
 export interface InvalidDecision {
   key: DecisionKey;
-  message: string;
+  /** Core's exception text (a plain string) for a decision `applyMappings`/`validate` rejected,
+   * or this app's own bilingual `validateValue` message for a fact edit an attribute rejects. */
+  message: string | LangText;
 }
 
-export interface Derived {
-  draft: PassportDraft;
-  conflicts: MappingConflict[];
-  invalidDecisions: InvalidDecision[];
-  report: ValidationReport;
-  gap: GapReport;
-  asOf: string;
-}
-
-function toMapping(state: WorkflowState, d: Decision): MappingDecision | null {
-  const path = d.path !== undefined ? { path: d.path } : {};
-  if (d.kind === 'reject') return null;
-  if (d.kind === 'manual') {
-    return {
-      attributeId: d.attributeId,
-      ...path,
-      value: d.value,
-      ...(d.unit ? { unit: d.unit } : {}),
-      ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
-      override: true,
-    };
-  }
-  const p = state.proposals.find(
-    (x) => x.factId === d.factId && x.attributeId === d.attributeId && x.path === d.path,
-  );
-  if (!p) return null;
-  const value = d.kind === 'edit' ? d.value : p.value;
-  const unit = d.kind === 'edit' ? d.unit : p.unit;
-  return {
-    attributeId: d.attributeId,
-    ...path,
-    value,
-    ...(unit ? { unit } : {}),
-    ...(d.kind === 'edit' && d.recordedAt ? { recordedAt: d.recordedAt } : {}),
-    source: p.source,
-    confidence: p.confidence,
-    override: true,
-  };
-}
-
-interface MappingEntry {
+export interface MappingEntry {
   key: DecisionKey;
   mapping: MappingDecision;
 }
 
-/** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
-function mappingEntries(state: WorkflowState): MappingEntry[] {
-  return Object.keys(state.decisions)
-    .sort()
-    .map((key) => ({ key, decision: state.decisions[key] }))
-    .filter((e): e is { key: DecisionKey; decision: Decision } => e.decision !== undefined)
-    .map((e) => ({ key: e.key, mapping: toMapping(state, e.decision) }))
-    .filter((e): e is MappingEntry => e.mapping !== null);
+type ToMappingResult =
+  | { kind: 'mapping'; mapping: MappingDecision }
+  | { kind: 'invalid'; message: LangText }
+  /** Rejected, or waiting for its proposal to come back (a category change, or a fact edit
+   * that is still a valid value for its attribute): nothing to apply, nothing to report. */
+  | { kind: 'omit' };
+
+function toMapping(
+  d: Decision,
+  proposals: MappingProposal[],
+  facts: FactSet,
+  factEdits: Record<string, FactEdit>,
+): ToMappingResult {
+  const path = d.path !== undefined ? { path: d.path } : {};
+  if (d.kind === 'reject') return { kind: 'omit' };
+  if (d.kind === 'manual') {
+    const fact = d.factId !== undefined ? facts.facts.find((f) => f.id === d.factId) : undefined;
+    return {
+      kind: 'mapping',
+      mapping: {
+        attributeId: d.attributeId,
+        ...path,
+        value: d.value,
+        ...(d.unit ? { unit: d.unit } : {}),
+        ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
+        ...(fact ? { source: [fact.source] } : {}),
+        override: true,
+      },
+    };
+  }
+  const p = proposals.find(
+    (x) => x.factId === d.factId && x.attributeId === d.attributeId && x.path === d.path,
+  );
+  if (!p) {
+    // No proposal under the current category: usually the decision merely waits until its
+    // proposal is back (a battery-type change strands it, then revives it). But when the
+    // decision's fact still exists and carries a reviewer edit, the missing proposal can also
+    // mean core's `suggestMappings` dropped the fact because the edited value fails the
+    // attribute's own check (PW-L1-VALUE territory) — that must surface, not vanish silently.
+    const fact = facts.facts.find((f) => f.id === d.factId);
+    const edit = fact ? factEdits[d.factId] : undefined;
+    if (fact && edit) {
+      const check = validateValue(d.attributeId, d.path, edit.value);
+      if (!check.ok) return { kind: 'invalid', message: check.message };
+    }
+    return { kind: 'omit' };
+  }
+  const value = d.kind === 'edit' ? d.value : p.value;
+  const unit = d.kind === 'edit' ? d.unit : p.unit;
+  return {
+    kind: 'mapping',
+    mapping: {
+      attributeId: d.attributeId,
+      ...path,
+      value,
+      ...(unit ? { unit } : {}),
+      ...(d.kind === 'edit' && d.recordedAt ? { recordedAt: d.recordedAt } : {}),
+      source: p.source,
+      confidence: p.confidence,
+      override: true,
+    },
+  };
 }
 
-/** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
-export function decisionsToMappings(state: WorkflowState): MappingDecision[] {
-  return mappingEntries(state).map((e) => e.mapping);
+export interface MappingsResult {
+  entries: MappingEntry[];
+  /** Decisions stranded by a missing proposal whose underlying fact edit the attribute itself
+   * rejects: never applied, so never `applyMappings`'s or `validate`'s to blame. */
+  invalid: InvalidDecision[];
 }
 
-interface Applied {
+/**
+ * Accept, edit and manual decisions as core mapping decisions, in stable key order, plus the
+ * ones a fact edit stranded and invalidated. `factEdits` is optional: a caller with no interest
+ * in the invalid case (there is no fact edit to check against) can omit it and gets today's
+ * silent-wait behaviour for every unmatched decision.
+ */
+export function mappingEntries(
+  decisions: Record<DecisionKey, Decision>,
+  proposals: MappingProposal[],
+  facts: FactSet,
+  factEdits: Record<string, FactEdit> = {},
+): MappingsResult {
+  const entries: MappingEntry[] = [];
+  const invalid: InvalidDecision[] = [];
+  for (const key of Object.keys(decisions).sort()) {
+    const decision = decisions[key];
+    if (!decision) continue;
+    const result = toMapping(decision, proposals, facts, factEdits);
+    if (result.kind === 'mapping') entries.push({ key, mapping: result.mapping });
+    else if (result.kind === 'invalid') invalid.push({ key, message: result.message });
+  }
+  return { entries, invalid };
+}
+
+export interface Applied {
   draft: PassportDraft;
   conflicts: MappingConflict[];
   invalidDecisions: InvalidDecision[];
@@ -168,7 +212,7 @@ function foldOneByOne(base: PassportDraft, entries: MappingEntry[], asOf: string
  * happy path is one batch apply and one validate; only when that pair throws does the fold
  * above isolate the offending decisions and keep the rest.
  */
-function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
+export function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): Applied {
   try {
     const r = applyMappings(
       base,
@@ -179,23 +223,4 @@ function applyAll(base: PassportDraft, entries: MappingEntry[], asOf: string): A
   } catch {
     return foldOneByOne(base, entries, asOf);
   }
-}
-
-const cache = new WeakMap<WorkflowState, { asOf: string; derived: Derived | null }>();
-
-export function derive(state: WorkflowState, asOf: string): Derived | null {
-  const hit = cache.get(state);
-  if (hit && hit.asOf === asOf) return hit.derived;
-  let derived: Derived | null = null;
-  if (state.baseDraft) {
-    const { draft, conflicts, invalidDecisions, report } = applyAll(
-      state.baseDraft,
-      mappingEntries(state),
-      asOf,
-    );
-    const gap = gapReport(draft, { report, asOf });
-    derived = { draft, conflicts, invalidDecisions, report, gap, asOf };
-  }
-  cache.set(state, { asOf, derived });
-  return derived;
 }
