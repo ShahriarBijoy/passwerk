@@ -32,7 +32,7 @@ proves zero network calls.
 | `packages/server` | `@passwerk/server` | MCP server, stdio + Streamable HTTP. Adapter only, no domain logic |
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
 | `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
-| `apps/mcp-app` (Phase 7b) | | MCP App: the web app's review, gap and export views served as a `ui://` resource |
+| `apps/mcp-app` | `@passwerk/mcp-app` | MCP App: the web app's workflow in the host's iframe, served by the server as `ui://passwerk/workbench.html` (ADR D-037) |
 | `packaging` (Phase 7c) | | MCPB bundle, Codex plugin manifest, Claude connector submission checklist |
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
@@ -182,5 +182,17 @@ so no build is needed before `pnpm test`.
   meta, base draft, validation and QR (ADR D-036); `checkObligations` now names a pre-2027
   battery's passport category instead of `null`. Playwright covers the project, facts, row
   editor and QR tracks.
-- **Next:** bring-your-own-key for the web app (own PR, D-002 boundary), then Phase 7b, then 7c
-  (D-024 order).
+- **Phase 7b (`apps/mcp-app`): done.** The workbench is the web app inside the host's iframe: one
+  inlined HTML built from `apps/web/src` (`views`, `workflow`, `i18n`, `components`; the shell
+  takes its platform hooks as a prop) plus a bridge over `@modelcontextprotocol/ext-apps`. Core
+  runs in the iframe; the derived draft is stored through `validate_passport` one second after
+  the last decision and the model learns the draft id through `updateModelContext`; exports go
+  through the host's `downloadFile` or fall back to `emit_passport`. The server gains the twelfth
+  tool `review_passport` (`_meta.ui.resourceUri`) and `ui://passwerk/workbench.html` (empty CSP,
+  `ServerOptions.ui` loader, no SDK dependency), `PASSWERK_CLOCK`, and ships `ui/` in the
+  tarball and the Docker image. Playwright runs a dev-only host page against the real server over
+  Streamable HTTP (Musterwerk, golden, model-context, sovereignty). `pnpm build:mcp-app`,
+  `pnpm e2e:mcp-app`. The Claude Desktop measurements go into ADR D-037 from the probe
+  (`pnpm --filter @passwerk/mcp-app probe`).
+- **Next:** bring-your-own-key for the web app (own PR, D-002 boundary), then Phase 7c (D-024
+  order).

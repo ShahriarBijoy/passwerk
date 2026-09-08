@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.shahriarbijoy/passwerk",
   "title": "passwerk",
-  "description": "Offline EU Digital Battery Passport toolkit: ingest supplier documents, map, validate (AAS / IDTA 02035), gap report, emit AASX. No network, no model calls.",
+  "description": "Offline EU Digital Battery Passport toolkit: ingest supplier documents, map, validate (AAS / IDTA 02035), gap report, emit AASX; MCP App workbench for hosts that render ui:// resources. No network, no model calls.",
   "websiteUrl": "https://github.com/ShahriarBijoy/passwerk#readme",
   "repository": { "url": "https://github.com/ShahriarBijoy/passwerk", "source": "github" },
   "version": "0.1.0",

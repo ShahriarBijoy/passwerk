@@ -17,10 +17,17 @@ node packages/server/dist/bin.js --http 3777 --host 127.0.0.1
 | `PASSWERK_ROOT` or `--root` | directory `ingest_documents` may read and `emit_passport` may write |
 | `PASSWERK_LOG_LEVEL` | `info` (default) or `debug`; logs go to stderr as JSON lines |
 | `PASSWERK_LOG_PAYLOADS` | `1` logs tool names with input and output sizes (and payloads at `debug`); off by default |
+| `PASSWERK_CLOCK` | ISO date-time used as "now" for every session; for test suites only |
 
 Endpoints: `POST`, `GET`, `DELETE /mcp` (MCP Streamable HTTP, one session store per
 `Mcp-Session-Id`), `GET /healthz` (no auth). Without a token the process exits with code 2.
 DNS-rebinding protection is on when bound to a loopback address.
+
+Hosts that render MCP Apps (Claude web with a custom connector) show the passwerk workbench
+when the model calls `review_passport`: the server serves it as `ui://passwerk/workbench.html`
+(ADR D-037). The documents are read inside the workbench iframe; the draft reaches this server.
+A hosted connector is a convenience mode with the operator's retention policy, never an
+offline mode (ADR D-019).
 
 Client configuration (Claude Code):
 

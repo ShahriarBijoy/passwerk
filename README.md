@@ -61,9 +61,11 @@ Phase 7a (upload, review, gaps, export; ADR D-029). Phase 6 added the MCP server
 and the `passwerk` command line. Phase 7 added the data carrier (UID, GS1 Digital Link, QR SVG
 and PNG), the self-contained HTML passport sheet, a publishable build (`npx -y @passwerk/server`
 runs the bundled AAS SDK from a clean install), the Docker image and the Official MCP Registry
-entry (`io.github.shahriarbijoy/passwerk`; see `docs/RELEASE.md` for the publish status). Next:
-the rest of Phase 7a (project screen, facts screen, QR preview panel, BYOK), then 7b and 7c. See
-`docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
+entry (`io.github.shahriarbijoy/passwerk`; see `docs/RELEASE.md` for the publish status). Phase 7a
+completed the web app (project screen, facts screen, row editor, QR preview) and Phase 7b added
+the MCP App: the same workbench rendered inside Claude Desktop and Claude web through
+`review_passport` (ADR D-037). Next: bring-your-own-key for the web app, then Phase 7c
+(packaging). See `docs/BUILD_PLAN.md` and `docs/DECISIONS.md`.
 
 ## Packages
 
@@ -74,6 +76,7 @@ the rest of Phase 7a (project screen, facts screen, QR preview panel, BYOK), the
 | `@passwerk/server` | MCP server over stdio and Streamable HTTP: twelve tools, reference resources, workflow prompts; see [docs/install](docs/install/claude-code.md) and [skills/passwerk](skills/passwerk/SKILL.md) |
 | `@passwerk/cli` | `passwerk audit \| extract \| emit \| gaps \| obligations \| tools \| chat` with CI-friendly exit codes; see [the CLI reference](skills/passwerk/references/cli.md) |
 | `@passwerk/web` | Client-side web app: upload, review, gaps, export; the primary product (ADR D-019) |
+| `@passwerk/mcp-app` | The web app's workflow as an MCP App: served by the server as `ui://passwerk/workbench.html`, opened by `review_passport` in Claude Desktop and Claude web; documents stay in the iframe, the draft id stays in sync with the model (ADR D-037) |
 
 ## Command line
 
