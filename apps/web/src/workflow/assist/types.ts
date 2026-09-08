@@ -15,6 +15,18 @@ import type { LangText, Language } from '../../i18n/index.ts';
 
 export type AssistProvider = 'anthropic' | 'openai-compatible';
 
+/**
+ * What the reviewer typed into the assist panel. Plain data, so `views` can hold it without
+ * reaching into `app`; the endpoints it resolves to live in `app/assist/providers.ts`.
+ */
+export interface AssistConfig {
+  provider: AssistProvider;
+  model: string;
+  apiKey: string;
+  /** Required for `openai-compatible`; e.g. `http://localhost:11434/v1` for Ollama. */
+  baseUrl?: string;
+}
+
 /** One knowledge-base attribute as the model sees it. Public reference data only. */
 export interface CatalogueEntry {
   id: string;

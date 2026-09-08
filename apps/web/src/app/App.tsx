@@ -16,12 +16,17 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { type LangText, type Language, t } from '../i18n/index.ts';
 import { AddValueDialog } from '../views/AddValueDialog.tsx';
+import { AssistPanel } from '../views/AssistPanel.tsx';
 import { FactsView } from '../views/FactsView.tsx';
 import { GapsExportView } from '../views/GapsExportView.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
 import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
 import { UploadView } from '../views/UploadView.tsx';
+import { type SuggestionPrefill, suggestionPrefill } from '../workflow/assist/accept.ts';
+import { buildRequest } from '../workflow/assist/request.ts';
+import { runAssist } from '../workflow/assist/run.ts';
+import type { AssistConfig, AssistSuggestion } from '../workflow/assist/types.ts';
 import { type Derived, derive } from '../workflow/derive/index.ts';
 import { deriveProject } from '../workflow/derive/project.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
@@ -37,6 +42,7 @@ import {
   type WorkflowState,
 } from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
+import { DEFAULT_MODELS, endpointLabel } from './assist/providers.ts';
 import { nowIso } from './clock.ts';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 import type { Platform } from './platform.ts';
@@ -47,6 +53,8 @@ export interface AppProps {
   /** Download, persistence and pdf.js worker of the host environment (browser or MCP App). */
   platform: Platform;
   storageNotice?: 'unavailable' | 'version';
+  /** A key remembered on this device, read before mount so no effect has to fetch it. */
+  initialAssistKey?: string;
 }
 
 let idCounter = 0;
@@ -120,12 +128,21 @@ function ProjectStep({
   );
 }
 
-export function App({ store, platform, storageNotice }: AppProps) {
+export function App({ store, platform, storageNotice, initialAssistKey }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
   const [mapFact, setMapFact] = useState<Fact | null>(null);
+  const [assistPrefill, setAssistPrefill] = useState<SuggestionPrefill | null>(null);
+  const [assistConfig, setAssistConfig] = useState<AssistConfig>(() => ({
+    provider: 'anthropic',
+    model: DEFAULT_MODELS.anthropic,
+    apiKey: initialAssistKey ?? '',
+  }));
+  const [rememberKey, setRememberKey] = useState(initialAssistKey !== undefined);
+  const [assistRun, setAssistRun] = useState<{ controller: AbortController } | null>(null);
+  const [assistError, setAssistError] = useState<string | undefined>(undefined);
   const [asOf] = useState(() => nowIso());
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
@@ -173,6 +190,101 @@ export function App({ store, platform, storageNotice }: AppProps) {
       setBusy(false);
     }
   };
+
+  /**
+   * One assist run (ADR D-038). The request is built here so the disclosure panel shows exactly
+   * what a run would send, and the result becomes state the reviewer acts on — never a
+   * decision, and never a change to the draft.
+   */
+  const assistInput = () =>
+    derived && state.project
+      ? {
+          category: derived.meta.category,
+          language: lang,
+          facts: derived.facts,
+          proposals: derived.proposals,
+          decisions: state.decisions,
+        }
+      : null;
+
+  const onAssistRun = async () => {
+    const input = assistInput();
+    if (!input || !platform.assist) return;
+    const controller = new AbortController();
+    setAssistRun({ controller });
+    setAssistError(undefined);
+    try {
+      const client = platform.assist.client(assistConfig);
+      const result = await runAssist({ ...input, client }, controller.signal);
+      dispatch({
+        type: 'assistRan',
+        result,
+        provider: assistConfig.provider,
+        model: assistConfig.model,
+        at: nowIso(),
+      });
+      if (rememberKey && assistConfig.apiKey !== '')
+        await platform.assist.saveKey(assistConfig.apiKey);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      setAssistError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAssistRun(null);
+    }
+  };
+
+  const onRememberChange = (remember: boolean) => {
+    setRememberKey(remember);
+    if (!platform.assist) return;
+    if (remember && assistConfig.apiKey !== '') void platform.assist.saveKey(assistConfig.apiKey);
+    if (!remember) void platform.assist.clearKey();
+  };
+
+  const assistPanel = (() => {
+    const input = assistInput();
+    if (!platform.assist || !input) return undefined;
+    const { request } = buildRequest(input);
+    return (
+      <AssistPanel
+        lang={lang}
+        config={assistConfig}
+        onConfigChange={(c) =>
+          setAssistConfig(
+            // Switching provider carries the key over but not a model id the other one
+            // would not recognise.
+            c.provider === assistConfig.provider ? c : { ...c, model: DEFAULT_MODELS[c.provider] },
+          )
+        }
+        remember={rememberKey}
+        onRememberChange={onRememberChange}
+        disclosure={{
+          facts: request.facts.length,
+          proposals: request.proposals.length,
+          catalogue: request.catalogue.length,
+          endpoint: endpointLabel(assistConfig),
+          json: JSON.stringify(request, null, 2),
+        }}
+        assist={state.assist}
+        running={assistRun !== null}
+        {...(assistError === undefined ? {} : { error: assistError })}
+        onRun={() => void onAssistRun()}
+        onCancel={() => assistRun?.controller.abort()}
+        onAccept={(s: AssistSuggestion) => {
+          const prefill = derived ? suggestionPrefill(s, derived.facts) : null;
+          if (prefill) setAssistPrefill(prefill);
+        }}
+        onDismiss={(s: AssistSuggestion) =>
+          dispatch({
+            type: 'assistDismissed',
+            factId: s.factId,
+            attributeId: s.attributeId,
+            ...(s.path === undefined ? {} : { path: s.path }),
+            at: nowIso(),
+          })
+        }
+      />
+    );
+  })();
 
   const onExport = (kind: ExportKind) => {
     if (!derived) return;
@@ -296,6 +408,8 @@ export function App({ store, platform, storageNotice }: AppProps) {
             accepted={accepted}
             pending={pending}
             verdict={derived.report.verdict}
+            critiques={state.assist?.critiques ?? []}
+            {...(assistPanel ? { assistPanel } : {})}
             onDecide={(d: Decision) => dispatch({ type: 'decide', decision: d, at: nowIso() })}
             onClear={(key: DecisionKey) => dispatch({ type: 'clearDecision', key, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'gaps', at: nowIso() })}
@@ -379,6 +493,24 @@ export function App({ store, platform, storageNotice }: AppProps) {
       <ErrorBoundary lang={lang} onReset={reset}>
         {view}
       </ErrorBoundary>
+      {assistPrefill && derived && (
+        <AddValueDialog
+          key={`${assistPrefill.factId}|${assistPrefill.attributeId}`}
+          lang={lang}
+          category={derived.meta.category}
+          arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
+          open
+          hideTrigger
+          prefill={assistPrefill}
+          onOpenChange={(o) => {
+            if (!o) setAssistPrefill(null);
+          }}
+          onAdd={(d) => {
+            dispatch({ type: 'decide', decision: d, at: nowIso() });
+            setAssistPrefill(null);
+          }}
+        />
+      )}
       <Toaster />
     </div>
   );

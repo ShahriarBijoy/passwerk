@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ANTHROPIC_URL, buildCall, DEFAULT_MODELS, readText } from '@/app/assist/providers.ts';
+import {
+  ANTHROPIC_URL,
+  buildCall,
+  DEFAULT_MODELS,
+  endpointLabel,
+  readText,
+} from '@/app/assist/providers.ts';
 import type { Prompt } from '@/workflow/assist/prompt.ts';
 
 const PROMPT: Prompt = { system: 'you map things', user: 'here are the facts' };
@@ -101,5 +107,32 @@ describe('defaults', () => {
   it('names a model for each provider', () => {
     expect(DEFAULT_MODELS.anthropic).toBe('claude-sonnet-5');
     expect(DEFAULT_MODELS['openai-compatible'].length).toBeGreaterThan(0);
+  });
+});
+
+describe('endpointLabel', () => {
+  it('names the host the request will actually reach', () => {
+    expect(endpointLabel({ provider: 'anthropic', model: 'claude-sonnet-5', apiKey: 'x' })).toBe(
+      'api.anthropic.com',
+    );
+    expect(
+      endpointLabel({
+        provider: 'openai-compatible',
+        model: 'llama3',
+        apiKey: '',
+        baseUrl: 'http://localhost:11434/v1',
+      }),
+    ).toBe('localhost:11434');
+  });
+
+  it('echoes an unparseable base URL rather than pretending it knows the host', () => {
+    expect(
+      endpointLabel({
+        provider: 'openai-compatible',
+        model: 'llama3',
+        apiKey: '',
+        baseUrl: 'not a url',
+      }),
+    ).toBe('not a url');
   });
 });

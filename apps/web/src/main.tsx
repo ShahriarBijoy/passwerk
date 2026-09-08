@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App.tsx';
+import { loadAssistKey } from './app/assist/key.ts';
 import { nowIso } from './app/clock.ts';
 import { ErrorBoundary } from './app/ErrorBoundary.tsx';
 import { attachPersistence, clearState, loadState } from './app/persistence.ts';
@@ -10,6 +11,8 @@ import { createStore } from './workflow/store.ts';
 
 async function boot() {
   const loaded = await loadState();
+  // Read before mount so nothing has to fetch it from an effect after the first paint.
+  const assistKey = await loadAssistKey();
   const store = createStore(loaded.kind === 'state' ? loaded.state : initialState);
   if (loaded.kind !== 'unavailable') attachPersistence(store);
   const notice =
@@ -28,6 +31,7 @@ async function boot() {
         store={store}
         platform={browserPlatform}
         {...(notice ? { storageNotice: notice } : {})}
+        {...(assistKey === undefined ? {} : { initialAssistKey: assistKey })}
       />
     </ErrorBoundary>,
   );

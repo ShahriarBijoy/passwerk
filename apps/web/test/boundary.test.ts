@@ -82,4 +82,30 @@ describe('import boundaries (spec section 3)', () => {
     const viewsBad = ['../../app/store.ts'].filter((spec) => viewsRules.some((r) => r.test(spec)));
     expect(viewsBad).toEqual(['../../app/store.ts']);
   });
+
+  it('names a model endpoint only in app/assist', () => {
+    // apps/mcp-app builds its bundle from `views`, `workflow`, `i18n` and `components` plus
+    // its own `main`, and supplies no `Platform.assist`. Keeping every endpoint string inside
+    // `app/assist` is what makes that omission airtight: the iframe cannot bundle a URL it
+    // never imports, so the MCP App's sovereignty proof needs no exception (ADR D-038).
+    const marks = ['api.anthropic.com', '/chat/completions'];
+    const offenders = files.filter((f) => {
+      const rel = relative(SRC, f).split(sep).join('/');
+      if (rel.startsWith('app/assist/')) return false;
+      const text = readFileSync(f, 'utf8');
+      return marks.some((m) => text.includes(m));
+    });
+    expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it('keeps the assist transport out of the workflow layer', () => {
+    const assist = files.filter((f) =>
+      relative(SRC, f).split(sep).join('/').startsWith('workflow/assist/'),
+    );
+    expect(assist.length).toBeGreaterThan(0);
+    for (const f of assist) {
+      const bad = imports(f).filter((spec) => /app\//.test(spec) || /^https?:/.test(spec));
+      expect(bad, relative(SRC, f)).toEqual([]);
+    }
+  });
 });

@@ -5,7 +5,7 @@
  */
 
 import type { Prompt } from '../../workflow/assist/prompt.ts';
-import type { AssistProvider } from '../../workflow/assist/types.ts';
+import type { AssistConfig, AssistProvider } from '../../workflow/assist/types.ts';
 
 export const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 export const ANTHROPIC_VERSION = '2023-06-01';
@@ -19,13 +19,7 @@ export const DEFAULT_MODELS: Record<AssistProvider, string> = {
 /** Enough for a few dozen suggestions with a sentence each; the answer is a small JSON object. */
 const MAX_TOKENS = 4096;
 
-export interface AssistConfig {
-  provider: AssistProvider;
-  model: string;
-  apiKey: string;
-  /** Required for `openai-compatible`; e.g. `http://localhost:11434/v1` for Ollama. */
-  baseUrl?: string;
-}
+export type { AssistConfig };
 
 export interface AssistCall {
   url: string;
@@ -116,4 +110,15 @@ export function readText(provider: AssistProvider, answer: unknown): string {
     throw new Error('The answer carried no message content.');
   }
   return content;
+}
+
+/** The host a run would reach, for the disclosure panel. Display only; never a request. */
+export function endpointLabel(config: AssistConfig): string {
+  if (config.provider === 'anthropic') return new URL(ANTHROPIC_URL).host;
+  const base = config.baseUrl ?? '';
+  try {
+    return new URL(base).host;
+  } catch {
+    return base;
+  }
 }

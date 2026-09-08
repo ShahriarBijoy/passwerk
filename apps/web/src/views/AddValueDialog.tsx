@@ -32,8 +32,13 @@ export interface AddValueDialogProps {
   /** Existing rows for an array composite, so picking one that already holds data prefills
    * the row editor instead of silently replacing it. */
   arrayRows?(attributeId: string): unknown;
-  /** A fact from the facts screen: value and unit prefilled, provenance kept through `factId`. */
-  prefill?: { factId: string; value: string; unit?: string };
+  /**
+   * A fact from the facts screen: value and unit prefilled, provenance kept through `factId`.
+   * `attributeId` and `path` are set when the caller already knows the attribute — an accepted
+   * assist suggestion (ADR D-038) — so the reviewer confirms a choice instead of hunting for
+   * it. The value still comes from the fact, and the same validation runs either way.
+   */
+  prefill?: { factId: string; value: string; unit?: string; attributeId?: string; path?: string };
   open?: boolean;
   onOpenChange?(open: boolean): void;
   hideTrigger?: boolean;
@@ -47,8 +52,12 @@ export function AddValueDialog(props: AddValueDialogProps) {
     setOwnOpen(v);
     props.onOpenChange?.(v);
   };
-  const [attributeId, setAttributeId] = useState('');
-  const [leaf, setLeaf] = useState('');
+  const [attributeId, setAttributeId] = useState(prefill?.attributeId ?? '');
+  const [leaf, setLeaf] = useState(
+    () =>
+      prefill?.path ??
+      (prefill?.attributeId ? (compositeLeaves(prefill.attributeId)[0] ?? '') : ''),
+  );
   const [value, setValue] = useState(prefill?.value ?? '');
   const [unit, setUnit] = useState(prefill?.unit ?? '');
   const [recordedAt, setRecordedAt] = useState('');

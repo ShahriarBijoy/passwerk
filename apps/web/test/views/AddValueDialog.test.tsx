@@ -155,4 +155,51 @@ describe('AddValueDialog', () => {
     expect(onAdd).not.toHaveBeenCalled();
     expect(screen.getByTestId('value-error').textContent).toContain('Rated capacity');
   });
+
+  it('opens on an attribute the caller already chose, so an assist suggestion needs one confirm', () => {
+    const onAdd = vi.fn();
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={onAdd}
+        open
+        hideTrigger
+        prefill={{
+          factId: 'a.pdf#1:1',
+          value: '400',
+          unit: 'V',
+          attributeId: 'nominalVoltage',
+        }}
+      />,
+    );
+    expect(screen.getByTestId('add-attribute').textContent).toContain('nominalVoltage');
+    fireEvent.click(screen.getByTestId('add-submit'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'nominalVoltage',
+      factId: 'a.pdf#1:1',
+      value: '400',
+      unit: 'V',
+    });
+  });
+
+  it('preselects the composite leaf a suggestion named', () => {
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={vi.fn()}
+        open
+        hideTrigger
+        prefill={{
+          factId: 'a.pdf#1:2',
+          value: 'Musterwerk GmbH',
+          attributeId: 'manufacturerInformation',
+          path: 'address.cityTown',
+        }}
+      />,
+    );
+    expect(screen.getByTestId('add-leaf').textContent).toContain('address.cityTown');
+  });
 });
