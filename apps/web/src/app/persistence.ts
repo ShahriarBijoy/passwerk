@@ -15,8 +15,7 @@ export async function loadState(): Promise<LoadResult> {
     const raw = (await get(STORAGE_KEY)) as Partial<WorkflowState> | undefined;
     if (raw === undefined) return { kind: 'none' };
     if (raw.version !== STATE_VERSION) return { kind: 'version' };
-    // A state autosaved before the generation counter existed starts at 0.
-    return { kind: 'state', state: { ...(raw as WorkflowState), generation: raw.generation ?? 0 } };
+    return { kind: 'state', state: raw as WorkflowState };
   } catch {
     return { kind: 'unavailable' };
   }

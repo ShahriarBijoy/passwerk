@@ -23,14 +23,20 @@ import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
 import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
 import { UploadView } from '../views/UploadView.tsx';
-import { derive } from '../workflow/derive/index.ts';
+import { type Derived, derive } from '../workflow/derive/index.ts';
 import { deriveProject } from '../workflow/derive/project.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
 import { buildExports, type ExportKind } from '../workflow/exports.ts';
 import { factStatuses } from '../workflow/factsModel.ts';
 import { ingestFiles } from '../workflow/ingest.ts';
 import { defaultProject, type Project } from '../workflow/project.ts';
-import { type Decision, type DecisionKey, STEPS, type Step } from '../workflow/state.ts';
+import {
+  type Decision,
+  type DecisionKey,
+  STEPS,
+  type Step,
+  type WorkflowState,
+} from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
 import { nowIso } from './clock.ts';
 import { downloadFile } from './download.ts';
@@ -54,6 +60,66 @@ function randomId(): string {
   return `${Math.random().toString(36).slice(2)}-${idCounter}`;
 }
 
+/**
+ * Owns the project screen's local draft state: the placeholder draft URN generated at mount
+ * and the in-progress project shown before "Create project" commits it to `state.project`.
+ * Keyed on `state.generation` by the caller so that a reset or an imported draft (both bump
+ * the generation) remounts this component and re-seeds a fresh URN and an empty project,
+ * instead of reusing the previous battery's identifier.
+ */
+function ProjectStep({
+  lang,
+  state,
+  asOf,
+  derived,
+  dispatch,
+  onImport,
+  onReset,
+}: {
+  lang: Language;
+  state: WorkflowState;
+  asOf: string;
+  derived: Derived | null;
+  dispatch: Store['dispatch'];
+  onImport(text: string): { ok: true } | { ok: false; message: LangText };
+  onReset(): void;
+}) {
+  const [draftUrn] = useState(() => `urn:passwerk:draft:${randomId()}`);
+  const [localProject, setLocalProject] = useState(() => defaultProject(draftUrn, ''));
+  const project = state.project ?? localProject;
+  const projectDerived = deriveProject(project, asOf);
+  const onChange = (p: Project) => {
+    if (state.project) dispatch({ type: 'setProject', project: p, at: nowIso() });
+    else setLocalProject(p);
+  };
+  const onContinue = () => {
+    const at = nowIso();
+    if (!state.project) dispatch({ type: 'setProject', project: localProject, at });
+    dispatch({ type: 'goTo', step: 'upload', at });
+  };
+
+  return (
+    <ProjectView
+      lang={lang}
+      project={project}
+      derived={projectDerived}
+      isNew={state.project === null}
+      draftUrn={draftUrn}
+      {...(state.project
+        ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
+        : {})}
+      onChange={onChange}
+      onContinue={onContinue}
+      onImport={onImport}
+      onResume={() => {
+        const step = derived === null ? 'project' : state.files.length ? 'review' : 'upload';
+        if (step !== 'project') dispatch({ type: 'goTo', step, at: nowIso() });
+      }}
+      onReset={onReset}
+    />
+  );
+}
+
 export function App({ store, storageNotice }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
@@ -61,21 +127,8 @@ export function App({ store, storageNotice }: AppProps) {
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
   const [mapFact, setMapFact] = useState<Fact | null>(null);
   const [asOf] = useState(() => nowIso());
-  const [draftUrn] = useState(() => `urn:passwerk:draft:${randomId()}`);
-  const [localProject, setLocalProject] = useState(() => defaultProject(draftUrn, ''));
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
-  const project = state.project ?? localProject;
-  const projectDerived = deriveProject(project, asOf);
-  const onProjectChange = (p: Project) => {
-    if (state.project) dispatch({ type: 'setProject', project: p, at: nowIso() });
-    else setLocalProject(p);
-  };
-  const onProjectContinue = () => {
-    const at = nowIso();
-    if (!state.project) dispatch({ type: 'setProject', project: localProject, at });
-    dispatch({ type: 'goTo', step: 'upload', at });
-  };
 
   const fail = (e: unknown) => {
     const message = e instanceof Error ? e.message : String(e);
@@ -145,8 +198,9 @@ export function App({ store, storageNotice }: AppProps) {
 
   const reachable = (step: Step): boolean => {
     if (step === 'project') return true;
-    if (step === 'upload') return projectDerived.meta !== null;
-    if (step === 'facts') return state.facts !== null;
+    if (step === 'upload')
+      return state.project !== null && deriveProject(state.project, asOf).meta !== null;
+    if (step === 'facts') return state.facts !== null && derived !== null;
     return derived !== null;
   };
 
@@ -158,25 +212,17 @@ export function App({ store, storageNotice }: AppProps) {
     switch (state.step) {
       case 'project':
         return (
-          <ProjectView
+          <ProjectStep
+            key={state.generation}
             lang={lang}
-            project={project}
-            derived={projectDerived}
-            isNew={state.project === null}
-            draftUrn={draftUrn}
-            {...(state.project
-              ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
-              : {})}
-            onChange={onProjectChange}
-            onContinue={onProjectContinue}
+            state={state}
+            asOf={asOf}
+            derived={derived}
+            dispatch={dispatch}
             onImport={(text) => {
               const r = importDraftJson(text);
               if (r.ok) dispatch({ type: 'importDraft', draft: r.draft, at: nowIso() });
               return r.ok ? { ok: true } : { ok: false, message: r.message };
-            }}
-            onResume={() => {
-              const step = derived === null ? 'project' : state.files.length ? 'review' : 'upload';
-              if (step !== 'project') dispatch({ type: 'goTo', step, at: nowIso() });
             }}
             onReset={reset}
           />

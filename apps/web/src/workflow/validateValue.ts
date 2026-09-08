@@ -28,8 +28,11 @@ const reasonOf = (issues: { message: string }[]): string => issues.map((i) => i.
  * and only blows up later inside `validate`. So the whole value is refused here, and a leaf
  * is checked against the schema its dotted path resolves to.
  *
- * For an array composite, a parsed array value (from the row editor) can be passed directly
- * for validation.
+ * For an array composite, a parsed array value can be passed directly for validation. There is
+ * no production caller of this branch today: the row editor validates each row through
+ * `checkRows` before it ever builds a decision, so a bad row never reaches here. The branch is
+ * kept anyway because it guards the decision-level contract (whatever hands `validateValue` an
+ * already-parsed array, now or later, gets the same schema check the row editor relies on).
  *
  * `recordedAt` is the reviewer's LastUpdate for a dynamic value, as the browser's
  * `datetime-local` input spells it. Only its parsability is checked; whether the instant is

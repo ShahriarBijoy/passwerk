@@ -180,6 +180,60 @@ describe('App', () => {
     expect(store.getState().step).toBe('upload');
   });
 
+  it('disables the Dokumente step until a project exists', () => {
+    const store = createStore(initialState);
+    mount(<App store={store} />);
+    expect((screen.getByTestId('step-upload') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('disables the Fakten step when facts exist but the project derives no meta', () => {
+    const store = createStore(initialState);
+    // PORTABLE resolves no obligations category and the project has no manual category
+    // either, so `derive` returns null even though `state.facts` is set.
+    const project = {
+      ...defaultProject('urn:passwerk:test:portable-facts', AT),
+      batteryType: 'PORTABLE' as const,
+    };
+    store.dispatch({ type: 'setProject', project, at: AT });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    mount(<App store={store} />);
+    expect((screen.getByTestId('step-facts') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('start over re-seeds the project form instead of reusing the previous identifier', () => {
+    const store = createStore(initialState);
+    mount(<App store={store} />);
+    // Default mode is 'draft': capture the freshly generated placeholder URN before switching
+    // away from it, so it can be compared against the one generated after the reset.
+    const firstUrn = (screen.getByTestId('identifier-urn') as HTMLInputElement).value;
+    expect(firstUrn.startsWith('urn:passwerk:draft:')).toBe(true);
+
+    fireEvent.click(screen.getByTestId('identifier-mode-https'));
+    fireEvent.change(screen.getByTestId('identifier-uri'), {
+      target: { value: 'https://example.com/passport/1' },
+    });
+    fireEvent.click(screen.getByTestId('project-continue'));
+    expect(store.getState().project?.identifier).toEqual({
+      mode: 'https',
+      uri: 'https://example.com/passport/1',
+    });
+
+    fireEvent.click(screen.getByTestId('start-over'));
+    fireEvent.click(screen.getByTestId('start-over-confirm'));
+
+    expect(store.getState().project).toBeNull();
+    // Back on the project step in the default 'draft' mode: a freshly generated URN, not the
+    // https identifier just entered and not the same draft URN as before this reset.
+    const urnInput = screen.getByTestId('identifier-urn') as HTMLInputElement;
+    expect(urnInput.value.startsWith('urn:passwerk:draft:')).toBe(true);
+    expect(urnInput.value).not.toBe(firstUrn);
+  });
+
   it('resume stays on the project step when the derived meta is null', () => {
     const store = createStore(initialState);
     // PORTABLE resolves no obligations category and the project has no manual category either,

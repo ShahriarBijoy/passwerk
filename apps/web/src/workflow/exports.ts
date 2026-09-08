@@ -17,14 +17,6 @@ export interface ExportFile {
 }
 
 export type ExportKind = 'aasJson' | 'aasx' | 'draft' | 'gaps' | 'html' | 'qr';
-export const EXPORT_KINDS: readonly ExportKind[] = [
-  'aasJson',
-  'aasx',
-  'draft',
-  'gaps',
-  'html',
-  'qr',
-];
 
 export type ExportResult =
   | { verdict: Verdict; files: Partial<Record<ExportKind, ExportFile>>; carrierError?: LangText }
