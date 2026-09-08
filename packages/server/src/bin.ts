@@ -7,6 +7,7 @@ import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { DEFAULT_INGEST_LIMITS } from '@passwerk/core';
 import { nodeFileSystem } from './fs.js';
 import { startHttp } from './http.js';
 import { stderrLogger } from './logging.js';
@@ -119,7 +120,12 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
     logPayloads,
     ui,
   });
-  await server.connect(new StdioServerTransport());
+  // The SDK's stdio read buffer defaults to 10 MB per message; an inline document above that
+  // (a 16 MB base64 payload from the MCP App probe, measured in Claude Desktop) made the
+  // transport throw and the session end. Size it like the HTTP body cap: core's input limit
+  // plus base64 overhead.
+  const maxBufferSize = Math.ceil(DEFAULT_INGEST_LIMITS.maxInputBytes * 1.4);
+  await server.connect(new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize }));
   log('info', 'stdio transport connected', { root: args.root ?? process.cwd() });
   return -1;
 }
