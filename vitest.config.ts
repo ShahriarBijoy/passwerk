@@ -24,11 +24,12 @@ export default defineConfig({
       'packages/*/src/**/*.test.ts',
       'tools/*/test/**/*.test.ts',
       'apps/web/test/**/*.test.{ts,tsx}',
+      'apps/mcp-app/test/**/*.test.{ts,tsx}',
     ],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',
-      include: ['packages/*/src/**/*.ts', 'apps/web/src/**/*.{ts,tsx}'],
+      include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.{ts,tsx}'],
     },
   },
 });

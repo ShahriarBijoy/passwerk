@@ -12,10 +12,12 @@
   "scripts": {
     "build": "tsc -b && node packages/core/scripts/bundle-vendor.mjs",
     "build:web": "pnpm --filter @passwerk/web build",
+    "build:mcp-app": "pnpm --filter @passwerk/mcp-app build",
     "clean": "pnpm -r run clean && rimraf --glob \"packages/*/*.tsbuildinfo\"",
-    "typecheck": "tsc -b && tsc -p tsconfig.test.json && tsc -p apps/web/tsconfig.json",
+    "typecheck": "tsc -b && tsc -p tsconfig.test.json && tsc -p apps/web/tsconfig.json && tsc -p apps/mcp-app/tsconfig.json",
     "test": "vitest run",
     "e2e": "pnpm --filter @passwerk/web e2e",
+    "e2e:mcp-app": "pnpm --filter @passwerk/mcp-app e2e",
     "test:watch": "vitest",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

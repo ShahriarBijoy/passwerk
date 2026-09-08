@@ -1,0 +1,4 @@
+/* The web app's theme and Tailwind setup, plus its source tree as a class scan root so the
+   reused views get their utilities generated in this build too. */
+@import "../../web/src/index.css";
+@source "../../web/src";

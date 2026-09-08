@@ -9,6 +9,8 @@
     "includes": [
       "**",
       "!**/dist",
+      "!**/dist-host",
+      "!**/dist-probe",
       "!**/coverage",
       "!pnpm-lock.yaml",
       "!packages/rules/artefacts",
