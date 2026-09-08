@@ -14,7 +14,10 @@ calls; you do the semantic work. Before the first call, read `list_capabilities`
 
 1. **`check_obligations`**: battery type, role, energy in kWh, placed-on-market date. Confirm
    the category (EV, LMT, INDUSTRIAL_GT_2KWH) and the mandatory attribute set. Stop on
-   `not_required` and say why. Ask for missing input on `insufficient_input`.
+   `not_required` and say why. Ask for missing input on `insufficient_input`. A `not_required`
+   verdict with a non-null category means the passport is not yet required for that date but
+   the data set is already known (a supplier may prepare a voluntary passport ahead of it), so
+   the user may continue deliberately; only a null category means no passport data set applies.
 2. **`ingest_documents`** with `paths` (a directory or files; preferred) or `inline` base64.
    Then **`extract_facts`** with the returned `bundleId`, then **`suggest_mappings`** with the
    `factSetId` and the confirmed category.

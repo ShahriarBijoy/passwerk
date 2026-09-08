@@ -64,6 +64,13 @@ export interface ObligationResult {
   reason: LangText;
   /** Which input would settle an insufficient_input verdict. */
   missingInput: string[];
+  /**
+   * The passport data set this battery type would use, whether or not the duty has attached
+   * yet: null for a type outside the passport regime (portable, SLI, other) and for an
+   * industrial battery at or under 2 kWh, but non-null before 2027-02-18 too. A non-null
+   * category with `verdict: 'not_required'` means the passport is not yet mandatory for that
+   * date, not that no data set applies.
+   */
   category: BatteryCategory | null;
   mandatoryAttributes: string[];
   conditionalAttributes: string[];

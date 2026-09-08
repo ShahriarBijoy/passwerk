@@ -763,4 +763,10 @@ is reported as not restorable, never migrated.
 optional `factId` so a value mapped from the facts screen keeps provenance, stripped when that
 fact goes away. Chrome labels for core's battery types and roles live in the app dictionary;
 every legal string still comes from core. Issue #23 closes. The bring-your-own-key mode ships
-in its own PR with its own ADR.
+in its own PR with its own ADR. `setProject` never changes the step: it fires on every keystroke
+of the project form (so the form can hold an in-progress edit before it is ever committed to
+`state.project`), and navigation to `upload` happens only on Continue — the design spec's "step
+becomes upload on the first call" line describes an earlier intent, not the built behaviour. The
+QR panel on the project and export screens shows the payload URL the code carries but not the
+GS1 link's parsed parts (GTIN, serial, resolver), a deliberate simplification of design spec
+section 5.4.
