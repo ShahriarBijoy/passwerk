@@ -1,6 +1,6 @@
 # AAS conformance
 
-Generated: 2026-09-07T12:59:04Z
+Generated: 2026-09-08T14:04:52Z
 Oracle: aas-test-engines 1.0.3
 passwerk: @passwerk/core 0.1.0
 Parity: 16/16
