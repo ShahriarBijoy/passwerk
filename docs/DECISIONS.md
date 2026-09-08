@@ -816,8 +816,16 @@ session, because the SDK's stdio read buffer defaults to 10 MB per message. A Wo
 from the inlined `data:` URL failed (`error` event, no message); a Worker from a `blob:` URL and
 a dynamic `import()` of a `data:` URL both worked, so the shell re-wraps the inlined pdf.js
 worker as a Blob (`workerUrlOf`). Clipboard writes were swallowed until the resource requested
-`permissions.clipboardWrite`. The file input renders; whether the OS picker opens is confirmed
-by the workbench run (upload step).
+`permissions.clipboardWrite`.
+
+**Workbench run in Claude Desktop (2026-09-08, the Phase 7b definition of done).** The five
+Musterwerk documents entered through the file input (the OS picker opens), pdf.js ran in the
+iframe with the Blob worker (both PDFs show their page count), 114 proposals were derived, and
+the gaps screen showed 15 of 47 mandatory data points (31.9 %), the figure D-029 recorded from
+core in Node. The AASX export was saved to the Downloads folder through the host. Asked "what is
+the gap report for the current draft", Claude called `gap_report` on the synced id
+`drf_f2fca2876baa3f01` and answered with the same 15/47 and 32 open required attributes, so the
+model and the user look at one draft. Screenshots: `docs/screenshots/mcp-app-*.png`.
 
 **Consequences.** Twelve tools. The server tarball and the Docker image carry the workbench
 (`ui/`). CI builds it, runs the Playwright host page, and the pack and docker smokes read the
