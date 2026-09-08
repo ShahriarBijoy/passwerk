@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { type Key, type Language, t } from '../i18n/index.ts';
+import { type Key, type Language, t, uploadContinueLabel } from '../i18n/index.ts';
 import type { FileSummary } from '../workflow/state.ts';
 
 export interface UploadViewProps {
@@ -102,7 +102,7 @@ export function UploadView(props: UploadViewProps) {
           disabled={props.busy || props.files.every((f) => f.error)}
           onClick={props.onContinue}
         >
-          {t(lang, 'upload.continue', { count: props.proposalCount })}
+          {uploadContinueLabel(lang, props.proposalCount)}
         </Button>
       </CardContent>
     </Card>

@@ -213,6 +213,7 @@ export function App({ store, storageNotice }: AppProps) {
                 key={mapFact.id}
                 lang={lang}
                 category={derived.meta.category}
+                arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
                 open
                 hideTrigger
                 prefill={{

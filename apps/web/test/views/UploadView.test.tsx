@@ -35,6 +35,21 @@ describe('UploadView', () => {
     expect(onContinue).toHaveBeenCalled();
   });
 
+  it('uses the singular form for a single proposal', () => {
+    mount(
+      <UploadView
+        lang="en"
+        busy={false}
+        proposalCount={1}
+        files={[]}
+        onFiles={() => undefined}
+        onRemove={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Continue to facts (1 proposal)' })).toBeTruthy();
+  });
+
   it('passes chosen files to onFiles', () => {
     const onFiles = vi.fn();
     mount(

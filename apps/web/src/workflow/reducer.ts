@@ -55,8 +55,20 @@ const factIds = (facts: FactSet | null): Set<string> =>
   new Set((facts ?? EMPTY_FACTS).facts.map((f) => f.id));
 
 /**
+ * A manual decision's `factId` is just kept-for-display provenance, never a live binding: fact
+ * ids are `${document}#${page}:${ordinal}` with no content hash, so once the fact behind one is
+ * gone, letting the id survive would risk a later re-upload silently rebinding the decision to a
+ * different fact's data under the same id. The typed value stays; the provenance does not.
+ */
+function stripFactId(d: Extract<Decision, { kind: 'manual' }>): Decision {
+  const { factId: _dropped, ...rest } = d;
+  return rest;
+}
+
+/**
  * Drops accept/reject/edit decisions whose fact no longer exists; manual ones stay (a value the
- * reviewer typed does not vanish with a document; its provenance is simply gone).
+ * reviewer typed does not vanish with a document), but a manual decision's `factId` is stripped
+ * once its fact is gone.
  */
 function pruneDecisions(
   decisions: Record<DecisionKey, Decision>,
@@ -65,7 +77,11 @@ function pruneDecisions(
   const live = factIds(facts);
   const out: Record<DecisionKey, Decision> = {};
   for (const [key, d] of Object.entries(decisions)) {
-    if (d.kind === 'manual' || live.has(d.factId)) out[key] = d;
+    if (d.kind === 'manual') {
+      out[key] = d.factId !== undefined && !live.has(d.factId) ? stripFactId(d) : d;
+    } else if (live.has(d.factId)) {
+      out[key] = d;
+    }
   }
   return out;
 }
@@ -83,7 +99,8 @@ function pruneEdits(
  * under the same name regenerates the very ids the reviewer already decided on. The document
  * hash is the only thing that can tell the two apart: when it changed, every non-manual decision
  * and every edit that came from that file goes, matched against the facts as they were *before*
- * the re-upload.
+ * the re-upload; a manual decision from that file survives with its `factId` stripped, so it
+ * cannot rebind to whatever fact now sits at the same id.
  */
 function fileOfFact(facts: FactSet | null, factId: string): string | undefined {
   return (facts ?? EMPTY_FACTS).facts.find((f: Fact) => f.id === factId)?.source.file;
@@ -97,7 +114,8 @@ function withoutChangedFiles(
   const decisions: Record<DecisionKey, Decision> = {};
   for (const [key, d] of Object.entries(state.decisions)) {
     if (d.kind === 'manual') {
-      decisions[key] = d;
+      const file = d.factId === undefined ? undefined : fileOfFact(state.facts, d.factId);
+      decisions[key] = file !== undefined && changed.has(file) ? stripFactId(d) : d;
       continue;
     }
     const file = fileOfFact(state.facts, d.factId);

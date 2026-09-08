@@ -42,6 +42,7 @@ export const en: Record<keyof typeof de, string> = {
   'upload.error.undecodable': 'Text could not be decoded',
   'upload.error.limit_exceeded': 'File exceeds the size limit',
   'upload.continue': 'Continue to facts ({count} proposals)',
+  'upload.continue.one': 'Continue to facts (1 proposal)',
   'upload.empty': 'No files yet.',
   'facts.title': 'Extracted facts',
   'facts.hint':
@@ -65,6 +66,7 @@ export const en: Record<keyof typeof de, string> = {
   'facts.edited': 'edited',
   'facts.empty': 'No facts for this filter.',
   'facts.count': '{shown} of {total} facts',
+  'facts.count.one': '{shown} of 1 fact',
   'facts.continue': 'Continue to review',
   'review.title': 'Review proposals',
   'review.filter.pending': 'Pending',

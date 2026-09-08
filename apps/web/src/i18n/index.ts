@@ -25,3 +25,15 @@ export function verdictKey(verdict: 'valid' | 'valid_with_warnings' | 'invalid')
 export function rowsCount(lang: Language, count: number): string {
   return count === 1 ? t(lang, 'rows.count.one') : t(lang, 'rows.count', { count });
 }
+
+/** '1 of 3 facts' / singular '3 of 1 fact' when the total is exactly one. */
+export function factsCount(lang: Language, shown: number, total: number): string {
+  return total === 1
+    ? t(lang, 'facts.count.one', { shown })
+    : t(lang, 'facts.count', { shown, total });
+}
+
+/** 'Continue to facts (1 proposal)' singular, `upload.continue` otherwise. */
+export function uploadContinueLabel(lang: Language, count: number): string {
+  return count === 1 ? t(lang, 'upload.continue.one') : t(lang, 'upload.continue', { count });
+}

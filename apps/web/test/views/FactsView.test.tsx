@@ -5,6 +5,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { FactsView } from '@/views/FactsView.tsx';
 import { mount } from './render.tsx';
 
+/** Radix's Select ignores a synthetic click; the keyboard path works under jsdom. */
+function openSelect(testId: string): void {
+  fireEvent.keyDown(screen.getByTestId(testId), { key: 'ArrowDown' });
+}
+
 const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
   id,
   label: 'Nennkapazität',
@@ -56,6 +61,65 @@ describe('FactsView', () => {
     fireEvent.click(rowB.querySelector('[data-testid="fact-map"]') as HTMLElement);
     expect(onMap).toHaveBeenCalledWith(facts[1]);
   });
+  it("reopening the editor after a reset shows the fact's original value, not the discarded edit", () => {
+    const f = fact('a');
+    const props = {
+      lang: 'en' as const,
+      facts: [f],
+      documents: ['a.pdf'],
+      statuses: { a: { status: 'unmapped' as const } },
+      onEdit: () => undefined,
+      onClearEdit: () => undefined,
+      onMap: () => undefined,
+      onContinue: () => undefined,
+    };
+    const { rerender } = mount(<FactsView {...props} edits={{}} />);
+    fireEvent.click(screen.getByTestId('fact-edit'));
+    fireEvent.change(screen.getByTestId('fact-edit-value'), { target: { value: '999' } });
+    fireEvent.click(screen.getByTestId('fact-edit-save'));
+    // The reviewer's edit lands in state and is passed back down as a prop.
+    rerender(<FactsView {...props} edits={{ a: { value: '999' } }} />);
+    fireEvent.click(screen.getByTestId('fact-edit-reset'));
+    // The reset clears it; the parent passes an empty edits map back down.
+    rerender(<FactsView {...props} edits={{}} />);
+    fireEvent.click(screen.getByTestId('fact-edit'));
+    expect((screen.getByTestId('fact-edit-value') as HTMLInputElement).value).toBe('94.5');
+  });
+  it('falls back to "all documents" once the selected document disappears from the list', () => {
+    const props = {
+      lang: 'en' as const,
+      edits: {},
+      onEdit: () => undefined,
+      onClearEdit: () => undefined,
+      onMap: () => undefined,
+      onContinue: () => undefined,
+    };
+    const a = fact('a');
+    const b = fact('b', { source: { file: 'b.xlsx', page: 1 } });
+    const { rerender } = mount(
+      <FactsView
+        {...props}
+        facts={[a, b]}
+        documents={['a.pdf', 'b.xlsx']}
+        statuses={{ a: { status: 'unmapped' }, b: { status: 'unmapped' } }}
+      />,
+    );
+    openSelect('facts-document');
+    fireEvent.click(screen.getByRole('option', { name: 'b.xlsx' }));
+    expect(screen.getAllByTestId('fact-row')).toHaveLength(1);
+    // b.xlsx (and its facts) is removed elsewhere in the app; the filter still names it.
+    rerender(
+      <FactsView
+        {...props}
+        facts={[a]}
+        documents={['a.pdf']}
+        statuses={{ a: { status: 'unmapped' } }}
+      />,
+    );
+    const rows = screen.getAllByTestId('fact-row');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.getAttribute('data-fact')).toBe('a');
+  });
   it('renders German chrome and the count', () => {
     mount(
       <FactsView
@@ -72,5 +136,21 @@ describe('FactsView', () => {
     );
     expect(screen.getByText('Extrahierte Fakten')).toBeTruthy();
     expect(screen.getByTestId('facts-count').textContent).toContain('1');
+  });
+  it('uses the singular form when exactly one fact exists', () => {
+    mount(
+      <FactsView
+        lang="en"
+        facts={[fact('a')]}
+        documents={['a.pdf']}
+        edits={{}}
+        statuses={{ a: { status: 'unmapped' } }}
+        onEdit={() => undefined}
+        onClearEdit={() => undefined}
+        onMap={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    expect(screen.getByTestId('facts-count').textContent).toBe('1 of 1 fact');
   });
 });

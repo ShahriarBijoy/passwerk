@@ -7,15 +7,26 @@ export type FactStatus =
   | { status: 'proposed' }
   | { status: 'unmapped' };
 
-/** mapped: an accept, edit or manual decision names the fact; proposed: a proposal exists; else unmapped. */
+/**
+ * mapped: a manual decision with a factId always counts (there is no proposal to corroborate a
+ * value the reviewer typed); an accept or edit decision counts only when `proposals` still holds
+ * a matching entry (same factId, attributeId and path) — derivation drops the mapping otherwise,
+ * and the screen must not claim one the draft does not hold. proposed: a proposal exists; else
+ * unmapped.
+ */
 export function factStatuses(
   facts: Fact[],
   proposals: MappingProposal[],
   decisions: Record<DecisionKey, Decision>,
 ): Record<string, FactStatus> {
+  const corroborated = (d: Decision): boolean =>
+    proposals.some(
+      (p) => p.factId === d.factId && p.attributeId === d.attributeId && p.path === d.path,
+    );
   const mapped = new Map<string, string>();
   for (const d of Object.values(decisions)) {
     if (d.kind === 'reject' || d.factId === undefined) continue;
+    if (d.kind !== 'manual' && !corroborated(d)) continue;
     if (!mapped.has(d.factId)) mapped.set(d.factId, d.attributeId);
   }
   const proposed = new Set(proposals.map((p) => p.factId));

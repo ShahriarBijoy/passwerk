@@ -130,6 +130,25 @@ describe('reducer: facts and edits', () => {
     expect(r.factEdits).toEqual({});
     expect(Object.keys(r.decisions)).toEqual(['nominalVoltage']);
   });
+  it("fileRemoved strips a manual decision's factId when its fact is gone (the value survives, its provenance does not)", () => {
+    let s = withFile(start(), 'a.pdf');
+    s = reduce(s, {
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'nominalVoltage',
+        value: '400',
+        factId: 'a.pdf#1:0',
+      },
+      at: AT,
+    });
+    const r = reduce(s, { type: 'fileRemoved', name: 'a.pdf', at: AT });
+    expect(r.decisions['nominalVoltage']).toEqual({
+      kind: 'manual',
+      attributeId: 'nominalVoltage',
+      value: '400',
+    });
+  });
   it('re-uploading a file with a different hash drops its decisions and edits', () => {
     let s = withFile(start(), 'a.pdf', 'h1');
     s = reduce(s, { type: 'editFact', factId: 'a.pdf#1:0', edit: { value: '2' }, at: AT });
@@ -145,6 +164,25 @@ describe('reducer: facts and edits', () => {
     expect(changed.decisions).toEqual({});
     expect(changed.factEdits).toEqual({});
     expect(changed.facts?.facts).toHaveLength(1);
+  });
+  it("re-uploading a changed file strips a manual decision's factId (the value survives, its provenance does not)", () => {
+    let s = withFile(start(), 'a.pdf', 'h1');
+    s = reduce(s, {
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'nominalVoltage',
+        value: '400',
+        factId: 'a.pdf#1:0',
+      },
+      at: AT,
+    });
+    const changed = withFile(s, 'a.pdf', 'h2');
+    expect(changed.decisions['nominalVoltage']).toEqual({
+      kind: 'manual',
+      attributeId: 'nominalVoltage',
+      value: '400',
+    });
   });
   it('decide keeps one decision per key', () => {
     const s = withFile(start(), 'a.pdf');

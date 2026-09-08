@@ -13,6 +13,16 @@ import { mount } from './render.tsx';
 const { ingestFiles } = vi.hoisted(() => ({ ingestFiles: vi.fn() }));
 vi.mock('@/workflow/ingest.ts', () => ({ ingestFiles }));
 
+/** Radix's Select ignores a synthetic click; the keyboard path works under jsdom. */
+function openSelect(testId: string): void {
+  fireEvent.keyDown(screen.getByTestId(testId), { key: 'ArrowDown' });
+}
+
+function chooseAttribute(id: string): void {
+  openSelect('add-attribute');
+  fireEvent.click(screen.getByRole('option', { name: new RegExp(`\\(${id}\\)`) }));
+}
+
 const AT = '2026-09-05T12:00:00Z';
 
 const OUTCOME: IngestOutcome = {
@@ -101,6 +111,41 @@ describe('App', () => {
     fireEvent.click(continueButton);
     expect(store.getState().step).toBe('facts');
     expect(screen.getByText('Extracted facts')).toBeTruthy();
+  });
+
+  it('the facts-screen map dialog passes existing array rows through arrayRows', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:facts-arrayrows', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: OUTCOME.facts,
+      at: AT,
+    });
+    store.dispatch({
+      type: 'decide',
+      decision: {
+        kind: 'manual',
+        attributeId: 'criticalRawMaterials',
+        value: [
+          { name: 'Lithium', identifier: '7439-93-2' },
+          { name: 'Cobalt', identifier: '7440-48-4' },
+        ],
+      },
+      at: AT,
+    });
+    store.dispatch({ type: 'goTo', step: 'facts', at: AT });
+    mount(<App store={store} />);
+    fireEvent.click(screen.getByTestId('fact-map'));
+    chooseAttribute('criticalRawMaterials');
+    // Without `arrayRows` wired through, the row editor would open with a single empty row
+    // (the same regression AddValueDialog's `arrayRows` prop already guards against in
+    // ReviewView) and Save would silently replace the two rows above.
+    expect(screen.getAllByTestId('rows-row')).toHaveLength(2);
   });
 
   it('resumes to review when the project is valid and files exist', () => {

@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type Key, type Language, t } from '../i18n/index.ts';
+import { factsCount, type Key, type Language, t } from '../i18n/index.ts';
 import { type FactStatus, type FactsFilter, filterFacts } from '../workflow/factsModel.ts';
 import type { FactEdit } from '../workflow/state.ts';
 import { SourceRef } from './parts/SourceRef.tsx';
@@ -57,9 +57,16 @@ function FactRow({
   onMap(fact: Fact): void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(edit?.value ?? fact.value ?? fact.raw);
-  const [unit, setUnit] = useState(edit?.unit ?? fact.unit ?? '');
+  const [value, setValue] = useState('');
+  const [unit, setUnit] = useState('');
   const displayValue = edit?.value ?? fact.value ?? fact.raw;
+  const openEditor = () => {
+    // Seed from the current edit (or its absence) rather than once at mount, so a discarded
+    // edit does not resurface: a reset between two openings must show the fact's own value.
+    setValue(edit?.value ?? fact.value ?? fact.raw);
+    setUnit(edit?.unit ?? fact.unit ?? '');
+    setEditing(true);
+  };
   return (
     <TableRow data-testid="fact-row" data-fact={fact.id} data-status={status.status}>
       <TableCell>{fact.label}</TableCell>
@@ -120,12 +127,7 @@ function FactRow({
               {t(lang, 'facts.save')}
             </Button>
           ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              data-testid="fact-edit"
-              onClick={() => setEditing(true)}
-            >
+            <Button size="sm" variant="ghost" data-testid="fact-edit" onClick={openEditor}>
               {t(lang, 'facts.edit')}
             </Button>
           )}
@@ -151,7 +153,15 @@ function FactRow({
 export function FactsView(props: FactsViewProps) {
   const { lang } = props;
   const [filter, setFilter] = useState<FactsFilter>({ document: 'all', status: 'all', search: '' });
-  const visible = filterFacts(props.facts, props.statuses, filter, lang);
+  // A document can vanish from the list (its file removed, or replaced under a new hash) while
+  // the filter still names it; falling back at render time avoids a table stranded empty until
+  // the reviewer notices and reselects "All documents" themselves.
+  const selectedDocument =
+    filter.document !== 'all' && !props.documents.includes(filter.document)
+      ? 'all'
+      : filter.document;
+  const effectiveFilter: FactsFilter = { ...filter, document: selectedDocument };
+  const visible = filterFacts(props.facts, props.statuses, effectiveFilter, lang);
   return (
     <Card>
       <CardHeader>
@@ -161,7 +171,7 @@ export function FactsView(props: FactsViewProps) {
       <CardContent className="grid gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <Select
-            value={filter.document}
+            value={selectedDocument}
             onValueChange={(v) => setFilter((f) => ({ ...f, document: v }))}
           >
             <SelectTrigger data-testid="facts-document">
@@ -196,7 +206,7 @@ export function FactsView(props: FactsViewProps) {
             onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
           />
           <span data-testid="facts-count">
-            {t(lang, 'facts.count', { shown: visible.length, total: props.facts.length })}
+            {factsCount(lang, visible.length, props.facts.length)}
           </span>
           <Button className="ml-auto" data-testid="facts-continue" onClick={props.onContinue}>
             {t(lang, 'facts.continue')}

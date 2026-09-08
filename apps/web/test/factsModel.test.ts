@@ -43,6 +43,21 @@ describe('factStatuses', () => {
     expect(s['a']).toEqual({ status: 'mapped', attributeId: 'nominalVoltage' });
     expect(s['b']).toEqual({ status: 'proposed' });
   });
+  it('an accept or edit decision counts as mapped only when a matching proposal exists', () => {
+    const facts = [fact('a'), fact('b')];
+    // No proposal at all corroborates the decision: derivation would drop it, so the screen
+    // must not claim a mapping the draft does not hold.
+    const s1 = factStatuses(facts, [], {
+      ratedCapacity: { kind: 'accept', attributeId: 'ratedCapacity', factId: 'a' },
+    });
+    expect(s1['a']).toEqual({ status: 'unmapped' });
+
+    // A proposal exists for the fact, just naming a different attribute: falls back to proposed.
+    const s2 = factStatuses(facts, [proposal('a')], {
+      nominalVoltage: { kind: 'edit', attributeId: 'nominalVoltage', factId: 'a', value: '1' },
+    });
+    expect(s2['a']).toEqual({ status: 'proposed' });
+  });
 });
 
 describe('filterFacts', () => {
