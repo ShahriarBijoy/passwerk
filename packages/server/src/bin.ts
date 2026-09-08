@@ -4,6 +4,7 @@
  * The only place the wall clock and process environment are read.
  */
 import { realpathSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { nodeFileSystem } from './fs.js';
@@ -77,6 +78,9 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   }
   const log = stderrLogger(env['PASSWERK_LOG_LEVEL'] === 'debug' ? 'debug' : 'info');
   const logPayloads = env['PASSWERK_LOG_PAYLOADS'] === '1';
+  // The MCP App (ADR D-037): `pnpm build:mcp-app` writes packages/server/ui/workbench.html,
+  // which ships in the tarball beside dist/. Read per request so a rebuild needs no restart.
+  const ui = { html: () => readFile(new URL('../ui/workbench.html', import.meta.url), 'utf8') };
 
   if (args.http) {
     const token = env['PASSWERK_AUTH_TOKEN'] ?? '';
@@ -93,6 +97,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
       ...(args.root !== undefined ? { root: args.root } : {}),
       log,
       logPayloads,
+      ui,
     });
     const stop = () => {
       void handle.close().then(() => process.exit(0));
@@ -107,6 +112,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
     clock: new Date().toISOString(),
     log,
     logPayloads,
+    ui,
   });
   await server.connect(new StdioServerTransport());
   log('info', 'stdio transport connected', { root: args.root ?? process.cwd() });

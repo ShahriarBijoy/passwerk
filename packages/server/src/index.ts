@@ -25,3 +25,10 @@ export type {
   ToolResult,
 } from './types.js';
 export { LangSchema, PathOutsideRootError, pick } from './types.js';
+export {
+  MCP_APP_MIME,
+  type UiLoader,
+  WORKBENCH_NOT_BUILT,
+  WORKBENCH_UI_META,
+  WORKBENCH_URI,
+} from './ui.js';

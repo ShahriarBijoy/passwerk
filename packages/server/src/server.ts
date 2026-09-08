@@ -16,6 +16,7 @@ import {
   pick,
   type ToolContext,
 } from './types.js';
+import { registerWorkbench, type UiLoader } from './ui.js';
 
 export interface ServerOptions {
   /** Without one, `ingest_documents` accepts inline bytes only and `emit_passport` returns bytes. */
@@ -26,6 +27,11 @@ export interface ServerOptions {
   log?: Logger;
   /** Log tool payloads (sizes at info, bodies at debug). Off by default. */
   logPayloads?: boolean;
+  /**
+   * Serves `ui://passwerk/workbench.html` (the MCP App, ADR D-037). Without one the resource
+   * answers with the not-built error and `review_passport` stays a text tool.
+   */
+  ui?: UiLoader;
 }
 
 const noopLog: Logger = () => {};
@@ -134,6 +140,7 @@ export function createServer(options: ServerOptions = {}): {
   }
 
   registerResources(server, ctx);
+  registerWorkbench(server, options.ui);
   registerPrompts(server);
 
   return { server, ctx };

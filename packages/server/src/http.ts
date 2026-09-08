@@ -18,6 +18,7 @@ import { nodeFileSystem } from './fs.js';
 import { SERVER_NAME, SERVER_VERSION } from './meta.js';
 import { createServer } from './server.js';
 import type { Logger } from './types.js';
+import type { UiLoader } from './ui.js';
 
 export interface HttpOptions {
   host: string;
@@ -30,6 +31,8 @@ export interface HttpOptions {
   clock?: () => string;
   /** Largest accepted request body. Default: core's maxInputBytes plus base64 overhead. */
   maxBodyBytes?: number;
+  /** Workbench HTML for `ui://passwerk/workbench.html`; shared by every session. */
+  ui?: UiLoader;
 }
 
 export interface HttpHandle {
@@ -130,6 +133,7 @@ export async function startHttp(o: HttpOptions): Promise<HttpHandle> {
       clock: (o.clock ?? (() => new Date().toISOString()))(),
       log: o.log,
       ...(o.logPayloads !== undefined ? { logPayloads: o.logPayloads } : {}),
+      ...(o.ui ? { ui: o.ui } : {}),
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
