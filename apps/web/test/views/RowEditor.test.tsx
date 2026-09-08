@@ -64,6 +64,51 @@ describe('RowEditor', () => {
     expect(onSave).toHaveBeenCalledWith([{ partName: 'Cell', partNumber: 'C-1' }]);
     expect(screen.getByText('Zeile hinzufügen')).toBeTruthy();
   });
+  it('shows a language field the initial value carries beyond de/en, and keeps it on save', () => {
+    const onSave = vi.fn();
+    mount(
+      <RowEditor
+        lang="en"
+        attributeId="sparePartSources"
+        initial={[{ name: { en: 'Plant', fr: 'Usine' } }]}
+        onSave={onSave}
+      />,
+    );
+    const frField = screen.getByTestId('rows-field-name.fr') as HTMLInputElement;
+    expect(frField.value).toBe('Usine');
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).toHaveBeenCalledWith([{ name: { en: 'Plant', fr: 'Usine' } }]);
+  });
+  it('renders a list leaf as a textarea and keeps an item containing a comma intact', () => {
+    const onSave = vi.fn();
+    mount(
+      <RowEditor
+        lang="en"
+        attributeId="hazardousSubstances"
+        initial={[
+          {
+            name: 'Pb',
+            identifier: '7439-92-1',
+            impacts: ['Harmful if inhaled, swallowed or in contact with skin'],
+          },
+        ]}
+        onSave={onSave}
+      />,
+    );
+    const field = screen.getByTestId('rows-field-impacts');
+    expect(field.tagName).toBe('TEXTAREA');
+    expect((field as HTMLTextAreaElement).value).toBe(
+      'Harmful if inhaled, swallowed or in contact with skin',
+    );
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onSave).toHaveBeenCalledWith([
+      {
+        name: 'Pb',
+        identifier: '7439-92-1',
+        impacts: ['Harmful if inhaled, swallowed or in contact with skin'],
+      },
+    ]);
+  });
   it('edits nested rows', () => {
     const onSave = vi.fn();
     mount(<RowEditor lang="en" attributeId="sparePartSources" onSave={onSave} />);

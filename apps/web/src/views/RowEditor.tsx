@@ -6,7 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type Language, pick, t } from '../i18n/index.ts';
 import { arrayElementLeaves, type ElementLeaf } from '../workflow/compositeSchema.ts';
-import { checkRows, emptyRow, type RowDraft, rowsFromValue } from '../workflow/rows.ts';
+import {
+  checkRows,
+  emptyRow,
+  expandLeaves,
+  type RowDraft,
+  rowsFromValue,
+} from '../workflow/rows.ts';
 
 function RowFields({
   lang,
@@ -91,14 +97,26 @@ function RowFields({
               {leaf.required ? ` (${t(lang, 'rows.required')})` : ''}
               {leaf.kind === 'list' ? ` · ${t(lang, 'rows.list.hint')}` : ''}
             </Label>
-            <Input
-              id={domId(leaf.path)}
-              data-testid={testId(leaf.path)}
-              value={row.fields[leaf.path] ?? ''}
-              onChange={(e) =>
-                onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })
-              }
-            />
+            {leaf.kind === 'list' ? (
+              <textarea
+                id={domId(leaf.path)}
+                data-testid={testId(leaf.path)}
+                className="min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30"
+                value={row.fields[leaf.path] ?? ''}
+                onChange={(e) =>
+                  onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })
+                }
+              />
+            ) : (
+              <Input
+                id={domId(leaf.path)}
+                data-testid={testId(leaf.path)}
+                value={row.fields[leaf.path] ?? ''}
+                onChange={(e) =>
+                  onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })
+                }
+              />
+            )}
           </div>
         ),
       )}
@@ -119,7 +137,13 @@ export function RowEditor({
   onSave(rows: unknown[]): void;
   onCancel?(): void;
 }) {
-  const leaves = arrayElementLeaves(attributeId);
+  // Expanded once from the schema plus whatever `initial` actually carries, so a value with a
+  // language beyond `de`/`en` (an imported row's `fr`, say) both renders and round-trips intact
+  // instead of being silently dropped on save.
+  const leaves = expandLeaves(
+    arrayElementLeaves(attributeId),
+    Array.isArray(initial) ? initial : [],
+  );
   const [rows, setRows] = useState<RowDraft[]>(() => {
     const from = rowsFromValue(leaves, initial);
     return from.length > 0 ? from : [emptyRow()];
@@ -130,7 +154,7 @@ export function RowEditor({
       setErrors([{ row: -1, reason: t(lang, 'rows.empty') }]);
       return;
     }
-    const check = checkRows(attributeId, rows);
+    const check = checkRows(attributeId, rows, leaves);
     if (!check.ok) {
       setErrors(check.errors);
       return;

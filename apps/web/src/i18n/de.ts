@@ -111,7 +111,7 @@ export const de = {
   'rows.count': '{count} Zeilen',
   'rows.count.one': '1 Zeile',
   'rows.edit': 'Zeilen bearbeiten',
-  'rows.list.hint': 'Kommagetrennt',
+  'rows.list.hint': 'Eine pro Zeile',
   'rows.required': 'erforderlich',
   'rows.error': 'Zeile {row}: {reason}',
   'rows.empty': 'Mindestens eine Zeile ist erforderlich.',

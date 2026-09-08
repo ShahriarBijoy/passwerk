@@ -127,7 +127,12 @@ export function AddValueDialog(props: AddValueDialogProps) {
               attributeId={attributeId}
               initial={arrayRows?.(attributeId)}
               onSave={(rows) => {
-                onAdd({ kind: 'manual', attributeId, value: rows });
+                onAdd({
+                  kind: 'manual',
+                  attributeId,
+                  ...(prefill ? { factId: prefill.factId } : {}),
+                  value: rows,
+                });
                 setOpen(false);
                 setAttributeId('');
               }}

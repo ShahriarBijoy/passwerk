@@ -150,6 +150,57 @@ describe('derive', () => {
     expect(field?.value).toBe('42');
   });
   it(
+    'a fact correction the attribute rejects surfaces as an invalid decision, not a silent ' +
+      'drop, and does not clear the accepted count; a category-stranded decision still produces none',
+    () => {
+      const factId = 'datasheet-en.csv#1:1';
+      const accepted = reduce(withFacts, {
+        type: 'decide',
+        decision: { kind: 'accept', attributeId: 'ratedCapacity', factId },
+        at: AT,
+      });
+      expect(must(derive(accepted, AT)).draft.attributes['ratedCapacity']?.status).toBe('present');
+      const edited = reduce(accepted, {
+        type: 'editFact',
+        factId,
+        edit: { value: 'not-a-number' },
+        at: AT,
+      });
+      const d = must(derive(edited, AT));
+      expect(d.invalidDecisions).toHaveLength(1);
+      expect(d.invalidDecisions[0]?.key).toBe('ratedCapacity');
+      expect(d.draft.attributes['ratedCapacity']).toBeUndefined();
+
+      // The other stranding path (a battery-type change, no fact edit involved) must not be
+      // swept into the same "invalid" bucket: it stays the silent-wait, revivable case.
+      const evProposals = must(derive(withFacts, AT)).proposals;
+      const lmtProposals = suggestMappings(facts, { category: 'LMT' });
+      const evOnly = evProposals.find(
+        (p) =>
+          !lmtProposals.some(
+            (q) => q.attributeId === p.attributeId && q.factId === p.factId && q.path === p.path,
+          ),
+      );
+      if (!evOnly) throw new Error('expected an EV-only proposal not shared with LMT');
+      const decidedEvOnly = reduce(withFacts, {
+        type: 'decide',
+        decision: {
+          kind: 'accept',
+          attributeId: evOnly.attributeId,
+          ...(evOnly.path ? { path: evOnly.path } : {}),
+          factId: evOnly.factId,
+        },
+        at: AT,
+      });
+      const strandedByCategory = reduce(decidedEvOnly, {
+        type: 'setProject',
+        project: { ...PROJECT, batteryType: 'LMT' },
+        at: AT,
+      });
+      expect(must(derive(strandedByCategory, AT)).invalidDecisions).toEqual([]);
+    },
+  );
+  it(
     'an edit decision overrides value and unit but inherits source and confidence from the ' +
       'proposal; a reviewer-supplied recordedAt reaches the draft and satisfies PW-PLAUS-011',
     () => {

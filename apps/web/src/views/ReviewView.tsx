@@ -222,7 +222,10 @@ export function ReviewView(props: ReviewViewProps) {
       ))}
       {(props.invalidDecisions ?? []).map((d) => (
         <p key={d.key} className="text-destructive text-sm" data-testid="invalid-decision">
-          {d.key}: {t(lang, 'review.invalidDecision', { reason: d.message })}{' '}
+          {d.key}:{' '}
+          {t(lang, 'review.invalidDecision', {
+            reason: typeof d.message === 'string' ? d.message : pick(lang, d.message),
+          })}{' '}
           <Button size="sm" variant="ghost" onClick={() => props.onClear(d.key)}>
             {t(lang, 'review.clear')}
           </Button>

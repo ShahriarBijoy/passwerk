@@ -116,11 +116,15 @@ export function isArrayComposite(attributeId: string): boolean {
 export interface ElementLeaf {
   /** Dotted path inside one row. */
   path: string;
-  /** `scalar`: one input; `list`: a comma-separated string array; `rows`: a nested row editor. */
+  /** `scalar`: one input; `list`: a newline-separated string array; `rows`: a nested row editor. */
   kind: 'scalar' | 'list' | 'rows';
   /** False when the leaf, or any object above it, is optional. */
   required: boolean;
   rows?: ElementLeaf[];
+  /** True for a scalar leaf generated from a `record` (multilingual) field: `de`/`en` by
+   * schema. A value can carry further language keys the schema does not enumerate; see
+   * `expandLeaves` in `rows.ts`, which uses this marker to find the ones to add. */
+  lang?: true;
 }
 
 /** The whole composite schema (an array for a row composite), for parsing a complete value. */
@@ -151,7 +155,7 @@ function leavesOfObject(
       out.push(...leavesOfObject(inner.node, path, required, depth + 1));
     } else if (inner.def.type === 'record') {
       for (const lang of LANGUAGE_KEYS)
-        out.push({ path: `${path}.${lang}`, kind: 'scalar', required: false });
+        out.push({ path: `${path}.${lang}`, kind: 'scalar', required: false, lang: true });
     } else if (inner.def.type === 'array') {
       const element = unwrap(inner.def.element);
       if (element.def.type === 'object') {

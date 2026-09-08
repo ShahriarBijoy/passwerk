@@ -11,12 +11,16 @@ import {
   validate,
   validateSchema,
 } from '@passwerk/core';
-import type { Decision, DecisionKey } from '../state.ts';
+import type { LangText } from '../../i18n/index.ts';
+import type { Decision, DecisionKey, FactEdit } from '../state.ts';
+import { validateValue } from '../validateValue.ts';
 
 /** A decision core refused to apply, kept out of the draft and reported to the reviewer. */
 export interface InvalidDecision {
   key: DecisionKey;
-  message: string;
+  /** Core's exception text (a plain string) for a decision `applyMappings`/`validate` rejected,
+   * or this app's own bilingual `validateValue` message for a fact edit an attribute rejects. */
+  message: string | LangText;
 }
 
 export interface MappingEntry {
@@ -24,56 +28,99 @@ export interface MappingEntry {
   mapping: MappingDecision;
 }
 
+type ToMappingResult =
+  | { kind: 'mapping'; mapping: MappingDecision }
+  | { kind: 'invalid'; message: LangText }
+  /** Rejected, or waiting for its proposal to come back (a category change, or a fact edit
+   * that is still a valid value for its attribute): nothing to apply, nothing to report. */
+  | { kind: 'omit' };
+
 function toMapping(
   d: Decision,
   proposals: MappingProposal[],
   facts: FactSet,
-): MappingDecision | null {
+  factEdits: Record<string, FactEdit>,
+): ToMappingResult {
   const path = d.path !== undefined ? { path: d.path } : {};
-  if (d.kind === 'reject') return null;
+  if (d.kind === 'reject') return { kind: 'omit' };
   if (d.kind === 'manual') {
     const fact = d.factId !== undefined ? facts.facts.find((f) => f.id === d.factId) : undefined;
     return {
-      attributeId: d.attributeId,
-      ...path,
-      value: d.value,
-      ...(d.unit ? { unit: d.unit } : {}),
-      ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
-      ...(fact ? { source: [fact.source] } : {}),
-      override: true,
+      kind: 'mapping',
+      mapping: {
+        attributeId: d.attributeId,
+        ...path,
+        value: d.value,
+        ...(d.unit ? { unit: d.unit } : {}),
+        ...(d.recordedAt ? { recordedAt: d.recordedAt } : {}),
+        ...(fact ? { source: [fact.source] } : {}),
+        override: true,
+      },
     };
   }
   const p = proposals.find(
     (x) => x.factId === d.factId && x.attributeId === d.attributeId && x.path === d.path,
   );
-  // No proposal under the current category: the decision waits until its proposal is back.
-  if (!p) return null;
+  if (!p) {
+    // No proposal under the current category: usually the decision merely waits until its
+    // proposal is back (a battery-type change strands it, then revives it). But when the
+    // decision's fact still exists and carries a reviewer edit, the missing proposal can also
+    // mean core's `suggestMappings` dropped the fact because the edited value fails the
+    // attribute's own check (PW-L1-VALUE territory) — that must surface, not vanish silently.
+    const fact = facts.facts.find((f) => f.id === d.factId);
+    const edit = fact ? factEdits[d.factId] : undefined;
+    if (fact && edit) {
+      const check = validateValue(d.attributeId, d.path, edit.value);
+      if (!check.ok) return { kind: 'invalid', message: check.message };
+    }
+    return { kind: 'omit' };
+  }
   const value = d.kind === 'edit' ? d.value : p.value;
   const unit = d.kind === 'edit' ? d.unit : p.unit;
   return {
-    attributeId: d.attributeId,
-    ...path,
-    value,
-    ...(unit ? { unit } : {}),
-    ...(d.kind === 'edit' && d.recordedAt ? { recordedAt: d.recordedAt } : {}),
-    source: p.source,
-    confidence: p.confidence,
-    override: true,
+    kind: 'mapping',
+    mapping: {
+      attributeId: d.attributeId,
+      ...path,
+      value,
+      ...(unit ? { unit } : {}),
+      ...(d.kind === 'edit' && d.recordedAt ? { recordedAt: d.recordedAt } : {}),
+      source: p.source,
+      confidence: p.confidence,
+      override: true,
+    },
   };
 }
 
-/** Accept, edit and manual decisions as core mapping decisions, in stable key order. */
+export interface MappingsResult {
+  entries: MappingEntry[];
+  /** Decisions stranded by a missing proposal whose underlying fact edit the attribute itself
+   * rejects: never applied, so never `applyMappings`'s or `validate`'s to blame. */
+  invalid: InvalidDecision[];
+}
+
+/**
+ * Accept, edit and manual decisions as core mapping decisions, in stable key order, plus the
+ * ones a fact edit stranded and invalidated. `factEdits` is optional: a caller with no interest
+ * in the invalid case (there is no fact edit to check against) can omit it and gets today's
+ * silent-wait behaviour for every unmatched decision.
+ */
 export function mappingEntries(
   decisions: Record<DecisionKey, Decision>,
   proposals: MappingProposal[],
   facts: FactSet,
-): MappingEntry[] {
-  return Object.keys(decisions)
-    .sort()
-    .map((key) => ({ key, decision: decisions[key] }))
-    .filter((e): e is { key: DecisionKey; decision: Decision } => e.decision !== undefined)
-    .map((e) => ({ key: e.key, mapping: toMapping(e.decision, proposals, facts) }))
-    .filter((e): e is MappingEntry => e.mapping !== null);
+  factEdits: Record<string, FactEdit> = {},
+): MappingsResult {
+  const entries: MappingEntry[] = [];
+  const invalid: InvalidDecision[] = [];
+  for (const key of Object.keys(decisions).sort()) {
+    const decision = decisions[key];
+    if (!decision) continue;
+    const result = toMapping(decision, proposals, facts, factEdits);
+    if (result.kind === 'mapping') entries.push({ key, mapping: result.mapping });
+    else if (result.kind === 'invalid') invalid.push({ key, message: result.message });
+  }
+  return { entries, invalid };
 }
 
 export interface Applied {

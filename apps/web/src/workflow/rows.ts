@@ -41,17 +41,20 @@ function buildRow(leaves: ElementLeaf[], row: RowDraft): Record<string, unknown>
       if (nested.length > 0) setAt(out, leaf.path, nested);
       continue;
     }
-    const text = (row.fields[leaf.path] ?? '').trim();
-    if (text === '') continue;
     if (leaf.kind === 'list') {
-      const items = text
-        .split(',')
+      // One item per line, not comma-separated: an item can itself contain a comma (a
+      // hazardous-substance impact sentence, for instance), and splitting on it would corrupt
+      // that item on the very next save.
+      const items = (row.fields[leaf.path] ?? '')
+        .split('\n')
         .map((s) => s.trim())
         .filter((s) => s !== '');
       if (items.length > 0) setAt(out, leaf.path, items);
-    } else {
-      setAt(out, leaf.path, text);
+      continue;
     }
+    const text = (row.fields[leaf.path] ?? '').trim();
+    if (text === '') continue;
+    setAt(out, leaf.path, text);
   }
   return out;
 }
@@ -71,11 +74,58 @@ export function rowsFromValue(leaves: ElementLeaf[], value: unknown): RowDraft[]
       if (v === undefined) continue;
       if (leaf.kind === 'rows') row.nested[leaf.path] = rowsFromValue(leaf.rows ?? [], v);
       else if (leaf.kind === 'list')
-        row.fields[leaf.path] = Array.isArray(v) ? v.map(String).join(', ') : String(v);
+        row.fields[leaf.path] = Array.isArray(v) ? v.map(String).join('\n') : String(v);
       else row.fields[leaf.path] = String(v);
     }
     return row;
   });
+}
+
+/**
+ * `leaves`, extended with one scalar leaf for every extra language key some value in
+ * `values` carries on a record-typed (multilingual) field beyond the schema's own `de`/`en`.
+ * Core's `MultilingualText` is an open `z.record`, so an imported row can legitimately carry
+ * `fr`, `es`, and so on: without this, the row editor would only ever show `de`/`en`, rebuild
+ * the object from those two alone, and silently drop every other language on save.
+ *
+ * The union is taken across every row in `values` (a mixed batch shows every language any row
+ * carries), `de` and `en` are always kept, and extras are appended sorted after them. A row
+ * missing a language just renders that field blank, and blank still means "omit" on save, so
+ * nothing is invented. Recurses into nested `rows` leaves against their own nested values.
+ */
+export function expandLeaves(leaves: ElementLeaf[], values: unknown[]): ElementLeaf[] {
+  const out: ElementLeaf[] = [];
+  const done = new Set<string>();
+  for (const leaf of leaves) {
+    if (leaf.kind === 'rows') {
+      const nestedValues = values.flatMap((v) => {
+        const nested = getAt(v, leaf.path);
+        return Array.isArray(nested) ? nested : [];
+      });
+      out.push({ ...leaf, rows: expandLeaves(leaf.rows ?? [], nestedValues) });
+      continue;
+    }
+    if (!leaf.lang) {
+      out.push(leaf);
+      continue;
+    }
+    const prefix = leaf.path.slice(0, leaf.path.lastIndexOf('.'));
+    if (done.has(prefix)) continue;
+    done.add(prefix);
+    const extras = new Set<string>();
+    for (const v of values) {
+      const record = getAt(v, prefix);
+      if (record !== null && typeof record === 'object' && !Array.isArray(record)) {
+        for (const key of Object.keys(record as Record<string, unknown>)) {
+          if (key !== 'de' && key !== 'en') extras.add(key);
+        }
+      }
+    }
+    for (const lang of ['de', 'en', ...[...extras].sort()]) {
+      out.push({ path: `${prefix}.${lang}`, kind: 'scalar', required: false, lang: true });
+    }
+  }
+  return out;
 }
 
 export type RowsCheck =
@@ -83,11 +133,15 @@ export type RowsCheck =
   | { ok: false; errors: { row: number; reason: string }[] };
 
 /** Build and parse against core's composite schema; issues are attributed to their row index. */
-export function checkRows(attributeId: string, rows: RowDraft[]): RowsCheck {
+export function checkRows(
+  attributeId: string,
+  rows: RowDraft[],
+  leaves: ElementLeaf[] = arrayElementLeaves(attributeId),
+): RowsCheck {
   const schema = compositeSchemaOf(attributeId);
   if (!schema)
     return { ok: false, errors: [{ row: 0, reason: `${attributeId} is not a composite` }] };
-  const value = buildRows(arrayElementLeaves(attributeId), rows);
+  const value = buildRows(leaves, rows);
   const parsed = schema.safeParse(value);
   if (parsed.success) return { ok: true, value };
   return {

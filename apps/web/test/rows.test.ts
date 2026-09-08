@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { arrayElementLeaves } from '@/workflow/compositeSchema.ts';
-import { buildRows, checkRows, emptyRow, rowsFromValue } from '@/workflow/rows.ts';
+import { buildRows, checkRows, emptyRow, expandLeaves, rowsFromValue } from '@/workflow/rows.ts';
 
 const material = arrayElementLeaves('criticalRawMaterials');
 const supplier = arrayElementLeaves('sparePartSources');
@@ -12,7 +12,7 @@ describe('rows', () => {
     ];
     expect(buildRows(material, rows)).toEqual([{ name: 'Lithium', identifier: '7439-93-2' }]);
   });
-  it('splits list leaves on commas and nests rows', () => {
+  it('splits list leaves on newlines and nests rows', () => {
     const row = {
       fields: { 'name.de': 'Werk', 'name.en': 'Plant', email: 'a@b.c' },
       nested: { components: [{ fields: { partName: 'Cell', partNumber: 'C-1' }, nested: {} }] },
@@ -27,9 +27,24 @@ describe('rows', () => {
     const hazardous = arrayElementLeaves('hazardousSubstances');
     expect(
       buildRows(hazardous, [
-        { fields: { name: 'Pb', identifier: '7439-92-1', impacts: 'a, b,,c' }, nested: {} },
+        { fields: { name: 'Pb', identifier: '7439-92-1', impacts: 'a\nb\n\nc' }, nested: {} },
       ]),
     ).toEqual([{ name: 'Pb', identifier: '7439-92-1', impacts: ['a', 'b', 'c'] }]);
+  });
+  it('round-trips a list item that itself contains a comma, unchanged', () => {
+    const hazardous = arrayElementLeaves('hazardousSubstances');
+    const value = [
+      {
+        name: 'Pb',
+        identifier: '7439-92-1',
+        impacts: ['Harmful if inhaled, swallowed or in contact with skin'],
+      },
+    ];
+    const drafts = rowsFromValue(hazardous, value);
+    expect(drafts[0]?.fields['impacts']).toBe(
+      'Harmful if inhaled, swallowed or in contact with skin',
+    );
+    expect(buildRows(hazardous, drafts)).toEqual(value);
   });
   it('drops an object whose leaves are all blank', () => {
     const rows = [{ fields: { 'name.de': 'x', 'address.street': '' }, nested: {} }];
@@ -61,6 +76,32 @@ describe('rows', () => {
       { fields: { name: 'Li', identifier: 'x' }, nested: {} },
     ]);
     expect(good).toEqual({ ok: true, value: [{ name: 'Li', identifier: 'x' }] });
+  });
+  it('expandLeaves adds a language key the value carries beyond de/en, and it round-trips', () => {
+    const value = [{ name: { en: 'Parts', fr: 'Pieces' } }];
+    const leaves = expandLeaves(supplier, value);
+    expect(leaves.filter((l) => l.path.startsWith('name.')).map((l) => l.path)).toEqual([
+      'name.de',
+      'name.en',
+      'name.fr',
+    ]);
+    const drafts = rowsFromValue(leaves, value);
+    expect(drafts[0]?.fields['name.fr']).toBe('Pieces');
+    expect(buildRows(leaves, drafts)).toEqual(value);
+  });
+  it('expandLeaves takes the union of extra languages across every row and recurses into nested rows', () => {
+    const value = [
+      { name: { en: 'A' }, components: [{ partName: 'x', partNumber: 'y' }] },
+      { name: { en: 'B', fr: 'B-fr' } },
+    ];
+    const leaves = expandLeaves(supplier, value);
+    expect(leaves.filter((l) => l.path.startsWith('name.')).map((l) => l.path)).toEqual([
+      'name.de',
+      'name.en',
+      'name.fr',
+    ]);
+    const components = leaves.find((l) => l.path === 'components');
+    expect(components?.rows?.map((l) => l.path)).toEqual(['partName', 'partNumber']);
   });
   it('reports a nested row issue attributed to its outer row, with the nested path in the reason', () => {
     const bad = checkRows('sparePartSources', [

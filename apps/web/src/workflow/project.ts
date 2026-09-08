@@ -1,5 +1,11 @@
 import type { BatteryCategory, BatteryType, PassportMeta, Role } from '@passwerk/core';
-import { buildGs1DigitalLink, CarrierInputError, isHttpsUri, SCHEMA_VERSION } from '@passwerk/core';
+import {
+  buildGs1DigitalLink,
+  CarrierInputError,
+  isHttpsUri,
+  SCHEMA_VERSION,
+  Uri,
+} from '@passwerk/core';
 import { type Key, type LangText, t } from '../i18n/index.ts';
 
 export type Identifier =
@@ -30,7 +36,6 @@ export type IdentifierResult =
   | { ok: true; passportId: string; digitalLink?: string }
   | { ok: false; message: LangText };
 
-const URI = /^[a-z][a-z0-9+.-]*:.+/i;
 const both = (key: Key): LangText => ({ de: t('de', key), en: t('en', key) });
 
 /** The passport identifier an `Identifier` denotes, built through core's carrier module. */
@@ -58,7 +63,7 @@ export function passportIdOf(id: Identifier): IdentifierResult {
     }
     case 'draft': {
       const urn = id.urn.trim();
-      return URI.test(urn)
+      return Uri.safeParse(urn).success
         ? { ok: true, passportId: urn }
         : { ok: false, message: both('project.identifier.draft.invalid') };
     }

@@ -102,6 +102,51 @@ describe('ReviewView', () => {
     expect(onClear).toHaveBeenCalledWith('ratedCapacity');
   });
 
+  it('renders a bilingual invalid-decision message in the current language', () => {
+    const bilingual = { de: 'Erwartet eine Dezimalzahl', en: 'Expected a decimal number' };
+    const { unmount } = mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        invalidDecisions={[{ key: 'ratedCapacity', message: bilingual }]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('invalid-decision').textContent).toContain(
+      'Expected a decimal number',
+    );
+    unmount();
+    mount(
+      <ReviewView
+        lang="de"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        invalidDecisions={[{ key: 'ratedCapacity', message: bilingual }]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('invalid-decision').textContent).toContain(
+      'Erwartet eine Dezimalzahl',
+    );
+  });
+
   it('renders a mapping conflict with both values', () => {
     mount(
       <ReviewView

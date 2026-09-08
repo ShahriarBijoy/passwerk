@@ -120,6 +120,30 @@ describe('AddValueDialog', () => {
     });
   });
 
+  it('keeps the prefill factId on an array-composite decision, so the mapped fact shows as mapped', () => {
+    const onAdd = vi.fn();
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={onAdd}
+        open
+        prefill={{ factId: 'a.pdf#1:0', value: 'Li' }}
+        hideTrigger
+      />,
+    );
+    chooseAttribute('criticalRawMaterials');
+    fireEvent.change(screen.getByTestId('rows-field-name'), { target: { value: 'Li' } });
+    fireEvent.change(screen.getByTestId('rows-field-identifier'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('rows-save'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'criticalRawMaterials',
+      factId: 'a.pdf#1:0',
+      value: [{ name: 'Li', identifier: 'x' }],
+    });
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);

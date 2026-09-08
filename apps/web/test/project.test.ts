@@ -62,6 +62,15 @@ describe('passportIdOf', () => {
     });
     expect(passportIdOf({ mode: 'draft', urn: 'hello' }).ok).toBe(false);
   });
+  it('rejects a draft URN with embedded whitespace, which core would reject too', () => {
+    const r = passportIdOf({ mode: 'draft', urn: 'urn:passwerk:my battery' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message.de).toBe('Muss eine URI sein, zum Beispiel urn:...');
+      expect(r.message.en).toBe('Must be a URI, for example urn:...');
+    }
+    expect(passportIdOf({ mode: 'draft', urn: 'urn:passwerk:draft:abc' }).ok).toBe(true);
+  });
 });
 
 describe('project helpers', () => {

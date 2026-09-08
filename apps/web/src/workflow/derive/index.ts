@@ -43,7 +43,7 @@ export function decisionsToMappings(
   proposals: MappingProposal[],
   facts: FactSet,
 ): MappingDecision[] {
-  return mappingEntries(decisions, proposals, facts).map((e) => e.mapping);
+  return mappingEntries(decisions, proposals, facts).entries.map((e) => e.mapping);
 }
 
 const baseOf = memoLast(
@@ -65,11 +65,13 @@ const deriveInputs = memoLast(
     const eff = effectiveFacts(facts, factEdits);
     const proposals = deriveProposals(eff, p.meta.category);
     const base = baseOf(importedDraft, p.meta);
-    const { draft, conflicts, invalidDecisions, report } = applyAll(
-      base,
-      mappingEntries(decisions, proposals, eff),
-      asOf,
+    const { entries, invalid: strandedInvalid } = mappingEntries(
+      decisions,
+      proposals,
+      eff,
+      factEdits,
     );
+    const { draft, conflicts, invalidDecisions, report } = applyAll(base, entries, asOf);
     const gap = gapReport(draft, { report, asOf });
     return {
       meta: p.meta,
@@ -77,7 +79,7 @@ const deriveInputs = memoLast(
       proposals,
       draft,
       conflicts,
-      invalidDecisions,
+      invalidDecisions: [...strandedInvalid, ...invalidDecisions],
       report,
       gap,
       carrier: p.carrier,

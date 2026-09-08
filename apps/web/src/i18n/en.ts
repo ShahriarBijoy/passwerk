@@ -109,7 +109,7 @@ export const en: Record<keyof typeof de, string> = {
   'rows.count': '{count} rows',
   'rows.count.one': '1 row',
   'rows.edit': 'Edit rows',
-  'rows.list.hint': 'Comma-separated',
+  'rows.list.hint': 'One per line',
   'rows.required': 'required',
   'rows.error': 'Row {row}: {reason}',
   'rows.empty': 'At least one row is required.',
