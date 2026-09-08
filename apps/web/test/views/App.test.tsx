@@ -17,7 +17,24 @@ const AT = '2026-09-05T12:00:00Z';
 
 const OUTCOME: IngestOutcome = {
   summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
-  facts: { facts: [], tables: [], documents: [] },
+  facts: {
+    facts: [
+      {
+        id: 'a.csv#1:0',
+        label: 'Nennkapazität',
+        labelKey: 'nennkapazitaet',
+        raw: '94,5',
+        value: '94.5',
+        kind: 'decimal',
+        unit: 'Ah',
+        lang: 'de',
+        shape: 'kv',
+        source: { file: 'a.csv', page: 1 },
+      },
+    ],
+    tables: [],
+    documents: [],
+  },
 };
 
 describe('App', () => {
@@ -66,6 +83,24 @@ describe('App', () => {
 
     expect(ingestFiles).toHaveBeenCalledOnce();
     expect(store.getState().files).toEqual([]);
+  });
+
+  it('continues from upload to the facts screen', async () => {
+    ingestFiles.mockResolvedValueOnce(OUTCOME);
+    const store = createStore(initialState);
+    mount(<App store={store} />);
+    fireEvent.click(screen.getByTestId('lang-toggle'));
+    fireEvent.click(screen.getByTestId('project-continue'));
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('file-input'), {
+        target: { files: [new File(['a;b'], 'a.csv', { type: 'text/csv' })] },
+      });
+    });
+    const continueButton = screen.getByTestId('continue');
+    expect(continueButton.textContent).toContain('facts');
+    fireEvent.click(continueButton);
+    expect(store.getState().step).toBe('facts');
+    expect(screen.getByText('Extracted facts')).toBeTruthy();
   });
 
   it('resumes to review when the project is valid and files exist', () => {

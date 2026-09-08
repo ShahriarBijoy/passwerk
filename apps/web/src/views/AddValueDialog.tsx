@@ -25,24 +25,32 @@ import { validateValue } from '../workflow/validateValue.ts';
 import { RowEditor } from './RowEditor.tsx';
 import { attributeChoices, compositeLeaves } from './reviewModel.ts';
 
-export function AddValueDialog({
-  lang,
-  category,
-  onAdd,
-  arrayRows,
-}: {
+export interface AddValueDialogProps {
   lang: Language;
   category: BatteryCategory;
   onAdd(d: Decision): void;
   /** Existing rows for an array composite, so picking one that already holds data prefills
    * the row editor instead of silently replacing it. */
   arrayRows?(attributeId: string): unknown;
-}) {
-  const [open, setOpen] = useState(false);
+  /** A fact from the facts screen: value and unit prefilled, provenance kept through `factId`. */
+  prefill?: { factId: string; value: string; unit?: string };
+  open?: boolean;
+  onOpenChange?(open: boolean): void;
+  hideTrigger?: boolean;
+}
+
+export function AddValueDialog(props: AddValueDialogProps) {
+  const { lang, category, onAdd, arrayRows, prefill, hideTrigger } = props;
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = props.open ?? ownOpen;
+  const setOpen = (v: boolean) => {
+    setOwnOpen(v);
+    props.onOpenChange?.(v);
+  };
   const [attributeId, setAttributeId] = useState('');
   const [leaf, setLeaf] = useState('');
-  const [value, setValue] = useState('');
-  const [unit, setUnit] = useState('');
+  const [value, setValue] = useState(prefill?.value ?? '');
+  const [unit, setUnit] = useState(prefill?.unit ?? '');
   const [recordedAt, setRecordedAt] = useState('');
   const [error, setError] = useState<LangText | null>(null);
   const choices = attributeChoices(category);
@@ -67,6 +75,7 @@ export function AddValueDialog({
       kind: 'manual',
       attributeId,
       ...(path !== undefined ? { path } : {}),
+      ...(prefill ? { factId: prefill.factId } : {}),
       value: value.trim(),
       ...(unit.trim() ? { unit: unit.trim() } : {}),
       ...(stamp === undefined ? {} : { recordedAt: new Date(stamp).toISOString() }),
@@ -79,11 +88,13 @@ export function AddValueDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" data-testid="add-value">
-          {t(lang, 'review.addValue')}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" data-testid="add-value">
+            {t(lang, 'review.addValue')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t(lang, 'review.addValue')}</DialogTitle>

@@ -31,7 +31,7 @@ describe('UploadView', () => {
     );
     expect(screen.getByText('a.pdf')).toBeTruthy();
     expect(screen.getByText('Unsupported format')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to 7 proposals' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to facts (7 proposals)' }));
     expect(onContinue).toHaveBeenCalled();
   });
 

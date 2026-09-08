@@ -1,3 +1,4 @@
+import type { Fact } from '@passwerk/core';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +16,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { type LangText, type Language, t } from '../i18n/index.ts';
+import { AddValueDialog } from '../views/AddValueDialog.tsx';
+import { FactsView } from '../views/FactsView.tsx';
 import { GapsExportView } from '../views/GapsExportView.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
@@ -24,6 +27,7 @@ import { derive } from '../workflow/derive/index.ts';
 import { deriveProject } from '../workflow/derive/project.ts';
 import { importDraftJson } from '../workflow/draftIo.ts';
 import { buildExports, type ExportKind } from '../workflow/exports.ts';
+import { factStatuses } from '../workflow/factsModel.ts';
 import { ingestFiles } from '../workflow/ingest.ts';
 import { defaultProject, type Project } from '../workflow/project.ts';
 import { type Decision, type DecisionKey, STEPS, type Step } from '../workflow/state.ts';
@@ -55,6 +59,7 @@ export function App({ store, storageNotice }: AppProps) {
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<LangText | undefined>(undefined);
+  const [mapFact, setMapFact] = useState<Fact | null>(null);
   const [asOf] = useState(() => nowIso());
   const [draftUrn] = useState(() => `urn:passwerk:draft:${randomId()}`);
   const [localProject, setLocalProject] = useState(() => defaultProject(draftUrn, ''));
@@ -185,11 +190,47 @@ export function App({ store, storageNotice }: AppProps) {
             proposalCount={derived?.proposals.length ?? 0}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
-            onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            onContinue={() => dispatch({ type: 'goTo', step: 'facts', at: nowIso() })}
           />
         );
       case 'facts':
-        return <p data-testid="facts-placeholder">{t(lang, 'step.facts')}</p>;
+        if (!derived) return null;
+        return (
+          <>
+            <FactsView
+              lang={lang}
+              facts={derived.facts.facts}
+              documents={state.files.map((f) => f.name)}
+              edits={state.factEdits}
+              statuses={factStatuses(derived.facts.facts, derived.proposals, state.decisions)}
+              onEdit={(factId, edit) => dispatch({ type: 'editFact', factId, edit, at: nowIso() })}
+              onClearEdit={(factId) => dispatch({ type: 'clearFactEdit', factId, at: nowIso() })}
+              onMap={setMapFact}
+              onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            />
+            {mapFact && (
+              <AddValueDialog
+                key={mapFact.id}
+                lang={lang}
+                category={derived.meta.category}
+                open
+                hideTrigger
+                prefill={{
+                  factId: mapFact.id,
+                  value: mapFact.value ?? mapFact.raw,
+                  ...(mapFact.unit ? { unit: mapFact.unit } : {}),
+                }}
+                onOpenChange={(o) => {
+                  if (!o) setMapFact(null);
+                }}
+                onAdd={(d) => {
+                  dispatch({ type: 'decide', decision: d, at: nowIso() });
+                  setMapFact(null);
+                }}
+              />
+            )}
+          </>
+        );
       case 'review':
         if (!derived) return null;
         return (

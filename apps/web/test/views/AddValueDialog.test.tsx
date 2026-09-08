@@ -97,6 +97,29 @@ describe('AddValueDialog', () => {
     expect(arrayRows).toHaveBeenCalledWith('criticalRawMaterials');
   });
 
+  it('prefills from a mapped fact and keeps the factId on the manual decision', () => {
+    const onAdd = vi.fn();
+    mount(
+      <AddValueDialog
+        lang="en"
+        category="EV"
+        onAdd={onAdd}
+        open
+        prefill={{ factId: 'a.pdf#1:0', value: '400', unit: 'V' }}
+        hideTrigger
+      />,
+    );
+    chooseAttribute('nominalVoltage');
+    fireEvent.click(screen.getByTestId('add-submit'));
+    expect(onAdd).toHaveBeenCalledWith({
+      kind: 'manual',
+      attributeId: 'nominalVoltage',
+      value: '400',
+      unit: 'V',
+      factId: 'a.pdf#1:0',
+    });
+  });
+
   it('shows no leaf select for a plain attribute and still validates its value', () => {
     const onAdd = vi.fn();
     mount(<AddValueDialog lang="en" category="EV" onAdd={onAdd} />);
