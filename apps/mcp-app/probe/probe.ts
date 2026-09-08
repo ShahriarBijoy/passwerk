@@ -7,8 +7,10 @@ import { App } from '@modelcontextprotocol/ext-apps';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 
 const out = document.getElementById('out') as HTMLPreElement;
+// Newest line first, so a button's result is visible without scrolling past the earlier dump.
 const log = (k: string, v: unknown) => {
-  out.textContent += `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}\n`;
+  const line = `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}\n`;
+  out.textContent = line + (out.textContent ?? '');
 };
 const button = (id: string) => document.getElementById(id) as HTMLButtonElement;
 
@@ -24,7 +26,13 @@ try {
   await app.connect();
   log('host', app.getHostVersion());
   log('capabilities', app.getHostCapabilities());
-  log('context', app.getHostContext());
+  // toolInfo repeats the whole tool schema and styles is long; neither is a measurement.
+  const {
+    toolInfo: _toolInfo,
+    styles: _styles,
+    ...context
+  } = (app.getHostContext() ?? {}) as Record<string, unknown>;
+  log('context', context);
 } catch (e) {
   log('connect failed', String(e));
 }
@@ -72,7 +80,7 @@ button('worker').onclick = async () => {
 
 button('payload').onclick = async () => {
   for (const mb of [1, 4, 16]) {
-    const base64 = 'QQ=='.repeat((mb * 1024 * 1024) / 4);
+    const base64 = 'QUJD'.repeat((mb * 1024 * 1024) / 4);
     const t0 = performance.now();
     try {
       const r = await app.callServerTool({
