@@ -62,6 +62,16 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report
           retention-days: 14
+      # Phase 7b (ADR D-037): the MCP App workbench, driven through a dev-only host page that
+      # talks to the real server over Streamable HTTP; same Chromium.
+      - run: pnpm build:mcp-app && pnpm --filter @passwerk/mcp-app build:host
+      - run: pnpm e2e:mcp-app
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-mcp-app
+          path: apps/mcp-app/playwright-report
+          retention-days: 14
 
   test:
     name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
@@ -85,7 +95,7 @@ jobs:
 
   # Phase 7 (ADR D-034): the packed tarballs must work outside the monorepo, where the pnpm
   # patch of the AAS SDK does not exist. Installs them into an empty project and runs the
-  # server (stdio tools/list) and the CLI (audit, carrier).
+  # server (stdio tools/list, the MCP App workbench resource) and the CLI (audit, carrier).
   pack:
     name: Pack and install smoke
     needs: test
@@ -98,7 +108,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm build && pnpm build:mcp-app
       - run: pnpm release:pack
       - run: pnpm release:smoke
       - uses: actions/upload-artifact@v7

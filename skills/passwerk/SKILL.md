@@ -32,6 +32,9 @@ calls; you do the semantic work. Before the first call, read `list_capabilities`
    explains what a finding means and who typically has the data.
 5. **`gap_report`**: present it as a to-do list grouped by `byDataOwner` (who typically has the
    data), each item with its legal reference. Do not estimate missing values.
+   In a host that renders MCP Apps (Claude Desktop, Claude web), **`review_passport`** with the
+   `draftId` opens the passwerk workbench instead: the user uploads, reviews and fixes
+   visually, and the draft id stays in sync for the tools below. Skip it in terminal hosts.
 6. **`emit_passport`** (`aas-json`, `aasx`, `draft-json`, `html`) only when the verdict is `valid`
    or the user explicitly accepts `valid_with_warnings`. Quote the re-validation verdict. The
    `html` target is the human-readable sheet (DE and EN inside; `htmlLang` picks the opening

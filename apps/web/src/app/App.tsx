@@ -1,5 +1,4 @@
 import type { Fact } from '@passwerk/core';
-import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -39,13 +38,14 @@ import {
 } from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
 import { nowIso } from './clock.ts';
-import { downloadFile } from './download.ts';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
-import { clearState } from './persistence.ts';
+import type { Platform } from './platform.ts';
 import { useStore } from './useStore.ts';
 
 export interface AppProps {
   store: Store;
+  /** Download, persistence and pdf.js worker of the host environment (browser or MCP App). */
+  platform: Platform;
   storageNotice?: 'unavailable' | 'version';
 }
 
@@ -120,7 +120,7 @@ function ProjectStep({
   );
 }
 
-export function App({ store, storageNotice }: AppProps) {
+export function App({ store, platform, storageNotice }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
@@ -142,7 +142,7 @@ export function App({ store, storageNotice }: AppProps) {
   };
 
   const reset = () => {
-    void clearState();
+    platform.clearPersisted();
     dispatch({ type: 'reset', at: nowIso() });
   };
 
@@ -161,7 +161,10 @@ export function App({ store, storageNotice }: AppProps) {
           size: f.size,
         })),
       );
-      const out = await ingestFiles(inputs, { workerSrc: pdfWorkerUrl });
+      const out = await ingestFiles(
+        inputs,
+        platform.pdfWorkerSrc !== undefined ? { workerSrc: platform.pdfWorkerSrc } : {},
+      );
       if (store.getState().generation !== generation) return;
       dispatch({ type: 'filesIngested', ...out, at: nowIso() });
     } catch (e) {
@@ -190,7 +193,7 @@ export function App({ store, storageNotice }: AppProps) {
         return;
       }
       setExportError(undefined);
-      if (file) downloadFile(file);
+      if (file) platform.download(file);
     } catch (e) {
       fail(e);
     }

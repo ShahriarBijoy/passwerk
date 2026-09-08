@@ -770,3 +770,65 @@ becomes upload on the first call" line describes an earlier intent, not the buil
 QR panel on the project and export screens shows the payload URL the code carries but not the
 GS1 link's parsed parts (GTIN, serial, resolver), a deliberate simplification of design spec
 section 5.4.
+
+## D-037: The MCP App is the web app in the host's iframe; the draft id is the shared state (2026-09-08)
+
+**Context.** D-019 added a passwerk MCP App and left two facts to verify: whether the host's
+iframe sandbox permits file inputs, and the host's message size limit for inline bytes. The
+web app (D-029, D-036) is three layers with `views` free of the `app` layer, and the server
+already stores drafts by content hash, so the same draft always has the same id.
+
+**Decision.** `apps/mcp-app` is a single-file Vite build of the web app's `views`, `workflow`,
+`i18n` and `components`, reached through the alias `@` into `apps/web/src`, plus a bridge over
+`@modelcontextprotocol/ext-apps`. The web shell takes its platform hooks (download, clearing
+persisted state, the pdf.js worker) as a prop, so the same `App` component runs in both. Core
+runs inside the iframe: documents never leave the machine; only the derived `PassportDraft`
+goes to the server, through `validate_passport`, one second after the last decision, and the
+model learns the resulting draft id through `updateModelContext`. One new read-only tool,
+`review_passport`, carries `_meta.ui.resourceUri`; the resource `ui://passwerk/workbench.html`
+declares an empty CSP and is served through an injected loader so `server.ts` stays free of
+`node:fs`. The server does not depend on the MCP Apps SDK: it writes the two literals the
+specification defines and a monorepo test compares them with the SDK's constants. Exports are
+built in the iframe and handed to the host's `downloadFile` when advertised; otherwise the
+user is told to ask Claude for `emit_passport` with an `outDir`, which a local stdio server
+can write. Claude Code and Codex CLI see `review_passport` as a text tool and are unchanged.
+
+**Verified in CI.** The bridge is tested against the SDK's own `AppBridge` over a real
+in-memory passwerk server. A dev-only host page (`apps/mcp-app/e2e/host`) does what Claude's
+host does, with the workbench in an iframe sandboxed `allow-scripts allow-same-origin
+allow-forms` and the MCP traffic proxied to the real server on the preview origin: the
+Musterwerk documents produce in the iframe the verdict, findings and gap items core computes
+in Node; every golden sample renders with core's verdict; the draft id the workbench pushes
+resolves through `gap_report` in the same MCP session to the draft the screen shows; no
+request leaves the preview origin. The single-file workbench is 4.69 MB (1.23 MB gzipped); the
+server tarball grows to 1.29 MB.
+
+**Measured in Claude Desktop (2026-09-08, Claude 1.49585.0, Electron 44, Windows).** The probe
+(`pnpm --filter @passwerk/mcp-app probe`, served in place of the workbench) ran from the local
+stdio server. The view's origin is a per-server subdomain of `claudemcpcontent.com`; the host
+reports itself as `Claude 1.0.0`, platform `desktop`, `inline` display with `fullscreen`
+available, 735 px wide, `maxHeight` 5000, locale `en-US`, dark theme, 12 px safe-area insets.
+Capabilities: `openLinks`, `downloadFile`, `serverTools`, `serverResources`, `logging`,
+`updateModelContext` (text, image), `message` (text), sandbox CSP as declared. `downloadFile`
+saved the probe's text file to the Downloads folder. `callServerTool` with inline base64 of
+1, 4 and 16 MB took 42, 131 and 866 ms; before the fix in `bin.ts` the 16 MB call ended the
+session, because the SDK's stdio read buffer defaults to 10 MB per message. A Worker created
+from the inlined `data:` URL failed (`error` event, no message); a Worker from a `blob:` URL and
+a dynamic `import()` of a `data:` URL both worked, so the shell re-wraps the inlined pdf.js
+worker as a Blob (`workerUrlOf`). Clipboard writes were swallowed until the resource requested
+`permissions.clipboardWrite`.
+
+**Workbench run in Claude Desktop (2026-09-08, the Phase 7b definition of done).** The five
+Musterwerk documents entered through the file input (the OS picker opens), pdf.js ran in the
+iframe with the Blob worker (both PDFs show their page count), 114 proposals were derived, and
+the gaps screen showed 15 of 47 mandatory data points (31.9 %), the figure D-029 recorded from
+core in Node. The AASX export was saved to the Downloads folder through the host. Asked "what is
+the gap report for the current draft", Claude called `gap_report` on the synced id
+`drf_f2fca2876baa3f01` and answered with the same 15/47 and 32 open required attributes, so the
+model and the user look at one draft. Screenshots: `docs/screenshots/mcp-app-*.png`.
+
+**Consequences.** Twelve tools. The server tarball and the Docker image carry the workbench
+(`ui/`). CI builds it, runs the Playwright host page, and the pack and docker smokes read the
+resource. `PASSWERK_CLOCK` fixes the server clock for test suites. Phase 7c packages the same
+server; the MCPB bundle needs no extra step because the workbench travels inside
+`@passwerk/server`.

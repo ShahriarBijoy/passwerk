@@ -4,8 +4,10 @@
  * The only place the wall clock and process environment are read.
  */
 import { realpathSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { DEFAULT_INGEST_LIMITS } from '@passwerk/core';
 import { nodeFileSystem } from './fs.js';
 import { startHttp } from './http.js';
 import { stderrLogger } from './logging.js';
@@ -22,7 +24,8 @@ Usage: passwerk-server [--http [port]] [--host <host>] [--root <dir>]
   --root <dir>      restrict ingest paths and emit outDir to this directory (default: cwd, unrestricted)
   --version, --help
 
-Environment: PASSWERK_AUTH_TOKEN, PASSWERK_ROOT, PASSWERK_LOG_LEVEL=info|debug, PASSWERK_LOG_PAYLOADS=1
+Environment: PASSWERK_AUTH_TOKEN, PASSWERK_ROOT, PASSWERK_LOG_LEVEL=info|debug, PASSWERK_LOG_PAYLOADS=1,
+             PASSWERK_CLOCK=<ISO date-time> (fixed "now" for tests)
 `;
 
 interface Args {
@@ -77,6 +80,12 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   }
   const log = stderrLogger(env['PASSWERK_LOG_LEVEL'] === 'debug' ? 'debug' : 'info');
   const logPayloads = env['PASSWERK_LOG_PAYLOADS'] === '1';
+  // The MCP App (ADR D-037): `pnpm build:mcp-app` writes packages/server/ui/workbench.html,
+  // which ships in the tarball beside dist/. Read per request so a rebuild needs no restart.
+  const ui = { html: () => readFile(new URL('../ui/workbench.html', import.meta.url), 'utf8') };
+  // A fixed clock lets the Playwright suites compare the server with core in Node (D-029).
+  const fixedClock = env['PASSWERK_CLOCK'];
+  const clock = (): string => fixedClock ?? new Date().toISOString();
 
   if (args.http) {
     const token = env['PASSWERK_AUTH_TOKEN'] ?? '';
@@ -93,6 +102,8 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
       ...(args.root !== undefined ? { root: args.root } : {}),
       log,
       logPayloads,
+      ui,
+      clock,
     });
     const stop = () => {
       void handle.close().then(() => process.exit(0));
@@ -104,11 +115,17 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
 
   const { server } = createServer({
     fs: nodeFileSystem(args.root),
-    clock: new Date().toISOString(),
+    clock: clock(),
     log,
     logPayloads,
+    ui,
   });
-  await server.connect(new StdioServerTransport());
+  // The SDK's stdio read buffer defaults to 10 MB per message; an inline document above that
+  // (a 16 MB base64 payload from the MCP App probe, measured in Claude Desktop) made the
+  // transport throw and the session end. Size it like the HTTP body cap: core's input limit
+  // plus base64 overhead.
+  const maxBufferSize = Math.ceil(DEFAULT_INGEST_LIMITS.maxInputBytes * 1.4);
+  await server.connect(new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize }));
   log('info', 'stdio transport connected', { root: args.root ?? process.cwd() });
   return -1;
 }

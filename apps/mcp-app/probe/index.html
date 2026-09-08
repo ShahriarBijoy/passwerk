@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>passwerk probe (throwaway)</title>
+    <style>
+      body { font: 13px system-ui, sans-serif; margin: 12px; }
+      button { margin: 4px 4px 4px 0; }
+      pre { white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; min-height: 120px; }
+    </style>
+  </head>
+  <body>
+    <p><strong>passwerk MCP App probe</strong> (throwaway, ADR D-037 measurements). Press each button, pick a file, then copy the box.</p>
+    <input id="file" type="file" multiple />
+    <button id="worker" type="button">1 Worker test</button>
+    <button id="payload" type="button">2 Payload sizes</button>
+    <button id="download" type="button">3 downloadFile</button>
+    <button id="copy" type="button">Copy output</button>
+    <pre id="out"></pre>
+    <script type="module" src="./probe.ts"></script>
+  </body>
+</html>

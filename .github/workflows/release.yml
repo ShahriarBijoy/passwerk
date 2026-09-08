@@ -49,7 +49,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: pnpm build
+      - run: pnpm build && pnpm build:mcp-app
       - run: pnpm release:pack
       - run: pnpm release:smoke
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

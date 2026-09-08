@@ -39,3 +39,6 @@ out/
 # Compose bind-mount directories (created by users and by the smoke test)
 documents/
 output/
+
+# MCP App workbench copied in by `pnpm build:mcp-app` (ADR D-037); ships in the server tarball
+packages/server/ui/

@@ -16,6 +16,7 @@ import {
   pick,
   type ToolContext,
 } from './types.js';
+import { registerWorkbench, type UiLoader } from './ui.js';
 
 export interface ServerOptions {
   /** Without one, `ingest_documents` accepts inline bytes only and `emit_passport` returns bytes. */
@@ -26,6 +27,11 @@ export interface ServerOptions {
   log?: Logger;
   /** Log tool payloads (sizes at info, bodies at debug). Off by default. */
   logPayloads?: boolean;
+  /**
+   * Serves `ui://passwerk/workbench.html` (the MCP App, ADR D-037). Without one the resource
+   * answers with the not-built error and `review_passport` stays a text tool.
+   */
+  ui?: UiLoader;
 }
 
 const noopLog: Logger = () => {};
@@ -96,6 +102,15 @@ export function createServer(options: ServerOptions = {}): {
         // Loose: core's objects carry more keys than the compact wire schema names.
         outputSchema: z.looseObject(tool.outputSchema),
         annotations: tool.annotations,
+        // MCP Apps (extension io.modelcontextprotocol/ui): the host renders this tool's result
+        // with the named ui:// resource. Visibility: the model may call it, and so may the app.
+        ...(tool.ui
+          ? {
+              _meta: {
+                ui: { resourceUri: tool.ui.resourceUri, visibility: ['model', 'app'] },
+              },
+            }
+          : {}),
       },
       async (input: Record<string, unknown>) => {
         const { lang, ...rest } = input as { lang?: Lang };
@@ -125,6 +140,7 @@ export function createServer(options: ServerOptions = {}): {
   }
 
   registerResources(server, ctx);
+  registerWorkbench(server, options.ui);
   registerPrompts(server);
 
   return { server, ctx };

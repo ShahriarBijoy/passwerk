@@ -83,6 +83,10 @@ describe('sovereignty: the server surface makes no network attempt', () => {
       });
       await run('validate_passport', { draft: { draftId: applied['draftId'] } });
       await run('gap_report', { draft: { draftId: applied['draftId'] } });
+      await run('review_passport', {
+        draft: { draftId: applied['draftId'] },
+        facts: { factSetId: facts['factSetId'] },
+      });
       await run('emit_passport', {
         draft: getSample('ev-valid'),
         targets: ['aas-json', 'aasx', 'draft-json'],

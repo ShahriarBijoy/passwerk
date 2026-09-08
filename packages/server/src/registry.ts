@@ -7,6 +7,7 @@ import { gapReportTool } from './tools/gapReport.js';
 import { generateCarrierTool } from './tools/generateCarrier.js';
 import { ingestDocumentsTool } from './tools/ingestDocuments.js';
 import { listCapabilitiesTool, setToolNames } from './tools/listCapabilities.js';
+import { reviewPassportTool } from './tools/reviewPassport.js';
 import { suggestMappingsTool } from './tools/suggestMappings.js';
 import { validatePassportTool } from './tools/validatePassport.js';
 import type { AnyToolDefinition } from './types.js';
@@ -23,6 +24,7 @@ export const TOOLS: readonly AnyToolDefinition[] = [
   applyMappingsTool,
   validatePassportTool,
   gapReportTool,
+  reviewPassportTool,
   emitPassportTool,
   generateCarrierTool,
   checkObligationsTool,

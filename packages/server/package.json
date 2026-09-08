@@ -45,6 +45,7 @@
   },
   "files": [
     "dist",
+    "ui",
     "README.md"
   ],
   "engines": {
