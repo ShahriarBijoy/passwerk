@@ -60,12 +60,15 @@ interface Project {
   role: Role;                                  // core ROLES
   energyKwh?: string;                          // decimal string
   placedOnMarketDate?: string;                 // ISO date (YYYY-MM-DD)
-  category: BatteryCategory;                   // EV | LMT | INDUSTRIAL_GT_2KWH
-  categorySource: 'obligations' | 'manual';    // manual = voluntary passport or import
+  manualCategory?: BatteryCategory;            // chosen by hand; voluntary passport or import
   identifier: Identifier;
   createdAt: string;                           // stamped once from the action clock
 }
+```
 
+A derived category always wins; the hand-picked one applies only when the check derives none.
+
+```ts
 type Identifier =
   | { mode: 'gs1'; resolverBase: string; gtin: string; serial: string }
   | { mode: 'gs1-giai'; resolverBase: string; giai: string }
@@ -104,7 +107,7 @@ stays source-less.
 
 ### 3.2 Draft import fills the project
 
-The draft's `meta.category` becomes `project.category` with `categorySource: 'manual'`.
+The draft's `meta.category` becomes `project.manualCategory`.
 The battery type is the category mapped back (`EV` to `EV`, `LMT` to `LMT`,
 `INDUSTRIAL_GT_2KWH` to `INDUSTRIAL` with `energyKwh` unset, so the obligations panel reports
 insufficient input until the user fills it in). The role defaults to `manufacturer`. The
@@ -117,6 +120,7 @@ identifier is `{ mode: 'https', uri }` when `meta.passportId` is an absolute htt
 obligations  = checkObligations({ batteryType, role, energyKwh, placedOnMarketDate, asOf })
 identifier   = passportIdOf(project.identifier)
                -> { ok: true, passportId, digitalLink? } | { ok: false, message: LangText }
+category     = obligations.category ?? project.manualCategory
 meta         = { schemaVersion: SCHEMA_VERSION, category, passportId, createdAt }
 baseDraft    = importedDraft ? { ...importedDraft, meta } : newDraft(meta)
 effFacts     = facts with factEdits applied
@@ -163,9 +167,9 @@ Three cards, then the existing import, resume and start-over actions.
    missing inputs (as chrome labels of the missing field names), timeline entries (date,
    title, legal reference, status, in-effect marker, `verify` badge), role guidance, sources,
    not-legal-advice line. The derived category is shown as text. When the result has no
-   category, or the verdict is `not_required`, a category select appears under a
-   "voluntary passport" note; a chosen category sets `categorySource: 'manual'`. When the
-   result later derives a category and the source is `obligations`, the derived one wins.
+   category, a category select appears under a "voluntary passport" note; a chosen category
+   sets `project.manualCategory`. A derived category always wins; the hand-picked one applies
+   only when the check derives none.
 3. **Identifier**: tabs for the four modes, prefilled with `draft` and
    `urn:passwerk:draft:<uuid>` as today. GS1 fields show the carrier's DE/EN error text
    live; the https field shows "must be an absolute https URI". Beside the fields: the QR

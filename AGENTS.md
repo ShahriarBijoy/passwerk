@@ -176,5 +176,11 @@ so no build is needed before `pnpm test`.
   publishing, GHCR amd64/arm64, `mcp-publisher`) and `packages/server/server.json`
   (`io.github.shahriarbijoy/passwerk`) are new; the owner's one-time and per-release steps are
   in `docs/RELEASE.md`. See ADRs D-033 and D-034.
-- **Next:** the rest of Phase 7a (project screen with obligations, facts screen, QR preview
-  panel, BYOK), then Phase 7b, then 7c (D-024 order).
+- **Phase 7a, second slice (`apps/web`): done.** Project screen (obligations check, voluntary
+  category, four identifier modes, QR preview), facts screen (edit, map to attribute), row
+  editor for array composites (closes #23), state v2 with derived proposals, obligations result,
+  meta, base draft, validation and QR (ADR D-036); `checkObligations` now names a pre-2027
+  battery's passport category instead of `null`. Playwright covers the project, facts, row
+  editor and QR tracks.
+- **Next:** bring-your-own-key for the web app (own PR, D-002 boundary), then Phase 7b, then 7c
+  (D-024 order).
