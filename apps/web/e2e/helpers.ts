@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { BatteryCategory } from '@passwerk/core';
 import {
   applyMappings,
   extractFacts,
@@ -11,7 +10,7 @@ import {
   suggestMappings,
   validate,
 } from '@passwerk/core';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export const CLOCK = '2026-09-05T12:00:00.000Z';
 export const FIXTURES = join(
@@ -40,19 +39,48 @@ export async function pinClock(page: Page): Promise<void> {
   }, CLOCK);
 }
 
-export async function startProject(
-  page: Page,
-  opts: { category: BatteryCategory; passportId: string },
-): Promise<void> {
+export interface StartOptions {
+  batteryType?: 'EV' | 'LMT' | 'INDUSTRIAL' | 'PORTABLE';
+  energyKwh?: string;
+  identifier:
+    | { mode: 'https'; uri: string }
+    | { mode: 'gs1'; resolverBase: string; gtin: string; serial: string };
+}
+
+// German `project.batteryType.*` labels (apps/web/src/i18n/de.ts), copied verbatim:
+//   EV -> "Elektrofahrzeugbatterie", LMT -> "Batterie für leichte Verkehrsmittel",
+//   INDUSTRIAL -> "Industriebatterie" (exact: also matches "Stationärer..." and "Starterbatterie
+//   (SLI)" unless anchored), PORTABLE -> "Gerätebatterie".
+const LABEL = {
+  EV: /Elektrofahrzeug/,
+  LMT: /LMT|leichte Verkehrsmittel/i,
+  INDUSTRIAL: /^Industriebatterie$/,
+  PORTABLE: /Gerätebatterie|Portable/,
+};
+
+/** Fill the project screen and continue to the upload step. */
+export async function startProject(page: Page, opts: StartOptions): Promise<void> {
   await page.goto('/');
-  if (opts.category !== 'EV') {
-    await page.getByTestId('category').click();
-    await page
-      .getByRole('option', { name: new RegExp(opts.category === 'LMT' ? 'LMT' : '2 kWh') })
-      .click();
+  if (opts.batteryType && opts.batteryType !== 'EV') {
+    await page.getByTestId('battery-type').click();
+    await page.getByRole('option', { name: LABEL[opts.batteryType] }).click();
   }
-  await page.getByTestId('passport-id').fill(opts.passportId);
-  await page.getByTestId('start').click();
+  if (opts.energyKwh !== undefined) await page.getByTestId('energy-kwh').fill(opts.energyKwh);
+  // The default battery type is EV, and the pinned CLOCK is before 2027-02-18, so the derived
+  // category is always shown (verdict not_required) whether or not the caller set it explicitly.
+  if (!opts.batteryType || opts.batteryType === 'EV') {
+    await expect(page.getByTestId('obligation-category')).toContainText('EV');
+  }
+  await page.getByTestId(`identifier-mode-${opts.identifier.mode}`).click();
+  if (opts.identifier.mode === 'https') {
+    await page.getByTestId('identifier-uri').fill(opts.identifier.uri);
+  } else {
+    await page.getByTestId('identifier-resolver').fill(opts.identifier.resolverBase);
+    await page.getByTestId('identifier-gtin').fill(opts.identifier.gtin);
+    await page.getByTestId('identifier-serial').fill(opts.identifier.serial);
+  }
+  await page.getByTestId('project-continue').click();
+  await expect(page.getByTestId('file-input')).toBeVisible();
 }
 
 export function fixturePaths(): string[] {
@@ -98,5 +126,5 @@ export async function expectedMusterwerk() {
   );
   const report = validate(applied.draft, { asOf: CLOCK });
   const gap = gapReport(applied.draft, { report, asOf: CLOCK });
-  return { bundle, proposals, decisions, report, gap };
+  return { bundle, facts, proposals, decisions, report, gap };
 }
