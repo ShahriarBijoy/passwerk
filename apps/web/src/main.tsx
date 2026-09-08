@@ -3,6 +3,7 @@ import { App } from './app/App.tsx';
 import { nowIso } from './app/clock.ts';
 import { ErrorBoundary } from './app/ErrorBoundary.tsx';
 import { attachPersistence, clearState, loadState } from './app/persistence.ts';
+import { browserPlatform } from './app/platform.ts';
 import './index.css';
 import { initialState } from './workflow/state.ts';
 import { createStore } from './workflow/store.ts';
@@ -23,7 +24,11 @@ async function boot() {
         store.dispatch({ type: 'reset', at: nowIso() });
       }}
     >
-      <App store={store} {...(notice ? { storageNotice: notice } : {})} />
+      <App
+        store={store}
+        platform={browserPlatform}
+        {...(notice ? { storageNotice: notice } : {})}
+      />
     </ErrorBoundary>,
   );
 }

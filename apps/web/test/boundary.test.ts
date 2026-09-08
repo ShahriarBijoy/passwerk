@@ -60,6 +60,16 @@ describe('import boundaries (spec section 3)', () => {
     const bad = files.filter((f) => imports(f).some((s) => s.startsWith('node:')));
     expect(bad.map((f) => relative(SRC, f))).toEqual([]);
   });
+  it('the shell reaches the browser only through platform.ts (Phase 7b)', () => {
+    // The MCP App (apps/mcp-app) renders the same `App` inside a host iframe and supplies its
+    // own download, persistence and pdf.js worker. Those three must enter as a prop, never as
+    // imports, or the iframe build drags in IndexedDB and an anchor download it cannot use.
+    const app = join(SRC, 'app', 'App.tsx');
+    const bad = imports(app).filter(
+      (s) => /(persistence|download)\.ts$/.test(s) || /\?url$/.test(s),
+    );
+    expect(bad).toEqual([]);
+  });
   it('the relative-import patterns catch a two-level climb, not just one', () => {
     // A file two directories deep (e.g. `workflow/derive/x.ts` or `views/parts/x.tsx`) reaches
     // a forbidden layer with `../../`, not `../`. Run the actual matcher over a synthetic

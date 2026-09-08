@@ -24,6 +24,7 @@ function chooseAttribute(id: string): void {
 }
 
 const AT = '2026-09-05T12:00:00Z';
+const platform = { download: vi.fn(), clearPersisted: vi.fn() };
 
 const OUTCOME: IngestOutcome = {
   summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
@@ -50,7 +51,7 @@ const OUTCOME: IngestOutcome = {
 describe('App', () => {
   it('starts on the project step, toggles language and starts a project', () => {
     const store = createStore(initialState);
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     expect(screen.getByText('Batterietyp')).toBeTruthy();
     fireEvent.click(screen.getByTestId('lang-toggle'));
     expect(screen.getByText('Battery type')).toBeTruthy();
@@ -60,7 +61,7 @@ describe('App', () => {
     expect(screen.getByText('Upload documents')).toBeTruthy();
   });
   it('shows the storage notice', () => {
-    mount(<App store={createStore(initialState)} storageNotice="version" />);
+    mount(<App store={createStore(initialState)} platform={platform} storageNotice="version" />);
     expect(screen.getByTestId('storage-notice')).toBeTruthy();
   });
 
@@ -72,7 +73,7 @@ describe('App', () => {
       }),
     );
     const store = createStore(initialState);
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     fireEvent.click(screen.getByTestId('project-continue'));
     fireEvent.change(screen.getByTestId('file-input'), {
       target: { files: [new File(['a;b'], 'a.csv', { type: 'text/csv' })] },
@@ -98,7 +99,7 @@ describe('App', () => {
   it('continues from upload to the facts screen', async () => {
     ingestFiles.mockResolvedValueOnce(OUTCOME);
     const store = createStore(initialState);
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     fireEvent.click(screen.getByTestId('lang-toggle'));
     fireEvent.click(screen.getByTestId('project-continue'));
     await act(async () => {
@@ -139,7 +140,7 @@ describe('App', () => {
       at: AT,
     });
     store.dispatch({ type: 'goTo', step: 'facts', at: AT });
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     fireEvent.click(screen.getByTestId('fact-map'));
     chooseAttribute('criticalRawMaterials');
     // Without `arrayRows` wired through, the row editor would open with a single empty row
@@ -161,7 +162,7 @@ describe('App', () => {
       facts: { facts: [], tables: [], documents: [] },
       at: AT,
     });
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     // Default state language is 'de'.
     fireEvent.click(screen.getByText('Fortsetzen'));
     expect(store.getState().step).toBe('review');
@@ -174,7 +175,7 @@ describe('App', () => {
       project: defaultProject('urn:passwerk:test:2', AT),
       at: AT,
     });
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     // Default state language is 'de'.
     fireEvent.click(screen.getByText('Fortsetzen'));
     expect(store.getState().step).toBe('upload');
@@ -182,7 +183,7 @@ describe('App', () => {
 
   it('disables the Dokumente step until a project exists', () => {
     const store = createStore(initialState);
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     expect((screen.getByTestId('step-upload') as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -201,13 +202,13 @@ describe('App', () => {
       facts: { facts: [], tables: [], documents: [] },
       at: AT,
     });
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     expect((screen.getByTestId('step-facts') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('start over re-seeds the project form instead of reusing the previous identifier', () => {
     const store = createStore(initialState);
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     // Default mode is 'draft': capture the freshly generated placeholder URN before switching
     // away from it, so it can be compared against the one generated after the reset.
     const firstUrn = (screen.getByTestId('identifier-urn') as HTMLInputElement).value;
@@ -243,7 +244,7 @@ describe('App', () => {
       batteryType: 'PORTABLE' as const,
     };
     store.dispatch({ type: 'setProject', project, at: AT });
-    mount(<App store={store} />);
+    mount(<App store={store} platform={platform} />);
     // Default state language is 'de'.
     fireEvent.click(screen.getByText('Fortsetzen'));
     expect(store.getState().step).toBe('project');
