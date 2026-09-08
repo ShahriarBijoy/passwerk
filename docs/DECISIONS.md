@@ -832,3 +832,73 @@ model and the user look at one draft. Screenshots: `docs/screenshots/mcp-app-*.p
 resource. `PASSWERK_CLOCK` fixes the server clock for test suites. Phase 7c packages the same
 server; the MCPB bundle needs no extra step because the workbench travels inside
 `@passwerk/server`.
+
+## D-038: The browser assist chooses attributes, never values (2026-09-08)
+
+**Context.** `suggestMappings` proposes a mapping only when a fact's label scores against the
+synonym index. A label it has never seen produces no proposal at all, which is what the
+held-out evaluation measures: 42.9 % recall over documents transcribed from public datasheets
+against 94.1 % on the fixtures the index was authored against (`docs/EVALUATION.md`, D-028).
+The gap is vocabulary. The build plan's Phase 7a always carried an optional bring-your-own-key
+model call for exactly this, inside the D-002 boundary.
+
+**Decision.** `apps/web` gains an optional assist, off until a reviewer configures it.
+
+1. **The model chooses attribute ids and nothing else.** The response contract carries an
+   `attributeId`, an optional composite `path` and a reason. A `value`, `unit` or `confidence`
+   in the answer is discarded without being read. An accepted suggestion takes its value from
+   core's `proposalValue` and its provenance from the fact, so nothing in an emitted passport
+   can originate in the model. This is what keeps the assist inside the "never invent" rule.
+2. **Seven guards, each a counted and displayed discard**: unknown attribute, one the category
+   does not offer, unknown fact, a path that is not a leaf of that composite, a value core's
+   schema refuses, a duplicate, and one the reviewer has already decided. The catalogue offered
+   to the model is exactly the set the acceptance dialog can select, so it cannot name
+   something the reviewer then cannot enter.
+3. **No synthetic confidence.** Suggestions never join the deterministic proposal list and
+   never appear in a recall or precision figure. `MappingProposal.confidence` has a documented
+   formula; a number invented beside it would poison the one signal the reviewer trusts.
+4. **Second opinions mark, they do not decide.** A critique renders under the proposal it is
+   about and changes no state, no verdict and no draft.
+5. **Accepting is the flow that already existed.** `AddValueDialog` gains `attributeId` and
+   `path` on its prefill; the result is the same `manual` decision, with the fact's provenance,
+   through the same conflict detection and validation.
+6. **Facts travel as per-run tokens.** Core's fact id is `${document}#${page}:${ordinal}` and
+   would carry the supplier's file name out inside the key. Only label, value, unit and
+   language are sent, under `f0`, `f1`, ...; the real ids stay in a local `refs` map, which
+   also gives the parser an exact-match guard against an invented id.
+7. **A fixed payload, disclosed before the call.** The panel shows the counts, the endpoint host
+   and the literal request JSON. `request.test.ts` and `prompt.test.ts` assert that no file
+   name, page or cell survives serialisation, so a future field has to be argued for in review.
+8. **The key is its own IndexedDB record**, written only behind an explicit "remember on this
+   device". The workflow state is what autosave and every draft export are built from; a key
+   there would ride along into a file the supplier sends to their OEM. Memory-only is the
+   default and the panel says plainly what remembering costs.
+9. **The assist is a `Platform` capability.** Every provider specific — endpoints, default
+   model ids, request envelopes — sits behind `Platform.assist`. `apps/mcp-app` supplies none,
+   because its host already has a model, so the workbench bundles no endpoint at all; its
+   sovereignty spec asserts that on the built HTML.
+
+**Providers.** Plain `fetch`, no SDK: two envelopes of about twenty lines each. Anthropic
+Messages (default `claude-sonnet-5`, as `passwerk chat`, D-032) and any OpenAI-compatible base
+URL, which is what lets a supplier point the assist at Ollama or LM Studio on localhost and
+keep the whole thing inside the building. A local runner gets no `Authorization` header at all,
+since an empty bearer token makes some of them refuse the request. One call per run, no
+streaming, no retry, no repair: a failed run says so and shows what came back.
+
+**Sovereignty.** `core` and `server` still make zero model calls and zero network calls; nothing
+outside `apps/web` changed. The existing `apps/web/e2e/sovereignty.spec.ts` is unchanged and
+still passes, which is the load-bearing fact: with the assist unconfigured, no request leaves
+the origin. A new spec routes a stubbed endpoint and proves a run reaches that endpoint and no
+other, and that the body carries none of the fixture file names.
+
+**Unverified.** The Anthropic browser path needs the
+`anthropic-dangerous-direct-browser-access` header. It has not been exercised against the live
+API from this repo — CI never calls a real provider — so the OpenAI-compatible path is the one
+proven end to end here. If the header proves insufficient in the owner's first real run, the
+Anthropic provider ships disabled with an honest message and the compatibility endpoint carries
+the feature; this ADR records the outcome then.
+
+**Consequences.** `STATE_VERSION` 2 to 3, with a migration, because a stored v2 record can hold
+hours of review. `docs/EVALUATION.md` continues to measure the deterministic pipeline alone.
+The MCP App does not get bring-your-own-key; the natural route there is MCP sampling, and that
+is its own decision.

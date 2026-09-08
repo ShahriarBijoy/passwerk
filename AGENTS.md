@@ -194,5 +194,16 @@ so no build is needed before `pnpm test`.
   Streamable HTTP (Musterwerk, golden, model-context, sovereignty). `pnpm build:mcp-app`,
   `pnpm e2e:mcp-app`. The Claude Desktop measurements go into ADR D-037 from the probe
   (`pnpm --filter @passwerk/mcp-app probe`).
-- **Next:** bring-your-own-key for the web app (own PR, D-002 boundary), then Phase 7c (D-024
-  order).
+- **Phase 7a, bring-your-own-key (`apps/web`): done.** An optional mapping assist on the review
+  screen (ADR D-038), inside the D-002 boundary: `core` and `server` still make zero model calls
+  and zero network calls. The model returns attribute ids and nothing else — a value, unit or
+  confidence it volunteers is discarded unread, and an accepted suggestion takes its value from
+  `proposalValue` and its provenance from the fact. Facts travel as per-run tokens, never core's
+  ids, which embed the file name. Seven guards (unknown attribute, not offered for the category,
+  unknown fact, bad leaf, value refused, duplicate, already decided) become counted, displayed
+  discards. Second opinions mark a proposal row and decide nothing. Anthropic or any
+  OpenAI-compatible base URL (Ollama, LM Studio), plain `fetch`, key in memory unless
+  "remember on this device" is ticked, and then in its own IndexedDB record. The assist is a
+  `Platform` capability; `apps/mcp-app` supplies none, and its sovereignty spec proves the built
+  workbench carries no endpoint. `apps/web/e2e/sovereignty.spec.ts` is unchanged and still green.
+- **Next:** Phase 7c packaging (MCPB bundle, Codex plugin, connector submission checklist).
