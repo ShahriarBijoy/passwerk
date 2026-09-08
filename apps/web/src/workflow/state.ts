@@ -1,8 +1,9 @@
 import type { FactSet, IngestError, MappingProposal, PassportDraft } from '@passwerk/core';
 import type { Language } from '../i18n/index.ts';
+import type { AssistState } from './assist/types.ts';
 import type { Project } from './project.ts';
 
-export const STATE_VERSION = 2 as const;
+export const STATE_VERSION = 3 as const;
 export type Step = 'project' | 'upload' | 'facts' | 'review' | 'gaps';
 export const STEPS: readonly Step[] = ['project', 'upload', 'facts', 'review', 'gaps'];
 
@@ -63,6 +64,13 @@ export interface WorkflowState {
   factEdits: Record<string, FactEdit>;
   decisions: Record<DecisionKey, Decision>;
   /**
+   * The last bring-your-own-key assist run (ADR D-038), or null. An input like `factEdits`,
+   * never a derivation: the assist reaches the draft only through the decisions the reviewer
+   * makes from it, so every verdict stays a pure function of project, facts, edits and
+   * decisions. The API key is not here — it has its own store (`app/assist/key.ts`).
+   */
+  assist: AssistState | null;
+  /**
    * Bumped when a project is created or replaced (the first `setProject` from `null`,
    * `importDraft`, or `reset`) — not on every edit of an already-active project. An upload
    * started under one generation is discarded when it lands under another, so a slow ingest
@@ -82,6 +90,7 @@ export const initialState: WorkflowState = {
   facts: null,
   factEdits: {},
   decisions: {},
+  assist: null,
   generation: 0,
   updatedAt: '1970-01-01T00:00:00Z',
 };
