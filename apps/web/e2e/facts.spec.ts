@@ -59,8 +59,19 @@ test('facts: an edited value reaches the draft; a mapped fact keeps its provenan
     page.getByTestId('export-draft').click(),
   ]);
   const draft = JSON.parse(readFileSync((await download.path()) ?? '', 'utf8'));
-  const values = JSON.stringify(draft.attributes);
-  expect(values).toContain('"777"');
+  // Asserts the pinned attribute directly: a proposal landing on the wrong attribute (but still
+  // carrying "777" somewhere in the draft) must fail this.
+  expect(draft.attributes.ratedCapacity.value).toBe('777');
   expect(draft.attributes.nominalVoltage.value).toBe('400');
-  expect(draft.attributes.nominalVoltage.source[0].file).toBe('lieferantenerklaerung.pdf');
+  // Fact ids have the shape file#page:ordinal (extractFacts, packages/core/src/extract/facts.ts);
+  // derive the expected file and page from the mapped fact's own id so this proves the manual
+  // decision kept that fact's actual provenance, not just any source naming the one uploaded
+  // file. (The id never carries a cell reference for a non-table fact like this one — that lives
+  // in `source.cell`, which stays absent here — so only file and page are checked.)
+  const idMatch = /^(?<file>.+)#(?<page>\d+):\d+$/.exec(unmappedId ?? '');
+  if (!idMatch?.groups) throw new Error(`unexpected fact id shape: ${unmappedId}`);
+  const source = draft.attributes.nominalVoltage.source[0];
+  expect(source.file).toBe(idMatch.groups['file']);
+  expect(source.page).toBe(Number(idMatch.groups['page']));
+  expect(source.cell).toBeUndefined();
 });

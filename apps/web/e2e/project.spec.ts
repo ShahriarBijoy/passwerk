@@ -51,6 +51,11 @@ test('portable battery: no derived category, select appears', async ({ page }) =
     'data-verdict',
     'not_required',
   );
+  // EV is also not_required at the pinned clock (before 2027-02-18), so the verdict alone
+  // cannot tell the two apart. Portable's reason is core's "uncovered battery type" text
+  // (checkObligations, packages/core/src/obligations/check.ts), distinct from EV's
+  // "obligation starts on ... this is before that date" reason.
+  await expect(page.getByTestId('obligation-reason')).toContainText('gehört nicht dazu');
   await expect(page.getByTestId('manual-category')).toBeVisible();
 });
 

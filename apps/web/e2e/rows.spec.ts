@@ -1,12 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { applyMappings, getSample, type PassportDraft, validate } from '@passwerk/core';
+import { applyMappings, getSample, validate, validateSchema } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
 import { CLOCK, pinClock } from './helpers.ts';
 
 test('row editor: rows saved on ev-valid equal core for the same draft', async ({ page }) => {
-  const draft = getSample('ev-valid') as PassportDraft;
+  const parsed = validateSchema(getSample('ev-valid'));
+  if (!parsed.draft) throw new Error('ev-valid sample no longer parses against the schema');
+  const draft = parsed.draft;
   const path = join(tmpdir(), 'passwerk-rows-ev-valid.json');
   writeFileSync(path, JSON.stringify(draft));
   const rows = [
@@ -26,6 +28,10 @@ test('row editor: rows saved on ev-valid equal core for the same draft', async (
     .locator('[data-testid="array-entry"][data-attribute="criticalRawMaterials"]')
     .getByTestId('array-edit')
     .click();
+  // count() does not auto-wait; without this the dialog may not have mounted yet, the removal
+  // loop below would be skipped, and the later unscoped rows-field-name fill would hit a
+  // strict-mode violation against more than one row.
+  await expect(page.getByTestId('rows-row').first()).toBeVisible();
   const rowCount = await page.getByTestId('rows-row').count();
   for (let i = rowCount - 1; i >= 0; i--) await page.getByTestId('rows-remove').nth(i).click();
   await page.getByTestId('rows-add').click();
@@ -39,9 +45,12 @@ test('row editor: rows saved on ev-valid equal core for the same draft', async (
   await second.getByTestId('rows-field-identifier').fill('7440-48-4');
   await second.getByTestId('rows-field-massKg').fill('1.5');
   await page.getByTestId('rows-save').click();
+  // A leading word-boundary, not a plain substring, so "12 Zeilen" cannot satisfy an expectation
+  // of "2". No trailing boundary: the card's next text node ("manuell" or the edit button label)
+  // butts up against "Zeilen" with no space in the flattened text content.
   await expect(
     page.locator('[data-testid="array-entry"][data-attribute="criticalRawMaterials"]'),
-  ).toContainText('2');
+  ).toHaveText(/\b2 Zeilen/);
 
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toHaveAttribute('data-verdict', expected.verdict);

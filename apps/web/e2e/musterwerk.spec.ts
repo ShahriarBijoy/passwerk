@@ -25,8 +25,11 @@ test('Musterwerk track: upload, accept >= 0.7, gaps match core', async ({ page }
   await expect(page.getByTestId('continue')).toHaveText(new RegExp(`${expected.proposals.length}`));
   await page.getByTestId('continue').click();
 
-  // Facts screen: core extracted the same number of facts as the app shows.
-  await expect(page.getByTestId('facts-count')).toContainText(String(expected.facts.facts.length));
+  // Facts screen: core extracted the same number of facts as the app shows. A word-boundary
+  // regex, not a substring, so e.g. 18 does not also satisfy a rendered 118.
+  await expect(page.getByTestId('facts-count')).toHaveText(
+    new RegExp(`\\b${expected.facts.facts.length}\\b`),
+  );
   await page.getByTestId('facts-continue').click();
 
   // Accept the first proposal at >= 0.7 in each group, exactly as the Node helper did.
