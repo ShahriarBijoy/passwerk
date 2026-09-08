@@ -19,6 +19,7 @@ import {
   languageOf,
   type SyncState,
   seedActions,
+  workerUrlOf,
 } from './bridge.ts';
 import './index.css';
 
@@ -32,7 +33,7 @@ const platform: Platform = {
   download: (file) => void hostDownload(host, file, store.getState().language, sync.draftId),
   // The host owns the instance's lifetime; nothing is persisted, so nothing is cleared.
   clearPersisted: () => {},
-  pdfWorkerSrc: pdfWorkerUrl,
+  pdfWorkerSrc: workerUrlOf(pdfWorkerUrl),
 };
 
 const root = document.getElementById('root');

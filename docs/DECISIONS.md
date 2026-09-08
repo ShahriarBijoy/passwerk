@@ -803,14 +803,21 @@ resolves through `gap_report` in the same MCP session to the draft the screen sh
 request leaves the preview origin. The single-file workbench is 4.69 MB (1.23 MB gzipped); the
 server tarball grows to 1.29 MB.
 
-**Measured in Claude Desktop.** Pending at the time of the PR: the owner runs
-`pnpm --filter @passwerk/mcp-app probe` (a throwaway page served in place of the workbench)
-inside Claude Desktop and records here whether the file input opens the OS picker, whether the
-inlined pdf.js worker runs or pdf.js falls back to the main thread, which of the 1, 4 and 16 MB
-`callServerTool` payloads the host accepts, and whether `downloadFile` is advertised. If the
-worker and its fallback are both blocked, ingest falls back to `ingest_documents` with inline
-bytes followed by `extract_facts`, seeded through `filesIngested`; that path is designed in the
-Phase 7b spec and implemented only if needed.
+**Measured in Claude Desktop (2026-09-08, Claude 1.49585.0, Electron 44, Windows).** The probe
+(`pnpm --filter @passwerk/mcp-app probe`, served in place of the workbench) ran from the local
+stdio server. The view's origin is a per-server subdomain of `claudemcpcontent.com`; the host
+reports itself as `Claude 1.0.0`, platform `desktop`, `inline` display with `fullscreen`
+available, 735 px wide, `maxHeight` 5000, locale `en-US`, dark theme, 12 px safe-area insets.
+Capabilities: `openLinks`, `downloadFile`, `serverTools`, `serverResources`, `logging`,
+`updateModelContext` (text, image), `message` (text), sandbox CSP as declared. `downloadFile`
+saved the probe's text file to the Downloads folder. `callServerTool` with inline base64 of
+1, 4 and 16 MB took 42, 131 and 866 ms; before the fix in `bin.ts` the 16 MB call ended the
+session, because the SDK's stdio read buffer defaults to 10 MB per message. A Worker created
+from the inlined `data:` URL failed (`error` event, no message); a Worker from a `blob:` URL and
+a dynamic `import()` of a `data:` URL both worked, so the shell re-wraps the inlined pdf.js
+worker as a Blob (`workerUrlOf`). Clipboard writes were swallowed until the resource requested
+`permissions.clipboardWrite`. The file input renders; whether the OS picker opens is confirmed
+by the workbench run (upload step).
 
 **Consequences.** Twelve tools. The server tarball and the Docker image carry the workbench
 (`ui/`). CI builds it, runs the Playwright host page, and the pack and docker smokes read the

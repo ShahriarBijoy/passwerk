@@ -14,7 +14,7 @@ import type { FileSummary } from '@/workflow/state.ts';
 import type { Store } from '@/workflow/store.ts';
 import { languageOf } from './host.ts';
 
-export { applyTheme, languageOf } from './host.ts';
+export { applyTheme, languageOf, workerUrlOf } from './host.ts';
 
 export interface HostLink {
   callServerTool(params: { name: string; arguments?: Record<string, unknown> }): Promise<{

@@ -11,7 +11,7 @@ describe('ui://passwerk/workbench.html (Phase 7b, ADR D-037)', () => {
     // carry the SDK (and its React peer) into the published tarball; this monorepo test is
     // the parity check.
     expect(MCP_APP_MIME).toBe(RESOURCE_MIME_TYPE);
-    expect(Object.keys(WORKBENCH_UI_META).sort()).toEqual(['csp', 'prefersBorder']);
+    expect(Object.keys(WORKBENCH_UI_META).sort()).toEqual(['csp', 'permissions', 'prefersBorder']);
     expect(Object.keys(WORKBENCH_UI_META.csp).sort()).toEqual([
       'connectDomains',
       'resourceDomains',
@@ -31,7 +31,11 @@ describe('ui://passwerk/workbench.html (Phase 7b, ADR D-037)', () => {
       expect(c.mimeType).toBe(MCP_APP_MIME);
       expect(c.text).toBe(HTML);
       expect(c._meta).toEqual({
-        ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true },
+        ui: {
+          csp: { connectDomains: [], resourceDomains: [] },
+          permissions: { clipboardWrite: {} },
+          prefersBorder: true,
+        },
       });
     } finally {
       await s.close();

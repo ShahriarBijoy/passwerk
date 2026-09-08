@@ -8,7 +8,14 @@ import { createServer } from '@passwerk/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
-import { applyTheme, attachSync, hostDownload, languageOf, seedActions } from '../src/bridge.ts';
+import {
+  applyTheme,
+  attachSync,
+  hostDownload,
+  languageOf,
+  seedActions,
+  workerUrlOf,
+} from '../src/bridge.ts';
 
 const CLOCK = '2026-09-05T12:00:00.000Z';
 
@@ -233,6 +240,23 @@ describe('hostDownload', () => {
     expect(text).toContain('drf_1');
     expect(text).toMatch(/^Dieser Host/);
     await h.close();
+  });
+});
+
+describe('workerUrlOf', () => {
+  it('re-wraps an inlined data: worker as a Blob URL and passes other URLs through', async () => {
+    const blobs: Blob[] = [];
+    const create = (b: Blob) => {
+      blobs.push(b);
+      return `blob:test/${blobs.length}`;
+    };
+    const source = 'self.postMessage(1)';
+    const url = workerUrlOf(`data:text/javascript;base64,${btoa(source)}`, create);
+    expect(url).toBe('blob:test/1');
+    expect(blobs[0]?.type).toBe('text/javascript');
+    expect(await blobs[0]?.text()).toBe(source);
+    expect(workerUrlOf('/assets/pdf.worker.mjs', create)).toBe('/assets/pdf.worker.mjs');
+    expect(blobs).toHaveLength(1);
   });
 });
 

@@ -20,6 +20,8 @@ export const MCP_APP_MIME = 'text/html;profile=mcp-app' as const;
  */
 export const WORKBENCH_UI_META = {
   csp: { connectDomains: [] as string[], resourceDomains: [] as string[] },
+  // The error panel offers "copy details"; without this the sandbox swallows the write.
+  permissions: { clipboardWrite: {} },
   prefersBorder: true,
 } as const;
 
