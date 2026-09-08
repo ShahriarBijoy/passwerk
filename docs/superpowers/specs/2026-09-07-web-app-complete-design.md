@@ -204,8 +204,9 @@ Value dialog and the group's edit action open the **row editor** instead of the 
   (`sparePartSources.components`) as `rows` leaves. `leafSchemaAt` learns to resolve a path
   inside the element (`0.name` style is not used; the editor validates rows whole).
 - The editor renders one row per element with one input per leaf; `list` leaves are a
-  comma-separated field, `rows` leaves a nested editor with the same component (depth 2 is
-  the deepest shape core has). Optional leaves left blank are omitted from the row.
+  textarea, one item per line (so an item may itself contain a comma), `rows` leaves a
+  nested editor with the same component (depth 2 is the deepest shape core has). Optional
+  leaves left blank are omitted from the row.
 - On save the rows are parsed into objects and checked with
   `COMPOSITE_SCHEMAS[attributeId].safeParse(rows)`; issues are shown per row and nothing is
   dispatched on failure. On success one `manual` decision with `path` undefined and

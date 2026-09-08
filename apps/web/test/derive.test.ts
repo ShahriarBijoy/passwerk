@@ -170,6 +170,14 @@ describe('derive', () => {
       expect(d.invalidDecisions).toHaveLength(1);
       expect(d.invalidDecisions[0]?.key).toBe('ratedCapacity');
       expect(d.draft.attributes['ratedCapacity']).toBeUndefined();
+      // App.tsx's `accepted` count (Object.values(state.decisions).filter((d) => d.kind !==
+      // 'reject').length) is unchanged by this fix: it counts every non-reject decision,
+      // invalid or not, and still counts this one after the correction. It is the visible
+      // invalid-decision row above that tells the reviewer something needs attention, not a
+      // drop in this count.
+      expect(Object.values(edited.decisions).filter((x) => x.kind !== 'reject').length).toBe(
+        Object.values(accepted.decisions).filter((x) => x.kind !== 'reject').length,
+      );
 
       // The other stranding path (a battery-type change, no fact edit involved) must not be
       // swept into the same "invalid" bucket: it stays the silent-wait, revivable case.
