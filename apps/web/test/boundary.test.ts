@@ -84,10 +84,11 @@ describe('import boundaries (spec section 3)', () => {
   });
 
   it('names a model endpoint only in app/assist', () => {
-    // apps/mcp-app builds its bundle from `views`, `workflow`, `i18n` and `components` plus
-    // its own `main`, and supplies no `Platform.assist`. Keeping every endpoint string inside
-    // `app/assist` is what makes that omission airtight: the iframe cannot bundle a URL it
-    // never imports, so the MCP App's sovereignty proof needs no exception (ADR D-038).
+    // apps/mcp-app builds its bundle from `views`, `workflow`, `i18n`, `components` and the
+    // shared `app/App.tsx`, and supplies no `Platform.assist`. Only `browserPlatform` reaches
+    // `app/assist/providers.ts`, and the MCP App does not import it, so nothing pulls an
+    // endpoint into that bundle (ADR D-038). This checks the rule at the source; the MCP App's
+    // own sovereignty spec checks the built artefact.
     const marks = ['api.anthropic.com', '/chat/completions'];
     const offenders = files.filter((f) => {
       const rel = relative(SRC, f).split(sep).join('/');

@@ -42,7 +42,6 @@ import {
   type WorkflowState,
 } from '../workflow/state.ts';
 import type { Store } from '../workflow/store.ts';
-import { DEFAULT_MODELS, endpointLabel } from './assist/providers.ts';
 import { nowIso } from './clock.ts';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 import type { Platform } from './platform.ts';
@@ -137,7 +136,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
   const [assistPrefill, setAssistPrefill] = useState<SuggestionPrefill | null>(null);
   const [assistConfig, setAssistConfig] = useState<AssistConfig>(() => ({
     provider: 'anthropic',
-    model: DEFAULT_MODELS.anthropic,
+    model: platform.assist?.defaultModel('anthropic') ?? '',
     apiKey: initialAssistKey ?? '',
   }));
   const [rememberKey, setRememberKey] = useState(initialAssistKey !== undefined);
@@ -242,7 +241,8 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
 
   const assistPanel = (() => {
     const input = assistInput();
-    if (!platform.assist || !input) return undefined;
+    const assist = platform.assist;
+    if (!assist || !input) return undefined;
     const { request } = buildRequest(input);
     return (
       <AssistPanel
@@ -252,7 +252,9 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
           setAssistConfig(
             // Switching provider carries the key over but not a model id the other one
             // would not recognise.
-            c.provider === assistConfig.provider ? c : { ...c, model: DEFAULT_MODELS[c.provider] },
+            c.provider === assistConfig.provider
+              ? c
+              : { ...c, model: assist.defaultModel(c.provider) },
           )
         }
         remember={rememberKey}
@@ -261,7 +263,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
           facts: request.facts.length,
           proposals: request.proposals.length,
           catalogue: request.catalogue.length,
-          endpoint: endpointLabel(assistConfig),
+          endpoint: assist.endpointLabel(assistConfig),
           json: JSON.stringify(request, null, 2),
         }}
         assist={state.assist}

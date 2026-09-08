@@ -29,6 +29,8 @@ __pycache__/
 
 apps/web/playwright-report/
 apps/web/test-results/
+apps/mcp-app/playwright-report/
+apps/mcp-app/test-results/
 
 # Demo output (packages/cli/scripts/demo.*)
 out/

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { downloads, openWorkbench } from './helpers.ts';
 
@@ -42,4 +44,18 @@ test('no request leaves the preview origin; exports go through the host', async 
   expect(foreign).toEqual([]);
   expect(beacons).toEqual([]);
   expect(frameBeacons).toEqual([]);
+});
+
+/**
+ * The web app's bring-your-own-key assist (ADR D-038) is a `Platform` capability, and this app
+ * supplies none: its host already has a model, so a second one inside the iframe would be
+ * duplicative. The claim is only worth as much as the artefact, so assert it on the built file
+ * rather than on the source: no model endpoint is bundled here at all.
+ */
+test('the built workbench carries no model endpoint', () => {
+  const html = readFileSync(join(import.meta.dirname, '..', 'dist', 'index.html'), 'utf8');
+  expect(html.length).toBeGreaterThan(1000);
+  for (const mark of ['api.anthropic.com', 'chat/completions', 'anthropic-version']) {
+    expect(html, mark).not.toContain(mark);
+  }
 });
