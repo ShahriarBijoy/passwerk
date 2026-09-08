@@ -96,6 +96,15 @@ export function createServer(options: ServerOptions = {}): {
         // Loose: core's objects carry more keys than the compact wire schema names.
         outputSchema: z.looseObject(tool.outputSchema),
         annotations: tool.annotations,
+        // MCP Apps (extension io.modelcontextprotocol/ui): the host renders this tool's result
+        // with the named ui:// resource. Visibility: the model may call it, and so may the app.
+        ...(tool.ui
+          ? {
+              _meta: {
+                ui: { resourceUri: tool.ui.resourceUri, visibility: ['model', 'app'] },
+              },
+            }
+          : {}),
       },
       async (input: Record<string, unknown>) => {
         const { lang, ...rest } = input as { lang?: Lang };

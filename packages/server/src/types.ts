@@ -81,6 +81,11 @@ export interface ToolDefinition<I extends z.ZodRawShape, O extends z.ZodRawShape
   outputSchema: O;
   annotations: ToolAnnotations;
   /**
+   * Set when a host that renders MCP Apps should show this tool's result as a UI (the
+   * `ui://` resource named here). `createServer` turns it into `_meta.ui` (ADR D-037).
+   */
+  ui?: { resourceUri: string };
+  /**
    * `structured` is validated against `outputSchema` by the SDK at call time; it is typed as
    * `object` here because loose schemas infer index signatures that core's interfaces lack.
    */

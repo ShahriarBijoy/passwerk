@@ -22,7 +22,7 @@ Open Settings, Developer, Edit Config. The file is `claude_desktop_config.json`
 }
 ```
 
-Restart Claude Desktop. The hammer icon lists the eleven passwerk tools.
+Restart Claude Desktop. The hammer icon lists the twelve passwerk tools.
 
 ## From source
 

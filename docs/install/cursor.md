@@ -18,7 +18,7 @@ Project: `.cursor/mcp.json`. User: `~/.cursor/mcp.json`.
 }
 ```
 
-Enable the server under Settings, MCP. The eleven tools appear in the agent's tool list.
+Enable the server under Settings, MCP. The twelve tools appear in the agent's tool list.
 
 ## From source
 
