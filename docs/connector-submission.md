@@ -1,0 +1,98 @@
+# Claude connector submission checklist
+
+Date: 2026-09-09. Owner-facing, English only. Checked against the code at
+`8a2fcf7` on `feat/packaging`.
+
+## 1. What is submitted
+
+`@passwerk/server` (version `0.1.0`), the MCP server for the offline EU Digital Battery
+Passport toolkit, over Streamable HTTP. It exposes:
+
+- The twelve tools listed in section 3.
+- The MCP App `ui://passwerk/workbench.html`: the same review workflow as `apps/web`, running
+  inside the connecting host's iframe, wired to the `review_passport` tool's
+  `_meta.ui.resourceUri`.
+
+The server also runs over stdio (the default, used by Claude Code, Codex and Claude Desktop);
+this submission is for the hosted Streamable HTTP deployment.
+
+## 2. Transport
+
+- Binary: `passwerk-server --http [port]` (`packages/server/src/bin.ts`). Default bind
+  `127.0.0.1:3777`; `--host <host>` and `--root <dir>` (restricts ingest and emit paths) are
+  also available. Without `--http`, the server speaks stdio.
+- `PASSWERK_AUTH_TOKEN` is required to start in HTTP mode and must be sent as a bearer token
+  (`Authorization: Bearer <token>`) on every request to `/mcp` (`packages/server/src/http.ts`,
+  `bearerMatches`, compared with `timingSafeEqual`). A missing or wrong token gets `401`.
+- `GET /healthz` is unauthenticated and returns `{"status":"ok","name":"passwerk-server",
+  "version":"0.1.0"}`.
+- The published container image is `ghcr.io/shahriarbijoy/passwerk:<version>`: distroless
+  Node 22 (`gcr.io/distroless/nodejs22-debian12:nonroot`), non-root, HTTP mode only
+  (`CMD ["dist/bin.js", "--http", "3777", "--host", "0.0.0.0"]` — note the container binds
+  `0.0.0.0` so it is reachable from outside its own network namespace; the CLI default of
+  `127.0.0.1` is for a locally run process, not the container).
+- **Open item:** the endpoint the reviewer connects to must be hosted by the owner (this
+  repository ships the server and the image, not a running instance). No such endpoint is
+  live yet as of this date.
+
+## 3. Tools
+
+All twelve tool definitions live in `packages/server/src/tools/*.ts` and are registered in
+`packages/server/src/server.ts`. Every one of them declares `destructiveHint: false` and
+`openWorldHint: false` — passwerk never deletes anything and never reaches outside the
+process. The table below is the annotations each tool actually sets (verified with
+`grep -A6 "annotations: {" packages/server/src/tools/*.ts`); no tool sets anything beyond
+`readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`.
+
+| Tool | Title | readOnlyHint | destructiveHint | idempotentHint | openWorldHint |
+|---|---|---|---|---|---|
+| `ingest_documents` | Ingest supplier documents | true | false | true | false |
+| `extract_facts` | Extract facts | true | false | true | false |
+| `suggest_mappings` | Suggest attribute mappings | true | false | true | false |
+| `apply_mappings` | Apply mapping decisions | false | false | true | false |
+| `validate_passport` | Validate a passport draft | true | false | true | false |
+| `gap_report` | Gap report | true | false | true | false |
+| `emit_passport` | Emit the passport files | false | false | true | false |
+| `check_obligations` | Check battery passport obligations | true | false | true | false |
+| `explain_attribute` | Explain an attribute or rule | true | false | true | false |
+| `generate_carrier` | Generate the data carrier (QR code) | false | false | true | false |
+| `list_capabilities` | List capabilities | true | false | true | false |
+| `review_passport` | Review a passport in the workbench | true | false | true | false |
+
+`review_passport` additionally carries `_meta.ui.resourceUri` pointing at
+`ui://passwerk/workbench.html` (`packages/server/src/tools/reviewPassport.ts`), which is how a
+host that renders MCP Apps opens the workbench for this tool's result.
+
+Every tool call returns both `structuredContent` and a human-readable `content: [{type:
+"text", ...}]` summary (`packages/server/src/server.ts`, the shared `registerTool` wrapper —
+this is uniform across all twelve, not a per-tool choice). Every legal claim (obligations,
+gap report line items, attribute explanations) carries a `sources[]` array and
+`isNotLegalAdvice: true` (`packages/core/src/obligations`, `packages/core/src/gap/report.ts`,
+`packages/core/src/explain/explain.ts`).
+
+## 4. Screenshots to attach
+
+- `docs/screenshots/mcp-app-01-project.png`
+- `docs/screenshots/mcp-app-03-review.png`
+- `docs/screenshots/mcp-app-04-gaps-export.png`
+- `docs/media/passwerk-web.gif`
+
+All four files exist in the repository as of this date.
+
+## 5. Privacy
+
+See `PRIVACY.md`. In short: passwerk contacts no external service by default, which is why
+the MCPB manifest (`packaging/mcpb/manifest.json`) omits `privacy_policies` — there is no
+policy to link because there is no service being contacted. The one exception is the web
+app's optional, off-by-default bring-your-own-key mapping assist (ADR D-038), which is not
+part of this MCP server submission.
+
+## 6. Open items
+
+- **Hosted endpoint.** No publicly reachable Streamable HTTP endpoint exists yet; the owner
+  must stand one up (or point the submission at the Docker image) before review can begin.
+- **`SECURITY.md` does not exist yet.** This is a known gap, deliberately out of scope for
+  this packaging phase. It should be written before or alongside the eventual submission.
+- **npm publish and registry listing.** `@passwerk/server` has not yet had its first publish
+  to the npm registry; the `server.json` entry (`io.github.shahriarbijoy/passwerk`) needs a
+  live, matching npm package before submission, per `docs/RELEASE.md`.
