@@ -40,7 +40,7 @@ export function iconPng() {
   // charge bars inside
   fill(png, bx + 44, by + 48, 56, 96, MARK);
   fill(png, bx + 120, by + 48, 56, 96, MARK);
-  return PNG.sync.write(png, { deflateLevel: 9, filterType: 0 });
+  return PNG.sync.write(png, { deflateLevel: 9 });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
