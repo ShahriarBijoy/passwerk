@@ -41,8 +41,27 @@ export async function rpcCollect({ bin, cwd, env, requests, timeoutMs = 30000 })
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      // Wait for the child to actually exit before resolving: on Windows the OS process can
+      // keep its cwd (and any files under it) locked for a moment after kill() returns, which
+      // races a caller's own cleanup of that same directory. A short forced-kill fallback
+      // keeps this from hanging if the child ignores the signal.
+      if (child.exitCode !== null || child.signalCode !== null) {
+        fn(arg);
+        return;
+      }
+      const killTimer = setTimeout(() => {
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          // already gone
+        }
+      }, 3000);
+      killTimer.unref();
+      child.once('exit', () => {
+        clearTimeout(killTimer);
+        fn(arg);
+      });
       child.kill();
-      fn(arg);
     }
 
     child.stdout.on('data', (d) => {

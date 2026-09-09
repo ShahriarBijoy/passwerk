@@ -294,7 +294,11 @@ importers:
 
   packaging/codex-plugin: {}
 
-  packaging/mcpb: {}
+  packaging/mcpb:
+    dependencies:
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
 
   tools/fixtures:
     devDependencies:
