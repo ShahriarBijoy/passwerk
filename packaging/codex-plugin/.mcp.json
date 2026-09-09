@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "passwerk": {
+      "command": "npx",
+      "args": ["-y", "@passwerk/server"]
+    }
+  }
+}
