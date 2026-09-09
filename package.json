@@ -28,9 +28,13 @@
     "heldout": "pnpm --filter @passwerk/fixtures run heldout",
     "review-sheet": "pnpm --filter @passwerk/rules run review-sheet",
     "release:pack": "rimraf out/pack && pnpm -r --filter \"./packages/*\" exec pnpm pack --pack-destination ../../out/pack",
-    "release:smoke": "node tools/release/pack-smoke.mjs"
+    "release:smoke": "node tools/release/pack-smoke.mjs",
+    "package:mcpb": "node packaging/mcpb/scripts/build.mjs",
+    "package:smoke": "node packaging/mcpb/scripts/smoke.mjs",
+    "package:codex": "node packaging/codex-plugin/scripts/build.mjs"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
     "@biomejs/biome": "2.5.11",
     "@modelcontextprotocol/ext-apps": "1.7.5",
     "@types/node": "^22.18.0",

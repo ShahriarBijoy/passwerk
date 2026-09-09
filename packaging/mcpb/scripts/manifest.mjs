@@ -14,7 +14,7 @@ const PROMPT_DESCRIPTIONS = {
     'Draft a data request to the party that holds a missing attribute, in German or English.',
 };
 
-export function buildManifest(base, { version, tools, promptNames }) {
+export function buildManifest(base, { version, tools, promptNames, promptTexts }) {
   const { manifest_version, name, display_name, ...rest } = base;
   return {
     manifest_version,
@@ -27,6 +27,13 @@ export function buildManifest(base, { version, tools, promptNames }) {
     prompts: promptNames.map((promptName) => ({
       name: promptName,
       description: PROMPT_DESCRIPTIONS[promptName] ?? promptName,
+      // The mcpb 2.1.2 schema requires a literal `text` per prompt (0.4.js:
+      // McpbManifestPromptSchema, `text` a required ZodString) — a static preview a host can
+      // show without calling the server. passwerk's prompts are argument-driven
+      // (registerPrompt in packages/server/src/prompts/index.ts takes lang/category), so this
+      // is the real English, no-argument rendering from packages/server/src/prompts/texts.ts,
+      // not new copy: the closest static text to what the live prompt returns by default.
+      text: promptTexts[promptName],
     })),
     prompts_generated: false,
   };

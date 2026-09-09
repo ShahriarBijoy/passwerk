@@ -2,8 +2,19 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PROMPT_NAMES, TOOLS } from '@passwerk/server';
 import { describe, expect, it } from 'vitest';
+import {
+  auditSupplierSubmission,
+  buildPassportInterview,
+  draftDataRequest,
+} from '../../../packages/server/src/prompts/texts.js';
 // @ts-expect-error - .mjs build helper, deliberately untyped
 import { buildManifest } from '../scripts/manifest.mjs';
+
+const promptTexts = {
+  'build-passport-interview': buildPassportInterview('en'),
+  'audit-supplier-submission': auditSupplierSubmission('en'),
+  'draft-data-request': draftDataRequest('en'),
+};
 
 const base = JSON.parse(
   readFileSync(fileURLToPath(new URL('../manifest.json', import.meta.url)), 'utf8'),
@@ -19,6 +30,7 @@ const built = buildManifest(base, {
   version: serverPkg.version,
   tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
   promptNames: PROMPT_NAMES,
+  promptTexts,
 });
 
 describe('the committed manifest template', () => {
@@ -90,6 +102,13 @@ describe('buildManifest', () => {
   it('has a real description for every prompt', () => {
     for (const p of built.prompts as { name: string; description: string }[]) {
       expect(p.description).not.toBe(p.name);
+    }
+  });
+
+  it('has the real English prompt text for every prompt, so mcpb validate accepts it', () => {
+    for (const p of built.prompts as { name: string; text: string }[]) {
+      expect(p.text).toBe(promptTexts[p.name as keyof typeof promptTexts]);
+      expect(p.text.length).toBeGreaterThan(0);
     }
   });
 });
