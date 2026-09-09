@@ -289,6 +289,10 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
 
+  packaging/codex-plugin: {}
+
+  packaging/mcpb: {}
+
   tools/fixtures:
     devDependencies:
       '@passwerk/core':

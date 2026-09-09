@@ -23,6 +23,7 @@ export default defineConfig({
       'packages/*/test/**/*.test.ts',
       'packages/*/src/**/*.test.ts',
       'tools/*/test/**/*.test.ts',
+      'packaging/*/test/**/*.test.ts',
       'apps/web/test/**/*.test.{ts,tsx}',
       'apps/mcp-app/test/**/*.test.{ts,tsx}',
     ],
