@@ -81,7 +81,10 @@ describe('buildManifest', () => {
   });
 
   it('does not mutate the template', () => {
-    expect(base).not.toHaveProperty('version');
+    const pristine = JSON.parse(
+      readFileSync(fileURLToPath(new URL('../manifest.json', import.meta.url)), 'utf8'),
+    );
+    expect(base).toEqual(pristine);
   });
 
   it('has a real description for every prompt', () => {
