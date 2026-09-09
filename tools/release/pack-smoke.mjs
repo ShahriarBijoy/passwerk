@@ -15,7 +15,7 @@
  * (rules, core, server, cli) makes each package already present in node_modules by the time
  * the next one is installed, so npm resolves the workspace dependency locally instead.
  */
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import {
   copyFileSync,
   existsSync,
@@ -26,6 +26,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { rpcCollect } from './stdio-client.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const PACK = join(ROOT, 'out', 'pack');
@@ -64,94 +65,20 @@ function shNode(args, cwd) {
 }
 
 /**
- * Talks the stdio JSON-RPC handshake to the freshly installed server: initialize, then
- * tools/list (id 2) and a resources/read of the MCP App workbench (id 3, ADR D-037). Frames
- * newline-delimited JSON correctly across `data` chunks (keeps only the trailing partial line
- * in the buffer) and always kills the child before settling, on every path: success, a
- * malformed line, a process error or the timeout. Resolves `{ tools, workbench }`.
+ * Talks the stdio JSON-RPC handshake to the freshly installed server: tools/list and a
+ * resources/read of the MCP App workbench (ADR D-037). Framing and child-process lifetime
+ * live in the shared client.
  */
 async function stdioSurface(serverBin, cwd) {
-  return await new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(process.execPath, [serverBin], {
-      cwd,
-      shell: false,
-      stdio: ['pipe', 'pipe', 'inherit'],
-    });
-    let buf = '';
-    let settled = false;
-    const result = {};
-    const timer = setTimeout(
-      () => settle(rejectPromise, new SmokeError('stdio tools/list + resources/read timed out')),
-      30000,
-    );
-    timer.unref();
-
-    function settle(fn, arg) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      child.kill();
-      fn(arg);
-    }
-
-    child.stdout.on('data', (d) => {
-      if (settled) return;
-      buf += d.toString();
-      const lines = buf.split('\n');
-      buf = lines.pop() ?? '';
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        let msg;
-        try {
-          msg = JSON.parse(line);
-        } catch (err) {
-          settle(rejectPromise, new SmokeError(`could not parse stdio line: ${line}\n${err}`));
-          return;
-        }
-        if (msg.id === 2) {
-          if (msg.error) {
-            settle(rejectPromise, new SmokeError(`tools/list error: ${JSON.stringify(msg.error)}`));
-            return;
-          }
-          result.tools = msg.result.tools;
-        } else if (msg.id === 3) {
-          if (msg.error) {
-            settle(
-              rejectPromise,
-              new SmokeError(`resources/read workbench error: ${JSON.stringify(msg.error)}`),
-            );
-            return;
-          }
-          result.workbench = msg.result.contents[0];
-        }
-        if (result.tools && result.workbench) {
-          settle(resolvePromise, result);
-          return;
-        }
-      }
-    });
-    child.on('error', (err) => settle(rejectPromise, err));
-
-    const send = (m) => child.stdin.write(`${JSON.stringify(m)}\n`);
-    send({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'initialize',
-      params: {
-        protocolVersion: '2025-06-18',
-        capabilities: {},
-        clientInfo: { name: 'smoke', version: '0' },
-      },
-    });
-    send({ jsonrpc: '2.0', method: 'notifications/initialized' });
-    send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-    send({
-      jsonrpc: '2.0',
-      id: 3,
-      method: 'resources/read',
-      params: { uri: 'ui://passwerk/workbench.html' },
-    });
+  const [list, read] = await rpcCollect({
+    bin: serverBin,
+    cwd,
+    requests: [
+      { method: 'tools/list' },
+      { method: 'resources/read', params: { uri: 'ui://passwerk/workbench.html' } },
+    ],
   });
+  return { tools: list.tools, workbench: read.contents[0] };
 }
 
 async function main() {
