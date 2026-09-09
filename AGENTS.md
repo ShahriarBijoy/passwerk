@@ -224,8 +224,9 @@ so no build is needed before `pnpm test`.
   the corrections found during implementation (`mcpb` 2.1.2's required `prompts[].text`, the
   derived-manifest improvement over the design document, the skill-copy guarantee's true scope)
   and the two owner measurements the ADR leaves blank: the `.mcpb` one-click install on macOS and
-  Windows, and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md` is a
-  deliberately open item.
+  Windows, and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md`, the
+  item D-039 left open, was written on 2026-09-10 (reporting channel, the three load-bearing
+  promises, five trust boundaries, supply chain).
 - **Workbench redesign: done (2026-09-11).** `apps/web` and `apps/mcp-app` are a fixed-height
   instrument in the Nothing idiom (dark-first, mono-caps labels, bundled Space Grotesk / Space
   Mono / Doto) instead of a scrolling document, with six steps (export is now its own screen)

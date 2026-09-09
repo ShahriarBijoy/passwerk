@@ -152,6 +152,13 @@ pnpm --filter @passwerk/web dev
 passwerk cites the regulation and the standards it implements, but it is a tool, not a
 lawyer. Every legal claim it emits carries its sources and an `isNotLegalAdvice: true` flag.
 
+## Security and privacy
+
+`PRIVACY.md` says what passwerk sends and stores, with the tests that enforce it: nothing
+leaves the machine unless you switch on one of the two optional, bring-your-own-key model
+features. `SECURITY.md` says how to report a vulnerability privately, and where the trust
+boundaries are — the document parsers first.
+
 ## License
 
 Apache-2.0. See `LICENSE` and `NOTICE`. Bundled third-party artefacts are documented with
