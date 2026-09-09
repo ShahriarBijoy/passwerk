@@ -311,4 +311,51 @@ describe('ReviewView', () => {
     expect(entry.textContent).toContain('1 row');
     expect(entry.textContent).not.toContain('1 rows');
   });
+
+  it('marks a proposal the assist flagged, without changing its state', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        critiques={[
+          { factId: 'f1', attributeId: 'ratedCapacity', reason: 'looks like the C/3 capacity' },
+        ]}
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    const chip = screen.getByTestId('assist-critique-chip');
+    expect(chip.textContent).toContain('looks like the C/3 capacity');
+    // A second opinion is a prompt to the reviewer, never a decision.
+    expect(screen.getByTestId('proposal').dataset['state']).toBe('pending');
+  });
+
+  it('leaves a proposal alone when the critique is about another one', () => {
+    mount(
+      <ReviewView
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        critiques={[{ factId: 'f9', attributeId: 'batteryMass', reason: 'nope' }]}
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    expect(screen.queryByTestId('assist-critique-chip')).toBeNull();
+  });
 });

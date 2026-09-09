@@ -1,0 +1,6 @@
+[mcp_servers.passwerk]
+command = "node"
+args = ["packages/server/dist/bin.js"]
+
+[mcp_servers.passwerk.env]
+PASSWERK_ROOT = "."

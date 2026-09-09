@@ -1,5 +1,6 @@
 import type { Fact, FactSet, PassportDraft } from '@passwerk/core';
 import type { Language } from '../i18n/index.ts';
+import type { AssistProvider, AssistResult, AssistState } from './assist/types.ts';
 import { type Project, projectFromMeta } from './project.ts';
 import {
   type Decision,
@@ -26,6 +27,14 @@ export type Action = Stamped &
     | { type: 'clearFactEdit'; factId: string }
     | { type: 'decide'; decision: Decision }
     | { type: 'clearDecision'; key: DecisionKey }
+    | {
+        type: 'assistRan';
+        result: AssistResult;
+        provider: AssistProvider;
+        model: string;
+      }
+    | { type: 'assistDismissed'; attributeId: string; path?: string; factId: string }
+    | { type: 'assistCleared' }
     | { type: 'setLanguage'; language: Language }
     | { type: 'goTo'; step: Step }
     | { type: 'reset' }
@@ -142,6 +151,28 @@ function changedFiles(before: FileSummary[], incoming: FileSummary[]): Set<strin
   return out;
 }
 
+/**
+ * The inputs that decide the battery category. When one of them changes, the catalogue the
+ * model chose from is no longer the project's, so its suggestions stop meaning anything and
+ * the run is dropped rather than left on screen under a category it never saw.
+ */
+function categoryInputsChanged(a: Project | null, b: Project): boolean {
+  if (!a) return true;
+  return (
+    a.batteryType !== b.batteryType ||
+    a.energyKwh !== b.energyKwh ||
+    a.manualCategory !== b.manualCategory ||
+    a.placedOnMarketDate !== b.placedOnMarketDate
+  );
+}
+
+/** The suggestions still worth showing after a decision landed on one of their keys. */
+function assistAfterDecision(assist: AssistState | null, key: DecisionKey): AssistState | null {
+  if (!assist) return null;
+  const suggestions = assist.suggestions.filter((s) => decisionKey(s.attributeId, s.path) !== key);
+  return suggestions.length === assist.suggestions.length ? assist : { ...assist, suggestions };
+}
+
 function decide(state: WorkflowState, decision: Decision): Record<DecisionKey, Decision> {
   const key = decisionKey(decision.attributeId, decision.path);
   // One decision per key: the group's other proposals are implicitly rejected by not being chosen.
@@ -156,6 +187,7 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
         ...state,
         ...stamp,
         project: { ...action.project, createdAt: state.project?.createdAt ?? action.at },
+        ...(categoryInputsChanged(state.project, action.project) ? { assist: null } : {}),
         generation: state.project === null ? state.generation + 1 : state.generation,
       };
     case 'importDraft':
@@ -168,6 +200,7 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
         facts: null,
         factEdits: {},
         decisions: {},
+        assist: null,
         generation: state.generation + 1,
         step: 'review',
       };
@@ -209,11 +242,55 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
       return { ...state, ...stamp, factEdits: rest };
     }
     case 'decide':
-      return { ...state, ...stamp, decisions: decide(state, action.decision) };
+      return {
+        ...state,
+        ...stamp,
+        decisions: decide(state, action.decision),
+        assist: assistAfterDecision(
+          state.assist,
+          decisionKey(action.decision.attributeId, action.decision.path),
+        ),
+      };
     case 'clearDecision': {
       const { [action.key]: _dropped, ...rest } = state.decisions;
       return { ...state, ...stamp, decisions: rest };
     }
+    case 'assistRan': {
+      // A run's guards saw the decisions as they were when its request was built. The reviewer
+      // keeps working while the model answers, so the same guard runs again on arrival: a
+      // suggestion for a key that has since been answered must not be offered, or accepting it
+      // would overwrite the newer decision.
+      const suggestions = action.result.suggestions.filter(
+        (s) => !(decisionKey(s.attributeId, s.path) in state.decisions),
+      );
+      return {
+        ...state,
+        ...stamp,
+        assist: {
+          ...action.result,
+          suggestions,
+          runAt: action.at,
+          provider: action.provider,
+          model: action.model,
+        },
+      };
+    }
+    case 'assistDismissed': {
+      if (!state.assist) return state;
+      const key = decisionKey(action.attributeId, action.path);
+      return {
+        ...state,
+        ...stamp,
+        assist: {
+          ...state.assist,
+          suggestions: state.assist.suggestions.filter(
+            (s) => s.factId !== action.factId || decisionKey(s.attributeId, s.path) !== key,
+          ),
+        },
+      };
+    }
+    case 'assistCleared':
+      return state.assist === null ? state : { ...state, ...stamp, assist: null };
     case 'setLanguage':
       return { ...state, ...stamp, language: action.language };
     case 'goTo':

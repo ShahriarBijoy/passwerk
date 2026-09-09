@@ -447,7 +447,13 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - Review, gap and export views are built as a shared component library so Phase 7b can reuse them unchanged.
 - Optional bring-your-own-key model call from the browser for semantic mapping (D-002 boundary).
 - DoD (first slice, D-029): Playwright on the built app, Chromium. Musterwerk track: the five fixtures uploaded and every proposal at confidence >= 0.7 accepted show the verdict, findings and gap items core computes in Node for the same inputs and clock. Golden track: each golden sample imported as draft JSON shows core's verdict and finding ids. Sovereignty: no request leaves the preview origin. Persistence: decisions survive a reload. The documents alone do not reach `valid` (31.9 % of mandatory data points), which is why `valid` is measured on the golden samples.
-- **Second slice done (2026-09-07):** project screen (obligations, voluntary category, identifier modes, QR preview), facts screen (edit, map), row editor for array composites (#23), state v2 with derived proposals (ADR D-036). Remaining: bring-your-own-key, own PR.
+- **Second slice done (2026-09-07):** project screen (obligations, voluntary category, identifier modes, QR preview), facts screen (edit, map), row editor for array composites (#23), state v2 with derived proposals (ADR D-036).
+- **Bring-your-own-key done (2026-09-08, ADR D-038):** an optional assist on the review screen.
+  The model names attributes only; values and provenance keep coming from core and the
+  documents. Anthropic or any OpenAI-compatible base URL (so Ollama and LM Studio work
+  offline), the key in memory unless the reviewer asks for it to be remembered, a disclosure
+  panel showing the literal request, and seven guards that turn everything else into a
+  displayed discard. **Phase 7a is complete.**
 
 ### Phase 7b — MCP App (D-019) (2–3 days)
 - `apps/mcp-app`: the Phase 7a review, gap and export components wrapped in the MCP Apps bridge (`@modelcontextprotocol/ext-apps`), served by `@passwerk/server` as a `ui://` resource referenced from `_meta.ui.resourceUri` on the relevant tools.

@@ -1,12 +1,13 @@
 import type { BatteryCategory, MappingConflict, MappingProposal, Verdict } from '@passwerk/core';
 import { getAttribute } from '@passwerk/rules';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type LangText, type Language, pick, rowsCount, t } from '../i18n/index.ts';
+import type { AssistCritique } from '../workflow/assist/types.ts';
 import type { InvalidDecision } from '../workflow/derive/index.ts';
 import type { Decision, DecisionKey } from '../workflow/state.ts';
 import { validateValue } from '../workflow/validateValue.ts';
@@ -31,6 +32,14 @@ export interface ReviewViewProps {
   arrays: ArrayEntry[];
   conflicts: MappingConflict[];
   invalidDecisions?: InvalidDecision[];
+  /**
+   * Second opinions from the bring-your-own-key assist (ADR D-038). They mark a row and say
+   * why; they never decide anything, never touch the draft and never move a verdict. The
+   * reviewer resolves one with the accept, reject and edit controls that are already there.
+   */
+  critiques?: AssistCritique[];
+  /** The assist panel, supplied by the shell. Absent when the host offers no assist. */
+  assistPanel?: ReactNode;
   accepted: number;
   pending: number;
   verdict: Verdict;
@@ -44,11 +53,13 @@ function ProposalRow({
   lang,
   group,
   p,
+  critique,
   onDecide,
 }: {
   lang: Language;
   group: ReviewGroup;
   p: MappingProposal;
+  critique?: AssistCritique;
   onDecide(d: Decision): void;
 }) {
   const d = group.decision;
@@ -163,6 +174,14 @@ function ProposalRow({
           {t(lang, 'review.edit')}
         </Button>
       </span>
+      {critique && (
+        <span
+          className="basis-full text-muted-foreground text-xs"
+          data-testid="assist-critique-chip"
+        >
+          {t(lang, 'assist.critique.chip')}: {critique.reason}
+        </span>
+      )}
     </div>
   );
 }
@@ -206,6 +225,7 @@ export function ReviewView(props: ReviewViewProps) {
           {t(lang, 'review.continue')}
         </Button>
       </div>
+      {props.assistPanel}
       {props.conflicts.map((c) => (
         <p
           key={`${c.attributeId}${c.path ?? ''}`}
@@ -295,9 +315,22 @@ export function ReviewView(props: ReviewViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {g.proposals.map((p) => (
-              <ProposalRow key={p.factId} lang={lang} group={g} p={p} onDecide={props.onDecide} />
-            ))}
+            {g.proposals.map((p) => {
+              const critique = (props.critiques ?? []).find(
+                (c) =>
+                  c.factId === p.factId && c.attributeId === g.attributeId && c.path === g.path,
+              );
+              return (
+                <ProposalRow
+                  key={p.factId}
+                  lang={lang}
+                  group={g}
+                  p={p}
+                  {...(critique ? { critique } : {})}
+                  onDecide={props.onDecide}
+                />
+              );
+            })}
             {g.decision && (
               <Button size="sm" variant="link" onClick={() => props.onClear(g.key)}>
                 {t(lang, 'review.clear')}

@@ -42,6 +42,15 @@ that oracle, expected failures included. It is not a certification of battery-pa
 compliance; template (L3) and plausibility (L4) checks are passwerk's own. A sovereignty test
 proves zero network calls.
 
+`@passwerk/rules`, `@passwerk/core`, `@passwerk/server` and `@passwerk/cli` make no network call
+and no model call, ever; that is what the sovereignty tests and the `--network none` Docker job
+enforce. The one exception in the whole project is opt-in and lives in the browser: the web app's
+**mapping assist** (ADR D-038) can ask a model of your choice which attribute an unrecognised
+label belongs to. It is off until you enter a key, it only ever receives labels and values — no
+file names, no pages, no cells, no documents — and it names attributes only: values and sources
+always come from your documents. Point it at `http://localhost:11434/v1` and it runs against
+Ollama without a byte leaving the building.
+
 ## Status
 
 **Phases 0 to 7 are done.**

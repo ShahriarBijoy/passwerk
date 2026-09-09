@@ -6,6 +6,7 @@ import { App } from '@/app/App.tsx';
 import { ErrorBoundary } from '@/app/ErrorBoundary.tsx';
 import type { IngestOutcome } from '@/workflow/ingest.ts';
 import { defaultProject } from '@/workflow/project.ts';
+import { reduce } from '@/workflow/reducer.ts';
 import { initialState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
 import { mount } from './render.tsx';
@@ -282,5 +283,148 @@ describe('ErrorBoundary', () => {
     expect(onReset).toHaveBeenCalledOnce();
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.getByText('recovered')).toBeTruthy();
+  });
+});
+
+/**
+ * A platform whose assist client resolves when the test says so, and whose key store is a
+ * variable the test can read. Both assist races are about what happens between the call and
+ * the answer, so the answer has to be held open.
+ */
+function assistHarness() {
+  const store = { key: undefined as string | undefined };
+  let settle: (text: string) => void = () => undefined;
+  const client = vi.fn(
+    () =>
+      new Promise<string>((resolve) => {
+        settle = resolve;
+      }),
+  );
+  const platform = {
+    download: vi.fn(),
+    clearPersisted: vi.fn(),
+    assist: {
+      client: () => client,
+      defaultModel: () => 'claude-sonnet-5',
+      endpointLabel: () => 'a-model-host',
+      loadKey: async () => store.key,
+      saveKey: async (key: string) => {
+        store.key = key;
+      },
+      clearKey: async () => {
+        store.key = undefined;
+      },
+    },
+  };
+  return { platform, store, client, settle: (text: string) => settle(text) };
+}
+
+/**
+ * A store parked on the review screen, ready for an assist run. The second fact carries a label
+ * the synonym index does not know, so it survives into the request as `f0` — a fact the
+ * deterministic matcher already places confidently is never asked about.
+ */
+function reviewStore() {
+  const outcome: IngestOutcome = {
+    summaries: OUTCOME.summaries,
+    facts: {
+      ...OUTCOME.facts,
+      facts: [
+        ...OUTCOME.facts.facts,
+        {
+          id: 'a.csv#1:1',
+          label: 'Typbezeichnung laut Werksangabe',
+          labelKey: 'typbezeichnung-laut-werksangabe',
+          raw: 'MW-EV-2026',
+          value: 'MW-EV-2026',
+          kind: 'text',
+          lang: 'de',
+          shape: 'kv',
+          source: { file: 'a.csv', page: 1 },
+        },
+      ],
+    },
+  };
+  let s = reduce(initialState, {
+    type: 'setProject',
+    project: defaultProject('urn:passwerk:test:1', AT),
+    at: AT,
+  });
+  s = reduce(s, { type: 'filesIngested', ...outcome, at: AT });
+  s = reduce(s, { type: 'goTo', step: 'review', at: AT });
+  return createStore(s);
+}
+
+function startRun(): void {
+  fireEvent.click(screen.getByTestId('assist-toggle'));
+  fireEvent.change(screen.getByTestId('assist-key'), { target: { value: 'sk-secret' } });
+  fireEvent.click(screen.getByTestId('assist-run'));
+}
+
+describe('App: the assist while the model is still answering', () => {
+  it('does not re-save a key the reviewer unchecked mid-run', async () => {
+    const h = assistHarness();
+    mount(<App store={reviewStore()} platform={h.platform} />);
+
+    fireEvent.click(screen.getByTestId('assist-toggle'));
+    fireEvent.change(screen.getByTestId('assist-key'), { target: { value: 'sk-secret' } });
+    fireEvent.click(screen.getByTestId('assist-remember'));
+    expect(h.store.key).toBe('sk-secret');
+    fireEvent.click(screen.getByTestId('assist-run'));
+
+    // The reviewer changes their mind before the answer comes back.
+    fireEvent.click(screen.getByTestId('assist-remember'));
+    expect(h.store.key).toBeUndefined();
+
+    await act(async () => {
+      h.settle('{"suggestions":[]}');
+    });
+
+    // The checkbox is unchecked, so the key must still be gone: an in-flight run is not a
+    // licence to write a secret the reviewer has withdrawn consent for (ADR D-038).
+    expect(h.store.key).toBeUndefined();
+    expect((screen.getByTestId('assist-remember') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('persists the key as soon as it is typed under a ticked box, not at the end of a run', () => {
+    const h = assistHarness();
+    mount(<App store={reviewStore()} platform={h.platform} />);
+    fireEvent.click(screen.getByTestId('assist-toggle'));
+    fireEvent.click(screen.getByTestId('assist-remember'));
+    fireEvent.change(screen.getByTestId('assist-key'), { target: { value: 'sk-typed-after' } });
+    expect(h.store.key).toBe('sk-typed-after');
+  });
+
+  it('discards an answer that arrives after the battery category changed', async () => {
+    const h = assistHarness();
+    const store = reviewStore();
+    mount(<App store={store} platform={h.platform} />);
+    startRun();
+
+    // The catalogue the model was given belongs to the old category.
+    await act(async () => {
+      store.dispatch({
+        type: 'setProject',
+        project: { ...defaultProject('urn:passwerk:test:1', AT), batteryType: 'LMT' },
+        at: AT,
+      });
+    });
+    await act(async () => {
+      h.settle('{"suggestions":[{"fact":"f0","attribute":"batteryIdentifier","reason":"x"}]}');
+    });
+
+    expect(store.getState().assist).toBeNull();
+    expect(screen.getByTestId('assist-error').textContent).toMatch(/chang|geändert/i);
+  });
+
+  it('installs an answer when nothing about the project moved', async () => {
+    const h = assistHarness();
+    const store = reviewStore();
+    mount(<App store={store} platform={h.platform} />);
+    startRun();
+    await act(async () => {
+      h.settle('{"suggestions":[{"fact":"f0","attribute":"batteryIdentifier","reason":"x"}]}');
+    });
+    expect(store.getState().assist?.suggestions).toHaveLength(1);
   });
 });

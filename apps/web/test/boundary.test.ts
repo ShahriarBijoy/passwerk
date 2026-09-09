@@ -82,4 +82,31 @@ describe('import boundaries (spec section 3)', () => {
     const viewsBad = ['../../app/store.ts'].filter((spec) => viewsRules.some((r) => r.test(spec)));
     expect(viewsBad).toEqual(['../../app/store.ts']);
   });
+
+  it('names a model endpoint only in app/assist', () => {
+    // apps/mcp-app builds its bundle from `views`, `workflow`, `i18n`, `components` and the
+    // shared `app/App.tsx`, and supplies no `Platform.assist`. Only `browserPlatform` reaches
+    // `app/assist/providers.ts`, and the MCP App does not import it, so nothing pulls an
+    // endpoint into that bundle (ADR D-038). This checks the rule at the source; the MCP App's
+    // own sovereignty spec checks the built artefact.
+    const marks = ['api.anthropic.com', '/chat/completions'];
+    const offenders = files.filter((f) => {
+      const rel = relative(SRC, f).split(sep).join('/');
+      if (rel.startsWith('app/assist/')) return false;
+      const text = readFileSync(f, 'utf8');
+      return marks.some((m) => text.includes(m));
+    });
+    expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it('keeps the assist transport out of the workflow layer', () => {
+    const assist = files.filter((f) =>
+      relative(SRC, f).split(sep).join('/').startsWith('workflow/assist/'),
+    );
+    expect(assist.length).toBeGreaterThan(0);
+    for (const f of assist) {
+      const bad = imports(f).filter((spec) => /app\//.test(spec) || /^https?:/.test(spec));
+      expect(bad, relative(SRC, f)).toEqual([]);
+    }
+  });
 });

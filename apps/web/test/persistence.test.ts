@@ -34,6 +34,17 @@ describe('persistence', () => {
     expect(await loadState()).toEqual({ kind: 'version' });
   });
 
+  it('migrates a v2 state rather than throwing away the reviewer’s work', async () => {
+    // v2 predates the assist slice (ADR D-038). A record from it holds hours of review, so it
+    // is carried forward with an empty assist rather than discarded as an unknown version.
+    const { assist: _absent, ...v2 } = { ...initialState, language: 'en' as const, version: 2 };
+    db.set('passwerk.web.state', v2);
+    expect(await loadState()).toEqual({
+      kind: 'state',
+      state: { ...initialState, language: 'en', version: STATE_VERSION, assist: null },
+    });
+  });
+
   it('writes after a dispatch (debounced) and clearState deletes', async () => {
     vi.useFakeTimers();
     const store = createStore(initialState);
