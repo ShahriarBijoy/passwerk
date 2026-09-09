@@ -1,8 +1,12 @@
 /**
  * Newline-delimited JSON-RPC over a child process's stdio, shared by the release pack smoke
  * and the MCPB bundle smoke. Frames correctly across `data` chunks (only the trailing partial
- * line stays in the buffer) and always kills the child before settling, on every path:
- * success, a malformed line, a process error or the timeout.
+ * line stays in the buffer) and, on every path (success, a malformed line, a process error or
+ * the timeout), kills the child and waits for it to actually exit before settling, so a caller
+ * can safely clean up the child's cwd immediately afterwards. If the child is already gone
+ * (a spawn failure sets exitCode before emitting 'error', with no 'exit' event to wait for)
+ * settling is immediate. Otherwise a 3 s forced SIGKILL fallback bounds the wait, so the total
+ * time to settle can exceed `timeoutMs` by up to that much.
  */
 import { spawn } from 'node:child_process';
 

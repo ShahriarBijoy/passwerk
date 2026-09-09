@@ -9,7 +9,7 @@
     "build": "node scripts/build.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
-  "dependencies": {
+  "devDependencies": {
     "fflate": "0.8.3"
   }
 }
