@@ -1,0 +1,48 @@
+{
+  "manifest_version": "0.4",
+  "name": "passwerk",
+  "display_name": "passwerk",
+  "description": "Offline EU Digital Battery Passport toolkit: ingest supplier documents, map, validate against IDTA 02035, report gaps with legal citations, emit AASX.",
+  "long_description": "passwerk turns a battery supplier's documents (BOMs, Excel exports, energy bills, supplier declarations) into a conformant EU Digital Battery Passport in the official AAS format (IDTA 02035-1 to -7) plus a legally cited gap report. Regulation (EU) 2023/1542 Article 77 makes the passport mandatory for EV, LMT and industrial batteries above 2 kWh from 18 February 2027.\n\nEverything runs on this machine. The server makes no network calls and no model calls; documents never leave the computer. Open the workbench to upload documents, review each mapping with its provenance, and export.\n\npasswerk reports gaps and cites the regulation. It is not legal advice.",
+  "author": {
+    "name": "Shahriar Bijoy",
+    "url": "https://github.com/ShahriarBijoy"
+  },
+  "license": "Apache-2.0",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShahriarBijoy/passwerk"
+  },
+  "homepage": "https://github.com/ShahriarBijoy/passwerk#readme",
+  "documentation": "https://github.com/ShahriarBijoy/passwerk/tree/main/docs",
+  "support": "https://github.com/ShahriarBijoy/passwerk/issues",
+  "keywords": ["battery-passport", "digital-product-passport", "aas", "idta-02035", "eu-2023-1542"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "PASSWERK_ROOT": "${user_config.documents_directory}"
+      }
+    }
+  },
+  "user_config": {
+    "documents_directory": {
+      "type": "directory",
+      "title": "Document folder",
+      "description": "The only folder passwerk may read documents from and write passports to.",
+      "required": true,
+      "default": "${DOCUMENTS}",
+      "multiple": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=22.13"
+    }
+  }
+}
