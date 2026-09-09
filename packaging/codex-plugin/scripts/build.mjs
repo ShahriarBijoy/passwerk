@@ -34,6 +34,13 @@ cpSync(join(ROOT, 'skills', 'passwerk'), join(OUT, 'skills', 'passwerk'), { recu
 
 console.log(`built ${OUT} (passwerk ${VERSION})`);
 console.log('install locally:');
+console.log('  mkdir -p ~/plugins ~/.agents/plugins');
 console.log(`  cp -r ${OUT} ~/plugins/passwerk`);
-console.log(`  cp ${join(HERE, 'marketplace.json')} ~/.agents/plugins/marketplace.json`);
+console.log(
+  `  [ -f ~/.agents/plugins/marketplace.json ] || cp ${join(HERE, 'marketplace.json')} ~/.agents/plugins/marketplace.json`,
+);
 console.log('  codex plugin add passwerk@personal');
+console.log(
+  'if ~/.agents/plugins/marketplace.json already exists, do NOT overwrite it: add the passwerk\n' +
+    'entry to its existing plugins array (see docs/install/codex.md) and use that marketplace name.',
+);
