@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const read = (p: string) =>
   JSON.parse(readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8'));
@@ -87,10 +87,17 @@ function tree(dir: string, prefix = ''): string[] {
 }
 
 describe('the assembled plugin', () => {
-  it('carries a byte-identical copy of skills/passwerk', () => {
+  // Runs once for this describe block, so every test below depends on a build this test run
+  // actually performed rather than on whatever `out/` a preceding test (or a stale local build)
+  // happened to leave behind. Under `-t` filtering, or if a sibling test throws before running
+  // the build, a bare `read()` of `out/` would otherwise silently assert against stale output.
+  beforeAll(() => {
     execFileSync(process.execPath, [join(root, 'packaging/codex-plugin/scripts/build.mjs')], {
       stdio: 'pipe',
     });
+  });
+
+  it('carries a byte-identical copy of skills/passwerk', () => {
     const source = join(root, 'skills', 'passwerk');
     const copied = join(root, 'out', 'codex-plugin', 'skills', 'passwerk');
     expect(tree(copied)).toEqual(tree(source));
