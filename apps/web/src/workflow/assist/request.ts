@@ -36,6 +36,7 @@ export function buildRequest(input: BuildRequestInput): BuiltRequest {
   const { category, language, facts, proposals, decisions } = input;
   const refs: AssistRefs = { facts: {}, proposals: {} };
 
+  const labelOf = new Map(facts.facts.map((f) => [f.id, f.label]));
   const confident = new Set<string>();
   const critiqued: RequestProposal[] = [];
   const ordered = [...proposals]
@@ -56,6 +57,9 @@ export function buildRequest(input: BuildRequestInput): BuiltRequest {
     };
     critiqued.push({
       id,
+      // The label is the whole question. Without it "Ladespannung -> nominalVoltage" and a
+      // correct nominal-voltage mapping are the same row, and the critique pass is guesswork.
+      label: labelOf.get(p.factId) ?? '',
       attributeId: p.attributeId,
       ...(p.path === undefined ? {} : { path: p.path }),
       value: asString(p.value),
@@ -64,8 +68,12 @@ export function buildRequest(input: BuildRequestInput): BuiltRequest {
     });
   }
 
+  // Only a decision that put a value in the draft settles a fact. A rejection leaves it
+  // unmapped, which makes it the fact most in need of a suggestion, not the least; the
+  // rejected attribute itself stays blocked by the response guard on the decision key.
   const decided = new Set(
     Object.values(decisions)
+      .filter((d) => d.kind !== 'reject')
       .map((d) => d.factId)
       .filter((id): id is string => id !== undefined),
   );

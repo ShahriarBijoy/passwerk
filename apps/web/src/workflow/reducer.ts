@@ -255,17 +255,26 @@ export function reduce(state: WorkflowState, action: Action): WorkflowState {
       const { [action.key]: _dropped, ...rest } = state.decisions;
       return { ...state, ...stamp, decisions: rest };
     }
-    case 'assistRan':
+    case 'assistRan': {
+      // A run's guards saw the decisions as they were when its request was built. The reviewer
+      // keeps working while the model answers, so the same guard runs again on arrival: a
+      // suggestion for a key that has since been answered must not be offered, or accepting it
+      // would overwrite the newer decision.
+      const suggestions = action.result.suggestions.filter(
+        (s) => !(decisionKey(s.attributeId, s.path) in state.decisions),
+      );
       return {
         ...state,
         ...stamp,
         assist: {
           ...action.result,
+          suggestions,
           runAt: action.at,
           provider: action.provider,
           model: action.model,
         },
       };
+    }
     case 'assistDismissed': {
       if (!state.assist) return state;
       const key = decisionKey(action.attributeId, action.path);

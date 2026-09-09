@@ -60,6 +60,8 @@ export interface RequestFact {
 /** A deterministic proposal offered up for a second opinion, under its own token (`p0`, ...). */
 export interface RequestProposal {
   id: string;
+  /** The source fact's label: what the critique is actually about. */
+  label: string;
   attributeId: string;
   path?: string;
   value: string;

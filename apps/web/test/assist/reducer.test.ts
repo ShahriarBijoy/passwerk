@@ -133,4 +133,30 @@ describe('the assist slice', () => {
     const imported = reduce(ran(withProject), { type: 'importDraft', draft, at: AT });
     expect(imported.assist).toBeNull();
   });
+
+  it('drops a landing suggestion for an attribute decided while the model was answering', () => {
+    // The run's guards saw the decisions as they were when the request was built. A reviewer
+    // who decides during the flight must not be handed a suggestion that would overwrite it.
+    const decided = reduce(withProject, {
+      type: 'decide',
+      decision: { kind: 'manual', attributeId: 'nominalVoltage', factId: 'a.pdf#1:9', value: '48' },
+      at: AT,
+    });
+    const after = ran(decided);
+    expect(assistOf(after).suggestions.map((s) => s.attributeId)).toEqual(['batteryMass']);
+  });
+
+  it('drops a landing suggestion for an attribute the reviewer rejected', () => {
+    // The landing filter is the same rule `parseResponse` applies when the request is built:
+    // a decision key the reviewer has answered — rejection included — is answered. The fact
+    // itself stays eligible for other attributes; that freedom lives in `buildRequest`.
+    const rejected = reduce(withProject, {
+      type: 'decide',
+      decision: { kind: 'reject', attributeId: 'batteryMass', factId: 'a.pdf#1:9' },
+      at: AT,
+    });
+    expect(assistOf(ran(rejected)).suggestions.map((s) => s.attributeId)).toEqual([
+      'nominalVoltage',
+    ]);
+  });
 });

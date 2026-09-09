@@ -112,6 +112,7 @@ describe('buildRequest', () => {
       'attributeId',
       'confidence',
       'id',
+      'label',
       'path',
       'unit',
       'value',
@@ -130,5 +131,47 @@ describe('buildRequest', () => {
       ]),
     );
     expect(build(decisions).request.facts).toEqual([]);
+  });
+
+  it('keeps a fact whose only decision is a rejection', () => {
+    // Rejecting a wrong sub-0.7 proposal leaves the fact unmapped. Dropping it from the next
+    // request is exactly backwards: that fact is now the one most in need of a suggestion.
+    const first = build().request.facts[0];
+    if (!first) throw new Error('expected at least one fact to ask about');
+    const factId = build().refs.facts[first.id] ?? '';
+    const decisions: Record<DecisionKey, Decision> = {
+      nominalVoltage: { kind: 'reject', attributeId: 'nominalVoltage', factId },
+    };
+    const { request, refs } = build(decisions);
+    expect(request.facts.map((f) => refs.facts[f.id])).toContain(factId);
+  });
+
+  it('leaves out a fact whose value the reviewer edited into the draft', () => {
+    const first = build().request.facts[0];
+    if (!first) throw new Error('expected at least one fact to ask about');
+    const factId = build().refs.facts[first.id] ?? '';
+    for (const decision of [
+      { kind: 'accept', attributeId: 'nominalVoltage', factId },
+      { kind: 'edit', attributeId: 'nominalVoltage', factId, value: '400' },
+    ] as Decision[]) {
+      const { request, refs } = build({ nominalVoltage: decision });
+      expect(request.facts.map((f) => refs.facts[f.id])).not.toContain(factId);
+    }
+  });
+
+  it('gives each critique candidate the label it came from', () => {
+    // Without the source label a critique is unanswerable: "Ladespannung -> nominalVoltage"
+    // and a correct nominal-voltage mapping look identical once only the value is shown.
+    const { request } = build();
+    expect(request.proposals.length).toBeGreaterThan(0);
+    for (const p of request.proposals) {
+      expect(p.label.length).toBeGreaterThan(0);
+    }
+    const byFact = new Map(facts.facts.map((f) => [f.id, f.label]));
+    const withRefs = build();
+    for (const p of withRefs.request.proposals) {
+      const ref = withRefs.refs.proposals[p.id];
+      expect(p.label).toBe(byFact.get(ref?.factId ?? ''));
+    }
   });
 });

@@ -898,6 +898,30 @@ proven end to end here. If the header proves insufficient in the owner's first r
 Anthropic provider ships disabled with an honest message and the compatibility endpoint carries
 the feature; this ADR records the outcome then.
 
+**Amended after review (2026-09-09, PR #30).** Four corrections, all to behaviour this ADR
+describes:
+
+- *A run never writes the key.* Persistence follows the reviewer's current preference at the
+  moment it changes — when the box is ticked, and when the key is edited under a ticked box.
+  Writing it when a run succeeded meant an answer arriving after the box was unticked restored
+  the secret against an explicit withdrawal of consent, because the handler had captured
+  `rememberKey` when the run started.
+- *A stale answer is discarded, not installed.* The reviewer keeps working while the model
+  thinks. An answer is dropped with a message when the project generation or the battery
+  category has moved since the request was built, because the catalogue the model chose from
+  was the old category's.
+- *The "already decided" guard runs again on arrival*, in the reducer, against current state.
+  A decision made during the flight would otherwise be overwritten by a suggestion that
+  predates it and passed the guard when the request was built.
+- *A rejection frees the fact but not the attribute.* A rejected sub-threshold proposal leaves
+  the fact unmapped, which makes it the fact most in need of a suggestion; it stays in the
+  request. The rejected attribute key itself stays answered, at request time and on arrival
+  alike, because the reviewer has given their answer for that key.
+
+Also: each critique candidate now carries the label of the fact it came from. The critique
+question is whether that label means that attribute, and a row showing only the value cannot
+distinguish a wrong mapping from a right one — the pass was unanswerable without it.
+
 **Consequences.** `STATE_VERSION` 2 to 3, with a migration, because a stored v2 record can hold
 hours of review. `docs/EVALUATION.md` continues to measure the deterministic pipeline alone.
 The MCP App does not get bring-your-own-key; the natural route there is MCP sampling, and that

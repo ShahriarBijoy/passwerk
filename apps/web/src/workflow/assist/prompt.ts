@@ -55,10 +55,12 @@ const catalogueLine = (e: CatalogueEntry): string =>
 const factLine = (f: RequestFact): string =>
   `- ${f.id}: "${f.label}" = "${f.value}"${f.unit === undefined ? '' : ` ${f.unit}`} (${f.lang})`;
 
+// The source label leads the line: the question is whether that label means that attribute,
+// and the value alone cannot tell a wrong mapping from a right one.
 const proposalLine = (p: RequestProposal): string =>
-  `- ${p.id}: ${p.attributeId}${p.path === undefined ? '' : `.${p.path}`} = "${p.value}"${
-    p.unit === undefined ? '' : ` ${p.unit}`
-  } (confidence ${p.confidence})`;
+  `- ${p.id}: "${p.label}" = "${p.value}"${p.unit === undefined ? '' : ` ${p.unit}`} was mapped to ${
+    p.attributeId
+  }${p.path === undefined ? '' : `.${p.path}`} (confidence ${p.confidence})`;
 
 const listOrNone = (lines: string[]): string => (lines.length === 0 ? '(none)' : lines.join('\n'));
 

@@ -242,6 +242,8 @@ export const de = {
   'assist.needBaseUrl': 'Bitte zuerst eine Basis-URL eingeben.',
   'assist.failed': 'Der Assistent ist fehlgeschlagen: {reason}',
   'assist.ranAt': '{model} hat um {at} geantwortet',
+  'assist.stale':
+    'Das Projekt hat sich geändert, während das Modell geantwortet hat; die Antwort wurde verworfen. Bitte erneut ausführen.',
   'assist.suggestions': 'Vorschläge ({count})',
   'assist.suggestions.none': 'Das Modell hat keine weiteren Zuordnungen vorgeschlagen.',
   'assist.accept': 'Prüfen und übernehmen',

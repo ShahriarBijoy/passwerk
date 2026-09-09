@@ -1,4 +1,4 @@
-import type { Fact, FactSet } from '@passwerk/core';
+import type { Fact, FactSet, MappingProposal } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 import { buildPrompt } from '@/workflow/assist/prompt.ts';
 import { buildRequest } from '@/workflow/assist/request.ts';
@@ -25,12 +25,23 @@ const FACTS: FactSet = {
   documents: [],
 };
 
-const built = (language: 'de' | 'en' = 'de') =>
+const PROPOSAL = {
+  attributeId: 'nominalVoltage',
+  value: '400',
+  unit: 'V',
+  source: [{ file: 'geheim-lieferant.pdf', page: 7 }],
+  confidence: 0.9,
+  factId: 'geheim-lieferant.pdf#7:1',
+  why: { de: 'x', en: 'x' },
+  checks: { label: 1, matched: 'Nennspannung', unit: 'match' as const, kind: 'ok' as const },
+};
+
+const built = (language: 'de' | 'en' = 'de', proposals: MappingProposal[] = []) =>
   buildRequest({
     category: 'INDUSTRIAL_GT_2KWH',
     language,
     facts: FACTS,
-    proposals: [],
+    proposals,
     decisions: {},
   });
 
@@ -85,5 +96,14 @@ describe('buildPrompt', () => {
 
   it('says there is nothing to critique when no proposal was sent', () => {
     expect(prompt().user).toContain('(none)');
+  });
+
+  it('shows the model the label a critique candidate came from', () => {
+    // The critique question is "does this label mean this attribute". A row without the label
+    // cannot be answered, only guessed at.
+    const request = built('de', [PROPOSAL]).request;
+    const line = buildPrompt(request).user;
+    expect(line).toContain('Nennspannung (DC)');
+    expect(line).toContain('nominalVoltage');
   });
 });

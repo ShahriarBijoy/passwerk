@@ -212,9 +212,20 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
     const controller = new AbortController();
     setAssistRun({ controller });
     setAssistError(undefined);
+    // What the answer will be judged against. The reviewer keeps working while the model
+    // thinks, and a result built for another category means nothing under this one.
+    const before = { generation: store.getState().generation, category: input.category };
     try {
       const client = platform.assist.client(assistConfig);
       const result = await runAssist({ ...input, client }, controller.signal);
+      const now = store.getState();
+      const nowCategory = derive(now, asOf)?.meta.category;
+      if (now.generation !== before.generation || nowCategory !== before.category) {
+        setAssistError(t(lang, 'assist.stale'));
+        return;
+      }
+      // The reducer runs the "already decided" guard again as this lands: a decision made
+      // while the model was answering must not be overwritten by a suggestion that predates it.
       dispatch({
         type: 'assistRan',
         result,
@@ -222,8 +233,6 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         model: assistConfig.model,
         at: nowIso(),
       });
-      if (rememberKey && assistConfig.apiKey !== '')
-        await platform.assist.saveKey(assistConfig.apiKey);
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') return;
       setAssistError(e instanceof Error ? e.message : String(e));
@@ -232,11 +241,21 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
     }
   };
 
+  /**
+   * The key is written whenever the reviewer's current preference says so — when the box is
+   * ticked and when the key changes under a ticked box — and never at the end of a run. A run
+   * captures its state at the moment it starts, so persisting there would let an answer that
+   * arrives after the box was unticked write the secret back (ADR D-038's opt-in is explicit).
+   */
+  const persistKey = (remember: boolean, apiKey: string) => {
+    if (!platform.assist) return;
+    if (remember && apiKey !== '') void platform.assist.saveKey(apiKey);
+    else void platform.assist.clearKey();
+  };
+
   const onRememberChange = (remember: boolean) => {
     setRememberKey(remember);
-    if (!platform.assist) return;
-    if (remember && assistConfig.apiKey !== '') void platform.assist.saveKey(assistConfig.apiKey);
-    if (!remember) void platform.assist.clearKey();
+    persistKey(remember, assistConfig.apiKey);
   };
 
   const assistPanel = (() => {
@@ -248,15 +267,18 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
       <AssistPanel
         lang={lang}
         config={assistConfig}
-        onConfigChange={(c) =>
-          setAssistConfig(
-            // Switching provider carries the key over but not a model id the other one
-            // would not recognise.
+        onConfigChange={(c) => {
+          // Switching provider carries the key over but not a model id the other one
+          // would not recognise.
+          const next =
             c.provider === assistConfig.provider
               ? c
-              : { ...c, model: assist.defaultModel(c.provider) },
-          )
-        }
+              : { ...c, model: assist.defaultModel(c.provider) };
+          setAssistConfig(next);
+          // Typing a key under a ticked box has to persist it here: a run no longer writes
+          // the key at all, so this is the only moment that "remember" can act on.
+          if (next.apiKey !== assistConfig.apiKey) persistKey(rememberKey, next.apiKey);
+        }}
         remember={rememberKey}
         onRememberChange={onRememberChange}
         disclosure={{

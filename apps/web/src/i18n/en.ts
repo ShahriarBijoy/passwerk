@@ -239,6 +239,8 @@ export const en: Record<keyof typeof de, string> = {
   'assist.needBaseUrl': 'Enter a base URL first.',
   'assist.failed': 'The assist failed: {reason}',
   'assist.ranAt': '{model} answered at {at}',
+  'assist.stale':
+    'The project changed while the model was answering, so its answer was discarded. Run it again.',
   'assist.suggestions': 'Suggestions ({count})',
   'assist.suggestions.none': 'The model suggested no further mappings.',
   'assist.accept': 'Review and add',
