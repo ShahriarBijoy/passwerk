@@ -57,6 +57,28 @@ jobs:
           name: tarballs
           path: out/pack/*.tgz
 
+  mcpb:
+    name: Build the .mcpb bundle
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build && pnpm build:mcp-app
+      - run: pnpm release:pack
+      - run: pnpm package:mcpb
+      - run: pnpm package:smoke
+      - run: pnpm package:codex
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mcpb-bundle
+          path: out/mcpb/passwerk-${{ needs.verify.outputs.version }}.mcpb
+
   npm:
     name: Publish to npm (trusted publishing)
     needs: verify
@@ -142,7 +164,7 @@ jobs:
 
   github-release:
     name: GitHub release
-    needs: [verify, npm, image]
+    needs: [verify, npm, image, mcpb]
     if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ubuntu-latest
     steps:
@@ -151,7 +173,13 @@ jobs:
         with:
           name: tarballs
           path: out/pack
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: mcpb-bundle
+          path: out/mcpb
       - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: out/pack/*.tgz
+          files: |
+            out/pack/*.tgz
+            out/mcpb/*.mcpb
           generate_release_notes: true

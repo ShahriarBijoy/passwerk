@@ -40,8 +40,21 @@ For any battery passport, Batteriepass or IDTA 02035 request, read `skills/passw
 and follow its workflow with the `passwerk` MCP tools.
 ```
 
-Alternatively, install the skill into Codex's skills directory once Phase 7c ships the
-`.codex-plugin/plugin.json` bundle.
+Alternatively, install the Codex plugin, which carries the skill and the passwerk MCP server
+together, from a checkout:
+
+```sh
+pnpm package:codex
+cp -r out/codex-plugin ~/plugins/passwerk
+cp packaging/codex-plugin/marketplace.json ~/.agents/plugins/marketplace.json
+codex plugin add passwerk@personal
+```
+
+`pnpm package:codex` prints these same commands with your absolute paths filled in. On
+Windows, the equivalent paths under the user profile apply (there is no `~` in `cmd.exe` or
+PowerShell; use `$HOME` or `%USERPROFILE%`). `~/.agents/plugins/marketplace.json` is
+discovered implicitly, no further registration step is needed. Start a new Codex session
+afterwards; the skill and the passwerk tools only appear from then on.
 
 ## First prompt
 

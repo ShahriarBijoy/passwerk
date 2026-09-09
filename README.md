@@ -16,6 +16,11 @@ web app with QR preview.
 
 ## Quick start
 
+**Claude Desktop:** download `passwerk-<version>.mcpb` from the
+[GitHub releases page](https://github.com/ShahriarBijoy/passwerk/releases) and open it. Claude
+Desktop installs the server, asks for your document folder, and the twelve passwerk tools are
+ready after a restart; see [docs/install/claude-desktop.md](docs/install/claude-desktop.md).
+
 ```sh
 npx -y @passwerk/server            # MCP server over stdio, offline, no keys
 claude mcp add passwerk -- npx -y @passwerk/server

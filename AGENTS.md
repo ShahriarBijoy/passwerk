@@ -33,7 +33,7 @@ proves zero network calls.
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
 | `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
 | `apps/mcp-app` | `@passwerk/mcp-app` | MCP App: the web app's workflow in the host's iframe, served by the server as `ui://passwerk/workbench.html` (ADR D-037) |
-| `packaging` (Phase 7c) | | MCPB bundle, Codex plugin manifest, Claude connector submission checklist |
+| `packaging` (Phase 7c) | | MCPB bundle for Claude Desktop, Codex plugin, connector submission checklist |
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
 
@@ -55,6 +55,9 @@ pnpm heldout            # regenerate the held-out documents and docs/EVALUATION.
 pnpm review-sheet       # regenerate docs/KB_REVIEW.md (every verify: true knowledge-base entry)
 pnpm build:web          # vite build of apps/web (after pnpm build)
 pnpm e2e                # Playwright suite of apps/web (after pnpm build:web; needs Chromium)
+pnpm package:mcpb       # build out/mcpb/passwerk-<version>.mcpb (after build, build:mcp-app, release:pack)
+pnpm package:smoke      # unzip that bundle and drive it over stdio
+pnpm package:codex      # build out/codex-plugin/ (manifests plus a copy of skills/passwerk)
 ```
 
 Tests import workspace packages by name (`@passwerk/core`). Vitest aliases them to `src/`,
