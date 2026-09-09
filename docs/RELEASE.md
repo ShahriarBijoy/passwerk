@@ -45,8 +45,12 @@ and downloads and checksums `mcp-publisher`, but publishes nothing.
    update `README.md` status if needed, merge to `main`.
 2. `git tag v<version> && git push origin v<version>`.
 3. Watch the workflow: verify (checks, pack smoke), npm, image (amd64 and arm64 on GHCR),
-   registry, GitHub release with the tarballs.
-4. Verify from a machine without the repository:
+   registry, mcpb (builds and smoke-tests `passwerk-<version>.mcpb`), GitHub release with the
+   tarballs and the `.mcpb` attached.
+4. Download `passwerk-<version>.mcpb` from the GitHub release and confirm it installs: open it
+   in Claude Desktop on macOS and on Windows, and check the hammer icon lists the twelve
+   passwerk tools after the restart.
+5. Verify from a machine without the repository:
    ```sh
    npx -y @passwerk/server --version
    curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.shahriarbijoy/passwerk"

@@ -1,9 +1,26 @@
 # Install: Claude Desktop
 
 Claude Desktop runs the server locally over stdio, so every document stays on the machine.
-Phase 7c will ship a one-click MCPB bundle; until then the JSON configuration below works.
 
-## Server
+## One-click install (MCPB bundle)
+
+Download `passwerk-<version>.mcpb` from the
+[GitHub releases page](https://github.com/ShahriarBijoy/passwerk/releases), then open the
+downloaded file. Claude Desktop shows an install dialog; confirm it and set the document
+folder it asks for (this becomes `PASSWERK_ROOT`). Restart Claude Desktop. The hammer icon
+lists the twelve passwerk tools.
+
+No release carries a `.mcpb` yet — the first one ships from the next tag (`docs/DECISIONS.md`
+D-039). Until then, build it yourself from a checkout: `pnpm build && pnpm build:mcp-app &&
+pnpm release:pack && pnpm package:mcpb` produces `out/mcpb/passwerk-<version>.mcpb`.
+
+The bundle carries the server, `@passwerk/core` and `@passwerk/rules` pinned to one version;
+there is nothing to install separately and no `npx` network fetch at startup.
+
+## Server (npx or from source)
+
+Use this JSON configuration instead of the MCPB bundle for an `npx` install or a from-source
+checkout.
 
 Open Settings, Developer, Edit Config. The file is `claude_desktop_config.json`
 (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`).

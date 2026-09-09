@@ -1,0 +1,11 @@
+{
+  "name": "@passwerk/codex-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Builds the Codex plugin: skills/passwerk plus the passwerk MCP server, installable from a local marketplace",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}

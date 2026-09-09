@@ -117,6 +117,36 @@ jobs:
           path: out/pack/*.tgz
           retention-days: 14
 
+  # Phase 7c: the .mcpb bundle and the Codex plugin must build and smoke on every operating
+  # system Claude Desktop and Codex actually ship on.
+  packaging:
+    name: Packaging (${{ matrix.os }})
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build && pnpm build:mcp-app
+      - run: pnpm release:pack
+      - run: pnpm package:mcpb
+      - run: pnpm package:smoke
+      - run: pnpm package:codex
+      - if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcpb-bundle
+          path: out/mcpb/*.mcpb
+          retention-days: 14
+
   docker:
     name: Docker image smoke
     needs: test

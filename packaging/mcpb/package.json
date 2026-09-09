@@ -1,0 +1,15 @@
+{
+  "name": "@passwerk/mcpb-bundle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Builds the .mcpb bundle Claude Desktop installs with one click; vendors the release tarballs so the install is offline",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "fflate": "0.8.3"
+  }
+}

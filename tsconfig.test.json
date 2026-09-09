@@ -25,6 +25,7 @@
     "packages/*/scripts/**/*.ts",
     "tools/*/src/**/*.ts",
     "tools/*/test/**/*.ts",
+    "packaging/*/test/**/*.ts",
     "vitest.config.ts"
   ]
 }

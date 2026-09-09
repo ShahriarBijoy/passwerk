@@ -926,3 +926,107 @@ distinguish a wrong mapping from a right one — the pass was unanswerable witho
 hours of review. `docs/EVALUATION.md` continues to measure the deterministic pipeline alone.
 The MCP App does not get bring-your-own-key; the natural route there is MCP sampling, and that
 is its own decision.
+
+## D-039: Packaging vendors the release tarballs; the manifests derive their own facts (2026-09-09)
+
+**Context.** Phase 7c (D-019) packages the same server two more ways: a `.mcpb` bundle Claude
+Desktop installs in one click, and a Codex CLI plugin. Both need a manifest that names the
+tools and prompts the server actually exposes, and the design document proposed committing
+`version`, `tools` and `prompts` and checking them against the server in the release workflow,
+the same shape as the existing version-agreement loop over the four npm packages.
+
+**Decision.**
+
+1. **The `.mcpb` bundle vendors the `rules`, `core` and `server` release tarballs**, installed
+   into `packaging/mcpb/server/node_modules` with `npm install --omit=dev --omit=optional`, so
+   the one-click install never touches the network. The CLI tarball is not vendored: it is not
+   part of an MCP host's surface. `--omit=optional` is load-bearing, not cosmetic: it keeps
+   `pdfjs-dist`'s optional native-canvas dependency out of the bundle. That dependency is only
+   for rendering pages to images, never for the text extraction passwerk does, and a platform
+   binary would turn one bundle into three (darwin/win32/linux), which `mcpb pack` does not
+   support producing from a single build. Without the omission the bundle would need a
+   per-platform build matrix; with it, everything vendored is pure JavaScript and one `.mcpb`
+   serves all three `compatibility.platforms`.
+2. **The launcher `packaging/mcpb/server/index.js` exists because `dist/bin.js` self-executes
+   only when it is `process.argv[1]`.** Inside the installed bundle it is imported, not run
+   directly, so the launcher imports the exported `main` and calls it, letting `main` read
+   `argv`/`env` itself. This is not just an inconvenience to route around: keeping `bin.js` as
+   the thing Node actually executes also keeps `new URL('../ui/workbench.html', import.meta.url)`
+   resolving inside the installed `@passwerk/server` package (ADR D-037), so the MCP App
+   workbench ships inside the bundle and `review_passport` renders it the same way it does from
+   a plain `npx` install.
+3. **`version`, `tools` and `prompts` are derived at build time, not committed.**
+   `packaging/mcpb/scripts/build.mjs` installs the tarballs first, then imports the *installed*
+   `@passwerk/server`'s `dist/index.js` for its exported `TOOLS` and `PROMPT_NAMES`, and reads
+   `version` off `packages/server/package.json`. `buildManifest` (`packaging/mcpb/scripts/
+   manifest.mjs`) folds those into the committed template (`packaging/mcpb/manifest.json`,
+   which carries everything that is not derived: description, author, `user_config`,
+   `compatibility`). The Codex plugin's `packaging/codex-plugin/scripts/build.mjs` does the same
+   for its own `version`. **This is an improvement over the design document**, which proposed
+   committing these fields and adding them to the release workflow's version-agreement loop
+   (the one that already checks the four npm packages agree). That loop did not need to grow:
+   there is no second copy of `tools`/`prompts` that can drift, because the manifest is built
+   from the installed server's own registry every time.
+4. **`mcpb` 2.1.2 requires `prompts[].text`, which the design document did not anticipate.**
+   Its manifest schema (`McpbManifestPromptSchema`) makes `text` a required string — a static
+   preview a host can show without calling the server. passwerk's prompts are argument-driven
+   (`registerPrompt` takes `lang`/`category`; there is no single canonical rendering), so
+   `buildManifest` gained a `promptTexts` map, and `build.mjs` fills it from a deep import of
+   the *installed* package's own `dist/prompts/texts.js`, calling each prompt with `'en'` and no
+   arguments. This is never authored or paraphrased copy: it is the real English, no-argument
+   rendering the server itself would return, read out of the tarball that ships. `texts.js` is
+   not on the package's public exports map, but it is a real file inside the tarball, so the
+   deep import is stable as long as the compiled layout does not move.
+5. **`manifest_version` is `"0.4"`**, which `mcpb validate` 2.1.2 accepts with no downgrade
+   needed; the design document had flagged a possible version mismatch as a risk that did not
+   materialize.
+6. **`privacy_policies` is omitted from the manifest** because passwerk contacts no external
+   service to omit a policy link for; the field would have nothing truthful to point at.
+7. **The Codex plugin does not vendor a runtime.** `.mcp.json` points at `npx -y
+   @passwerk/server`, so the plugin is a thin wrapper: manifests plus a copy of `skills/passwerk`,
+   installed with the runtime already on the machine, unlike the `.mcpb`'s offline vendoring.
+   The skill has one source (`skills/passwerk`); `packaging/codex-plugin/scripts/build.mjs`
+   copies it into `out/codex-plugin/skills/passwerk` on every build, and
+   `packaging/codex-plugin/test/plugin.test.ts` asserts the copy is byte-identical, file by file.
+8. **State the skill-copy guarantee accurately.** The test proves the *build script's copy step*
+   is byte-faithful right now — it rebuilds `out/` from source and diffs the result against
+   `skills/passwerk`. It does not, and structurally cannot, catch "a skill edit that forgot to
+   update the plugin", because there is no such failure mode to catch: `out/codex-plugin` is
+   git-ignored, nothing commits a plugin artefact, and every build re-syncs from the one source.
+   There is no stale copy anywhere in the repository for a skill edit to leave behind. The design
+   document's original framing — a test that would catch drift between the skill and a shipped
+   plugin copy — assumed a committed artefact that this design does not have; recording that
+   here is the correction, not a restatement of the plan.
+9. **The `.mcpb` is deliberately not byte-reproducible.** `mcpb pack` writes zip timestamps and
+   npm may vary tree layout between runs, so two builds of the same source can produce a
+   different `.mcpb` file even though their contents are equivalent. Determinism in this project
+   is a property of emitted passports (sorted keys, injected clock, byte-identical re-runs), not
+   of the installer that ships the tool that emits them.
+
+**Consequences.** CI (`.github/workflows/ci.yml`) builds and smokes the `.mcpb` and the Codex
+plugin on `ubuntu-latest`, `macos-latest` and `windows-latest` (job `Packaging (${{ matrix.os
+}})`: `pnpm package:mcpb`, `pnpm package:smoke`, `pnpm package:codex`), and the release workflow
+uploads the built `.mcpb` as a release asset. `packaging/mcpb/scripts/smoke.mjs` drives the
+shipped bundle over stdio and reads a real PDF through it, proving the vendored, offline install
+actually answers tool calls, not just that `mcpb validate` accepts the manifest.
+`SECURITY.md` remains an open item: it does not exist and was deliberately not created in this
+phase, which stays a checklist item under "Definition of done for v1.0" (`docs/BUILD_PLAN.md`
+§8) rather than something Phase 7c silently closed.
+
+**Owner measurements (outstanding — Phase 7c is not fully done until both are recorded here).**
+
+1. `.mcpb` one-click install, macOS and Windows: download `out/mcpb/passwerk-<version>.mcpb`
+   (or the CI packaging job's artifact), open it in Claude Desktop, confirm the document-folder
+   prompt (`user_config.documents_directory`), that all twelve tools are listed, and that asking
+   Claude to open the passwerk workbench renders the MCP App via `review_passport`.
+   - macOS: *(owner to fill in — version, build, screenshot or note)*
+   - Windows: *(owner to fill in — version, build, screenshot or note)*
+2. Codex CLI plugin: run `pnpm package:codex`, follow the three printed commands (`cp -r
+   out/codex-plugin ~/plugins/passwerk`, install `marketplace.json`, `codex plugin add
+   passwerk@personal`), then in a new Codex session confirm the `passwerk` skill and its MCP
+   tools are present.
+   - This measurement is gated on the first npm publish: the plugin's `.mcp.json` runs `npx -y
+     @passwerk/server`, and `@passwerk/server` is not on npm yet, so `codex plugin add
+     passwerk@personal` today loads the skill but not the tools (`docs/install/codex.md`). The
+     tools half of this measurement cannot be recorded until that publish happens.
+   - *(owner to fill in — Codex version, session transcript or note)*
