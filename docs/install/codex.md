@@ -56,6 +56,12 @@ PowerShell; use `$HOME` or `%USERPROFILE%`). `~/.agents/plugins/marketplace.json
 discovered implicitly, no further registration step is needed. Start a new Codex session
 afterwards; the skill and the passwerk tools only appear from then on.
 
+The plugin's `.mcp.json` runs `npx -y @passwerk/server`, and `@passwerk/server` is not
+published to npm yet (see `docs/DECISIONS.md` D-039). Until the first publish, `codex plugin
+add passwerk@personal` loads the skill but not the MCP tools — `npx` cannot resolve the
+package and the server never starts. Use the "From source" or "Server" configuration above for
+the tools in the meantime.
+
 ## First prompt
 
 ```

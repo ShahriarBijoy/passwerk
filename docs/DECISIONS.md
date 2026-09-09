@@ -997,6 +997,11 @@ the same shape as the existing version-agreement loop over the four npm packages
    document's original framing — a test that would catch drift between the skill and a shipped
    plugin copy — assumed a committed artefact that this design does not have; recording that
    here is the correction, not a restatement of the plan.
+9. **The `.mcpb` is deliberately not byte-reproducible.** `mcpb pack` writes zip timestamps and
+   npm may vary tree layout between runs, so two builds of the same source can produce a
+   different `.mcpb` file even though their contents are equivalent. Determinism in this project
+   is a property of emitted passports (sorted keys, injected clock, byte-identical re-runs), not
+   of the installer that ships the tool that emits them.
 
 **Consequences.** CI (`.github/workflows/ci.yml`) builds and smokes the `.mcpb` and the Codex
 plugin on `ubuntu-latest`, `macos-latest` and `windows-latest` (job `Packaging (${{ matrix.os
@@ -1020,4 +1025,8 @@ phase, which stays a checklist item under "Definition of done for v1.0" (`docs/B
    out/codex-plugin ~/plugins/passwerk`, install `marketplace.json`, `codex plugin add
    passwerk@personal`), then in a new Codex session confirm the `passwerk` skill and its MCP
    tools are present.
+   - This measurement is gated on the first npm publish: the plugin's `.mcp.json` runs `npx -y
+     @passwerk/server`, and `@passwerk/server` is not on npm yet, so `codex plugin add
+     passwerk@personal` today loads the skill but not the tools (`docs/install/codex.md`). The
+     tools half of this measurement cannot be recorded until that publish happens.
    - *(owner to fill in — Codex version, session transcript or note)*
