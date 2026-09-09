@@ -209,4 +209,23 @@ so no build is needed before `pnpm test`.
   "remember on this device" is ticked, and then in its own IndexedDB record. The assist is a
   `Platform` capability; `apps/mcp-app` supplies none, and its sovereignty spec proves the built
   workbench carries no endpoint. `apps/web/e2e/sovereignty.spec.ts` is unchanged and still green.
-- **Next:** Phase 7c packaging (MCPB bundle, Codex plugin, connector submission checklist).
+- **Phase 7c (packaging): done, two owner measurements outstanding.** `packaging/mcpb` builds a
+  `.mcpb` bundle for Claude Desktop that vendors the `rules`, `core` and `server` release
+  tarballs with `npm install --omit=dev --omit=optional` (the CLI is not vendored; omitting
+  `optional` keeps `pdfjs-dist`'s native canvas out and the bundle platform-neutral), a launcher
+  that imports `dist/bin.js`'s exported `main` so the MCP App workbench keeps resolving inside
+  the installed package (ADR D-037), and a manifest whose `version`, `tools` and `prompts` are
+  derived at build time from the installed server's own registry and `dist/prompts/texts.js`
+  rather than committed and checked, which is why the release workflow's version-agreement loop
+  did not need to grow. `packaging/codex-plugin` builds a Codex CLI plugin that points at `npx -y
+  @passwerk/server` (no vendored runtime) and copies `skills/passwerk` byte-for-byte from its one
+  source on every build. `PRIVACY.md` and `docs/connector-submission.md` are new. CI builds and
+  smokes both packages on `ubuntu-latest`, `macos-latest` and `windows-latest`. See ADR D-039 for
+  the corrections found during implementation (`mcpb` 2.1.2's required `prompts[].text`, the
+  derived-manifest improvement over the design document, the skill-copy guarantee's true scope)
+  and the two owner measurements the ADR leaves blank: the `.mcpb` one-click install on macOS and
+  Windows, and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md` is a
+  deliberately open item.
+- **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
+  test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
+  supplier via BIBA).

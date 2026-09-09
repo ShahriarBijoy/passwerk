@@ -465,6 +465,21 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 ### Phase 7c — Packaging (D-019) (1–2 days)
 - MCPB bundle for Claude Desktop (`manifest.json`, bundled Node server, `user_config` for the working directory); Codex plugin (`.codex-plugin/plugin.json` with the skills directory and the stdio server); Claude connector submission checklist (Streamable HTTP, tool annotations, privacy policy, screenshots).
 - DoD: one-click install works on macOS and Windows for MCPB; the plugin loads in Codex CLI from a local marketplace.
+- **Done (2026-09-09):** design document `docs/superpowers/specs/2026-09-09-phase-7c-packaging-design.md`.
+  `packaging/mcpb` builds a `.mcpb` bundle vendoring the `rules`, `core` and `server` release
+  tarballs (`--omit=dev --omit=optional`, offline install, platform-neutral) behind a launcher
+  that keeps the MCP App workbench resolving inside the installed package (ADR D-037); its
+  manifest's `version`, `tools` and `prompts` are derived at build time from the installed
+  server's own registry rather than committed and checked, an improvement over the design
+  document that left the release workflow's version-agreement loop unchanged. `packaging/
+  codex-plugin` builds a Codex CLI plugin pointing at `npx -y @passwerk/server` with
+  `skills/passwerk` copied byte-for-byte from its one source. `PRIVACY.md` and
+  `docs/connector-submission.md` are new; CI builds and smokes both packages on Ubuntu, macOS
+  and Windows. See ADR D-039 for the corrections made during implementation, including
+  `mcpb` 2.1.2's required `prompts[].text`. Two owner measurements are still outstanding and
+  recorded blank in D-039: the `.mcpb` one-click install in Claude Desktop on macOS and Windows,
+  and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md` remains a
+  deliberately open item.
 
 ### Phase 8 — Proof & pilot (ongoing)
 - Run emitted AASX through AASX Package Explorer and the BatteryPass-Ready public test environment; record reports in `CONFORMANCE.md`.
