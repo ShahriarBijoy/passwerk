@@ -112,6 +112,7 @@ function ProjectStep({
       derived={projectDerived}
       isNew={state.project === null}
       draftUrn={draftUrn}
+      top={<span className="label">passwerk</span>}
       {...(state.project
         ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
         : {})}
