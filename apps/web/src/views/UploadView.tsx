@@ -51,7 +51,22 @@ export function UploadView(props: UploadViewProps) {
             />
           )}
           {props.error && !props.busy && (
-            <InlineStatus kind="error" text={props.error} data-testid="upload-error" />
+            <InlineStatus
+              kind="error"
+              text={props.error}
+              data-testid="upload-error"
+              action={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    void navigator.clipboard?.writeText(props.error ?? '').catch(() => undefined)
+                  }
+                >
+                  {t(lang, 'shell.copy')}
+                </Button>
+              }
+            />
           )}
           <span className="flex-1" />
           <Button

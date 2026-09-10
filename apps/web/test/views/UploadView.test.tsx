@@ -105,5 +105,6 @@ describe('UploadView', () => {
       />,
     );
     expect(screen.getByTestId('upload-error').textContent).toContain('body too large');
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy();
   });
 });

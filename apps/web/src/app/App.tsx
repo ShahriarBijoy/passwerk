@@ -168,6 +168,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
     platform.clearPersisted();
     dispatch({ type: 'reset', at: nowIso() });
     setReviewSearch('');
+    setStatus(null);
   };
 
   const onFiles = async (files: File[]) => {

@@ -98,7 +98,9 @@ void host
   .then(() => {
     const ctx = host.getHostContext();
     applyTheme(ctx?.theme);
+    applyHeight(ctx?.displayMode);
     store.dispatch({ type: 'setLanguage', language: languageOf(ctx?.locale), at: nowIso() });
+    render();
     attachSync(host, store, {
       asOf: nowIso,
       debounceMs: SYNC_DEBOUNCE_MS,
