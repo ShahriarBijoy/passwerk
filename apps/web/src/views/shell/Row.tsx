@@ -3,8 +3,8 @@ import type { KeyboardEvent, ReactNode } from 'react';
 export type RowTag = { label: string; tone?: 'default' | 'dim' | 'success' | 'warning' | 'accent' };
 
 const TAG: Record<NonNullable<RowTag['tone']>, string> = {
-  default: 'text-muted-foreground',
-  dim: 'text-disabled',
+  default: 'text-foreground',
+  dim: 'text-muted-foreground',
   success: 'text-success',
   warning: 'text-warning',
   accent: 'text-destructive',

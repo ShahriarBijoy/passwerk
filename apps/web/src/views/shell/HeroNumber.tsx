@@ -21,7 +21,7 @@ export function HeroNumber({
         >
           {value}
         </span>
-        {unit && <span className="font-mono text-[22px] text-disabled">{unit}</span>}
+        {unit && <span className="font-mono text-[22px] text-muted-foreground">{unit}</span>}
       </div>
     </div>
   );
