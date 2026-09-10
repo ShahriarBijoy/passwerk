@@ -416,4 +416,112 @@ describe('ReviewView', () => {
     expect(screen.getByTestId('review-sheet').textContent).toContain('2 of 2');
     expect(screen.getAllByTestId('group')).toHaveLength(2);
   });
+
+  it('starts the search from initialSearch, and shows the empty state when nothing matches it', () => {
+    const { unmount } = mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        initialSearch="Rated"
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('group')).toBeTruthy();
+    unmount();
+
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        initialSearch="zzz"
+        {...noArrays}
+      />,
+    );
+    expect(screen.queryByTestId('group')).toBeNull();
+    expect(screen.getByText('No proposals for this filter.')).toBeTruthy();
+  });
+
+  it('advances the sheet to the next group when a decision drops the open one from the filter', () => {
+    const onDecide = vi.fn();
+    const proposals = [
+      { ...groups[0]!.proposals[0]!, attributeId: 'ratedCapacity', factId: 'f1' },
+      {
+        ...groups[0]!.proposals[0]!,
+        attributeId: 'batteryMass',
+        factId: 'f2',
+        value: '412',
+        unit: 'kg',
+      },
+    ];
+    const two = buildGroups(proposals, {});
+    const { rerender } = mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={two}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={onDecide}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    // `buildGroups` sorts alphabetically by attributeId, so `batteryMass` opens first.
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    fireEvent.click(screen.getByTestId('accept'));
+    expect(onDecide).toHaveBeenCalledWith({
+      kind: 'accept',
+      attributeId: 'batteryMass',
+      factId: 'f2',
+    });
+
+    const decided = buildGroups(proposals, {
+      batteryMass: { kind: 'accept', attributeId: 'batteryMass', factId: 'f2' },
+    });
+    rerender(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={decided}
+        manual={[]}
+        conflicts={[]}
+        accepted={1}
+        pending={1}
+        verdict="invalid"
+        onDecide={onDecide}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    const sheet = screen.getByTestId('review-sheet');
+    expect(sheet.textContent).toContain('Rated capacity');
+    expect(sheet.textContent).toContain('1 of 1');
+  });
 });

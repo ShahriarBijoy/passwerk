@@ -58,6 +58,8 @@ export interface ReviewViewProps {
   onContinue(): void;
   arrayRows(attributeId: string): unknown;
   children?: ReactNode;
+  /** Prefills the search box, e.g. when a caller remounts the view on a fresh key. */
+  initialSearch?: string;
 }
 
 /** One candidate inside the sheet: value, provenance, why, and the three decisions. */
@@ -201,7 +203,7 @@ const stateTag = (g: ReviewGroup, lang: Language): RowTag[] => {
 export function ReviewView(props: ReviewViewProps) {
   const { lang } = props;
   const [filter, setFilter] = useState<ReviewFilter>('pending');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(props.initialSearch ?? '');
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [editingArray, setEditingArray] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -215,6 +217,26 @@ export function ReviewView(props: ReviewViewProps) {
     (props.critiques ?? []).find(
       (c) => c.factId === p.factId && c.attributeId === g.attributeId && c.path === g.path,
     );
+
+  // Deciding the open group can drop it out of the current filter (accepting under PENDING,
+  // say). Rather than let the sheet vanish mid-loop, it advances to the next visible group —
+  // or the previous one if this was the last — before the decision reaches the caller.
+  const decide = (d: Decision) => {
+    if (openGroup) {
+      const leaves =
+        filter === 'pending'
+          ? true
+          : filter === 'accepted'
+            ? d.kind === 'reject'
+            : filter === 'rejected'
+              ? d.kind !== 'reject'
+              : false;
+      if (leaves) {
+        setOpenKey(visible[openIndex + 1]?.key ?? visible[openIndex - 1]?.key ?? null);
+      }
+    }
+    props.onDecide(d);
+  };
 
   const sheet = openGroup ? (
     <Sheet
@@ -246,7 +268,7 @@ export function ReviewView(props: ReviewViewProps) {
             group={openGroup}
             p={p}
             {...(critique ? { critique } : {})}
-            onDecide={props.onDecide}
+            onDecide={decide}
           />
         );
       })}
