@@ -306,6 +306,7 @@ export const en: Record<keyof typeof de, string> = {
   'gaps.verify.short': 'Verify',
   'export.download': 'Download',
   'export.aasJson.note': 'IDTA 02035-1…7',
+  'export.aasx.note': 'AASX package',
   'export.html.note': 'DE / EN',
   'export.gaps.note': 'JSON',
   'export.draft.note': 'JSON, re-importable',

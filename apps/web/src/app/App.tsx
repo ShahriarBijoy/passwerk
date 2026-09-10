@@ -17,8 +17,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { type LangText, type Language, t } from '../i18n/index.ts';
 import { AddValueDialog } from '../views/AddValueDialog.tsx';
 import { AssistPanel } from '../views/AssistPanel.tsx';
+import { ExportView } from '../views/ExportView.tsx';
 import { FactsView } from '../views/FactsView.tsx';
-import { GapsExportView } from '../views/GapsExportView.tsx';
+import { GapsView } from '../views/GapsView.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
 import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
@@ -465,8 +466,21 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
       case 'gaps':
         if (!derived) return null;
         return (
-          <GapsExportView
+          <GapsView
             lang={lang}
+            top={<span className="label">passwerk</span>}
+            report={derived.report}
+            gap={derived.gap}
+            onFixInReview={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            onContinue={() => dispatch({ type: 'goTo', step: 'export', at: nowIso() })}
+          />
+        );
+      case 'export':
+        if (!derived) return null;
+        return (
+          <ExportView
+            lang={lang}
+            top={<span className="label">passwerk</span>}
             report={derived.report}
             gap={derived.gap}
             carrier={derived.carrier}
@@ -474,8 +488,6 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             onExport={onExport}
           />
         );
-      case 'export':
-        return null;
     }
   })();
 

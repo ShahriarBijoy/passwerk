@@ -309,6 +309,7 @@ export const de = {
   'gaps.verify.short': 'Prüfen',
   'export.download': 'Herunterladen',
   'export.aasJson.note': 'IDTA 02035-1…7',
+  'export.aasx.note': 'AASX-Paket',
   'export.html.note': 'DE / EN',
   'export.gaps.note': 'JSON',
   'export.draft.note': 'JSON, erneut importierbar',
