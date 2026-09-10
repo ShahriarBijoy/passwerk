@@ -451,6 +451,8 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             onExport={onExport}
           />
         );
+      case 'export':
+        return null;
     }
   })();
 

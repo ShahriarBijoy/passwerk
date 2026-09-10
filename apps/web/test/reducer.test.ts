@@ -2,7 +2,7 @@ import { getSample, type PassportDraft } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
 import { defaultProject } from '@/workflow/project.ts';
 import { type Action, reduce } from '@/workflow/reducer.ts';
-import { initialState, type WorkflowState } from '@/workflow/state.ts';
+import { initialState, STEPS, type WorkflowState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
 
 const AT = '2026-09-07T12:00:00Z';
@@ -216,5 +216,10 @@ describe('reducer: facts and edits', () => {
     });
     expect(store.getState().generation).toBe(2);
     expect(notified).toBe(2);
+  });
+  it('has six steps ending in export and can go there', () => {
+    expect(STEPS).toEqual(['project', 'upload', 'facts', 'review', 'gaps', 'export']);
+    const s = reduce(initialState, { type: 'goTo', step: 'export', at: '2026-09-10T00:00:00Z' });
+    expect(s.step).toBe('export');
   });
 });

@@ -4,8 +4,8 @@ import type { AssistState } from './assist/types.ts';
 import type { Project } from './project.ts';
 
 export const STATE_VERSION = 3 as const;
-export type Step = 'project' | 'upload' | 'facts' | 'review' | 'gaps';
-export const STEPS: readonly Step[] = ['project', 'upload', 'facts', 'review', 'gaps'];
+export type Step = 'project' | 'upload' | 'facts' | 'review' | 'gaps' | 'export';
+export const STEPS: readonly Step[] = ['project', 'upload', 'facts', 'review', 'gaps', 'export'];
 
 export interface FileSummary {
   name: string;

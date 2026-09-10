@@ -34,4 +34,11 @@ describe('i18n dictionary', () => {
       expect(key in en, key).toBe(true);
     }
   });
+  it('names every step in both languages', () => {
+    for (const step of ['project', 'upload', 'facts', 'review', 'gaps', 'export']) {
+      expect(`step.${step}` in de, step).toBe(true);
+      expect(`step.${step}` in en, step).toBe(true);
+    }
+    expect(en['step.gaps']).toBe('Gaps');
+  });
 });
