@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test';
 import {
+  closeSheet,
   expectedMusterwerk,
   fixturePaths,
   MUSTERWERK_FILES,
+  openRow,
   PASSPORT_ID,
   pinClock,
   startProject,
@@ -37,14 +39,17 @@ test('Musterwerk track: upload, accept >= 0.7, gaps match core', async ({ page }
   await page.getByTestId('filter-all').click();
   for (const p of expected.decisions) {
     const key = p.path === undefined ? p.attributeId : `${p.attributeId}#${p.path}`;
-    const group = page.locator(`[data-testid="group"][data-key="${key}"]`);
-    await group
+    await openRow(page, `[data-testid="group"][data-key="${key}"]`);
+    await page
       .locator(`[data-testid="proposal"][data-fact="${p.factId}"]`)
       .getByTestId('accept')
       .click();
   }
   await expect(page.getByTestId('review-summary')).toContainText(String(expected.decisions.length));
 
+  // The last decision's sheet is still open (filter-all does not advance it away); close it
+  // first (see `closeSheet` in helpers.ts).
+  await closeSheet(page);
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toHaveAttribute(
     'data-verdict',
@@ -54,11 +59,14 @@ test('Musterwerk track: upload, accept >= 0.7, gaps match core', async ({ page }
     expected.gap.completeness.mandatory.percent,
   );
 
+  await page.getByTestId('gaps-view-findings').click();
   const shownFindings = await page
     .getByTestId('finding')
     .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
   expect(shownFindings).toEqual(expected.report.findings.map((f) => f.ruleId).sort());
 
+  await page.getByTestId('gaps-view-owner').click();
+  await page.getByTestId('gaps-filter-all').click();
   const shownItems = await page
     .getByTestId('gap-item')
     .evaluateAll((els) =>

@@ -1,5 +1,5 @@
 import { expect, type Page, type Route, test } from '@playwright/test';
-import { fixturePaths, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
 
 /**
  * A stand-in for an OpenAI-compatible endpoint (the shape Ollama and LM Studio speak). The
@@ -41,12 +41,15 @@ async function reachReview(page: Page): Promise<void> {
   await expect(page.getByTestId('upload-busy')).toHaveCount(0, { timeout: 60_000 });
   await page.getByTestId('continue').click();
   await page.getByTestId('facts-continue').click();
-  await expect(page.getByTestId('assist')).toBeVisible();
+  // The assist capability is offered on the review toolbar; its panel only renders once the
+  // sheet is opened (configureStub does that), so this only proves the review screen is ready.
+  await expect(page.getByTestId('assist-toggle')).toBeVisible();
 }
 
 /** Point the panel at the stub: a local runner needs no key. */
 async function configureStub(page: Page): Promise<void> {
   await page.getByTestId('assist-toggle').click();
+  await expect(page.getByTestId('assist-sheet')).toBeVisible();
   await page.getByTestId('assist-provider').click();
   // The chrome starts in German ("OpenAI-kompatibel"), so match the part both labels share.
   await page.getByRole('option', { name: /^OpenAI/ }).click();
@@ -94,8 +97,15 @@ test('a suggestion is reviewed and accepted, and reaches the draft with the fact
   // The suggestion is spent: the draft holds it now.
   await expect(page.getByTestId('assist-suggestion')).toHaveCount(0);
 
-  // The second opinion marks a row and nothing more.
+  // The second opinion marks a row and nothing more: the group carrying it shows the "bad"
+  // dot (ReviewView.tsx, `dot={g.proposals.some((p) => critiqueOf(g, p)) ? 'bad' : 'none'}`)
+  // even before its sheet is opened.
   await page.getByTestId('filter-all').click();
+  const flaggedGroup = page
+    .locator('[data-testid="group"]')
+    .filter({ has: page.locator('.bg-destructive') });
+  const flaggedKey = await flaggedGroup.first().getAttribute('data-key');
+  await openRow(page, `[data-testid="group"][data-key="${flaggedKey}"]`);
   const chip = page.getByTestId('assist-critique-chip').first();
   await expect(chip).toContainText('Ladespannung');
   await expect(page.getByTestId('proposal').first()).toHaveAttribute('data-state', 'pending');
@@ -145,6 +155,7 @@ test('the assist stays silent until it is configured and run', async ({ page, ba
 
   await reachReview(page);
   await page.getByTestId('assist-toggle').click();
+  await expect(page.getByTestId('assist-sheet')).toBeVisible();
   // Anthropic is the default provider and there is no key, so the button cannot be pressed.
   await expect(page.getByTestId('assist-run')).toBeDisabled();
   await expect(page.getByTestId('assist-disclosure')).toBeVisible();
