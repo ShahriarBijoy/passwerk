@@ -10,6 +10,7 @@
     "build": "vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "e2e": "playwright test",
+    "fonts": "node scripts/fonts.mjs",
     "clean": "rimraf dist playwright-report test-results"
   },
   "dependencies": {

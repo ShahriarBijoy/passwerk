@@ -192,16 +192,13 @@ panel), `table` (kept for the row editor dialog only), `badge` (becomes the `Tag
 pill, mono caps), `progress` (deleted; `SegmentedBar` replaces it), `card` (deleted; nothing
 in the redesign is a card), `separator` (deleted), `sonner` (deleted).
 
-ReUI is added as a registry in `components.json`
-(`"@reui": "https://reui.io/r/{style}/{name}.json"`, style `radix-nova`, the free `c-*` tier,
-MIT). Installed from it and re-skinned like the rest: `toggle-group` (the filter tabs and the
-identifier-mode radio), `scroll-area` (the list region, so the scrollbar matches both modes),
-`kbd` (the sheet's `ESC` / `←` / `→` hints), `spinner` (the segmented hardware-style loader
-for ingest). Each installed file is listed in `apps/web/src/components/ui/README.md` with its
-registry item name and the date; nothing else from ReUI. The exact item names are confirmed
-against the registry at install time (the public docs list the URL pattern, not the free
-catalogue); an item that turns out not to exist in the free tier is built on the matching
-shadcn or Radix primitive instead, and the README says so. Icons are `lucide-react` only, 1.5 px
+ReUI's registry answers `307 → /r/styles/radix-nova/<name>.json → 401` for the base primitives
+without a licence key (checked 2026-09-10 for `toggle-group`, `scroll-area`, `kbd`, `spinner`,
+`toggle`); only its blocks are public. The same four items are served by the official shadcn
+registry (`https://ui.shadcn.com/r/styles/radix-nova/<name>.json`, HTTP 200, MIT), and ReUI's
+own copies in its MIT repository are built from them. The plan installs them from the official
+registry with the shadcn CLI already in `devDependencies`; no ReUI registry entry is added to
+`components.json`. Icons are `lucide-react` only, 1.5 px
 stroke, 14 px, in `--text-secondary`: `ChevronRight`, `ChevronDown`, `X`, `Maximize2`,
 `ArrowLeft`, `ArrowRight`, `Upload`, `Download`, `Copy`. No filled icon, no animated icon.
 
