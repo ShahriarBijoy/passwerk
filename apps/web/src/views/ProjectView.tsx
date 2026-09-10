@@ -154,7 +154,7 @@ export function ProjectView(props: ProjectViewProps) {
               })}
             </span>
             <Button onClick={onResume}>{t(lang, 'start.resume.button')}</Button>
-            <Button variant="outline" onClick={onReset}>
+            <Button variant="secondary" onClick={onReset}>
               {t(lang, 'app.startOver')}
             </Button>
           </CardContent>
@@ -257,7 +257,7 @@ export function ProjectView(props: ProjectViewProps) {
                     type="button"
                     role="radio"
                     aria-checked={active}
-                    variant={active ? 'default' : 'outline'}
+                    variant={active ? 'primary' : 'secondary'}
                     size="sm"
                     data-testid={`identifier-mode-${mode}`}
                     onClick={() => {

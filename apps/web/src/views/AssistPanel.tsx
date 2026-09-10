@@ -202,7 +202,7 @@ export function AssistPanel(props: AssistPanelProps) {
               {t(lang, props.running ? 'assist.running' : 'assist.run')}
             </Button>
             {props.running && (
-              <Button variant="outline" data-testid="assist-cancel" onClick={props.onCancel}>
+              <Button variant="secondary" data-testid="assist-cancel" onClick={props.onCancel}>
                 {t(lang, 'assist.cancel')}
               </Button>
             )}

@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex gap-2">
           <Button onClick={() => window.location.reload()}>{t(lang, 'app.error.reload')}</Button>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => void navigator.clipboard?.writeText(details).catch(() => undefined)}
           >
             {t(lang, 'app.error.copy')}

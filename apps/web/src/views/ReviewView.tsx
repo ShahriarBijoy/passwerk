@@ -156,7 +156,7 @@ function ProposalRow({
       <span className="ml-auto flex gap-1">
         <Button
           size="sm"
-          variant={chosen === 'accept' ? 'default' : 'outline'}
+          variant={chosen === 'accept' ? 'primary' : 'secondary'}
           data-testid="accept"
           onClick={() => onDecide({ kind: 'accept', ...base })}
         >
@@ -164,7 +164,7 @@ function ProposalRow({
         </Button>
         <Button
           size="sm"
-          variant={chosen === 'reject' ? 'destructive' : 'outline'}
+          variant={chosen === 'reject' ? 'destructive' : 'secondary'}
           data-testid="reject"
           onClick={() => onDecide({ kind: 'reject', ...base })}
         >
@@ -290,7 +290,7 @@ export function ReviewView(props: ReviewViewProps) {
                 )}
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   className="ml-auto"
                   data-testid="array-edit"
                   onClick={() => setEditing(a.attributeId)}
@@ -332,7 +332,7 @@ export function ReviewView(props: ReviewViewProps) {
               );
             })}
             {g.decision && (
-              <Button size="sm" variant="link" onClick={() => props.onClear(g.key)}>
+              <Button size="sm" variant="ghost" onClick={() => props.onClear(g.key)}>
                 {t(lang, 'review.clear')}
               </Button>
             )}

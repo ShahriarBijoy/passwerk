@@ -141,7 +141,7 @@ function FactRow({
               {t(lang, 'facts.reset')}
             </Button>
           )}
-          <Button size="sm" variant="outline" data-testid="fact-map" onClick={() => onMap(fact)}>
+          <Button size="sm" variant="secondary" data-testid="fact-map" onClick={() => onMap(fact)}>
             {t(lang, 'facts.map')}
           </Button>
         </span>

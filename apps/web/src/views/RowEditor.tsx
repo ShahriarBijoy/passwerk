@@ -75,7 +75,7 @@ function RowFields({
             ))}
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               data-testid={`rows-add-${leaf.path}`}
               onClick={() =>
                 onChange({
@@ -204,7 +204,7 @@ export function RowEditor({
       ))}
       <div className="flex gap-2">
         <Button
-          variant="outline"
+          variant="secondary"
           data-testid="rows-add"
           onClick={() => setRows([...rows, emptyRow()])}
         >

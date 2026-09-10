@@ -99,7 +99,7 @@ export function AddValueDialog(props: AddValueDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button variant="outline" data-testid="add-value">
+          <Button variant="secondary" data-testid="add-value">
             {t(lang, 'review.addValue')}
           </Button>
         </DialogTrigger>

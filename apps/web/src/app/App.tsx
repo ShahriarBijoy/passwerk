@@ -464,7 +464,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             <Button
               key={step}
               size="sm"
-              variant={state.step === step ? 'default' : 'ghost'}
+              variant={state.step === step ? 'primary' : 'ghost'}
               disabled={!reachable(step)}
               data-testid={`step-${step}`}
               onClick={() => dispatch({ type: 'goTo', step, at: nowIso() })}
@@ -476,7 +476,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         <span className="ml-auto flex items-center gap-2">
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             data-testid="lang-toggle"
             onClick={() =>
               dispatch({ type: 'setLanguage', language: lang === 'de' ? 'en' : 'de', at: nowIso() })

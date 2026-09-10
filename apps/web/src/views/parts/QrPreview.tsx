@@ -28,7 +28,7 @@ export function QrPreview({
         {carrier.payload}
       </code>
       {onDownload && (
-        <Button size="sm" variant="outline" data-testid="qr-download" onClick={onDownload}>
+        <Button size="sm" variant="secondary" data-testid="qr-download" onClick={onDownload}>
           {t(lang, 'qr.download')}
         </Button>
       )}

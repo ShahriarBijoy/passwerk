@@ -119,21 +119,21 @@ export function GapsExportView(props: GapsExportViewProps) {
               {t(lang, 'export.aasx')}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               data-testid="export-draft"
               onClick={() => props.onExport('draft')}
             >
               {t(lang, 'export.draft')}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               data-testid="export-gaps"
               onClick={() => props.onExport('gaps')}
             >
               {t(lang, 'export.gaps')}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               data-testid="export-html"
               onClick={() => props.onExport('html')}
             >
