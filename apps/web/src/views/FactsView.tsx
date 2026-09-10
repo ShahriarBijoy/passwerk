@@ -215,7 +215,7 @@ export function FactsView(props: FactsViewProps) {
             value={selectedDocument}
             onValueChange={(v) => setFilter((f) => ({ ...f, document: v }))}
           >
-            <SelectTrigger className="w-44 border-0" data-testid="facts-document">
+            <SelectTrigger className="label w-44 border-0" data-testid="facts-document">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -282,10 +282,18 @@ export function FactsView(props: FactsViewProps) {
             <Row
               key={f.id}
               name={f.label}
-              value={edit?.value ?? f.value ?? f.raw}
+              value={<span data-testid="fact-value">{edit?.value ?? f.value ?? f.raw}</span>}
               unit={edit?.unit ?? f.unit ?? ''}
               tags={[
-                ...(edit ? [{ label: t(lang, 'facts.edited'), tone: 'dim' as const }] : []),
+                ...(edit
+                  ? [
+                      {
+                        label: t(lang, 'facts.edited'),
+                        tone: 'dim' as const,
+                        testId: 'fact-edited',
+                      },
+                    ]
+                  : []),
                 {
                   label: t(lang, `facts.status.${status.status}` as Key),
                   tone: TONE[status.status],
@@ -296,12 +304,7 @@ export function FactsView(props: FactsViewProps) {
               data-testid="fact-row"
               data-fact={f.id}
               data-status={status.status}
-            >
-              <span hidden data-testid="fact-value">
-                {edit?.value ?? f.value ?? f.raw}
-              </span>
-              {edit && <span hidden data-testid="fact-edited" />}
-            </Row>
+            />
           );
         })
       )}

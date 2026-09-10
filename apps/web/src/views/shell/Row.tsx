@@ -1,6 +1,10 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 
-export type RowTag = { label: string; tone?: 'default' | 'dim' | 'success' | 'warning' | 'accent' };
+export type RowTag = {
+  label: string;
+  tone?: 'default' | 'dim' | 'success' | 'warning' | 'accent';
+  testId?: string;
+};
 
 const TAG: Record<NonNullable<RowTag['tone']>, string> = {
   default: 'text-foreground',
@@ -33,7 +37,7 @@ export function Row({
   ...data
 }: {
   name: ReactNode;
-  value?: string;
+  value?: ReactNode;
   unit?: string;
   tags?: RowTag[];
   dot?: keyof typeof DOT;
@@ -68,7 +72,11 @@ export function Row({
       {value !== undefined && <span className="font-mono text-display">{value}</span>}
       {unit && <span className="label">{unit}</span>}
       {tags.map((tg) => (
-        <span key={tg.label} className={['label', TAG[tg.tone ?? 'default']].join(' ')}>
+        <span
+          key={tg.label}
+          className={['label', TAG[tg.tone ?? 'default']].join(' ')}
+          {...(tg.testId ? { 'data-testid': tg.testId } : {})}
+        >
           {tg.label}
         </span>
       ))}
