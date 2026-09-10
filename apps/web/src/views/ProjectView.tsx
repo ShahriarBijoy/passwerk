@@ -173,10 +173,16 @@ export function ProjectView(props: ProjectViewProps & { top: ReactNode; children
             </span>
           </div>
         ) : (
-          <HeroNumber
-            label={t(lang, 'project.title')}
-            value={t(lang, `project.batteryType.${project.batteryType}` as Key)}
-          />
+          // The obligation verdict is this screen's one hero (spec 6.1). The battery type is a
+          // value, so it reads as a value: mono 14 px, not a second Doto display that competes
+          // with the verdict for the eye - and "Elektrofahrzeugbatterie" is 23 characters of
+          // dot matrix, which is not what Doto is for either.
+          <div data-testid="project-hero">
+            <div className="label">{t(lang, 'project.title')}</div>
+            <div className="font-mono text-[14px] text-display">
+              {t(lang, `project.batteryType.${project.batteryType}` as Key)}
+            </div>
+          </div>
         )
       }
       footer={

@@ -385,7 +385,12 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
               bump((n) => n + 1);
             }}
           >
-            {platform.theme.current() === 'dark' ? '☼' : '☾'}
+            {t(
+              lang,
+              platform.theme.current() === 'dark'
+                ? 'shell.theme.light.short'
+                : 'shell.theme.dark.short',
+            )}
           </Button>
         )}
         {canFullscreen && display && (

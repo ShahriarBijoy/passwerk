@@ -33,6 +33,6 @@ describe('Stepper', () => {
     const named = (id: string) =>
       screen.getByTestId(id).querySelector('span') as HTMLSpanElement | null;
     expect(named('step-review')?.className).toBe('max-[640px]:hidden');
-    expect(named('step-project')?.className).toBe('max-[880px]:hidden');
+    expect(named('step-project')?.className).toBe('max-[920px]:hidden');
   });
 });

@@ -181,6 +181,14 @@ describe('ProjectView', () => {
       />,
     );
     expect(screen.getByText('Batterietyp')).toBeTruthy();
+    // The obligation verdict is this screen's one hero (spec 6.1). The battery type used to be a
+    // second Doto display of the same 40 px beside it, and 'Elektrofahrzeugbatterie' is 23
+    // characters of dot matrix, which Doto is not for (spec 4.2). It is a value, so it reads as
+    // one: mono, 14 px.
+    const hero = screen.getByTestId('project-hero');
+    expect(hero.textContent).toContain('Elektrofahrzeugbatterie');
+    expect(hero.querySelector('.display')).toBeNull();
+    expect(hero.querySelector('.font-mono')).toBeTruthy();
   });
   it('shows the resume card and wires its buttons', () => {
     const onResume = vi.fn();

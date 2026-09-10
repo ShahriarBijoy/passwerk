@@ -247,6 +247,23 @@ describe('App', () => {
     expect((screen.getByTestId('step-gaps') as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('names the theme it switches to rather than drawing a glyph the bundled fonts lack', () => {
+    const set = vi.fn();
+    mount(
+      <App
+        store={createStore(initialState)}
+        platform={{ ...platform, theme: { current: () => 'dark', set } }}
+      />,
+    );
+    // The subset in `scripts/fonts.mjs` carries the glyphs the shell draws, and a sun and a moon
+    // are not among them, so the control used to fall back to whatever the system had and read
+    // as a stray dot. A mono caps word is a control the way `EN` beside it is.
+    const toggle = screen.getByTestId('theme-toggle');
+    expect(toggle.textContent).toBe('Hell');
+    fireEvent.click(toggle);
+    expect(set).toHaveBeenCalledWith('light');
+  });
+
   it('shows the fullscreen control only when the platform offers it', () => {
     const request = vi.fn(async () => undefined);
     const { unmount } = mount(<App store={createStore(initialState)} platform={platform} />);
