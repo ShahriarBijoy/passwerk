@@ -24,7 +24,12 @@ export function InlineStatus({
       ].join(' ')}
       {...rest}
     >
-      {`[${WORD[kind]}] ${text}`}
+      {/* The word is a label and shouts; the message is a sentence someone reads, so it keeps
+          the label's mono 11 px (spec 5.1) without the upper case (spec 2). */}
+      <span>
+        {`[${WORD[kind]}] `}
+        <span className="normal-case">{text}</span>
+      </span>
       {action}
     </span>
   );

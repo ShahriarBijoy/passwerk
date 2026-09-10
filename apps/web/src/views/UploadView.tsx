@@ -39,7 +39,7 @@ export function UploadView(props: UploadViewProps) {
           )}
         </>
       }
-      toolbar={<span className="label">{t(lang, 'upload.hint')}</span>}
+      toolbar={<span className="note">{t(lang, 'upload.hint')}</span>}
       footer={
         <>
           {props.busy && (

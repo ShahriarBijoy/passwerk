@@ -53,7 +53,7 @@ export function ExportView(props: ExportViewProps) {
         </>
       }
       footer={
-        <span className="label" data-testid="not-legal-advice">
+        <span className="note" data-testid="not-legal-advice">
           {t(lang, 'app.notLegalAdvice')}
         </span>
       }

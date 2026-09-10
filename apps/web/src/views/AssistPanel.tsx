@@ -155,7 +155,7 @@ export function AssistPanel(props: AssistPanelProps) {
             endpoint: disclosure.endpoint,
           })}
         </span>
-        <span className="label">{t(lang, 'assist.disclosure.never')}</span>
+        <span className="note">{t(lang, 'assist.disclosure.never')}</span>
         <Button
           variant="ghost"
           size="sm"
@@ -190,7 +190,7 @@ export function AssistPanel(props: AssistPanelProps) {
           </Button>
         )}
         {nothingToAsk && (
-          <span className="label" data-testid="assist-nothing">
+          <span className="note" data-testid="assist-nothing">
             {t(lang, 'assist.nothing')}
           </span>
         )}
@@ -271,7 +271,7 @@ export function AssistPanel(props: AssistPanelProps) {
               <h4 className="text-[13px] font-medium">
                 {t(lang, 'assist.discards', { count: assist.discards.length })}
               </h4>
-              <p className="label">{t(lang, 'assist.discards.hint')}</p>
+              <p className="note">{t(lang, 'assist.discards.hint')}</p>
               {assist.discards.map((d) => (
                 <p
                   key={`${d.kind}|${d.factId}|${d.attributeId}|${d.reason}`}

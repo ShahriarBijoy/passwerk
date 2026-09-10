@@ -142,6 +142,13 @@
     text-transform: uppercase;
     color: var(--text-secondary);
   }
+  /* Prose that sits where a label sits: sentence case, never mono caps (spec 2). */
+  .note {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
   .display {
     font-family: var(--font-display);
     font-weight: 700;

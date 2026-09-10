@@ -39,7 +39,9 @@ describe('ExportView', () => {
     ]);
     fireEvent.click(screen.getByTestId('qr-download'));
     expect(onExport).toHaveBeenLastCalledWith('qr');
-    expect(screen.getByTestId('not-legal-advice')).toBeTruthy();
+    // A sentence, so Space Grotesk sentence case (`.note`), not the mono caps of a label
+    // (spec 2). `.label` upper-cases in CSS, which shouted the whole disclaimer.
+    expect(screen.getByTestId('not-legal-advice').className).toContain('note');
   });
   it('shows the reason when there is no QR, and the export error inline', () => {
     mount(

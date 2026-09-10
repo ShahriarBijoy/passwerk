@@ -134,7 +134,7 @@ export function ObligationsPanel({
           {result.sources.join('; ')}
         </p>
       </div>
-      <p className="label" data-testid="not-legal-advice">
+      <p className="note" data-testid="not-legal-advice">
         {t(lang, 'app.notLegalAdvice')}
       </p>
     </div>
