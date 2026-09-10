@@ -1,5 +1,11 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { type KeyboardEvent, type ReactNode, useContext } from 'react';
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useRef,
+} from 'react';
 import { Kbd } from '@/components/ui/kbd';
 import { type Language, t } from '../../i18n/index.ts';
 import { InstrumentContext } from './context.ts';
@@ -34,33 +40,54 @@ export function Sheet({
   'data-testid'?: string;
 }) {
   const { container } = useContext(InstrumentContext);
-  // Escape is handled here, on the content's own bubbled keydown, instead of leaving it solely
-  // to Radix's document-level DismissableLayer check (silenced below via `onEscapeKeyDown`, so
-  // `onClose` runs exactly once either way). This closes the sheet reliably whenever focus is
-  // still somewhere inside its own DOM - which holds right after it opens (Radix auto-focuses
-  // the close button) and after most in-place state changes.
-  //
-  // KNOWN GAP: it is not sufficient on its own once the browser moves focus to <body> - which
-  // was observed both right after a nested modal dialog (the row editor, the add-value dialog)
-  // closes, and after some in-place re-renders inside this sheet that unmount the element that
-  // was focused (e.g. FactsView's own "edit" toggle, with no nested dialog involved at all).
-  // <body> is not a descendant of this Content node, so a keydown targeting it never bubbles
-  // here, and Radix's own Escape handling (also focus/layer-stack dependent) does not reliably
-  // pick it up either. See apps/web/e2e/helpers.ts's `closeSheet` and the specs that still fail
-  // this exact sequence (rows.spec.ts, persistence.spec.ts, one assist.spec.ts case).
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  // `←` / `→` stay on the content's own bubbled keydown; they only ever matter while focus is
+  // still inside the sheet (an input's own left/right editing is excluded below), so there is no
+  // equivalent gap to close for them.
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.key === 'ArrowRight' && onNext) onNext();
     else if (e.key === 'ArrowLeft' && onPrev) onPrev();
-    else if (e.key === 'Escape') onClose();
     else return;
     e.preventDefault();
   };
+  // The latest `onClose`, read from the document-level listener below (a ref, not a dependency,
+  // so the listener below is attached exactly once per mount rather than re-attached on every
+  // render a caller passes a new closure).
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  // `Escape` closes the sheet from anywhere in the document, not only when focus is still inside
+  // its own content: a nested re-render (an in-sheet edit toggle) or a nested modal dialog
+  // closing can both move focus to `<body>`, which is not a descendant of this Content node, so
+  // a keydown handler attached there (as this one used to be) never sees the key in that case -
+  // see the fix-round-1 report. A React 19 callback ref with a cleanup function, this project's
+  // sanctioned alternative to an effect (Instrument's own container ref), attaches the listener
+  // once the content mounts and detaches it when the sheet unmounts. It skips Escape when a real
+  // modal dialog (the row editor, the add-value dialog, a confirm) is open above the sheet, so
+  // that dialog's own Escape handling - not this one - gets to close it first.
+  const escapeRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    const doc = el.ownerDocument;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // A modal dialog stacked above the sheet owns Escape.
+      if (
+        doc.querySelector(
+          '[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]',
+        )
+      )
+        return;
+      e.preventDefault();
+      closeRef.current();
+    };
+    doc.addEventListener('keydown', onKey);
+    return () => doc.removeEventListener('keydown', onKey);
+  }, []);
   return (
     <DialogPrimitive.Root open={open} modal={false} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal container={container ?? undefined}>
         <DialogPrimitive.Content
+          ref={escapeRef}
           onKeyDown={onKeyDown}
           onEscapeKeyDown={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
