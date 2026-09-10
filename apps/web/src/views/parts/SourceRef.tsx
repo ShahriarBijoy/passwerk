@@ -3,7 +3,7 @@ import { type Language, t } from '../../i18n/index.ts';
 
 export function SourceRef({ lang, source }: { lang: Language; source: Provenance[] }) {
   return (
-    <span className="text-muted-foreground text-xs">
+    <span className="font-mono text-[12px] text-muted-foreground">
       {source.map((s, i) => (
         <span key={`${s.file}-${s.page ?? ''}-${s.cell ?? ''}`}>
           {i > 0 ? '; ' : ''}

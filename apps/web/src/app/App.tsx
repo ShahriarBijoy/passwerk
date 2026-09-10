@@ -424,6 +424,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <ReviewView
             lang={lang}
+            top={<span className="label">passwerk</span>}
             category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
@@ -436,10 +437,30 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             verdict={derived.report.verdict}
             critiques={state.assist?.critiques ?? []}
             {...(assistPanel ? { assistPanel } : {})}
+            assistOpen={false}
             onDecide={(d: Decision) => dispatch({ type: 'decide', decision: d, at: nowIso() })}
             onClear={(key: DecisionKey) => dispatch({ type: 'clearDecision', key, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'gaps', at: nowIso() })}
-          />
+          >
+            {assistPrefill && (
+              <AddValueDialog
+                key={`${assistPrefill.factId}|${assistPrefill.attributeId}`}
+                lang={lang}
+                category={derived.meta.category}
+                arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
+                open
+                hideTrigger
+                prefill={assistPrefill}
+                onOpenChange={(o) => {
+                  if (!o) setAssistPrefill(null);
+                }}
+                onAdd={(d) => {
+                  dispatch({ type: 'decide', decision: d, at: nowIso() });
+                  setAssistPrefill(null);
+                }}
+              />
+            )}
+          </ReviewView>
         );
       case 'gaps':
         if (!derived) return null;
@@ -521,7 +542,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
       <ErrorBoundary lang={lang} onReset={reset}>
         {view}
       </ErrorBoundary>
-      {assistPrefill && derived && (
+      {assistPrefill && derived && state.step !== 'review' && (
         <AddValueDialog
           key={`${assistPrefill.factId}|${assistPrefill.attributeId}`}
           lang={lang}

@@ -1,11 +1,14 @@
-import { Badge } from '@/components/ui/badge';
-
 export function ConfidenceBadge({ value }: { value: number }) {
   const pct = Math.round(value * 100);
-  const variant = value >= 0.7 ? 'default' : value >= 0.4 ? 'secondary' : 'outline';
   return (
-    <Badge variant={variant} data-testid="confidence">
+    <span
+      className={[
+        'label',
+        value >= 0.7 ? 'text-foreground' : value >= 0.4 ? '' : 'text-disabled',
+      ].join(' ')}
+      data-testid="confidence"
+    >
       {pct} %
-    </Badge>
+    </span>
   );
 }

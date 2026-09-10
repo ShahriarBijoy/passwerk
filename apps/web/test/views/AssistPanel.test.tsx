@@ -58,7 +58,6 @@ const props = (over: Partial<AssistPanelProps> = {}): AssistPanelProps => ({
 describe('AssistPanel', () => {
   it('states the boundary before anything else: the model never supplies values', () => {
     mount(<AssistPanel {...props()} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-boundary').textContent).toMatch(
       /never from the model|only names attributes/i,
     );
@@ -67,7 +66,6 @@ describe('AssistPanel', () => {
   it('will not run without a key for a hosted provider', () => {
     const onRun = vi.fn();
     mount(<AssistPanel {...props({ onRun })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(runButton().disabled).toBe(true);
     fireEvent.click(screen.getByTestId('assist-run'));
     expect(onRun).not.toHaveBeenCalled();
@@ -88,7 +86,6 @@ describe('AssistPanel', () => {
         })}
       />,
     );
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(runButton().disabled).toBe(false);
     fireEvent.click(screen.getByTestId('assist-run'));
     expect(onRun).toHaveBeenCalled();
@@ -96,7 +93,6 @@ describe('AssistPanel', () => {
 
   it('says what is sent, and shows the literal request on demand', () => {
     mount(<AssistPanel {...props()} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     const summary = screen.getByTestId('assist-disclosure').textContent ?? '';
     expect(summary).toContain('12');
     expect(summary).toContain('api.anthropic.com');
@@ -108,13 +104,11 @@ describe('AssistPanel', () => {
 
   it('promises that file names and documents stay put', () => {
     mount(<AssistPanel {...props()} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-disclosure').textContent).toMatch(/File names/i);
   });
 
   it('lists a suggestion with the attribute and the model’s reason', () => {
     mount(<AssistPanel {...props({ assist: RAN })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     const row = screen.getByTestId('assist-suggestion');
     expect(row.textContent).toContain('nominalVoltage');
     expect(row.textContent).toContain('Klemmenspannung heisst hier Nennspannung');
@@ -124,7 +118,6 @@ describe('AssistPanel', () => {
     const onAccept = vi.fn();
     const onDismiss = vi.fn();
     mount(<AssistPanel {...props({ assist: RAN, onAccept, onDismiss })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     fireEvent.click(screen.getByTestId('assist-accept'));
     expect(onAccept).toHaveBeenCalledWith(RAN.suggestions[0]);
     fireEvent.click(screen.getByTestId('assist-dismiss'));
@@ -133,7 +126,6 @@ describe('AssistPanel', () => {
 
   it('shows a discarded answer with the check that refused it', () => {
     mount(<AssistPanel {...props({ assist: RAN })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     const discard = screen.getByTestId('assist-discard');
     expect(discard.textContent).toContain('batteryMass');
     expect(discard.textContent).toMatch(/does not fit/i);
@@ -141,27 +133,23 @@ describe('AssistPanel', () => {
 
   it('names the model that answered', () => {
     mount(<AssistPanel {...props({ assist: RAN })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-ran-at').textContent).toContain('claude-sonnet-5');
   });
 
   it('shows the failure rather than an empty panel', () => {
     mount(<AssistPanel {...props({ error: 'api.anthropic.com answered 401' })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-error').textContent).toContain('401');
   });
 
   it('offers a cancel while a run is in flight', () => {
     const onCancel = vi.fn();
     mount(<AssistPanel {...props({ running: true, onCancel })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     fireEvent.click(screen.getByTestId('assist-cancel'));
     expect(onCancel).toHaveBeenCalled();
   });
 
   it('says there is nothing to ask when nothing is unplaced', () => {
     mount(<AssistPanel {...props({ disclosure: { ...DISCLOSURE, facts: 0, proposals: 0 } })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-nothing')).toBeTruthy();
     expect(runButton().disabled).toBe(true);
   });
@@ -169,7 +157,6 @@ describe('AssistPanel', () => {
   it('warns what remembering the key on this device means', () => {
     const onRememberChange = vi.fn();
     mount(<AssistPanel {...props({ onRememberChange })} />);
-    fireEvent.click(screen.getByTestId('assist-toggle'));
     expect(screen.getByTestId('assist-remember-hint').textContent).toMatch(/browser profile/i);
     fireEvent.click(screen.getByTestId('assist-remember'));
     expect(onRememberChange).toHaveBeenCalledWith(true);

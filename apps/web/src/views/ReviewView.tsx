@@ -2,10 +2,8 @@ import type { BatteryCategory, MappingConflict, MappingProposal, Verdict } from 
 import { getAttribute } from '@passwerk/rules';
 import { type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { type LangText, type Language, pick, rowsCount, t } from '../i18n/index.ts';
 import type { AssistCritique } from '../workflow/assist/types.ts';
 import type { InvalidDecision } from '../workflow/derive/index.ts';
@@ -23,9 +21,18 @@ import {
   type ReviewFilter,
   type ReviewGroup,
 } from './reviewModel.ts';
+import { Field } from './shell/Field.tsx';
+import { GroupHeader } from './shell/GroupHeader.tsx';
+import { HeroNumber } from './shell/HeroNumber.tsx';
+import { InlineStatus } from './shell/InlineStatus.tsx';
+import { Instrument } from './shell/Instrument.tsx';
+import { Row, type RowTag } from './shell/Row.tsx';
+import { SegmentedBar } from './shell/SegmentedBar.tsx';
+import { Sheet } from './shell/Sheet.tsx';
 
 export interface ReviewViewProps {
   lang: Language;
+  top: ReactNode;
   category: BatteryCategory;
   groups: ReviewGroup[];
   manual: Decision[];
@@ -40,6 +47,9 @@ export interface ReviewViewProps {
   critiques?: AssistCritique[];
   /** The assist panel, supplied by the shell. Absent when the host offers no assist. */
   assistPanel?: ReactNode;
+  /** The shell owns whether the assist sheet is open, so the toolbar toggle and the sheet agree. */
+  assistOpen?: boolean;
+  onAssistToggle?(): void;
   accepted: number;
   pending: number;
   verdict: Verdict;
@@ -47,9 +57,11 @@ export interface ReviewViewProps {
   onClear(key: DecisionKey): void;
   onContinue(): void;
   arrayRows(attributeId: string): unknown;
+  children?: ReactNode;
 }
 
-function ProposalRow({
+/** One candidate inside the sheet: value, provenance, why, and the three decisions. */
+function Candidate({
   lang,
   group,
   p,
@@ -77,15 +89,32 @@ function ProposalRow({
     ...(group.path !== undefined ? { path: group.path } : {}),
     factId: p.factId,
   };
+  const save = () => {
+    const stamp = recordedAt.trim() === '' ? undefined : recordedAt;
+    const check = validateValue(group.attributeId, group.path, value, stamp);
+    if (!check.ok) {
+      setError(check.message);
+      return;
+    }
+    setError(null);
+    onDecide({
+      kind: 'edit',
+      ...base,
+      value,
+      ...(unit ? { unit } : {}),
+      ...(stamp === undefined ? {} : { recordedAt: new Date(stamp).toISOString() }),
+    });
+    setEditing(false);
+  };
   return (
     <div
-      className="flex flex-wrap items-center gap-3 border-t py-2"
+      className="grid gap-2 border-t border-border py-3 first:border-t-0 first:pt-0"
       data-testid="proposal"
       data-fact={p.factId}
       data-state={chosen ?? 'pending'}
     >
       {editing ? (
-        <>
+        <div className="flex flex-wrap items-end gap-3">
           <Input
             className="w-40"
             value={value}
@@ -99,8 +128,7 @@ function ProposalRow({
             data-testid="edit-unit"
           />
           {dynamic && (
-            <>
-              <Label htmlFor={`recorded-${p.factId}`}>{t(lang, 'review.recordedAt')}</Label>
+            <Field label={t(lang, 'review.recordedAt')} htmlFor={`recorded-${p.factId}`}>
               <Input
                 className="w-56"
                 id={`recorded-${p.factId}`}
@@ -109,248 +137,394 @@ function ProposalRow({
                 onChange={(e) => setRecordedAt(e.target.value)}
                 data-testid="edit-recorded-at"
               />
-            </>
+            </Field>
           )}
-          <Button
-            size="sm"
-            onClick={() => {
-              const stamp = recordedAt.trim() === '' ? undefined : recordedAt;
-              const check = validateValue(group.attributeId, group.path, value, stamp);
-              if (!check.ok) {
-                setError(check.message);
-                return;
-              }
-              setError(null);
-              onDecide({
-                kind: 'edit',
-                ...base,
-                value,
-                ...(unit ? { unit } : {}),
-                ...(stamp === undefined ? {} : { recordedAt: new Date(stamp).toISOString() }),
-              });
-              setEditing(false);
-            }}
-          >
+          <Button variant="primary" size="sm" onClick={save}>
             {t(lang, 'review.save')}
           </Button>
           {error && (
-            <p className="text-destructive text-sm" data-testid="value-error">
-              {pick(lang, error)}
-            </p>
+            <InlineStatus kind="error" text={pick(lang, error)} data-testid="value-error" />
           )}
-        </>
+        </div>
       ) : (
-        <>
-          <span className="font-mono" data-testid="proposal-value">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-[22px] text-display" data-testid="proposal-value">
             {chosen === 'edit' && d?.kind === 'edit' ? d.value : String(p.value)}
           </span>
-          <span className="text-muted-foreground">
+          <span className="label">
             {chosen === 'edit' && d?.kind === 'edit' ? (d.unit ?? '') : (p.unit ?? '')}
           </span>
-          {chosen === 'edit' && <span className="text-xs">{t(lang, 'review.edited')}</span>}
-        </>
+          {chosen === 'edit' && <span className="label">{t(lang, 'review.edited')}</span>}
+          <ConfidenceBadge value={p.confidence} />
+          <SourceRef lang={lang} source={p.source} />
+        </div>
       )}
-      <ConfidenceBadge value={p.confidence} />
-      <SourceRef lang={lang} source={p.source} />
-      <span className="text-muted-foreground text-xs">{pick(lang, p.why)}</span>
-      <span className="ml-auto flex gap-1">
+      <p className="text-[13px]">{pick(lang, p.why)}</p>
+      {critique && (
+        <p className="text-[12px] text-warning" data-testid="assist-critique-chip">
+          {t(lang, 'assist.critique.chip')}: {critique.reason}
+        </p>
+      )}
+      <div className="flex gap-2">
         <Button
-          size="sm"
           variant={chosen === 'accept' ? 'primary' : 'secondary'}
+          size="sm"
           data-testid="accept"
           onClick={() => onDecide({ kind: 'accept', ...base })}
         >
           {t(lang, 'review.accept')}
         </Button>
         <Button
-          size="sm"
           variant={chosen === 'reject' ? 'destructive' : 'secondary'}
+          size="sm"
           data-testid="reject"
           onClick={() => onDecide({ kind: 'reject', ...base })}
         >
           {t(lang, 'review.reject')}
         </Button>
-        <Button size="sm" variant="ghost" data-testid="edit" onClick={() => setEditing((v) => !v)}>
+        <Button variant="ghost" size="sm" data-testid="edit" onClick={() => setEditing((v) => !v)}>
           {t(lang, 'review.edit')}
         </Button>
-      </span>
-      {critique && (
-        <span
-          className="basis-full text-muted-foreground text-xs"
-          data-testid="assist-critique-chip"
-        >
-          {t(lang, 'assist.critique.chip')}: {critique.reason}
-        </span>
-      )}
+      </div>
     </div>
   );
 }
+
+const stateTag = (g: ReviewGroup, lang: Language): RowTag[] => {
+  if (!g.decision) return [];
+  if (g.decision.kind === 'reject')
+    return [{ label: t(lang, 'review.filter.rejected'), tone: 'dim' }];
+  if (g.decision.kind === 'edit') return [{ label: t(lang, 'review.edited'), tone: 'success' }];
+  return [{ label: t(lang, 'review.filter.accepted'), tone: 'success' }];
+};
 
 export function ReviewView(props: ReviewViewProps) {
   const { lang } = props;
   const [filter, setFilter] = useState<ReviewFilter>('pending');
   const [search, setSearch] = useState('');
-  const [editing, setEditing] = useState<string | null>(null);
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [editingArray, setEditingArray] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
   const visible = filterGroups(props.groups, filter, search, lang);
-  return (
-    <div className="grid gap-4">
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b bg-background py-2">
-        <h2 className="font-semibold text-lg">{t(lang, 'review.title')}</h2>
-        <span data-testid="review-summary">
-          {t(lang, 'review.summary', { accepted: props.accepted, pending: props.pending })}
-        </span>
-        <VerdictChip lang={lang} verdict={props.verdict} />
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as ReviewFilter)}>
-          <TabsList>
-            {(['pending', 'accepted', 'rejected', 'all'] as const).map((f) => (
-              <TabsTrigger key={f} value={f} data-testid={`filter-${f}`}>
-                {t(lang, `review.filter.${f}`)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <Input
-          className="w-48"
-          placeholder={t(lang, 'review.search')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <AddValueDialog
-          lang={lang}
-          category={props.category}
-          onAdd={props.onDecide}
-          arrayRows={props.arrayRows}
-        />
-        <Button className="ml-auto" data-testid="to-gaps" onClick={props.onContinue}>
-          {t(lang, 'review.continue')}
-        </Button>
-      </div>
-      {props.assistPanel}
-      {props.conflicts.map((c) => (
-        <p
-          key={`${c.attributeId}${c.path ?? ''}`}
-          className="text-destructive text-sm"
-          data-testid="conflict"
-        >
-          {c.attributeId}
-          {c.path ? `.${c.path}` : ''}:{' '}
-          {t(lang, 'review.conflict', {
-            existing: JSON.stringify(c.existing),
-            incoming: JSON.stringify(c.incoming),
-          })}
-        </p>
-      ))}
-      {(props.invalidDecisions ?? []).map((d) => (
-        <p key={d.key} className="text-destructive text-sm" data-testid="invalid-decision">
-          {d.key}:{' '}
-          {t(lang, 'review.invalidDecision', {
-            reason: typeof d.message === 'string' ? d.message : pick(lang, d.message),
-          })}{' '}
-          <Button size="sm" variant="ghost" onClick={() => props.onClear(d.key)}>
+  const openIndex = visible.findIndex((g) => g.key === openKey);
+  const openGroup = openIndex >= 0 ? visible[openIndex] : undefined;
+  const openArray = props.arrays.find((a) => `array:${a.attributeId}` === openKey);
+  const openManual = props.manual.find((d) => `manual:${keyOf(d)}` === openKey);
+  const total = props.accepted + props.pending;
+  const critiqueOf = (g: ReviewGroup, p: MappingProposal) =>
+    (props.critiques ?? []).find(
+      (c) => c.factId === p.factId && c.attributeId === g.attributeId && c.path === g.path,
+    );
+
+  const sheet = openGroup ? (
+    <Sheet
+      lang={lang}
+      open
+      title={`${pick(lang, openGroup.name)}${openGroup.path ? ` · ${openGroup.path}` : ''}`}
+      meta={openGroup.legalRefs.join('; ')}
+      position={{ index: openIndex + 1, total: visible.length }}
+      {...(openIndex > 0 ? { onPrev: () => setOpenKey(visible[openIndex - 1]?.key ?? null) } : {})}
+      {...(openIndex < visible.length - 1
+        ? { onNext: () => setOpenKey(visible[openIndex + 1]?.key ?? null) }
+        : {})}
+      onClose={() => setOpenKey(null)}
+      actions={
+        openGroup.decision && (
+          <Button variant="ghost" size="sm" onClick={() => props.onClear(openGroup.key)}>
             {t(lang, 'review.clear')}
           </Button>
-        </p>
-      ))}
-      {props.manual.map((d) => (
-        <Card key={keyOf(d)} data-testid="manual">
-          <CardContent className="flex items-center gap-3 py-3">
-            <span className="font-medium">
-              {d.attributeId}
-              {d.path ? `.${d.path}` : ''}
-            </span>
-            <span className="font-mono">
-              {d.kind === 'manual'
-                ? Array.isArray(d.value)
-                  ? rowsCount(lang, d.value.length)
-                  : d.value
-                : ''}
-            </span>
-            <span className="text-xs">{t(lang, 'review.manual')}</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="ml-auto"
-              onClick={() => props.onClear(keyOf(d))}
-            >
-              {t(lang, 'review.clear')}
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-      {props.arrays.length > 0 && (
-        <div className="grid gap-2">
-          <h3 className="font-medium text-sm">{t(lang, 'review.arrays')}</h3>
-          {props.arrays.map((a) => (
-            <Card key={a.attributeId} data-testid="array-entry" data-attribute={a.attributeId}>
-              <CardContent className="flex items-center gap-3 py-3">
-                <span className="font-medium">{pick(lang, a.name)}</span>
-                <span className="font-mono">{rowsCount(lang, a.rows)}</span>
-                {a.origin === 'manual' && (
-                  <span className="text-xs">{t(lang, 'review.manual')}</span>
-                )}
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="ml-auto"
-                  data-testid="array-edit"
-                  onClick={() => setEditing(a.attributeId)}
-                >
-                  {t(lang, 'rows.edit')}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-      {visible.length === 0 && <p className="text-muted-foreground">{t(lang, 'review.empty')}</p>}
-      {visible.map((g) => (
-        <Card key={g.key} data-testid="group" data-key={g.key}>
-          <CardHeader className="py-3">
-            <CardTitle className="text-base">
-              {pick(lang, g.name)}
-              {g.path ? ` · ${g.path}` : ''}
-              <span className="ml-2 font-normal text-muted-foreground text-xs">
-                {g.legalRefs.join('; ')}
+        )
+      }
+      data-testid="review-sheet"
+    >
+      {openGroup.proposals.map((p) => {
+        const critique = critiqueOf(openGroup, p);
+        return (
+          <Candidate
+            key={p.factId}
+            lang={lang}
+            group={openGroup}
+            p={p}
+            {...(critique ? { critique } : {})}
+            onDecide={props.onDecide}
+          />
+        );
+      })}
+    </Sheet>
+  ) : openArray ? (
+    <Sheet
+      lang={lang}
+      open
+      title={pick(lang, openArray.name)}
+      meta={rowsCount(lang, openArray.rows)}
+      onClose={() => setOpenKey(null)}
+      actions={
+        <Button
+          size="sm"
+          data-testid="array-edit"
+          onClick={() => setEditingArray(openArray.attributeId)}
+        >
+          {t(lang, 'rows.edit')}
+        </Button>
+      }
+      data-testid="review-sheet"
+    >
+      <p>{openArray.origin === 'manual' ? t(lang, 'review.manual') : ''}</p>
+    </Sheet>
+  ) : openManual ? (
+    <Sheet
+      lang={lang}
+      open
+      title={`${openManual.attributeId}${openManual.path ? `.${openManual.path}` : ''}`}
+      meta={t(lang, 'review.manual')}
+      onClose={() => setOpenKey(null)}
+      actions={
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            props.onClear(keyOf(openManual));
+            setOpenKey(null);
+          }}
+        >
+          {t(lang, 'review.clear')}
+        </Button>
+      }
+      data-testid="review-sheet"
+    >
+      <span className="font-mono text-[22px] text-display">
+        {openManual.kind === 'manual'
+          ? Array.isArray(openManual.value)
+            ? rowsCount(lang, openManual.value.length)
+            : openManual.value
+          : ''}
+      </span>
+    </Sheet>
+  ) : props.assistOpen && props.assistPanel ? (
+    <Sheet
+      lang={lang}
+      open
+      title={t(lang, 'review.assist')}
+      onClose={() => props.onAssistToggle?.()}
+      data-testid="assist-sheet"
+    >
+      {props.assistPanel}
+    </Sheet>
+  ) : undefined;
+
+  return (
+    <Instrument
+      top={props.top}
+      hero={
+        <>
+          <HeroNumber label={t(lang, 'hero.pending')} value={String(props.pending)} />
+          <div className="flex-1 pb-1.5">
+            <SegmentedBar filled={props.accepted} total={total} />
+            <div className="label mt-1.5 flex gap-2">
+              <span data-testid="review-summary">
+                {t(lang, 'review.summary', { accepted: props.accepted, pending: props.pending })}
               </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {g.proposals.map((p) => {
-              const critique = (props.critiques ?? []).find(
-                (c) =>
-                  c.factId === p.factId && c.attributeId === g.attributeId && c.path === g.path,
-              );
-              return (
-                <ProposalRow
-                  key={p.factId}
-                  lang={lang}
-                  group={g}
-                  p={p}
-                  {...(critique ? { critique } : {})}
-                  onDecide={props.onDecide}
-                />
-              );
-            })}
-            {g.decision && (
-              <Button size="sm" variant="ghost" onClick={() => props.onClear(g.key)}>
+              <span>·</span>
+              <VerdictChip lang={lang} verdict={props.verdict} />
+            </div>
+          </div>
+        </>
+      }
+      toolbar={
+        <>
+          <ToggleGroup
+            type="single"
+            value={filter}
+            onValueChange={(v) => v && setFilter(v as ReviewFilter)}
+          >
+            {(['pending', 'accepted', 'rejected', 'all'] as const).map((f) => (
+              <ToggleGroupItem key={f} value={f} data-testid={`filter-${f}`}>
+                {t(lang, `review.filter.${f}`)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+          <span className="flex-1" />
+          <Input
+            className="w-32"
+            placeholder={t(lang, 'review.search')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {props.assistPanel && props.onAssistToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              data-testid="assist-toggle"
+              aria-pressed={props.assistOpen ?? false}
+              onClick={props.onAssistToggle}
+            >
+              {t(lang, 'review.assist')}
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="add-value"
+            onClick={() => setAddOpen(true)}
+          >
+            + {t(lang, 'review.addValue')}
+          </Button>
+        </>
+      }
+      footer={
+        <>
+          <span className="flex-1" />
+          <Button variant="primary" data-testid="to-gaps" onClick={props.onContinue}>
+            {t(lang, 'review.continue')} →
+          </Button>
+        </>
+      }
+      sheet={sheet}
+    >
+      {props.conflicts.map((c) => (
+        <div key={`${c.attributeId}${c.path ?? ''}`} className="py-1">
+          <InlineStatus
+            kind="error"
+            data-testid="conflict"
+            text={`${c.attributeId}${c.path ? `.${c.path}` : ''}: ${t(lang, 'review.conflict', {
+              existing: JSON.stringify(c.existing),
+              incoming: JSON.stringify(c.incoming),
+            })}`}
+          />
+        </div>
+      ))}
+      {(props.invalidDecisions ?? []).map((d) => (
+        <div key={d.key} className="py-1">
+          <InlineStatus
+            kind="error"
+            data-testid="invalid-decision"
+            text={`${d.key}: ${t(lang, 'review.invalidDecision', {
+              reason: typeof d.message === 'string' ? d.message : pick(lang, d.message),
+            })}`}
+            action={
+              <Button variant="ghost" size="sm" onClick={() => props.onClear(d.key)}>
                 {t(lang, 'review.clear')}
               </Button>
-            )}
-          </CardContent>
-        </Card>
+            }
+          />
+        </div>
       ))}
+      {visible.length === 0 && props.manual.length === 0 && props.arrays.length === 0 && (
+        <p className="py-6 text-center text-[13px] text-muted-foreground">
+          {t(lang, 'review.empty')}
+        </p>
+      )}
+      {visible.map((g) => {
+        const best = g.proposals[0];
+        return (
+          <Row
+            key={g.key}
+            name={`${pick(lang, g.name)}${g.path ? ` · ${g.path}` : ''}`}
+            value={
+              best
+                ? g.decision?.kind === 'edit'
+                  ? g.decision.value
+                  : String(best.value)
+                : undefined
+            }
+            {...(best
+              ? { unit: g.decision?.kind === 'edit' ? (g.decision.unit ?? '') : (best.unit ?? '') }
+              : {})}
+            tags={[
+              ...(best
+                ? [{ label: `${Math.round(best.confidence * 100)} %`, tone: 'dim' as const }]
+                : []),
+              ...(g.proposals.length > 1
+                ? [
+                    {
+                      label: t(lang, 'review.candidates', { count: g.proposals.length }),
+                      tone: 'dim' as const,
+                    },
+                  ]
+                : []),
+              ...stateTag(g, lang),
+            ]}
+            dot={g.proposals.some((p) => critiqueOf(g, p)) ? 'bad' : 'none'}
+            open={g.key === openKey}
+            onOpen={() => setOpenKey(g.key)}
+            data-testid="group"
+            data-key={g.key}
+          />
+        );
+      })}
+      {props.manual.length > 0 && (
+        <GroupHeader
+          name={t(lang, 'review.manualSection')}
+          count={String(props.manual.length)}
+          open
+          onToggle={() => undefined}
+        />
+      )}
+      {props.manual.map((d) => (
+        <Row
+          key={keyOf(d)}
+          name={`${d.attributeId}${d.path ? `.${d.path}` : ''}`}
+          value={
+            d.kind === 'manual'
+              ? Array.isArray(d.value)
+                ? rowsCount(lang, d.value.length)
+                : d.value
+              : ''
+          }
+          tags={[{ label: t(lang, 'review.manual'), tone: 'dim' }]}
+          indent
+          open={openKey === `manual:${keyOf(d)}`}
+          onOpen={() => setOpenKey(`manual:${keyOf(d)}`)}
+          data-testid="manual"
+        />
+      ))}
+      {props.arrays.length > 0 && (
+        <GroupHeader
+          name={t(lang, 'review.rowsSection')}
+          count={String(props.arrays.length)}
+          open
+          onToggle={() => undefined}
+        />
+      )}
+      {props.arrays.map((a) => (
+        <Row
+          key={a.attributeId}
+          name={pick(lang, a.name)}
+          value={rowsCount(lang, a.rows)}
+          tags={a.origin === 'manual' ? [{ label: t(lang, 'review.manual'), tone: 'dim' }] : []}
+          indent
+          open={openKey === `array:${a.attributeId}`}
+          onOpen={() => setOpenKey(`array:${a.attributeId}`)}
+          data-testid="array-entry"
+          data-attribute={a.attributeId}
+        />
+      ))}
+      <AddValueDialog
+        lang={lang}
+        category={props.category}
+        onAdd={(d) => {
+          props.onDecide(d);
+          setAddOpen(false);
+        }}
+        arrayRows={props.arrayRows}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        hideTrigger
+      />
       <RowEditorDialog
         lang={lang}
-        attributeId={editing ?? ''}
-        initial={editing ? props.arrayRows(editing) : undefined}
-        open={editing !== null}
+        attributeId={editingArray ?? ''}
+        initial={editingArray ? props.arrayRows(editingArray) : undefined}
+        open={editingArray !== null}
         onOpenChange={(open) => {
-          if (!open) setEditing(null);
+          if (!open) setEditingArray(null);
         }}
         onSave={(rows) => {
-          if (editing) props.onDecide({ kind: 'manual', attributeId: editing, value: rows });
+          if (editingArray)
+            props.onDecide({ kind: 'manual', attributeId: editingArray, value: rows });
         }}
       />
-    </div>
+      {props.children}
+    </Instrument>
   );
 }

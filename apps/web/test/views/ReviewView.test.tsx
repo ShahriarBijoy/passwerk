@@ -29,6 +29,7 @@ describe('ReviewView', () => {
     const onDecide = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -44,6 +45,7 @@ describe('ReviewView', () => {
       />,
     );
     expect(screen.getByText('94.5')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('group'));
     expect(screen.getByText('Match')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
     expect(onDecide).toHaveBeenCalledWith({
@@ -56,6 +58,7 @@ describe('ReviewView', () => {
     const onDecide = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -70,6 +73,7 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     fireEvent.change(screen.getByTestId('edit-value'), { target: { value: '94,5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -80,6 +84,7 @@ describe('ReviewView', () => {
     const onClear = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -106,6 +111,7 @@ describe('ReviewView', () => {
     const bilingual = { de: 'Erwartet eine Dezimalzahl', en: 'Expected a decimal number' };
     const { unmount } = mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -127,6 +133,7 @@ describe('ReviewView', () => {
     unmount();
     mount(
       <ReviewView
+        top={<span />}
         lang="de"
         category="EV"
         groups={groups}
@@ -150,6 +157,7 @@ describe('ReviewView', () => {
   it('renders a mapping conflict with both values', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -207,12 +215,16 @@ describe('ReviewView', () => {
       ...noArrays,
     };
 
-    const { unmount } = mount(<ReviewView {...props} groups={groups} onDecide={onDecide} />);
+    const { unmount } = mount(
+      <ReviewView top={<span />} {...props} groups={groups} onDecide={onDecide} />,
+    );
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     expect(screen.queryByTestId('edit-recorded-at')).toBeNull();
     unmount();
 
-    mount(<ReviewView {...props} groups={dynamic} onDecide={onDecide} />);
+    mount(<ReviewView top={<span />} {...props} groups={dynamic} onDecide={onDecide} />);
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     const field = screen.getByTestId('edit-recorded-at');
     expect(field.getAttribute('type')).toBe('datetime-local');
@@ -232,6 +244,7 @@ describe('ReviewView', () => {
   it('renders German chrome', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="de"
         category="EV"
         groups={groups}
@@ -246,12 +259,13 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
-    expect(screen.getByText('0 übernommen, 1 offen')).toBeTruthy();
+    expect(screen.getByTestId('review-summary').textContent).toBe('0 übernommen, 1 offen');
   });
 
   it('lists array values and opens the row editor from an array-edit button', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={[]}
@@ -278,6 +292,7 @@ describe('ReviewView', () => {
     );
     const entry = screen.getByTestId('array-entry');
     expect(entry.textContent).toContain('3 rows');
+    fireEvent.click(entry);
     fireEvent.click(screen.getByTestId('array-edit'));
     expect(screen.getAllByTestId('rows-row')).toHaveLength(3);
   });
@@ -285,6 +300,7 @@ describe('ReviewView', () => {
   it('uses the singular form for a single row', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={[]}
@@ -315,6 +331,7 @@ describe('ReviewView', () => {
   it('marks a proposal the assist flagged, without changing its state', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -332,6 +349,7 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     const chip = screen.getByTestId('assist-critique-chip');
     expect(chip.textContent).toContain('looks like the C/3 capacity');
     // A second opinion is a prompt to the reviewer, never a decision.
@@ -341,6 +359,7 @@ describe('ReviewView', () => {
   it('leaves a proposal alone when the critique is about another one', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -356,6 +375,45 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     expect(screen.queryByTestId('assist-critique-chip')).toBeNull();
+  });
+
+  it('walks the pending queue with next and keeps the list', () => {
+    const two = buildGroups(
+      [
+        { ...groups[0]!.proposals[0]!, attributeId: 'ratedCapacity', factId: 'f1' },
+        {
+          ...groups[0]!.proposals[0]!,
+          attributeId: 'batteryMass',
+          factId: 'f2',
+          value: '412',
+          unit: 'kg',
+        },
+      ],
+      {},
+    );
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={two}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    expect(screen.getByTestId('review-sheet').textContent).toContain('1 of 2');
+    fireEvent.keyDown(screen.getByTestId('review-sheet'), { key: 'ArrowRight' });
+    expect(screen.getByTestId('review-sheet').textContent).toContain('2 of 2');
+    expect(screen.getAllByTestId('group')).toHaveLength(2);
   });
 });
