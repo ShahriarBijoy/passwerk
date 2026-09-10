@@ -59,7 +59,9 @@ describe('App', () => {
     fireEvent.click(screen.getByTestId('project-continue'));
     expect(store.getState().step).toBe('upload');
     expect(store.getState().project?.batteryType).toBe('EV');
-    expect(screen.getByText('Upload documents')).toBeTruthy();
+    expect(
+      screen.getByText('PDF, XLSX, DOCX, CSV or TXT. Files never leave the browser.'),
+    ).toBeTruthy();
   });
   it('shows the storage notice', () => {
     mount(<App store={createStore(initialState)} platform={platform} storageNotice="version" />);

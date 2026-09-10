@@ -371,6 +371,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <UploadView
             lang={lang}
+            top={<span className="label">passwerk</span>}
             files={state.files}
             busy={busy}
             proposalCount={derived?.proposals.length ?? 0}

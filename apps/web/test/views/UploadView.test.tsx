@@ -9,6 +9,7 @@ describe('UploadView', () => {
     const onContinue = vi.fn();
     mount(
       <UploadView
+        top={<span />}
         lang="en"
         busy={false}
         proposalCount={7}
@@ -31,13 +32,16 @@ describe('UploadView', () => {
     );
     expect(screen.getByText('a.pdf')).toBeTruthy();
     expect(screen.getByText('Unsupported format')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to facts (7 proposals)' }));
+    const continueButton = screen.getByTestId('continue');
+    expect(continueButton.textContent).toContain('7 proposals');
+    fireEvent.click(continueButton);
     expect(onContinue).toHaveBeenCalled();
   });
 
   it('uses the singular form for a single proposal', () => {
     mount(
       <UploadView
+        top={<span />}
         lang="en"
         busy={false}
         proposalCount={1}
@@ -47,13 +51,14 @@ describe('UploadView', () => {
         onContinue={() => undefined}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Continue to facts (1 proposal)' })).toBeTruthy();
+    expect(screen.getByTestId('continue').textContent).toContain('1 proposal');
   });
 
   it('passes chosen files to onFiles', () => {
     const onFiles = vi.fn();
     mount(
       <UploadView
+        top={<span />}
         lang="de"
         busy={false}
         proposalCount={0}
@@ -67,5 +72,38 @@ describe('UploadView', () => {
     const file = new File(['x'], 'c.csv', { type: 'text/csv' });
     fireEvent.change(input, { target: { files: [file] } });
     expect(onFiles).toHaveBeenCalledWith([file]);
+  });
+
+  it('shows the busy state as an inline status', () => {
+    mount(
+      <UploadView
+        top={<span />}
+        lang="en"
+        busy
+        proposalCount={0}
+        files={[]}
+        onFiles={() => undefined}
+        onRemove={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    expect(screen.getByTestId('upload-busy')).toBeTruthy();
+  });
+
+  it('shows the shell error inline when idle', () => {
+    mount(
+      <UploadView
+        top={<span />}
+        lang="en"
+        busy={false}
+        proposalCount={0}
+        files={[]}
+        error="body too large"
+        onFiles={() => undefined}
+        onRemove={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    expect(screen.getByTestId('upload-error').textContent).toContain('body too large');
   });
 });
