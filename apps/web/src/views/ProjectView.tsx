@@ -193,8 +193,8 @@ export function ProjectView(props: ProjectViewProps & { top: ReactNode; children
         </>
       }
     >
-      <div className="grid gap-6 py-2 md:grid-cols-[330px_1fr]">
-        <div className="grid content-start gap-4 md:border-r md:border-border md:pr-6">
+      <div className="grid gap-6 py-2 sm:grid-cols-[330px_1fr]">
+        <div className="grid content-start gap-4 sm:border-r sm:border-border sm:pr-6">
           <Field label={t(lang, 'project.batteryType')} htmlFor="battery-type">
             <Select
               value={project.batteryType}
