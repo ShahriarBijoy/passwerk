@@ -27,10 +27,14 @@ declare global {
   interface Window {
     __downloads: unknown[];
     __contexts: unknown[];
+    __sizes: { width?: number; height?: number }[];
+    __displayRequests: { mode: string }[];
   }
 }
 window.__downloads = [];
 window.__contexts = [];
+window.__sizes = [];
+window.__displayRequests = [];
 
 const transport = new StreamableHTTPClientTransport(new URL('/mcp', location.href), {
   requestInit: { headers: { authorization: `Bearer ${TOKEN}` } },
@@ -95,7 +99,8 @@ byTestId('host-open').onclick = async () => {
         locale: 'de-DE',
         platform: 'web',
         displayMode: 'inline',
-        containerDimensions: { width: iframe.clientWidth, height: 1800 },
+        availableDisplayModes: ['inline', 'fullscreen'],
+        containerDimensions: { width: iframe.clientWidth, height: 640 },
       },
     },
   );
@@ -114,7 +119,18 @@ byTestId('host-open').onclick = async () => {
     );
     return {};
   };
-  bridge.onsizechange = () => {};
+  bridge.onsizechange = (p) => {
+    window.__sizes.push(p);
+    byTestId('host-sizes').textContent = JSON.stringify(window.__sizes);
+  };
+  bridge.onrequestdisplaymode = async (p) => {
+    window.__displayRequests.push(p);
+    byTestId('host-display').textContent = JSON.stringify(window.__displayRequests);
+    // 1.7.5's AppBridge can push a host-context change back to the app; see the SDK check in
+    // the task report for why this is what makes the fullscreen assertion possible.
+    await bridge.sendHostContextChange({ displayMode: p.mode });
+    return { mode: p.mode };
+  };
   bridge.oninitialized = () => {
     bridge.sendToolInput({ arguments: args });
     void bridge.sendToolResult(result as Parameters<typeof bridge.sendToolResult>[0]);

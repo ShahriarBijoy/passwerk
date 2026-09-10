@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { downloads, openWorkbench } from './helpers.ts';
+import { downloads, openWorkbench, toExport } from './helpers.ts';
 
 /**
  * No request from the host page or the workbench iframe leaves the preview origin. The MCP
@@ -27,8 +27,7 @@ test('no request leaves the preview origin; exports go through the host', async 
   });
 
   const frame = await openWorkbench(page, 'ev-valid');
-  await frame.getByTestId('to-gaps').click();
-  await expect(frame.getByTestId('verdict')).toBeVisible();
+  await toExport(frame);
   await frame.getByTestId('export-aasJson').click();
   await expect(page.getByTestId('host-downloads')).toContainText('application/json');
   await frame.getByTestId('export-aasx').click();

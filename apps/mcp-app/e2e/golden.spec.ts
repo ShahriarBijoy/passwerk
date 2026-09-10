@@ -19,12 +19,15 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
     const frame = await openWorkbench(page, name);
     await frame.getByTestId('to-gaps').click();
     await expect(frame.getByTestId('verdict')).toHaveAttribute('data-verdict', expected.verdict);
+    await frame.getByTestId('gaps-view-findings').click();
     const shown = await frame
       .getByTestId('finding')
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
     expect(shown).toEqual(expected.findings.map((f) => f.ruleId).sort());
 
     if (validateSchema(draft).draft !== undefined) {
+      await frame.getByTestId('to-export').click();
+      await expect(frame.getByTestId('export-html')).toBeVisible();
       await frame.getByTestId('export-html').click();
       await expect(page.getByTestId('host-downloads')).toContainText('text/html');
       const [d] = await downloads(page);

@@ -65,3 +65,45 @@ test('the model learns the draft id the workbench synced, in the same session', 
     await client.close();
   }
 });
+
+/**
+ * Fullscreen: `display-toggle` only renders once the host context lists `fullscreen` in
+ * `availableDisplayModes` (App.tsx's `canFullscreen`), which the dev host does (e2e/host/host.ts).
+ * Clicking it calls the host's `requestDisplayMode`, whose `AppBridge.onrequestdisplaymode`
+ * handler records the request and - per the SDK check below - also pushes a
+ * `ui/notifications/host-context-changed` notification back to the app.
+ *
+ * SDK check: `@modelcontextprotocol/ext-apps` 1.7.5's `AppBridge` (see
+ * `node_modules/@modelcontextprotocol/ext-apps/dist/src/app-bridge.d.ts`) exposes
+ * `sendHostContextChange(params: McpUiHostContextChangedNotification['params']): Promise<void> |
+ * void` (no trailing `d`), so the host page can deliver the mode change back to the app; the
+ * fallback the task brief allows (dropping the height assertion because the bridge cannot push a
+ * context change) does not apply here.
+ *
+ * `main.tsx` reacts to that notification (`host.onhostcontextchanged`) by setting
+ * `--instrument-height` to `100vh`. The instrument iframe itself stays a fixed 640px in this dev
+ * host (only a real host resizes the surrounding chrome to match a fullscreen request), so the
+ * frame's own reported body height does not change; the CSS variable is what actually flips, and
+ * that is what this test asserts.
+ */
+test('fullscreen is offered by the host and requested by the workbench', async ({ page }) => {
+  const frame = await openWorkbench(page, 'ev-valid');
+  await frame.getByTestId('display-toggle').click();
+
+  // The host received the request.
+  await expect(page.getByTestId('host-display')).toContainText('fullscreen');
+  const requests = await page.evaluate(
+    () => (window as unknown as { __displayRequests: { mode: string }[] }).__displayRequests,
+  );
+  expect(requests.map((r) => r.mode)).toContain('fullscreen');
+
+  // The workbench applied the host's context change.
+  await expect
+    .poll(async () =>
+      page
+        .frameLocator('[data-testid="host-frame"]')
+        .locator('html')
+        .evaluate((el) => el.style.getPropertyValue('--instrument-height')),
+    )
+    .toBe('100vh');
+});
