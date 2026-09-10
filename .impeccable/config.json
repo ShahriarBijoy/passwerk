@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "space grotesk",
+        "createdAt": "2026-09-10T17:35:02.326Z",
+        "reason": "user confirmed: Nothing design system fonts (Space Grotesk / Space Mono / Doto) chosen on 2026-09-10, bundled offline"
+      }
+    ]
+  }
+}
