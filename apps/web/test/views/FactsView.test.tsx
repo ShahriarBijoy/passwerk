@@ -35,6 +35,7 @@ describe('FactsView', () => {
     mount(
       <FactsView
         lang="en"
+        top={<span />}
         facts={facts}
         documents={['a.pdf', 'b.xlsx']}
         edits={{ b: { value: '401', unit: 'V' } }}
@@ -46,19 +47,21 @@ describe('FactsView', () => {
       />,
     );
     expect(screen.getAllByTestId('fact-row')).toHaveLength(2);
-    expect(screen.getByText(/Page 2/)).toBeTruthy();
-    expect(screen.getByText(/Cell C3/)).toBeTruthy();
     const rowB = screen.getAllByTestId('fact-row')[1] as HTMLElement;
     expect(rowB.getAttribute('data-status')).toBe('unmapped');
     expect(rowB.querySelector('[data-testid="fact-value"]')?.textContent).toBe('401');
     expect(rowB.querySelector('[data-testid="fact-edited"]')).toBeTruthy();
-    fireEvent.click(rowB.querySelector('[data-testid="fact-edit"]') as HTMLElement);
-    fireEvent.change(rowB.querySelector('[data-testid="fact-edit-value"]') as HTMLElement, {
+    fireEvent.click(screen.getAllByTestId('fact-row')[0]!);
+    expect(screen.getByText(/Page 2/)).toBeTruthy();
+    fireEvent.click(rowB);
+    expect(screen.getByText(/Cell C3/)).toBeTruthy();
+    fireEvent.click(screen.getByTestId('fact-edit'));
+    fireEvent.change(screen.getByTestId('fact-edit-value'), {
       target: { value: '402' },
     });
-    fireEvent.click(rowB.querySelector('[data-testid="fact-edit-save"]') as HTMLElement);
+    fireEvent.click(screen.getByTestId('fact-edit-save'));
     expect(onEdit).toHaveBeenCalledWith('b', { value: '402', unit: 'V' });
-    fireEvent.click(rowB.querySelector('[data-testid="fact-map"]') as HTMLElement);
+    fireEvent.click(screen.getByTestId('fact-map'));
     expect(onMap).toHaveBeenCalledWith(facts[1]);
   });
   it("reopening the editor after a reset shows the fact's original value, not the discarded edit", () => {
@@ -73,21 +76,25 @@ describe('FactsView', () => {
       onMap: () => undefined,
       onContinue: () => undefined,
     };
-    const { rerender } = mount(<FactsView {...props} edits={{}} />);
+    const { rerender } = mount(<FactsView {...props} top={<span />} edits={{}} />);
+    fireEvent.click(screen.getByTestId('fact-row'));
     fireEvent.click(screen.getByTestId('fact-edit'));
     fireEvent.change(screen.getByTestId('fact-edit-value'), { target: { value: '999' } });
     fireEvent.click(screen.getByTestId('fact-edit-save'));
     // The reviewer's edit lands in state and is passed back down as a prop.
-    rerender(<FactsView {...props} edits={{ a: { value: '999' } }} />);
+    rerender(<FactsView {...props} top={<span />} edits={{ a: { value: '999' } }} />);
+    fireEvent.click(screen.getByTestId('fact-row'));
     fireEvent.click(screen.getByTestId('fact-edit-reset'));
     // The reset clears it; the parent passes an empty edits map back down.
-    rerender(<FactsView {...props} edits={{}} />);
+    rerender(<FactsView {...props} top={<span />} edits={{}} />);
+    fireEvent.click(screen.getByTestId('fact-row'));
     fireEvent.click(screen.getByTestId('fact-edit'));
     expect((screen.getByTestId('fact-edit-value') as HTMLInputElement).value).toBe('94.5');
   });
   it('falls back to "all documents" once the selected document disappears from the list', () => {
     const props = {
       lang: 'en' as const,
+      top: <span />,
       edits: {},
       onEdit: () => undefined,
       onClearEdit: () => undefined,
@@ -124,6 +131,7 @@ describe('FactsView', () => {
     mount(
       <FactsView
         lang="de"
+        top={<span />}
         facts={[fact('a')]}
         documents={['a.pdf']}
         edits={{}}
@@ -134,13 +142,14 @@ describe('FactsView', () => {
         onContinue={() => undefined}
       />,
     );
-    expect(screen.getByText('Extrahierte Fakten')).toBeTruthy();
+    expect(screen.getByText('Fakten')).toBeTruthy();
     expect(screen.getByTestId('facts-count').textContent).toContain('1');
   });
   it('uses the singular form when exactly one fact exists', () => {
     mount(
       <FactsView
         lang="en"
+        top={<span />}
         facts={[fact('a')]}
         documents={['a.pdf']}
         edits={{}}

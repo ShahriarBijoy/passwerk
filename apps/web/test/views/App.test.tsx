@@ -114,7 +114,7 @@ describe('App', () => {
     expect(continueButton.textContent).toContain('facts');
     fireEvent.click(continueButton);
     expect(store.getState().step).toBe('facts');
-    expect(screen.getByText('Extracted facts')).toBeTruthy();
+    expect(screen.getByTestId('facts-count')).toBeTruthy();
   });
 
   it('the facts-screen map dialog passes existing array rows through arrayRows', () => {
@@ -144,6 +144,7 @@ describe('App', () => {
     });
     store.dispatch({ type: 'goTo', step: 'facts', at: AT });
     mount(<App store={store} platform={platform} />);
+    fireEvent.click(screen.getByTestId('fact-row'));
     fireEvent.click(screen.getByTestId('fact-map'));
     chooseAttribute('criticalRawMaterials');
     // Without `arrayRows` wired through, the row editor would open with a single empty row

@@ -383,18 +383,18 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
       case 'facts':
         if (!derived) return null;
         return (
-          <>
-            <FactsView
-              lang={lang}
-              facts={derived.facts.facts}
-              documents={state.files.map((f) => f.name)}
-              edits={state.factEdits}
-              statuses={factStatuses(derived.facts.facts, derived.proposals, state.decisions)}
-              onEdit={(factId, edit) => dispatch({ type: 'editFact', factId, edit, at: nowIso() })}
-              onClearEdit={(factId) => dispatch({ type: 'clearFactEdit', factId, at: nowIso() })}
-              onMap={setMapFact}
-              onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
-            />
+          <FactsView
+            lang={lang}
+            top={<span className="label">passwerk</span>}
+            facts={derived.facts.facts}
+            documents={state.files.map((f) => f.name)}
+            edits={state.factEdits}
+            statuses={factStatuses(derived.facts.facts, derived.proposals, state.decisions)}
+            onEdit={(factId, edit) => dispatch({ type: 'editFact', factId, edit, at: nowIso() })}
+            onClearEdit={(factId) => dispatch({ type: 'clearFactEdit', factId, at: nowIso() })}
+            onMap={setMapFact}
+            onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+          >
             {mapFact && (
               <AddValueDialog
                 key={mapFact.id}
@@ -417,7 +417,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
                 }}
               />
             )}
-          </>
+          </FactsView>
         );
       case 'review':
         if (!derived) return null;
