@@ -21,9 +21,9 @@ export interface ExportViewProps {
   children?: ReactNode;
 }
 
-const FILES: { kind: Exclude<ExportKind, 'qr'>; note: Key; primary: boolean }[] = [
+const FILES: { kind: Exclude<ExportKind, 'qr'>; note?: Key; primary: boolean }[] = [
   { kind: 'aasJson', note: 'export.aasJson.note', primary: true },
-  { kind: 'aasx', note: 'export.aasx.note', primary: true },
+  { kind: 'aasx', primary: true },
   { kind: 'html', note: 'export.html.note', primary: false },
   { kind: 'gaps', note: 'export.gaps.note', primary: false },
   { kind: 'draft', note: 'export.draft.note', primary: false },
@@ -65,8 +65,8 @@ export function ExportView(props: ExportViewProps) {
               key={f.kind}
               name={
                 <>
-                  {t(lang, `export.${f.kind}` as Key)}{' '}
-                  <span className="text-disabled">· {t(lang, f.note)}</span>
+                  {t(lang, `export.${f.kind}` as Key)}
+                  {f.note && <span className="text-muted-foreground"> · {t(lang, f.note)}</span>}
                 </>
               }
               action={

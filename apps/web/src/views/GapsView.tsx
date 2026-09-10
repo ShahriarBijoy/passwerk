@@ -110,7 +110,6 @@ export function GapsView(props: GapsViewProps) {
               <span>·</span>
               <span data-testid="completeness-overall">
                 {t(lang, 'hero.gaps.meta', {
-                  percent: gap.completeness.mandatory.percent,
                   present: gap.completeness.overall.present,
                   total: gap.completeness.overall.total,
                 })}
@@ -174,12 +173,14 @@ export function GapsView(props: GapsViewProps) {
               </ToggleGroupItem>
             </ToggleGroup>
           )}
-          <Input
-            className="w-28"
-            placeholder={t(lang, 'review.search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          {view !== 'findings' && (
+            <Input
+              className="w-28"
+              placeholder={t(lang, 'review.search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          )}
         </>
       }
       footer={
@@ -242,6 +243,24 @@ export function GapsView(props: GapsViewProps) {
             title={openFinding.ruleId}
             meta={`${openFinding.layer} · ${openFinding.severity}`}
             onClose={() => setOpenKey(null)}
+            {...(openFinding.attributeId && byId.has(openFinding.attributeId)
+              ? {
+                  actions: (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      data-testid="gaps-show-attribute"
+                      onClick={() => {
+                        setView('owner');
+                        setOnlyOpen(false);
+                        setOpenKey(openFinding.attributeId ?? null);
+                      }}
+                    >
+                      {t(lang, 'gaps.showAttribute')}
+                    </Button>
+                  ),
+                }
+              : {})}
             data-testid="gaps-sheet"
           >
             <p>{pick(lang, openFinding.message)}</p>

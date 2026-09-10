@@ -41,6 +41,23 @@ describe('GapsView', () => {
     fireEvent.click(screen.getByTestId('gaps-fix'));
     expect(onFix).toHaveBeenCalledWith(first.getAttribute('data-attribute'));
   });
+  it('links a finding to its attribute in the sheet', () => {
+    const byId = new Map(gap.items.map((i) => [i.attributeId, i]));
+    const finding = report.findings.find((f) => f.attributeId && byId.has(f.attributeId));
+    expect(finding).toBeTruthy();
+    const item = byId.get(finding?.attributeId ?? '');
+    expect(item).toBeTruthy();
+    mount(<GapsView {...props} />);
+    fireEvent.click(screen.getByTestId('gaps-view-findings'));
+    const findingRow = screen
+      .getAllByTestId('finding')
+      .find((el) => el.getAttribute('data-attribute') === finding?.attributeId) as HTMLElement;
+    fireEvent.click(findingRow);
+    fireEvent.click(screen.getByTestId('gaps-show-attribute'));
+    const sheet = screen.getByTestId('gaps-sheet');
+    expect(sheet.textContent).toContain(item?.name.en);
+    expect(screen.getByTestId('gaps-view-owner').getAttribute('data-state')).toBe('on');
+  });
   it('renders German', () => {
     mount(<GapsView {...props} lang="de" />);
     expect(screen.getByText('Pflichtangaben')).toBeTruthy();
