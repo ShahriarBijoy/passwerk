@@ -4,7 +4,7 @@ import { loadAssistKey } from './app/assist/key.ts';
 import { nowIso } from './app/clock.ts';
 import { ErrorBoundary } from './app/ErrorBoundary.tsx';
 import { attachPersistence, clearState, loadState } from './app/persistence.ts';
-import { browserPlatform } from './app/platform.ts';
+import { applyTheme, browserPlatform } from './app/platform.ts';
 import './index.css';
 import { initialState } from './workflow/state.ts';
 import { createStore } from './workflow/store.ts';
@@ -19,6 +19,7 @@ async function boot() {
     loaded.kind === 'unavailable' || loaded.kind === 'version' ? loaded.kind : undefined;
   const root = document.getElementById('root');
   if (!root) throw new Error('missing #root');
+  applyTheme(browserPlatform.theme?.current() ?? 'light');
   createRoot(root).render(
     <ErrorBoundary
       lang={store.getState().language}

@@ -239,6 +239,45 @@ describe('App', () => {
     expect(urnInput.value).not.toBe(firstUrn);
   });
 
+  it('shows six steps and reaches export exactly when gaps is reachable', () => {
+    const store = createStore(initialState);
+    mount(<App store={store} platform={platform} />);
+    expect(screen.getAllByTestId(/^step-/)).toHaveLength(6);
+    expect((screen.getByTestId('step-export') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId('step-gaps') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows the fullscreen control only when the platform offers it', () => {
+    const request = vi.fn(async () => undefined);
+    const { unmount } = mount(<App store={createStore(initialState)} platform={platform} />);
+    expect(screen.queryByTestId('display-toggle')).toBeNull();
+    unmount();
+    mount(
+      <App
+        store={createStore(initialState)}
+        platform={{
+          ...platform,
+          display: { available: () => ['inline', 'fullscreen'], current: () => 'inline', request },
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('display-toggle'));
+    expect(request).toHaveBeenCalledWith('fullscreen');
+  });
+
+  it('reports an ingest failure inline, not as a toast', async () => {
+    ingestFiles.mockRejectedValueOnce(new Error('body too large'));
+    const store = createStore(initialState);
+    mount(<App store={store} platform={platform} />);
+    fireEvent.click(screen.getByTestId('project-continue'));
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('file-input'), {
+        target: { files: [new File(['a'], 'a.csv', { type: 'text/csv' })] },
+      });
+    });
+    expect(screen.getByTestId('upload-error').textContent).toContain('body too large');
+  });
+
   it('resume stays on the project step when the derived meta is null', () => {
     const store = createStore(initialState);
     // PORTABLE resolves no obligations category and the project has no manual category either,

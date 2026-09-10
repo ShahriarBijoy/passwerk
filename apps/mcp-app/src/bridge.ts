@@ -5,7 +5,6 @@
  * `App` it needs, so tests can pass the real `App` or a fake.
  */
 import { canonicalJson, type FactSet, validateSchema } from '@passwerk/core';
-import { toast } from 'sonner';
 import type { Language } from '@/i18n/index.ts';
 import { derive } from '@/workflow/derive/index.ts';
 import type { ExportFile } from '@/workflow/exports.ts';
@@ -185,7 +184,7 @@ export async function hostDownload(
   file: ExportFile,
   lang: Language,
   draftId: string | undefined,
-  notify: (text: string) => void = (text) => void toast(text),
+  notify: (text: string) => void,
 ): Promise<void> {
   if (!link.getHostCapabilities()?.downloadFile) {
     notify(noDownload(lang, draftId));

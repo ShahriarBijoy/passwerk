@@ -43,7 +43,32 @@ export interface Platform {
   pdfWorkerSrc?: string;
   /** Absent means no assist: the panel does not render and no endpoint is bundled. */
   assist?: AssistPlatform;
+  /** Web app only: the reviewer's theme choice. Absent in an MCP host, which owns the theme. */
+  theme?: { current(): 'dark' | 'light'; set(theme: 'dark' | 'light'): void };
+  /** MCP host only: fullscreen when the host offers it. Absent in the web app. */
+  display?: {
+    available(): ('inline' | 'fullscreen')[];
+    current(): 'inline' | 'fullscreen';
+    request(mode: 'inline' | 'fullscreen'): Promise<void>;
+  };
 }
+
+const THEME_KEY = 'passwerk.theme';
+
+const readTheme = (): 'dark' | 'light' => {
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v === 'dark' || v === 'light') return v;
+  } catch {
+    /* storage blocked: follow the system */
+  }
+  return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+};
+
+export const applyTheme = (theme: 'dark' | 'light') =>
+  document.documentElement.classList.toggle('dark', theme === 'dark');
 
 export const browserPlatform: Platform = {
   download: downloadFile,
@@ -56,5 +81,16 @@ export const browserPlatform: Platform = {
     loadKey: loadAssistKey,
     saveKey: saveAssistKey,
     clearKey: clearAssistKey,
+  },
+  theme: {
+    current: readTheme,
+    set(theme) {
+      try {
+        localStorage.setItem(THEME_KEY, theme);
+      } catch {
+        /* keep in DOM only */
+      }
+      applyTheme(theme);
+    },
   },
 };

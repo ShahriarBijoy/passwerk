@@ -9,7 +9,8 @@ globalThis.ResizeObserver ??= class {
 } as never;
 Element.prototype.scrollIntoView ??= () => undefined;
 Element.prototype.hasPointerCapture ??= () => false;
-// jsdom does not implement matchMedia; next-themes (used by the Sonner toaster) reads it on mount.
+// jsdom does not implement matchMedia; the shell's theme code (platform.ts) reads it to follow
+// the system preference when no theme has been chosen yet.
 window.matchMedia ??= ((query: string) =>
   ({
     matches: false,

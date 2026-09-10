@@ -1,6 +1,7 @@
 import type { Fact } from '@passwerk/core';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { getAttribute } from '@passwerk/rules';
+import { Maximize2 } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,8 +14,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/sonner';
-import { type LangText, type Language, t } from '../i18n/index.ts';
+import { type LangText, type Language, pick, t } from '../i18n/index.ts';
 import { AddValueDialog } from '../views/AddValueDialog.tsx';
 import { AssistPanel } from '../views/AssistPanel.tsx';
 import { ExportView } from '../views/ExportView.tsx';
@@ -23,6 +23,8 @@ import { GapsView } from '../views/GapsView.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { ReviewView } from '../views/ReviewView.tsx';
 import { arrayEntries, buildGroups, currentRows, manualEntries } from '../views/reviewModel.ts';
+import { InlineStatus } from '../views/shell/InlineStatus.tsx';
+import { Stepper } from '../views/shell/Stepper.tsx';
 import { UploadView } from '../views/UploadView.tsx';
 import { type SuggestionPrefill, suggestionPrefill } from '../workflow/assist/accept.ts';
 import { buildRequest } from '../workflow/assist/request.ts';
@@ -55,7 +57,11 @@ export interface AppProps {
   storageNotice?: 'unavailable' | 'version';
   /** A key remembered on this device, read before mount so no effect has to fetch it. */
   initialAssistKey?: string;
+  /** Where a host-level message lands when no screen owns it (the MCP app's "ask Claude to run emit_passport"). */
+  hostNotice?: string;
 }
+
+type ShellStatus = { kind: 'error' | 'info'; text: string } | null;
 
 let idCounter = 0;
 
@@ -81,6 +87,7 @@ function ProjectStep({
   asOf,
   derived,
   dispatch,
+  top,
   onImport,
   onReset,
 }: {
@@ -89,6 +96,7 @@ function ProjectStep({
   asOf: string;
   derived: Derived | null;
   dispatch: Store['dispatch'];
+  top: ReactNode;
   onImport(text: string): { ok: true } | { ok: false; message: LangText };
   onReset(): void;
 }) {
@@ -113,7 +121,7 @@ function ProjectStep({
       derived={projectDerived}
       isNew={state.project === null}
       draftUrn={draftUrn}
-      top={<span className="label">passwerk</span>}
+      top={top}
       {...(state.project
         ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
         : {})}
@@ -129,7 +137,7 @@ function ProjectStep({
   );
 }
 
-export function App({ store, platform, storageNotice, initialAssistKey }: AppProps) {
+export function App({ store, platform, storageNotice, initialAssistKey, hostNotice }: AppProps) {
   const state = useStore(store, (s) => s);
   const lang: Language = state.language;
   const [busy, setBusy] = useState(false);
@@ -144,28 +152,27 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
   const [rememberKey, setRememberKey] = useState(initialAssistKey !== undefined);
   const [assistRun, setAssistRun] = useState<{ controller: AbortController } | null>(null);
   const [assistError, setAssistError] = useState<string | undefined>(undefined);
+  const [assistOpen, setAssistOpen] = useState(false);
+  const [reviewSearch, setReviewSearch] = useState('');
+  const [status, setStatus] = useState<ShellStatus>(null);
+  // Forces a render so the theme icon flips; the theme itself lives on `<html>`, not in state.
+  const [, bump] = useState(0);
   const [asOf] = useState(() => nowIso());
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
 
-  const fail = (e: unknown) => {
-    const message = e instanceof Error ? e.message : String(e);
-    toast.error(t(lang, 'app.error.title'), {
-      description: message,
-      action: {
-        label: t(lang, 'app.error.copy'),
-        onClick: () => void navigator.clipboard?.writeText(message).catch(() => undefined),
-      },
-    });
-  };
+  const fail = (e: unknown) =>
+    setStatus({ kind: 'error', text: e instanceof Error ? e.message : String(e) });
 
   const reset = () => {
     platform.clearPersisted();
     dispatch({ type: 'reset', at: nowIso() });
+    setReviewSearch('');
   };
 
   const onFiles = async (files: File[]) => {
     if (!derived || files.length === 0) return;
+    setStatus(null);
     // Read the generation before the awaits: by the time the ingest resolves the reviewer may
     // have started over or imported a draft, and these documents belong to a project that is
     // no longer on screen.
@@ -314,6 +321,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
 
   const onExport = (kind: ExportKind) => {
     if (!derived) return;
+    setStatus(null);
     try {
       const out = buildExports(derived, lang);
       if ('error' in out) {
@@ -349,6 +357,87 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
   const groups = buildGroups(derived?.proposals ?? [], state.decisions);
   const pending = groups.filter((g) => !g.decision).length;
 
+  const display = platform.display;
+  const canFullscreen = display?.available().includes('fullscreen') ?? false;
+  const top = (
+    <>
+      <span className="font-mono text-[13px] tracking-[0.1em] text-display">PASSWERK</span>
+      <Stepper
+        lang={lang}
+        steps={STEPS}
+        current={state.step}
+        reachable={reachable}
+        onGo={(step) => dispatch({ type: 'goTo', step, at: nowIso() })}
+      />
+      <span className="ml-auto flex items-center gap-2">
+        {platform.theme && (
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="theme-toggle"
+            aria-label={t(
+              lang,
+              platform.theme.current() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark',
+            )}
+            onClick={() => {
+              platform.theme?.set(platform.theme.current() === 'dark' ? 'light' : 'dark');
+              bump((n) => n + 1);
+            }}
+          >
+            {platform.theme.current() === 'dark' ? '☼' : '☾'}
+          </Button>
+        )}
+        {canFullscreen && display && (
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="display-toggle"
+            aria-label={t(
+              lang,
+              display.current() === 'fullscreen' ? 'shell.inline' : 'shell.fullscreen',
+            )}
+            onClick={() =>
+              void display.request(display.current() === 'fullscreen' ? 'inline' : 'fullscreen')
+            }
+          >
+            <Maximize2 />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          data-testid="lang-toggle"
+          onClick={() =>
+            dispatch({ type: 'setLanguage', language: lang === 'de' ? 'en' : 'de', at: nowIso() })
+          }
+        >
+          {lang === 'de' ? 'EN' : 'DE'}
+        </Button>
+        {state.project && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" data-testid="start-over">
+                {t(lang, 'app.startOver')}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t(lang, 'app.startOver')}</AlertDialogTitle>
+                <AlertDialogDescription>{t(lang, 'app.startOver.confirm')}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel variant="ghost">{t(lang, 'app.cancel')}</AlertDialogCancel>
+                <AlertDialogAction data-testid="start-over-confirm" onClick={reset}>
+                  {t(lang, 'app.confirm')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </span>
+    </>
+  );
+
   const view = (() => {
     switch (state.step) {
       case 'project':
@@ -360,6 +449,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             asOf={asOf}
             derived={derived}
             dispatch={dispatch}
+            top={top}
             onImport={(text) => {
               const r = importDraftJson(text);
               if (r.ok) dispatch({ type: 'importDraft', draft: r.draft, at: nowIso() });
@@ -372,10 +462,11 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <UploadView
             lang={lang}
-            top={<span className="label">passwerk</span>}
+            top={top}
             files={state.files}
             busy={busy}
             proposalCount={derived?.proposals.length ?? 0}
+            {...(status?.kind === 'error' ? { error: status.text } : {})}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'facts', at: nowIso() })}
@@ -386,7 +477,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <FactsView
             lang={lang}
-            top={<span className="label">passwerk</span>}
+            top={top}
             facts={derived.facts.facts}
             documents={state.files.map((f) => f.name)}
             edits={state.factEdits}
@@ -424,8 +515,9 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         if (!derived) return null;
         return (
           <ReviewView
+            key={reviewSearch}
             lang={lang}
-            top={<span className="label">passwerk</span>}
+            top={top}
             category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
@@ -438,7 +530,9 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
             verdict={derived.report.verdict}
             critiques={state.assist?.critiques ?? []}
             {...(assistPanel ? { assistPanel } : {})}
-            assistOpen={false}
+            assistOpen={assistOpen}
+            onAssistToggle={() => setAssistOpen((o) => !o)}
+            initialSearch={reviewSearch}
             onDecide={(d: Decision) => dispatch({ type: 'decide', decision: d, at: nowIso() })}
             onClear={(key: DecisionKey) => dispatch({ type: 'clearDecision', key, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'gaps', at: nowIso() })}
@@ -468,10 +562,15 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <GapsView
             lang={lang}
-            top={<span className="label">passwerk</span>}
+            top={top}
             report={derived.report}
             gap={derived.gap}
-            onFixInReview={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            onFixInReview={(attributeId) => {
+              setReviewSearch(
+                pick(lang, getAttribute(attributeId)?.name ?? { de: attributeId, en: attributeId }),
+              );
+              dispatch({ type: 'goTo', step: 'review', at: nowIso() });
+            }}
             onContinue={() => dispatch({ type: 'goTo', step: 'export', at: nowIso() })}
           />
         );
@@ -480,7 +579,7 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
         return (
           <ExportView
             lang={lang}
-            top={<span className="label">passwerk</span>}
+            top={top}
             report={derived.report}
             gap={derived.gap}
             carrier={derived.carrier}
@@ -492,87 +591,25 @@ export function App({ store, platform, storageNotice, initialAssistKey }: AppPro
   })();
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-4 p-4">
-      <header className="flex flex-wrap items-center gap-3 border-b pb-3">
-        <h1 className="font-bold text-xl">{t(lang, 'app.title')}</h1>
-        <span className="text-muted-foreground text-sm">{t(lang, 'app.tagline')}</span>
-        <nav className="flex gap-1" aria-label={t(lang, 'step.nav')}>
-          {STEPS.map((step) => (
-            <Button
-              key={step}
-              size="sm"
-              variant={state.step === step ? 'primary' : 'ghost'}
-              disabled={!reachable(step)}
-              data-testid={`step-${step}`}
-              onClick={() => dispatch({ type: 'goTo', step, at: nowIso() })}
-            >
-              {t(lang, `step.${step}`)}
-            </Button>
-          ))}
-        </nav>
-        <span className="ml-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            data-testid="lang-toggle"
-            onClick={() =>
-              dispatch({ type: 'setLanguage', language: lang === 'de' ? 'en' : 'de', at: nowIso() })
-            }
-          >
-            {lang === 'de' ? 'EN' : 'DE'}
-          </Button>
-          {state.project && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" data-testid="start-over">
-                  {t(lang, 'app.startOver')}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t(lang, 'app.startOver')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t(lang, 'app.startOver.confirm')}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t(lang, 'app.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction data-testid="start-over-confirm" onClick={reset}>
-                    {t(lang, 'app.confirm')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+    <>
+      {(storageNotice || hostNotice) && (
+        <div className="mx-auto max-w-[1024px] px-4 py-1">
+          {storageNotice && (
+            <InlineStatus
+              kind="info"
+              text={t(
+                lang,
+                storageNotice === 'version' ? 'app.storage.version' : 'app.storage.unavailable',
+              )}
+              data-testid="storage-notice"
+            />
           )}
-        </span>
-      </header>
-      {storageNotice && (
-        <p className="rounded-md border p-2 text-sm" data-testid="storage-notice">
-          {t(lang, storageNotice === 'version' ? 'app.storage.version' : 'app.storage.unavailable')}
-        </p>
+          {hostNotice && <InlineStatus kind="info" text={hostNotice} data-testid="host-notice" />}
+        </div>
       )}
       <ErrorBoundary lang={lang} onReset={reset}>
         {view}
       </ErrorBoundary>
-      {assistPrefill && derived && state.step !== 'review' && (
-        <AddValueDialog
-          key={`${assistPrefill.factId}|${assistPrefill.attributeId}`}
-          lang={lang}
-          category={derived.meta.category}
-          arrayRows={(id) => currentRows(id, derived.draft, state.decisions)}
-          open
-          hideTrigger
-          prefill={assistPrefill}
-          onOpenChange={(o) => {
-            if (!o) setAssistPrefill(null);
-          }}
-          onAdd={(d) => {
-            dispatch({ type: 'decide', decision: d, at: nowIso() });
-            setAssistPrefill(null);
-          }}
-        />
-      )}
-      <Toaster />
-    </div>
+    </>
   );
 }
