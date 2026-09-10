@@ -438,6 +438,7 @@ export function ReviewView(props: ReviewViewProps) {
       )}
       {visible.map((g) => {
         const best = g.proposals[0];
+        const hasCritique = g.proposals.some((p) => critiqueOf(g, p));
         return (
           <Row
             key={g.key}
@@ -466,11 +467,12 @@ export function ReviewView(props: ReviewViewProps) {
                 : []),
               ...stateTag(g, lang),
             ]}
-            dot={g.proposals.some((p) => critiqueOf(g, p)) ? 'bad' : 'none'}
+            dot={hasCritique ? 'bad' : 'none'}
             open={g.key === openKey}
             onOpen={() => setOpenKey(g.key)}
             data-testid="group"
             data-key={g.key}
+            data-critique={hasCritique ? 'true' : undefined}
           />
         );
       })}
