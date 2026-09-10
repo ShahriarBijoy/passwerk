@@ -5,8 +5,11 @@ import { Toggle as TogglePrimitive } from 'radix-ui';
 import type * as React from 'react';
 import { cn } from '@/lib/utils';
 
+// Mono caps, the active one underlined (spec 3.2). A filled pill would be the brightest thing
+// on the screen and would take the hero's job; a row of outlined pills would be the boxes the
+// design spec spends section 2 removing.
 const toggleVariants = cva(
-  'label inline-flex h-7 items-center rounded-pill border border-border-visible px-3 transition-colors hover:text-foreground data-[state=on]:border-display data-[state=on]:bg-display data-[state=on]:text-background outline-none focus-visible:border-display',
+  'label inline-flex h-7 items-center whitespace-nowrap border-b-2 border-transparent transition-colors hover:text-foreground data-[state=on]:border-display data-[state=on]:text-display outline-none focus-visible:border-border-visible focus-visible:text-foreground',
   {
     variants: {
       variant: {

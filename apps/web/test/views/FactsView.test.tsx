@@ -161,5 +161,16 @@ describe('FactsView', () => {
       />,
     );
     expect(screen.getByTestId('facts-count').textContent).toBe('1 of 1 fact');
+    // The four filter names, the document trigger and the search fill the toolbar at the host's
+    // 735 px; the count reads from the footer's status slot instead of wrapping the toolbar onto
+    // a second line.
+    expect(
+      screen.getByTestId('facts-count').closest('[data-region]')?.getAttribute('data-region'),
+    ).toBe('footer');
+    // Mono caps with the active one underlined (spec 3.2), not a filled pill that would be the
+    // brightest thing on the screen.
+    const tab = screen.getByTestId('facts-status-all');
+    expect(tab.className).toContain('border-b-2');
+    expect(tab.className).not.toContain('rounded-pill');
   });
 });

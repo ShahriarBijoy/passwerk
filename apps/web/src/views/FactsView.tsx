@@ -198,6 +198,7 @@ export function FactsView(props: FactsViewProps) {
       toolbar={
         <>
           <ToggleGroup
+            className="shrink-0"
             type="single"
             value={filter.status}
             onValueChange={(v) =>
@@ -210,12 +211,16 @@ export function FactsView(props: FactsViewProps) {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <span className="flex-1" />
+          {/* The toolbar is one line at every width (spec 3.2): the four filters and the count
+              keep their size, the document trigger truncates, and the search takes the slack. */}
           <Select
             value={selectedDocument}
             onValueChange={(v) => setFilter((f) => ({ ...f, document: v }))}
           >
-            <SelectTrigger className="label w-44 border-0" data-testid="facts-document">
+            <SelectTrigger
+              className="label ml-auto max-w-44 shrink border-0 [&>span]:truncate"
+              data-testid="facts-document"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -228,19 +233,22 @@ export function FactsView(props: FactsViewProps) {
             </SelectContent>
           </Select>
           <Input
-            className="w-32"
+            className="min-w-16 flex-1"
             data-testid="facts-search"
             placeholder={t(lang, 'facts.search')}
             value={filter.search}
             onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
           />
-          <span className="label" data-testid="facts-count">
-            {factsCount(lang, visible.length, props.facts.length)}
-          </span>
         </>
       }
       footer={
         <>
+          {/* The four German filter names, the document trigger and the search already fill the
+              toolbar at 735 px; the filtered count reads just as well from the footer's status
+              slot, which is otherwise empty on this screen. */}
+          <span className="label whitespace-nowrap" data-testid="facts-count">
+            {factsCount(lang, visible.length, props.facts.length)}
+          </span>
           <span className="flex-1" />
           <Button variant="primary" data-testid="facts-continue" onClick={props.onContinue}>
             {t(lang, 'facts.continue')} →
