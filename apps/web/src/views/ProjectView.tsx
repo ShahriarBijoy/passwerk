@@ -264,6 +264,7 @@ export function ProjectView(props: ProjectViewProps & { top: ReactNode; children
             <div hidden={!identifierOpen} className="grid gap-3 py-3">
               <ToggleGroup
                 type="single"
+                className="w-full flex-wrap"
                 value={identifier.mode}
                 aria-label={t(lang, 'project.identifier.title')}
                 onValueChange={(mode) => {

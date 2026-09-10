@@ -64,6 +64,7 @@ export function Sheet({
             <DialogPrimitive.Close
               aria-label={t(lang, 'shell.close')}
               className="label hover:text-foreground"
+              data-testid="sheet-close"
             >
               [ ✕ ]
             </DialogPrimitive.Close>
