@@ -97,15 +97,10 @@ test('a suggestion is reviewed and accepted, and reaches the draft with the fact
   // The suggestion is spent: the draft holds it now.
   await expect(page.getByTestId('assist-suggestion')).toHaveCount(0);
 
-  // The second opinion marks a row and nothing more: the group carrying it shows the "bad"
-  // dot (ReviewView.tsx, `dot={g.proposals.some((p) => critiqueOf(g, p)) ? 'bad' : 'none'}`)
-  // even before its sheet is opened.
+  // The second opinion marks a row and nothing more: the group carrying it carries
+  // `data-critique="true"` (ReviewView.tsx) even before its sheet is opened.
   await page.getByTestId('filter-all').click();
-  const flaggedGroup = page
-    .locator('[data-testid="group"]')
-    .filter({ has: page.locator('.bg-destructive') });
-  const flaggedKey = await flaggedGroup.first().getAttribute('data-key');
-  await openRow(page, `[data-testid="group"][data-key="${flaggedKey}"]`);
+  await openRow(page, '[data-testid="group"][data-critique="true"]');
   const chip = page.getByTestId('assist-critique-chip').first();
   await expect(chip).toContainText('Ladespannung');
   await expect(page.getByTestId('proposal').first()).toHaveAttribute('data-state', 'pending');

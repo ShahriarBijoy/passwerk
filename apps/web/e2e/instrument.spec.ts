@@ -29,6 +29,17 @@ for (const viewport of [
       }
       await page.getByTestId('step-review').click();
       await page.getByTestId('filter-all').click();
+      // The instrument itself never scrolls (proved above by `noScroll`); only the list region
+      // does. The Musterwerk proposals (36 groups) overflow the review list's own viewport, so
+      // this proves the region is genuinely scrollable, not merely tall enough by accident.
+      const list = page.locator('[data-region="list"]');
+      const scrollable = await list.evaluate((el) => el.scrollHeight > el.clientHeight);
+      expect(scrollable).toBe(true);
+      const scrollTop = await list.evaluate((el) => {
+        el.scrollTop = 200;
+        return el.scrollTop;
+      });
+      expect(scrollTop).toBeGreaterThan(0);
       await page.getByTestId('group').first().click();
       // The app's default language is German ("shell.of": "{n} von {total}"), so the position
       // counter reads "1 von N", not "1 of N" (i18n/de.ts, i18n/en.ts) - match either locale's
@@ -36,6 +47,8 @@ for (const viewport of [
       await expect(page.getByTestId('review-sheet')).toContainText(/1\s+(of|von)\s+\d+/);
       await page.keyboard.press('ArrowRight');
       await expect(page.getByTestId('review-sheet')).toContainText(/2\s+(of|von)\s+\d+/);
+      await page.keyboard.press('ArrowLeft');
+      await expect(page.getByTestId('review-sheet')).toContainText(/1\s+(of|von)\s+\d+/);
       await page.keyboard.press('Escape');
       await expect(page.getByTestId('review-sheet')).toHaveCount(0);
       const fonts = await page.evaluate(async () => {
