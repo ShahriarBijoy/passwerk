@@ -36,6 +36,10 @@ describe('Sheet', () => {
     expect(onNext).toHaveBeenCalledOnce();
     expect(onPrev).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();
+    // `duration-200` times the slide. Left alone it also sets `transition-duration` against the
+    // initial `transition-property: all`, which re-tweened every colour and edge of the panel on
+    // a theme or frame change; the sheet animates in and out and transitions nothing.
+    expect(sheet.className).toContain('transition-none');
   });
   it('renders nothing when closed', () => {
     mount(

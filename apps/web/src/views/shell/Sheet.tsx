@@ -91,7 +91,13 @@ export function Sheet({
           onKeyDown={onKeyDown}
           onEscapeKeyDown={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
-          className="absolute inset-x-0 bottom-0 z-40 grid max-h-[45%] grid-rows-[auto_auto_1fr_auto] border-t border-border-visible bg-surface px-4 pt-2 pb-3 outline-none data-open:animate-in data-open:slide-in-from-bottom-4 data-closed:animate-out data-closed:slide-out-to-bottom-4 duration-200"
+          // `duration-200` is the slide's animation duration. On its own it also sets
+          // `transition-duration` while `transition-property` stays at its initial `all`, so the
+          // panel re-tweened every colour and every edge whenever the theme or the frame changed -
+          // caught in the visual review as a sheet that was still half dark a moment after the
+          // reviewer switched to light. `transition-none` keeps the entrance animation and takes
+          // the accidental transition away.
+          className="absolute inset-x-0 bottom-0 z-40 grid max-h-[45%] grid-rows-[auto_auto_1fr_auto] border-t border-border-visible bg-surface px-4 pt-2 pb-3 outline-none transition-none data-open:animate-in data-open:slide-in-from-bottom-4 data-closed:animate-out data-closed:slide-out-to-bottom-4 duration-200"
           {...rest}
         >
           <div aria-hidden className="mx-auto mb-2 h-0.5 w-8 bg-border-visible" />
