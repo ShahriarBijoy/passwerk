@@ -30,20 +30,26 @@ export function Instrument({
     <InstrumentContext.Provider value={{ container }}>
       <div
         ref={setContainer}
-        className="relative mx-auto grid w-full max-w-[1024px] grid-rows-[auto_auto_auto_1fr_auto] overflow-hidden bg-background text-foreground"
+        className="relative mx-auto grid w-full max-w-[1024px] grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_auto_1fr_auto] overflow-hidden bg-background text-foreground"
         style={{ height: 'var(--instrument-height)' }}
         {...rest}
       >
-        <div data-region="top" className="flex h-11 items-center gap-4 border-b border-border px-4">
+        <div
+          data-region="top"
+          className="flex h-11 min-w-0 items-center gap-4 border-b border-border px-4"
+        >
           {top}
         </div>
-        <div data-region="hero" className="flex min-h-[72px] items-end gap-4 px-4 pt-3 pb-2">
+        <div
+          data-region="hero"
+          className="flex min-h-[72px] min-w-0 items-end gap-4 px-4 pt-3 pb-2"
+        >
           {hero}
         </div>
-        <div data-region="toolbar" className="flex h-9 items-center gap-4 px-4">
+        <div data-region="toolbar" className="flex h-9 min-w-0 items-center gap-4 px-4">
           {toolbar}
         </div>
-        <div className="relative min-h-0">
+        <div className="relative min-h-0 min-w-0">
           <div
             data-region="list"
             className="h-full overflow-y-auto overscroll-contain px-4 [scrollbar-color:var(--border-visible)_transparent] [scrollbar-width:thin]"
@@ -60,7 +66,7 @@ export function Instrument({
         </div>
         <div
           data-region="footer"
-          className="flex h-13 items-center gap-3 border-t border-border px-4"
+          className="flex h-13 min-w-0 items-center gap-3 border-t border-border px-4"
         >
           {footer}
         </div>

@@ -19,7 +19,7 @@ export function Stepper({
   return (
     <nav
       aria-label={t(lang, 'step.nav')}
-      className="flex min-w-0 items-center gap-3 overflow-hidden"
+      className="flex min-w-0 shrink items-center gap-3 overflow-hidden max-[880px]:gap-2"
     >
       {steps.map((step, i) => {
         const active = step === current;
@@ -41,7 +41,18 @@ export function Stepper({
             ].join(' ')}
           >
             {active ? '[ ' : ''}
-            {pad(i)} <span className="max-[640px]:hidden">{t(lang, `step.${step}` as Key)}</span>
+            {pad(i)}
+            <span
+              className={
+                // The German step names need ~875 px of top bar; below that only the step the
+                // reader is on keeps its name, and below 640 px the stepper is numbers only
+                // (spec 3.1). Nothing is ever clipped mid-word.
+                active ? 'max-[640px]:hidden' : 'max-[880px]:hidden'
+              }
+            >
+              {' '}
+              {t(lang, `step.${step}` as Key)}
+            </span>
             {active ? ' ]' : ''}
           </button>
         );

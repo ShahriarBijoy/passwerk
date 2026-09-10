@@ -362,7 +362,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const canFullscreen = display?.available().includes('fullscreen') ?? false;
   const top = (
     <>
-      <span className="font-mono text-[13px] tracking-[0.1em] text-display">PASSWERK</span>
+      <span className="shrink-0 font-mono text-[13px] tracking-[0.1em] text-display">PASSWERK</span>
       <Stepper
         lang={lang}
         steps={STEPS}
@@ -370,7 +370,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         reachable={reachable}
         onGo={(step) => dispatch({ type: 'goTo', step, at: nowIso() })}
       />
-      <span className="ml-auto flex items-center gap-2">
+      <span className="ml-auto flex shrink-0 items-center gap-2">
         {platform.theme && (
           <Button
             variant="ghost"

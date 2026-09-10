@@ -20,8 +20,8 @@ export function GroupHeader({
       {...rest}
     >
       <span className="min-w-0 flex-1 truncate text-display">{name}</span>
-      <span className="label">{count}</span>
-      <span aria-hidden className="w-3 text-right text-disabled">
+      <span className="label shrink-0">{count}</span>
+      <span aria-hidden className="w-3 shrink-0 text-right text-disabled">
         {open ? '▾' : '›'}
       </span>
     </button>

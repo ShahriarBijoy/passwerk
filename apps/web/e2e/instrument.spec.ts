@@ -18,14 +18,30 @@ for (const viewport of [
       );
       await page.getByTestId('file-input').setInputFiles(fixturePaths());
       await expect(page.getByTestId('upload-busy')).toHaveCount(0, { timeout: 60_000 });
+      // The document never scrolls - and, because the instrument clips its own overflow, that
+      // alone would not notice a region rendering wider than the frame. `wide` therefore names
+      // every element inside the instrument whose right edge lies past the frame's: a clipped
+      // toolbar, a row whose tags fall off the end, a top bar whose START OVER never appears.
       const noScroll = async () =>
-        page.evaluate(() => ({
-          h: document.documentElement.scrollHeight === document.documentElement.clientHeight,
-          w: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-        }));
+        page.evaluate(() => {
+          const root = document.querySelector<HTMLElement>('[data-region="top"]')
+            ?.parentElement as HTMLElement;
+          const edge = root.getBoundingClientRect().right;
+          const wide = Array.from(root.querySelectorAll<HTMLElement>('*'))
+            .filter((el) => {
+              const r = el.getBoundingClientRect();
+              return r.width > 0 && r.right > edge + 0.5;
+            })
+            .map((el) => `${el.tagName}.${el.className.toString().slice(0, 40)}`);
+          return {
+            h: document.documentElement.scrollHeight === document.documentElement.clientHeight,
+            w: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+            wide: wide.slice(0, 4),
+          };
+        });
       for (const step of ['upload', 'facts', 'review', 'gaps', 'export'] as const) {
         await page.getByTestId(`step-${step}`).click();
-        expect(await noScroll(), step).toEqual({ h: true, w: true });
+        expect(await noScroll(), step).toEqual({ h: true, w: true, wide: [] });
       }
       await page.getByTestId('step-review').click();
       await page.getByTestId('filter-all').click();

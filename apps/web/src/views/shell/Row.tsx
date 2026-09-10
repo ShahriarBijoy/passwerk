@@ -69,12 +69,12 @@ export function Row({
         <span aria-hidden className={['size-1.5 shrink-0 rounded-pill', DOT[dot]].join(' ')} />
       )}
       <span className="min-w-0 flex-1 truncate text-foreground">{name}</span>
-      {value !== undefined && <span className="font-mono text-display">{value}</span>}
-      {unit && <span className="label">{unit}</span>}
+      {value !== undefined && <span className="shrink-0 font-mono text-display">{value}</span>}
+      {unit && <span className="label shrink-0">{unit}</span>}
       {tags.map((tg) => (
         <span
           key={tg.label}
-          className={['label', TAG[tg.tone ?? 'default']].join(' ')}
+          className={['label shrink-0', TAG[tg.tone ?? 'default']].join(' ')}
           {...(tg.testId ? { 'data-testid': tg.testId } : {})}
         >
           {tg.label}
@@ -82,7 +82,7 @@ export function Row({
       ))}
       {action}
       {onOpen && (
-        <span aria-hidden className="w-3 text-right text-disabled">
+        <span aria-hidden className="w-3 shrink-0 text-right text-disabled">
           {open ? '▾' : '›'}
         </span>
       )}
