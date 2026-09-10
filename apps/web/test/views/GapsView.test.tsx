@@ -21,8 +21,13 @@ describe('GapsView', () => {
   it('shows verdict, completeness and every item, grouped by owner, open ones first', () => {
     mount(<GapsView {...props} />);
     expect(screen.getByTestId('verdict').getAttribute('data-verdict')).toBe('invalid');
-    expect(screen.getByTestId('completeness-mandatory').textContent).toContain(
-      gap.completeness.mandatory.percent,
+    // The percentage and nothing else: the hero beside it already reads "present / total", and
+    // saying it twice in two type sizes is the metadata line's job for neither of them.
+    expect(screen.getByTestId('completeness-mandatory').textContent).toBe(
+      `${gap.completeness.mandatory.percent} %`,
+    );
+    expect(screen.getByTestId('completeness-mandatory-hero').textContent).toContain(
+      gap.completeness.mandatory.present,
     );
     fireEvent.click(screen.getByTestId('gaps-filter-all'));
     expect(screen.getAllByTestId('gap-item')).toHaveLength(gap.items.length);

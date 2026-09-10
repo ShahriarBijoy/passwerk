@@ -103,9 +103,10 @@ export function GapsView(props: GapsViewProps) {
               total={Number(gap.completeness.mandatory.total)}
             />
             <div className="label mt-1.5 flex flex-wrap gap-2">
+              {/* The hero beside this line already reads "15 / 47"; the metadata adds the
+                  precision the bar cannot show, and nothing else (spec 6.5). */}
               <span data-testid="completeness-mandatory">
-                {gap.completeness.mandatory.present}/{gap.completeness.mandatory.total} (
-                {gap.completeness.mandatory.percent} %)
+                {gap.completeness.mandatory.percent} %
               </span>
               <span>·</span>
               <span data-testid="completeness-overall">
