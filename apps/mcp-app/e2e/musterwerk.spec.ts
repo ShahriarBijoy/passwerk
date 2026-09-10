@@ -102,9 +102,15 @@ test('Musterwerk track inside the MCP App iframe', async ({ page }) => {
   expect(ctx.content[0]?.text).toMatch(/^passwerk-Werkbank/);
   expect(ctx.content[0]?.text).toContain(ctx.structuredContent.draftId);
 
+  // Six-step coverage (spec §10): reach the export screen too, same tail `toExport` (helpers.ts)
+  // drives from the gaps screen - already there, so just its last two steps.
+  await frame.getByTestId('to-export').click();
+  await expect(frame.getByTestId('export-aasx')).toBeVisible();
+
   // The app root is `height: var(--instrument-height)`, which main.tsx pins to 640px at boot
   // (inline display mode throughout this test). Every size the workbench reported to the host
-  // over the whole track is exactly that fixed frame - never taller, never shorter.
+  // over the whole six-step track - project, upload, facts, review, gaps, export - is exactly
+  // that fixed frame - never taller, never shorter.
   const sizes = await page.evaluate(
     () => (window as unknown as { __sizes: { height?: number }[] }).__sizes,
   );
