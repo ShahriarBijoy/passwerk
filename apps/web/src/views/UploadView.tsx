@@ -15,8 +15,11 @@ export interface UploadViewProps {
   files: FileSummary[];
   busy: boolean;
   proposalCount: number;
-  error?: string;
-  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  /**
+   * A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure,
+   * including an ingest failure — App.tsx's `notice` carries the `upload-error` test id when
+   * this screen is the active one).
+   */
   notice?: ReactNode;
   onFiles(files: File[]): void;
   onRemove(name: string): void;
@@ -51,24 +54,6 @@ export function UploadView(props: UploadViewProps) {
               text={t(lang, 'upload.busy')}
               data-testid="upload-busy"
               action={<Spinner />}
-            />
-          )}
-          {props.error && !props.busy && (
-            <InlineStatus
-              kind="error"
-              text={props.error}
-              data-testid="upload-error"
-              action={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    void navigator.clipboard?.writeText(props.error ?? '').catch(() => undefined)
-                  }
-                >
-                  {t(lang, 'shell.copy')}
-                </Button>
-              }
             />
           )}
           <span className="flex-1" />

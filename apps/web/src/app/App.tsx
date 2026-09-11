@@ -361,8 +361,28 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const groups = buildGroups(derived?.proposals ?? [], state.decisions);
   const pending = groups.filter((g) => !g.decision).length;
 
+  // A caught failure (an ingest error, or an export exception `fail(e)` catches) is shown on
+  // whichever screen is active when it happens, not only on upload: the `upload-error` test id
+  // is kept for the upload screen specifically, so the existing assertion survives unchanged,
+  // and every other screen shows the same status under `shell-error`.
   const notice = (
     <>
+      {status?.kind === 'error' && (
+        <InlineStatus
+          kind="error"
+          text={status.text}
+          data-testid={state.step === 'upload' ? 'upload-error' : 'shell-error'}
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void navigator.clipboard?.writeText(status.text).catch(() => undefined)}
+            >
+              {t(lang, 'shell.copy')}
+            </Button>
+          }
+        />
+      )}
       {storageNotice && (
         <InlineStatus
           kind="info"
@@ -493,7 +513,6 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             files={state.files}
             busy={busy}
             proposalCount={derived?.proposals.length ?? 0}
-            {...(status?.kind === 'error' ? { error: status.text } : {})}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
             onContinue={() => dispatch({ type: 'goTo', step: 'facts', at: nowIso() })}

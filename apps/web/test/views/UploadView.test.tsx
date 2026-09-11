@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { InlineStatus } from '@/views/shell/InlineStatus.tsx';
 import { UploadView } from '@/views/UploadView.tsx';
 import { mount } from './render.tsx';
 
@@ -96,7 +97,7 @@ describe('UploadView', () => {
     expect(screen.getByTestId('upload-busy')).toBeTruthy();
   });
 
-  it('shows the shell error inline when idle', () => {
+  it('renders the caught-failure notice the shell passes in, in the footer', () => {
     mount(
       <UploadView
         top={<span />}
@@ -104,13 +105,16 @@ describe('UploadView', () => {
         busy={false}
         proposalCount={0}
         files={[]}
-        error="body too large"
+        notice={
+          <InlineStatus kind="error" text="body too large" data-testid="upload-error" />
+        }
         onFiles={() => undefined}
         onRemove={() => undefined}
         onContinue={() => undefined}
       />,
     );
-    expect(screen.getByTestId('upload-error').textContent).toContain('body too large');
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy();
+    const notice = screen.getByTestId('upload-error');
+    expect(notice.textContent).toContain('body too large');
+    expect(notice.closest('[data-region="footer"]')).toBeTruthy();
   });
 });
