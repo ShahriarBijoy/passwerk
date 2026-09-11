@@ -156,11 +156,12 @@
     line-height: 1;
     color: var(--text-display);
     /* Doto is a dot matrix, and Windows Chromium rendered each dot with LCD subpixel
-       antialiasing, which put red and blue fringes on a monochrome screen. Promoting the hero to
-       its own compositing layer makes Chromium fall back to grayscale antialiasing; the
-       `-webkit-font-smoothing` line does the same on macOS. */
+       antialiasing, which put red and blue fringes on a monochrome screen. `will-change:
+       transform` promotes the hero to its own compositing layer, which makes Chromium fall back
+       to grayscale antialiasing on its own; the `-webkit-font-smoothing` line does the same on
+       macOS. A `transform: translateZ(0)` alongside `will-change` promoted the layer twice for
+       no further effect, so it is gone. */
     will-change: transform;
-    transform: translateZ(0);
     -webkit-font-smoothing: antialiased;
   }
   @media (prefers-reduced-motion: reduce) {
