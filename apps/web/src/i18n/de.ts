@@ -1,7 +1,4 @@
 export const de = {
-  'app.title': 'passwerk',
-  'app.tagline': 'Batteriepass aus Lieferantendokumenten',
-  'app.language': 'Sprache',
   'app.notLegalAdvice': 'Keine Rechtsberatung. Quellen sind bei jedem Eintrag angegeben.',
   'app.startOver': 'Neu beginnen',
   'app.startOver.confirm':
@@ -22,11 +19,9 @@ export const de = {
   'step.review': 'Prüfen',
   'step.gaps': 'Lücken',
   'step.export': 'Export',
-  'start.import': 'Entwurf importieren (JSON)',
   'start.import.error': 'Der Entwurf konnte nicht gelesen werden: {reason}',
   'start.resume.title': 'Letzte Sitzung fortsetzen',
   'start.resume.saved': 'Gespeichert {at}',
-  'start.resume.files': '{count} Dateien',
   'start.resume.button': 'Fortsetzen',
   'upload.title': 'Dokumente hochladen',
   'upload.hint': 'PDF, XLSX, DOCX, CSV oder TXT. Die Dateien verlassen den Browser nicht.',
@@ -274,10 +269,8 @@ export const de = {
   'shell.theme.dark.short': 'Dunkel',
   'shell.theme.light': 'Hell',
   'shell.theme.light.short': 'Hell',
-  'shell.saved': 'Gespeichert',
   'shell.copied': 'Kopiert',
   'shell.copy': 'Kopieren',
-  'shell.error': 'Fehler',
   'hero.obligation': 'Passpflicht',
   'hero.documents': 'Dokumente',
   'hero.facts': 'Fakten',
@@ -285,7 +278,6 @@ export const de = {
   'hero.mandatory': 'Pflichtangaben',
   'hero.carrier': 'Datenträger',
   'hero.verdictCarried': 'Ergebnis in jeder Datei',
-  'hero.decided': '{decided} / {total} entschieden',
   'hero.proposals': '{count} Vorschläge abgeleitet',
   'hero.facts.meta':
     'aus {documents} Dokumenten · {proposed} vorgeschlagen · {mapped} zugeordnet · {unmapped} offen',

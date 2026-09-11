@@ -1,9 +1,6 @@
 import type { de } from './de.ts';
 
 export const en: Record<keyof typeof de, string> = {
-  'app.title': 'passwerk',
-  'app.tagline': 'Battery passport from supplier documents',
-  'app.language': 'Language',
   'app.notLegalAdvice': 'Not legal advice. Sources are given on every entry.',
   'app.startOver': 'Start over',
   'app.startOver.confirm': 'All files, proposals and decisions from this session will be deleted.',
@@ -22,11 +19,9 @@ export const en: Record<keyof typeof de, string> = {
   'step.review': 'Review',
   'step.gaps': 'Gaps',
   'step.export': 'Export',
-  'start.import': 'Import draft (JSON)',
   'start.import.error': 'The draft could not be read: {reason}',
   'start.resume.title': 'Resume last session',
   'start.resume.saved': 'Saved {at}',
-  'start.resume.files': '{count} files',
   'start.resume.button': 'Resume',
   'upload.title': 'Upload documents',
   'upload.hint': 'PDF, XLSX, DOCX, CSV or TXT. Files never leave the browser.',
@@ -271,10 +266,8 @@ export const en: Record<keyof typeof de, string> = {
   'shell.theme.dark.short': 'Dark',
   'shell.theme.light': 'Light mode',
   'shell.theme.light.short': 'Light',
-  'shell.saved': 'Saved',
   'shell.copied': 'Copied',
   'shell.copy': 'Copy',
-  'shell.error': 'Error',
   'hero.obligation': 'Passport obligation',
   'hero.documents': 'Documents',
   'hero.facts': 'Facts',
@@ -282,7 +275,6 @@ export const en: Record<keyof typeof de, string> = {
   'hero.mandatory': 'Mandatory',
   'hero.carrier': 'Carrier',
   'hero.verdictCarried': 'Verdict carried by every file',
-  'hero.decided': '{decided} / {total} decided',
   'hero.proposals': '{count} proposals derived',
   'hero.facts.meta':
     'from {documents} documents · {proposed} proposed · {mapped} mapped · {unmapped} unmapped',
