@@ -103,7 +103,7 @@ function RowFields({
               <textarea
                 id={domId(leaf.path)}
                 data-testid={testId(leaf.path)}
-                className="min-h-16 w-full border border-border-visible bg-transparent px-2.5 py-1.5 font-mono text-sm text-display outline-none transition-colors placeholder:text-disabled focus-visible:border-display disabled:text-disabled disabled:border-border"
+                className="min-h-16 w-full border border-border-visible bg-transparent px-2.5 py-1.5 font-mono text-sm text-display outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-display disabled:text-disabled disabled:border-border"
                 value={row.fields[leaf.path] ?? ''}
                 onChange={(e) =>
                   onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })

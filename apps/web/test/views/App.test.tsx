@@ -310,6 +310,30 @@ describe('App', () => {
     expect(screen.getByTestId('shell-error').textContent).toContain('disk full');
   });
 
+  it('clears a stale shell error when the reviewer navigates to another step', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:export-error', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    store.dispatch({ type: 'goTo', step: 'export', at: AT });
+    const download = vi.fn(() => {
+      throw new Error('disk full');
+    });
+    mount(<App store={store} platform={{ ...platform, download }} />);
+    fireEvent.click(screen.getByTestId('export-aasJson'));
+    expect(screen.getByTestId('shell-error').textContent).toContain('disk full');
+    fireEvent.click(screen.getByTestId('step-gaps'));
+    expect(screen.queryByTestId('shell-error')).toBeNull();
+  });
+
   it('reports an ingest failure inline, not as a toast', async () => {
     ingestFiles.mockRejectedValueOnce(new Error('body too large'));
     const store = createStore(initialState);

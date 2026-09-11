@@ -87,6 +87,7 @@ function ProjectStep({
   asOf,
   derived,
   dispatch,
+  goTo,
   top,
   notice,
   onImport,
@@ -97,6 +98,7 @@ function ProjectStep({
   asOf: string;
   derived: Derived | null;
   dispatch: Store['dispatch'];
+  goTo(step: Step): void;
   top: ReactNode;
   notice?: ReactNode;
   onImport(text: string): { ok: true } | { ok: false; message: LangText };
@@ -111,9 +113,8 @@ function ProjectStep({
     else setLocalProject(p);
   };
   const onContinue = () => {
-    const at = nowIso();
-    if (!state.project) dispatch({ type: 'setProject', project: localProject, at });
-    dispatch({ type: 'goTo', step: 'upload', at });
+    if (!state.project) dispatch({ type: 'setProject', project: localProject, at: nowIso() });
+    goTo('upload');
   };
 
   return (
@@ -133,7 +134,7 @@ function ProjectStep({
       onImport={onImport}
       onResume={() => {
         const step = derived === null ? 'project' : state.files.length ? 'review' : 'upload';
-        if (step !== 'project') dispatch({ type: 'goTo', step, at: nowIso() });
+        if (step !== 'project') goTo(step);
       }}
       onReset={onReset}
     />
@@ -165,12 +166,14 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const dispatch = store.dispatch;
 
   /**
-   * Every explicit step change (the stepper, review's own "continue") goes through here so
-   * leaving review always clears `reviewSearch`. Without it, a stale search left over from an
-   * earlier "fix in review" would prefill the box again on a later, unrelated arrival at review.
+   * Every step change dispatches through here, so leaving review always clears `reviewSearch`
+   * (without it, a stale search left over from an earlier "fix in review" would prefill the box
+   * again on a later, unrelated arrival at review) and a status left over from the previous
+   * screen never follows the reviewer to the next one.
    */
   const goTo = (step: Step) => {
     if (state.step === 'review' && step !== 'review') setReviewSearch('');
+    setStatus(null);
     dispatch({ type: 'goTo', step, at: nowIso() });
   };
 
@@ -500,6 +503,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             asOf={asOf}
             derived={derived}
             dispatch={dispatch}
+            goTo={goTo}
             top={top}
             notice={notice}
             onImport={(text) => {
@@ -521,7 +525,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             proposalCount={derived?.proposals.length ?? 0}
             onFiles={(files) => void onFiles(files)}
             onRemove={(name) => dispatch({ type: 'fileRemoved', name, at: nowIso() })}
-            onContinue={() => dispatch({ type: 'goTo', step: 'facts', at: nowIso() })}
+            onContinue={() => goTo('facts')}
           />
         );
       case 'facts':
@@ -538,7 +542,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             onEdit={(factId, edit) => dispatch({ type: 'editFact', factId, edit, at: nowIso() })}
             onClearEdit={(factId) => dispatch({ type: 'clearFactEdit', factId, at: nowIso() })}
             onMap={setMapFact}
-            onContinue={() => dispatch({ type: 'goTo', step: 'review', at: nowIso() })}
+            onContinue={() => goTo('review')}
           >
             {mapFact && (
               <AddValueDialog
@@ -623,9 +627,9 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
               setReviewSearch(
                 pick(lang, getAttribute(attributeId)?.name ?? { de: attributeId, en: attributeId }),
               );
-              dispatch({ type: 'goTo', step: 'review', at: nowIso() });
+              goTo('review');
             }}
-            onContinue={() => dispatch({ type: 'goTo', step: 'export', at: nowIso() })}
+            onContinue={() => goTo('export')}
           />
         );
       case 'export':
