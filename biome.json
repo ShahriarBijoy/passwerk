@@ -55,7 +55,7 @@
   },
   "overrides": [
     {
-      "includes": ["packages/*/test/**", "tools/*/test/**"],
+      "includes": ["packages/*/test/**", "tools/*/test/**", "apps/*/test/**"],
       "linter": {
         "rules": {
           "style": {

@@ -105,9 +105,7 @@ describe('UploadView', () => {
         busy={false}
         proposalCount={0}
         files={[]}
-        notice={
-          <InlineStatus kind="error" text="body too large" data-testid="upload-error" />
-        }
+        notice={<InlineStatus kind="error" text="body too large" data-testid="upload-error" />}
         onFiles={() => undefined}
         onRemove={() => undefined}
         onContinue={() => undefined}
