@@ -131,10 +131,12 @@ Contributor instructions for humans and coding agents live in `AGENTS.md` and `C
 ## Web app
 
 `apps/web` is a client-side Vite app that runs the same ingest, mapping, validation and gap
-report pipeline as `@passwerk/core` in the browser: upload supplier documents, review the
-proposed mappings, see the gap report and export the passport. Documents never leave the
-browser, and the autosave to IndexedDB keeps your decisions, the extracted facts and the
-proposals, but never the uploaded files.
+report pipeline as `@passwerk/core` in the browser, as six steps: project, documents, facts,
+review, gaps and export. Upload supplier documents, review the proposed mappings, see the gap
+report and export the passport. Documents never leave the browser, and the autosave to
+IndexedDB keeps your decisions, the extracted facts and the proposals, but never the uploaded
+files. Inside Claude Desktop the same workbench (`apps/mcp-app`) runs as a fixed-height
+instrument in the host's iframe rather than a scrolling document (ADR D-040).
 
 ![passwerk web app: upload, review, gaps, export](docs/media/passwerk-web.gif)
 

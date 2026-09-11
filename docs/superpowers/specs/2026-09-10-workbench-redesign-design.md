@@ -2,6 +2,8 @@
 
 Status: approved in conversation 2026-09-10 (layout B, six steps, Lucide icons, bundled
 Space Grotesk / Space Mono / Doto, dark first). Branch `feat/workbench-redesign`.
+Implemented as ADR D-040 (2026-09-11); the rulings that amended this spec during
+implementation are recorded there.
 Scope: `apps/web` (`views`, `components`, `i18n`, `index.css`, one `workflow` type) and the
 `apps/mcp-app` shell that reuses them, plus fonts, tests, one ADR (D-040), the build plan
 status and `AGENTS.md`. No change to `@passwerk/core`, `@passwerk/rules` or

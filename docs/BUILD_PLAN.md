@@ -454,13 +454,22 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
   offline), the key in memory unless the reviewer asks for it to be remembered, a disclosure
   panel showing the literal request, and seven guards that turn everything else into a
   displayed discard. **Phase 7a is complete.**
+- **Redesign done (2026-09-11, ADR D-040):** the app is a fixed-height instrument in the
+  Nothing idiom, six steps (export is now its own screen), bundled Space Grotesk / Space Mono /
+  Doto, no toasts; `views/shell` is the design system in code and Phase 7b reuses it unchanged.
+  The ten places implementation ruled differently from the approved design — text-contrast
+  fixes beyond the plan's own code, the official shadcn registry over ReUI's licence-gated one,
+  the sheet's document-level Escape and advance-after-decision behaviour, an owner-requested
+  date picker, an instrument-overflow guard that caught a real 875-px-in-735-px grid defect,
+  and a grayscale-rendering fix for the Doto hero — are recorded in D-040, along with the
+  deferred minors and open owner questions the visual review surfaced.
 
 ### Phase 7b — MCP App (D-019) (2–3 days)
 - `apps/mcp-app`: the Phase 7a review, gap and export components wrapped in the MCP Apps bridge (`@modelcontextprotocol/ext-apps`), served by `@passwerk/server` as a `ui://` resource referenced from `_meta.ui.resourceUri` on the relevant tools.
 - File entry: plain file input inside the iframe; bytes go to `ingest_documents` inline, or `core` runs inside the iframe and only the `FactSet` is sent. Decide after measuring the host's message size limit and confirming the sandbox permits file inputs (both unverified, D-019).
 - Verified against Claude Desktop (stdio) and Claude web (Streamable HTTP); Claude Code and Codex CLI fall back to the text tools plus skill.
 - DoD: the same fixture run as 7a completes inside Claude Desktop; screenshots for the directory submission.
-- **Done (2026-09-08, ADR D-037):** `apps/mcp-app` builds one inlined HTML from the web app's `views`, `workflow`, `i18n` and `components` plus a bridge over `@modelcontextprotocol/ext-apps`; core runs inside the iframe and only the derived draft reaches the server (`validate_passport`, then `updateModelContext` with the draft id). New tool `review_passport` (`_meta.ui.resourceUri`) and resource `ui://passwerk/workbench.html` (empty CSP, injected loader). Playwright drives a dev-only host page against the real server over Streamable HTTP: Musterwerk, golden, model-context and sovereignty tracks. The Claude Desktop measurements (file input, pdf.js worker, payload cap, `downloadFile`) are recorded in D-037 by the owner from the bundled probe.
+- **Done (2026-09-08, ADR D-037):** `apps/mcp-app` builds one inlined HTML from the web app's `views`, `workflow`, `i18n` and `components` plus a bridge over `@modelcontextprotocol/ext-apps`; core runs inside the iframe and only the derived draft reaches the server (`validate_passport`, then `updateModelContext` with the draft id). New tool `review_passport` (`_meta.ui.resourceUri`) and resource `ui://passwerk/workbench.html` (empty CSP, injected loader). Playwright drives a dev-only host page against the real server over Streamable HTTP: Musterwerk, golden, model-context and sovereignty tracks. The Claude Desktop measurements (file input, pdf.js worker, payload cap, `downloadFile`) are recorded in D-037 by the owner from the bundled probe. The workbench inherits the Phase 7a redesign unchanged (ADR D-040): the host page in `apps/mcp-app/e2e` asserts a constant 640 px frame across all six steps and that a fullscreen request round-trips.
 
 ### Phase 7c — Packaging (D-019) (1–2 days)
 - MCPB bundle for Claude Desktop (`manifest.json`, bundled Node server, `user_config` for the working directory); Codex plugin (`.codex-plugin/plugin.json` with the skills directory and the stdio server); Claude connector submission checklist (Streamable HTTP, tool annotations, privacy policy, screenshots).
