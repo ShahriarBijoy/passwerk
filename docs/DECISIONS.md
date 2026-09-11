@@ -1042,8 +1042,10 @@ document's height to the host, the host grows the iframe to match (up to 5000 px
 and the app was laid out as a document — `max-w-6xl`, stacked cards, every list expanded, one
 text size for everything. The design document
 (`docs/superpowers/specs/2026-09-10-workbench-redesign-design.md`) was approved 2026-09-10;
-this ADR records the ten places implementation ruled differently from that draft, across 43
-commits on `feat/workbench-redesign`.
+this ADR records the ten places implementation ruled differently from that draft, across the
+commits on `feat/workbench-redesign` (`git rev-list --count 4837ddf..HEAD` counts them exactly;
+`4837ddf` is the packaging PR's merge commit into `main`, so the count moves every time this
+branch gains a commit and is not repeated here as a number that would immediately go stale).
 
 **Decision.**
 
@@ -1165,7 +1167,7 @@ none blocking, none touching a verdict, a finding or an export byte):
   does not resolve.
 - The gaps sheet's row-value column is ragged across differently-named attributes — parked, it
   needs an owner design decision, not a default; group names under `BY OWNER` may truncate
-  (accepted, per spec §14's "attribute names may truncate" rule); the stepper shows only the
+  (accepted, per spec §5.1's `Row` row: "name truncates"); the stepper shows only the
   current step's name between 640 and 920 px for German labels (accepted as an improvement on
   spec §3.1's "numbers only under 640 px").
 - The project screen's resume state renders two Doto heroes side by side (the resume count and
