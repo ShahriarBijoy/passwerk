@@ -1160,8 +1160,8 @@ none blocking, none touching a verdict, a finding or an export byte):
 - Review's `MANUAL` and `ROWS` group headers are permanently open with a no-op toggle;
   `assist-critique-chip` prose renders in `text-warning`, one step stronger than the other
   sheet prose.
-- Two dead i18n keys, `app.title` and `app.tagline`, were not removed; `App.tsx`'s top-bar JSX
-  could be pulled into its own component.
+- The fix wave removed nine dead i18n keys; `App.tsx`'s top-bar JSX could be pulled into its own
+  component.
 - `apps/mcp-app/dist-host` has been tracked since `eee1cec` (Phase 7b) and was re-staged by
   this branch's `build:host` runs; whether it should be gitignored is a separate chore this ADR
   does not resolve.
