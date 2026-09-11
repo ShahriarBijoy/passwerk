@@ -254,7 +254,7 @@ export function ReviewView(props: ReviewViewProps) {
       onClose={() => setOpenKey(null)}
       actions={
         openGroup.decision && (
-          <Button variant="ghost" size="sm" onClick={() => props.onClear(openGroup.key)}>
+          <Button variant="ghost" size="md" onClick={() => props.onClear(openGroup.key)}>
             {t(lang, 'review.clear')}
           </Button>
         )
@@ -284,7 +284,7 @@ export function ReviewView(props: ReviewViewProps) {
       onClose={() => setOpenKey(null)}
       actions={
         <Button
-          size="sm"
+          size="md"
           data-testid="array-edit"
           onClick={() => setEditingArray(openArray.attributeId)}
         >
@@ -305,7 +305,7 @@ export function ReviewView(props: ReviewViewProps) {
       actions={
         <Button
           variant="ghost"
-          size="sm"
+          size="md"
           onClick={() => {
             props.onClear(keyOf(openManual));
             setOpenKey(null);

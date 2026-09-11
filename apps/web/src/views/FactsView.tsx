@@ -96,7 +96,7 @@ function FactSheet({
         editing ? (
           <Button
             variant="primary"
-            size="sm"
+            size="md"
             data-testid="fact-edit-save"
             onClick={() => {
               onEdit(fact.id, { value, ...(unit ? { unit } : {}) });
@@ -107,20 +107,20 @@ function FactSheet({
           </Button>
         ) : (
           <>
-            <Button size="sm" data-testid="fact-edit" onClick={openEditor}>
+            <Button size="md" data-testid="fact-edit" onClick={openEditor}>
               {t(lang, 'facts.editValue')}
             </Button>
             {edit && (
               <Button
                 variant="ghost"
-                size="sm"
+                size="md"
                 data-testid="fact-edit-reset"
                 onClick={() => onClearEdit(fact.id)}
               >
                 {t(lang, 'facts.reset')}
               </Button>
             )}
-            <Button size="sm" data-testid="fact-map" onClick={() => onMap(fact)}>
+            <Button size="md" data-testid="fact-map" onClick={() => onMap(fact)}>
               {t(lang, 'facts.mapTo')}
             </Button>
           </>

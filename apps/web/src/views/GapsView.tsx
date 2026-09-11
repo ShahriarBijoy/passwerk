@@ -215,7 +215,7 @@ export function GapsView(props: GapsViewProps) {
             onClose={() => setOpenKey(null)}
             actions={
               <Button
-                size="sm"
+                size="md"
                 data-testid="gaps-fix"
                 onClick={() => props.onFixInReview(open.attributeId)}
               >
@@ -252,7 +252,7 @@ export function GapsView(props: GapsViewProps) {
                   actions: (
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="md"
                       data-testid="gaps-show-attribute"
                       onClick={() => {
                         setView('owner');

@@ -1100,7 +1100,10 @@ commits on `feat/workbench-redesign`.
    previous row, else it closes) rather than stranding on a row the decision just removed from
    the current view — spec §6.4 describes a continuous open → decide → next loop. One open
    question this raises — whether the document-level Escape should discard an unsaved in-sheet
-   edit — is recorded once, in the "Open for the owner" list below.
+   edit — is recorded once, in the "Open for the owner" list below. Every sheet's own `actions`
+   button is `size="md"` (36 px), not the 44 px a touch target guideline would otherwise suggest:
+   the sheet is capped at 45 % of a 640 px frame (fix wave item 14), so a 44 px action row would
+   have spent an eighth of that budget on the action bar alone.
 8. **The date picker.** An owner finding during the visual review (2026-09-11) asked for a real
    date picker on the project screen in place of the native `<input type="date">`; the Nothing
    skill's "no calendar popovers" note and the plan's mono ISO text input yielded to the
