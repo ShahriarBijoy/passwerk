@@ -381,7 +381,14 @@ export function ReviewView(props: ReviewViewProps) {
               size="sm"
               data-testid="assist-toggle"
               aria-pressed={props.assistOpen ?? false}
-              onClick={props.onAssistToggle}
+              onClick={() => {
+                // Without this, opening assist while a row (or manual, or array) sheet was
+                // already open left that sheet's own priority in the `sheet` computation above
+                // winning, so the toolbar toggle would flip `assistOpen` and nothing would
+                // visibly change.
+                setOpenKey(null);
+                props.onAssistToggle?.();
+              }}
             >
               {t(lang, 'review.assist')}
             </Button>

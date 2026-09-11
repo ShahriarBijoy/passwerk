@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { getSample, type PassportDraft } from '@passwerk/core';
 import { fireEvent, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ReviewView } from '@/views/ReviewView.tsx';
 import { buildGroups } from '@/views/reviewModel.ts';
@@ -523,5 +524,38 @@ describe('ReviewView', () => {
     const sheet = screen.getByTestId('review-sheet');
     expect(sheet.textContent).toContain('Rated capacity');
     expect(sheet.textContent).toContain('1 of 1');
+  });
+
+  it('toggling ASSIST closes a row sheet that was open, so the assist sheet actually shows', () => {
+    function Harness() {
+      const [assistOpen, setAssistOpen] = useState(false);
+      return (
+        <ReviewView
+          top={<span />}
+          lang="en"
+          category="EV"
+          groups={groups}
+          manual={[]}
+          conflicts={[]}
+          accepted={0}
+          pending={1}
+          verdict="invalid"
+          onDecide={() => undefined}
+          onClear={() => undefined}
+          onContinue={() => undefined}
+          assistPanel={<p>assist panel</p>}
+          assistOpen={assistOpen}
+          onAssistToggle={() => setAssistOpen((o) => !o)}
+          {...noArrays}
+        />
+      );
+    }
+    mount(<Harness />);
+    fireEvent.click(screen.getByTestId('group'));
+    expect(screen.getByTestId('review-sheet')).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId('assist-toggle'));
+    expect(screen.queryByTestId('review-sheet')).toBeNull();
+    expect(screen.getByTestId('assist-sheet').textContent).toContain('assist panel');
   });
 });
