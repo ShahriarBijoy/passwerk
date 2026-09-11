@@ -60,7 +60,13 @@ export function Row({
       data-open={open ? 'true' : undefined}
       className={[
         'flex min-h-10 items-center gap-3 border-t border-border py-2 text-sm outline-none',
-        onOpen ? 'cursor-pointer hover:bg-surface focus-visible:bg-surface' : '',
+        // `--surface-raised` is the hover surface in the token table (4.1). `--surface` is white
+        // in light mode, a tenth of a step from the page behind it, so a row lit up under the
+        // pointer only in dark mode; and a focused row needs to be visible to a keyboard, which a
+        // background alone was not. An outline, never a shadow.
+        onOpen
+          ? 'cursor-pointer hover:bg-surface-raised focus-visible:bg-surface-raised focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-border-visible'
+          : '',
         open ? '-mx-4 border-l-2 border-l-destructive bg-surface pr-4 pl-[14px]' : '',
         indent ? 'pl-5' : '',
       ].join(' ')}

@@ -49,6 +49,15 @@ describe('Row', () => {
       expect(el.className, el.textContent ?? '').toContain('shrink-0');
     }
   });
+  it('lights up under the pointer and shows a keyboard focus in both themes', () => {
+    mount(<Row name="x" onOpen={() => {}} data-testid="row" />);
+    // `--surface` is white in light mode, a tenth of a step from the page behind it, so the old
+    // hover was invisible there; `--surface-raised` is the hover surface the token table names
+    // (spec 4.1). The focus outline is an outline, never a shadow (spec 4.3).
+    const cls = screen.getByTestId('row').className;
+    expect(cls).toContain('hover:bg-surface-raised');
+    expect(cls).toContain('focus-visible:outline-border-visible');
+  });
   it('is a plain div without a click handler when it cannot open', () => {
     mount(<Row name="x" data-testid="row" />);
     expect(screen.getByTestId('row').getAttribute('role')).toBeNull();

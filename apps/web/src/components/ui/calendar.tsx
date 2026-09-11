@@ -50,7 +50,10 @@ function Calendar({
         week_number_header: cn('w-8 select-none', d.week_number_header),
         week_number: cn('label flex w-8 items-center justify-center text-disabled', d.week_number),
         day: cn('size-8 p-0 text-center', d.day),
-        today: cn('[&>button]:ring-1 [&>button]:ring-border-visible', d.today),
+        today: cn(
+          '[&>button]:outline [&>button]:outline-1 [&>button]:outline-border-visible',
+          d.today,
+        ),
         outside: cn('text-disabled', d.outside),
         disabled: cn('text-disabled', d.disabled),
         hidden: cn('invisible', d.hidden),
@@ -73,7 +76,7 @@ function Calendar({
             data-day={isoDay(day.date)}
             data-selected={modifiers['selected'] ? 'true' : undefined}
             className={cn(
-              'flex size-8 items-center justify-center rounded-sm font-mono text-[13px] text-foreground outline-none hover:bg-surface-raised focus-visible:ring-1 focus-visible:ring-border-visible data-[selected=true]:bg-display data-[selected=true]:text-background',
+              'flex size-8 items-center justify-center rounded-sm font-mono text-[13px] text-foreground outline-none hover:bg-surface-raised focus-visible:outline focus-visible:outline-1 focus-visible:outline-border-visible data-[selected=true]:bg-display data-[selected=true]:text-background',
               c,
             )}
             {...rest}

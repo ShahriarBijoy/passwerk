@@ -16,7 +16,7 @@ export function GroupHeader({
       type="button"
       aria-expanded={open}
       onClick={onToggle}
-      className="flex h-11 w-full items-center gap-3 border-t border-border text-left outline-none focus-visible:bg-surface"
+      className="flex h-11 w-full items-center gap-3 border-t border-border text-left outline-none hover:bg-surface-raised focus-visible:bg-surface-raised focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-border-visible"
       {...rest}
     >
       <span className="min-w-0 flex-1 truncate text-display">{name}</span>
