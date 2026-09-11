@@ -263,6 +263,8 @@ export const en: Record<keyof typeof de, string> = {
   'shell.prev': 'Prev',
   'shell.next': 'Next',
   'shell.close': 'Close',
+  'shell.date.open': 'Open calendar',
+  'shell.date.placeholder': 'YYYY-MM-DD',
   'shell.fullscreen': 'Fullscreen',
   'shell.inline': 'Exit fullscreen',
   'shell.theme.dark': 'Dark mode',

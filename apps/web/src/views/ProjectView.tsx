@@ -22,6 +22,7 @@ import {
 } from '../workflow/project.ts';
 import { ObligationsPanel } from './parts/ObligationsPanel.tsx';
 import { QrPreview } from './parts/QrPreview.tsx';
+import { DateField } from './shell/DateField.tsx';
 import { Field } from './shell/Field.tsx';
 import { GroupHeader } from './shell/GroupHeader.tsx';
 import { HeroNumber } from './shell/HeroNumber.tsx';
@@ -249,15 +250,14 @@ export function ProjectView(props: ProjectViewProps & { top: ReactNode; children
                 onChange={(e) => onEnergyChange(e.target.value)}
               />
             </Field>
-            <Field label={t(lang, 'project.placedOnMarketDate')} htmlFor="placed-on-market">
-              <Input
-                id="placed-on-market"
-                data-testid="placed-on-market"
-                type="date"
-                value={project.placedOnMarketDate ?? ''}
-                onChange={(e) => onDateChange(e.target.value)}
-              />
-            </Field>
+            <DateField
+              lang={lang}
+              id="placed-on-market"
+              data-testid="placed-on-market"
+              label={t(lang, 'project.placedOnMarketDate')}
+              value={project.placedOnMarketDate ?? ''}
+              onChange={onDateChange}
+            />
           </div>
           <div>
             <GroupHeader

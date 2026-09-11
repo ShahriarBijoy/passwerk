@@ -266,6 +266,8 @@ export const de = {
   'shell.prev': 'Zurück',
   'shell.next': 'Weiter',
   'shell.close': 'Schließen',
+  'shell.date.open': 'Kalender öffnen',
+  'shell.date.placeholder': 'JJJJ-MM-TT',
   'shell.fullscreen': 'Vollbild',
   'shell.inline': 'Vollbild beenden',
   'shell.theme.dark': 'Dunkel',
