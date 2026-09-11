@@ -32,6 +32,12 @@ describe('UploadView', () => {
     );
     expect(screen.getByText('a.pdf')).toBeTruthy();
     expect(screen.getByText('Unsupported format')).toBeTruthy();
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line. The toolbar's hint is
+    // "PDF, XLSX, DOCX, CSV or TXT. Files never leave the browser." - two sentences.
+    const hint = screen.getByText(/never leave the browser/i);
+    expect(hint.className).toContain('note');
+    expect(hint.className).not.toContain('label');
     const continueButton = screen.getByTestId('continue');
     expect(continueButton.textContent).toContain('7 proposals');
     fireEvent.click(continueButton);

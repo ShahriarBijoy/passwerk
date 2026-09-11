@@ -164,6 +164,14 @@ describe('ProjectView', () => {
     // copy to fit the test.
     expect(hero.textContent).toContain('Passport required');
   });
+  it('writes the not-legal-advice line as a sentence, not as a mono caps label', () => {
+    view(base);
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line.
+    const line = screen.getByTestId('not-legal-advice');
+    expect(line.className).toContain('note');
+    expect(line.className).not.toContain('label');
+  });
   it('renders German chrome', () => {
     mount(
       <ProjectView

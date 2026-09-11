@@ -155,6 +155,13 @@
     letter-spacing: -0.02em;
     line-height: 1;
     color: var(--text-display);
+    /* Doto is a dot matrix, and Windows Chromium rendered each dot with LCD subpixel
+       antialiasing, which put red and blue fringes on a monochrome screen. Promoting the hero to
+       its own compositing layer makes Chromium fall back to grayscale antialiasing; the
+       `-webkit-font-smoothing` line does the same on macOS. */
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
   }
   @media (prefers-reduced-motion: reduce) {
     *,

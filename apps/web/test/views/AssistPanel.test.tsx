@@ -129,6 +129,20 @@ describe('AssistPanel', () => {
     const discard = screen.getByTestId('assist-discard');
     expect(discard.textContent).toContain('batteryMass');
     expect(discard.textContent).toMatch(/does not fit/i);
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line. The hint above the discards
+    // reads "The model named these; the checks refused them."
+    const hint = screen.getByText(/the checks refused them/i);
+    expect(hint.className).toContain('note');
+    expect(hint.className).not.toContain('label');
+  });
+  it('writes the never-sent line of the disclosure as a sentence', () => {
+    mount(<AssistPanel {...props({})} />);
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line.
+    const never = screen.getByText(/never/i, { selector: 'span.note' });
+    expect(never.className).toContain('note');
+    expect(never.className).not.toContain('label');
   });
 
   it('names the model that answered', () => {
@@ -151,6 +165,10 @@ describe('AssistPanel', () => {
   it('says there is nothing to ask when nothing is unplaced', () => {
     mount(<AssistPanel {...props({ disclosure: { ...DISCLOSURE, facts: 0, proposals: 0 } })} />);
     expect(screen.getByTestId('assist-nothing')).toBeTruthy();
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line.
+    expect(screen.getByTestId('assist-nothing').className).toContain('note');
+    expect(screen.getByTestId('assist-nothing').className).not.toContain('label');
     expect(runButton().disabled).toBe(true);
   });
 

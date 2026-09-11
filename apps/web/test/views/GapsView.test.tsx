@@ -67,4 +67,12 @@ describe('GapsView', () => {
     mount(<GapsView {...props} lang="de" />);
     expect(screen.getByText('Pflichtangaben')).toBeTruthy();
   });
+  it('writes the not-legal-advice line as a sentence, not as a mono caps label', () => {
+    mount(<GapsView {...props} />);
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line.
+    const line = screen.getByTestId('not-legal-advice');
+    expect(line.className).toContain('note');
+    expect(line.className).not.toContain('label');
+  });
 });
