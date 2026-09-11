@@ -67,16 +67,24 @@ export function Sheet({
   // sanctioned alternative to an effect (Instrument's own container ref), attaches the listener
   // once the content mounts and detaches it when the sheet unmounts. It skips Escape when a real
   // modal dialog (the row editor, the add-value dialog, a confirm) is open above the sheet, so
-  // that dialog's own Escape handling - not this one - gets to close it first.
+  // that dialog's own Escape handling - not this one - gets to close it first. A select or
+  // popover open above the sheet (the row editor's own selects, DateField's calendar popover)
+  // gets the same courtesy: Radix's own Escape handling on those closes the dropdown first,
+  // rather than this listener closing the whole sheet out from under it.
   const escapeRef = useCallback((el: HTMLDivElement | null) => {
     if (!el) return;
     const doc = el.ownerDocument;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      // A modal dialog stacked above the sheet owns Escape.
+      // A modal dialog, select or popover stacked above the sheet owns Escape.
       if (
         doc.querySelector(
-          '[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]',
+          [
+            '[data-slot="dialog-content"][data-state="open"]',
+            '[data-slot="alert-dialog-content"][data-state="open"]',
+            '[data-slot="select-content"][data-state="open"]',
+            '[data-slot="popover-content"][data-state="open"]',
+          ].join(', '),
         )
       )
         return;

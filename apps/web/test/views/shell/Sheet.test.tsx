@@ -79,4 +79,24 @@ describe('Sheet', () => {
     fireEvent.keyDown(document.body, { key: 'Escape' });
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('leaves Escape to an open select or popover stacked above it', () => {
+    // The row editor's own selects and DateField's calendar popover can be open above the
+    // sheet; Radix's own Escape handling on those should close the dropdown first, not this
+    // listener closing the whole sheet out from under it.
+    for (const slot of ['select-content', 'popover-content']) {
+      const onClose = vi.fn();
+      const { unmount } = mount(
+        <>
+          <div data-slot={slot} data-state="open" />
+          <Sheet lang="en" open title="Rated capacity" onClose={onClose} data-testid="sheet">
+            <p>body</p>
+          </Sheet>
+        </>,
+      );
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(onClose, slot).not.toHaveBeenCalled();
+      unmount();
+    }
+  });
 });
