@@ -337,6 +337,27 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Fortsetzen'));
     expect(store.getState().step).toBe('project');
   });
+
+  it('"fix in review" prefills the search, but leaving and returning to review clears it', () => {
+    const store = reviewStore();
+    store.dispatch({ type: 'goTo', step: 'gaps', at: AT });
+    mount(<App store={store} platform={platform} />);
+
+    const [firstGapItem] = screen.getAllByTestId('gap-item');
+    if (!firstGapItem) throw new Error('expected at least one gap item');
+    fireEvent.click(firstGapItem);
+    fireEvent.click(screen.getByTestId('gaps-fix'));
+    expect(store.getState().step).toBe('review');
+    const search = screen.getByPlaceholderText('Suchen …') as HTMLInputElement;
+    expect(search.value).not.toBe('');
+
+    // Leave review (the stepper) and come back: the earlier fix-in-review search must not
+    // still be prefilled for this unrelated arrival.
+    fireEvent.click(screen.getByTestId('step-facts'));
+    fireEvent.click(screen.getByTestId('step-review'));
+    const searchAgain = screen.getByPlaceholderText('Suchen …') as HTMLInputElement;
+    expect(searchAgain.value).toBe('');
+  });
 });
 
 describe('ErrorBoundary', () => {

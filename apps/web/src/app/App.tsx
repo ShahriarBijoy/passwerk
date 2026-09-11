@@ -164,6 +164,16 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const derived = derive(state, asOf);
   const dispatch = store.dispatch;
 
+  /**
+   * Every explicit step change (the stepper, review's own "continue") goes through here so
+   * leaving review always clears `reviewSearch`. Without it, a stale search left over from an
+   * earlier "fix in review" would prefill the box again on a later, unrelated arrival at review.
+   */
+  const goTo = (step: Step) => {
+    if (state.step === 'review' && step !== 'review') setReviewSearch('');
+    dispatch({ type: 'goTo', step, at: nowIso() });
+  };
+
   const fail = (e: unknown) =>
     setStatus({ kind: 'error', text: e instanceof Error ? e.message : String(e) });
 
@@ -376,7 +386,9 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => void navigator.clipboard?.writeText(status.text).catch(() => undefined)}
+              onClick={() =>
+                void navigator.clipboard?.writeText(status.text).catch(() => undefined)
+              }
             >
               {t(lang, 'shell.copy')}
             </Button>
@@ -402,13 +414,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const top = (
     <>
       <span className="shrink-0 font-mono text-[13px] tracking-[0.1em] text-display">PASSWERK</span>
-      <Stepper
-        lang={lang}
-        steps={STEPS}
-        current={state.step}
-        reachable={reachable}
-        onGo={(step) => dispatch({ type: 'goTo', step, at: nowIso() })}
-      />
+      <Stepper lang={lang} steps={STEPS} current={state.step} reachable={reachable} onGo={goTo} />
       <span className="ml-auto flex shrink-0 items-center gap-2">
         {platform.theme && (
           <Button
@@ -562,7 +568,6 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         if (!derived) return null;
         return (
           <ReviewView
-            key={reviewSearch}
             lang={lang}
             top={top}
             notice={notice}
@@ -583,7 +588,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             initialSearch={reviewSearch}
             onDecide={(d: Decision) => dispatch({ type: 'decide', decision: d, at: nowIso() })}
             onClear={(key: DecisionKey) => dispatch({ type: 'clearDecision', key, at: nowIso() })}
-            onContinue={() => dispatch({ type: 'goTo', step: 'gaps', at: nowIso() })}
+            onContinue={() => goTo('gaps')}
           >
             {assistPrefill && (
               <AddValueDialog
