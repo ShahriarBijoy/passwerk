@@ -46,7 +46,9 @@ export function Instrument({
         >
           {hero}
         </div>
-        <div data-region="toolbar" className="flex h-9 min-w-0 items-center gap-4 px-4">
+        {/* `gap-6` against a toggle group's own `gap-4`: with the pills gone, two groups side by
+            side would otherwise read as one long row of words. */}
+        <div data-region="toolbar" className="flex h-9 min-w-0 items-center gap-6 px-4">
           {toolbar}
         </div>
         <div className="relative min-h-0 min-w-0">
