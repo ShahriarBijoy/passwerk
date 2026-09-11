@@ -62,16 +62,13 @@ export async function openSection(page: Page, id: 'identifier' | 'import'): Prom
 /**
  * Closes an open sheet via `Escape`, if one is open. The sheet is a genuine bottom sheet
  * (Sheet.tsx, spec §3.2): non-modal in the sense that the toolbar and scrolling stay live, but it
- * still covers the bottom ~45% of the instrument (including the footer), so a row or button
- * rendered under it is exactly as unclickable for a real reviewer as for Playwright. Sheet.tsx's
- * own `onKeyDown` handles `Escape` directly rather than depending solely on Radix's document-level
- * dismiss-layer check, and this closes the sheet reliably for the ordinary case (fresh open, most
- * in-place edits). It does NOT reliably close a sheet whose focus has already moved to `<body>` -
- * observed both right after a nested modal dialog (the row editor, the add-value dialog) closes,
- * and after some purely in-place re-renders with no nested dialog at all - because `<body>` is not
- * a descendant of the sheet's content, so the keydown never reaches its handler; see the comment
- * on Sheet.tsx's `onKeyDown` for the full account. That gap is why `rows.spec.ts`,
- * `persistence.spec.ts` and one `assist.spec.ts` case still fail here. Idempotent: a no-op when
+ * still covers the bottom ~45% of the list region, so a row rendered under it is exactly as
+ * unclickable for a real reviewer as for Playwright (the footer is unaffected: the sheet portals
+ * into the list region's own wrapper, not the instrument root - fix wave item 3). Sheet.tsx
+ * installs its own document-level `keydown` listener through a React 19 callback ref, attached
+ * once the sheet's content mounts, so `Escape` closes it regardless of where focus landed -
+ * including after a nested modal dialog (the row editor, the add-value dialog) returns focus
+ * somewhere `<body>` rather than back into the sheet's own content. Idempotent: a no-op when
  * nothing is open.
  */
 export async function closeSheet(scope: Page | FrameLocator): Promise<void> {
