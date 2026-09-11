@@ -2,8 +2,8 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
 import type * as React from 'react';
 import { useContext } from 'react';
+import { InstrumentContext } from '@/lib/instrument-context.ts';
 import { cn } from '@/lib/utils';
-import { InstrumentContext } from '@/views/shell/context.ts';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;

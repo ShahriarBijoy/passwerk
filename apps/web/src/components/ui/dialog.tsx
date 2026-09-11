@@ -3,8 +3,8 @@ import { Dialog as DialogPrimitive } from 'radix-ui';
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Button } from '@/components/ui/button';
+import { InstrumentContext } from '@/lib/instrument-context.ts';
 import { cn } from '@/lib/utils';
-import { InstrumentContext } from '@/views/shell/context.ts';
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;

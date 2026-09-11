@@ -1,14 +1,4 @@
-import { createContext } from 'react';
-
-/**
- * The instrument element: dialogs and popovers portal into `container`, never
- * `document.body`. `listContainer` is the list region's own wrapper (already `position:
- * relative`); the bottom sheet portals there instead, so it never covers the footer (spec §3.2).
- */
-export const InstrumentContext = createContext<{
-  container: HTMLElement | null;
-  listContainer: HTMLElement | null;
-}>({
-  container: null,
-  listContainer: null,
-});
+// Re-exported for `views/shell/index.ts` and any other `views` import; the definition itself
+// lives in `lib/instrument-context.ts` so `components/ui` can read it without importing `views`
+// (fix wave item 18).
+export { InstrumentContext } from '../../lib/instrument-context.ts';

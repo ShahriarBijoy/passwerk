@@ -1,8 +1,8 @@
 import { Popover as PopoverPrimitive } from 'radix-ui';
 import type * as React from 'react';
 import { useContext } from 'react';
+import { InstrumentContext } from '@/lib/instrument-context.ts';
 import { cn } from '@/lib/utils';
-import { InstrumentContext } from '@/views/shell/context.ts';
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
