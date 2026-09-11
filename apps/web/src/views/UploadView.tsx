@@ -16,6 +16,8 @@ export interface UploadViewProps {
   busy: boolean;
   proposalCount: number;
   error?: string;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onFiles(files: File[]): void;
   onRemove(name: string): void;
   onContinue(): void;
@@ -29,6 +31,7 @@ export function UploadView(props: UploadViewProps) {
   return (
     <Instrument
       top={props.top}
+      notice={props.notice}
       hero={
         <>
           <HeroNumber label={t(lang, 'hero.documents')} value={String(props.files.length)} />

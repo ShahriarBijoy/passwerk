@@ -11,6 +11,7 @@ export function Instrument({
   hero,
   toolbar,
   footer,
+  notice,
   sheet,
   children,
   ...rest
@@ -19,6 +20,9 @@ export function Instrument({
   hero?: ReactNode;
   toolbar?: ReactNode;
   footer?: ReactNode;
+  /** A footer-slot status line (storage, host or a caught failure), rendered before `footer`'s
+   *  other children so it never competes with the primary button for the same row's width. */
+  notice?: ReactNode;
   sheet?: ReactNode;
   children: ReactNode;
   'data-testid'?: string;
@@ -70,6 +74,7 @@ export function Instrument({
           data-region="footer"
           className="flex h-13 min-w-0 items-center gap-3 border-t border-border px-4"
         >
+          {notice}
           {footer}
         </div>
       </div>

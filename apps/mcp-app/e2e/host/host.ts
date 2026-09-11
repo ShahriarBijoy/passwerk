@@ -16,6 +16,9 @@ import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 
 const TOKEN = 'e2e-token';
 const WORKBENCH_URI = 'ui://passwerk/workbench.html';
+// `?nodownload` drives a host that never advertises `downloadFile` (fix wave item 1's e2e case):
+// the workbench falls back to its "ask Claude to run emit_passport" notice instead of a file.
+const NO_DOWNLOAD = new URLSearchParams(location.search).has('nodownload');
 
 const byTestId = (id: string): HTMLElement => {
   const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
@@ -91,7 +94,7 @@ byTestId('host-open').onclick = async () => {
       serverTools: {},
       serverResources: {},
       updateModelContext: { text: {} },
-      downloadFile: {},
+      ...(NO_DOWNLOAD ? {} : { downloadFile: {} }),
     },
     {
       hostContext: {

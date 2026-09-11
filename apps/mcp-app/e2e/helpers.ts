@@ -24,13 +24,19 @@ export interface HostDownload {
 /**
  * Pins the clock in every frame (init scripts run in srcdoc iframes too), opens the host page,
  * calls `review_passport` for `sample` (`none` opens an empty workbench) and returns the
- * workbench frame once it has rendered.
+ * workbench frame once it has rendered. `nodownload` opens the host in the mode that never
+ * advertises `downloadFile` (see `e2e/host/host.ts`), so an export falls back to the
+ * "ask Claude" host notice instead of a file.
  */
-export async function openWorkbench(page: Page, sample: string): Promise<FrameLocator> {
+export async function openWorkbench(
+  page: Page,
+  sample: string,
+  opts?: { nodownload?: boolean },
+): Promise<FrameLocator> {
   await page.addInitScript((clock) => {
     (window as unknown as { __passwerkClock: string }).__passwerkClock = clock;
   }, CLOCK);
-  await page.goto('/');
+  await page.goto(opts?.nodownload ? '/?nodownload' : '/');
   await expect(page.getByTestId('host-session')).not.toBeEmpty();
   await page.locator('#host-sample').selectOption(sample);
   await page.getByTestId('host-open').click();

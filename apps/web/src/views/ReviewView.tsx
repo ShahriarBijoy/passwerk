@@ -60,6 +60,8 @@ export interface ReviewViewProps {
   children?: ReactNode;
   /** Prefills the search box, e.g. when a caller remounts the view on a fresh key. */
   initialSearch?: string;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
 }
 
 /** One candidate inside the sheet: value, provenance, why, and the three decisions. */
@@ -337,6 +339,7 @@ export function ReviewView(props: ReviewViewProps) {
   return (
     <Instrument
       top={props.top}
+      notice={props.notice}
       hero={
         <>
           <HeroNumber label={t(lang, 'hero.pending')} value={String(props.pending)} />

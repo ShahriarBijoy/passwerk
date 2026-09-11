@@ -17,6 +17,8 @@ export interface ExportViewProps {
   gap: GapReport;
   carrier: CarrierView;
   exportError?: LangText;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onExport(kind: ExportKind): void;
   children?: ReactNode;
 }
@@ -34,6 +36,7 @@ export function ExportView(props: ExportViewProps) {
   return (
     <Instrument
       top={props.top}
+      notice={props.notice}
       hero={
         <>
           <HeroNumber

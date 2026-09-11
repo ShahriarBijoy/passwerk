@@ -27,6 +27,8 @@ export interface FactsViewProps {
   documents: string[];
   edits: Record<string, FactEdit>;
   statuses: Record<string, FactStatus>;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onEdit(factId: string, edit: FactEdit): void;
   onClearEdit(factId: string): void;
   onMap(fact: Fact): void;
@@ -187,6 +189,7 @@ export function FactsView(props: FactsViewProps) {
   return (
     <Instrument
       top={props.top}
+      notice={props.notice}
       hero={
         <>
           <HeroNumber label={t(lang, 'hero.facts')} value={String(props.facts.length)} />

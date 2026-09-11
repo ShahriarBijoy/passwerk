@@ -4,7 +4,7 @@ import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { getSample, validateSchema } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
 import { SERVER_URL, TOKEN } from '../playwright.config.ts';
-import { lastContext, openWorkbench } from './helpers.ts';
+import { lastContext, openWorkbench, toExport } from './helpers.ts';
 
 /**
  * The model-context track: after a decision in the workbench, the draft id the workbench pushed
@@ -106,4 +106,25 @@ test('fullscreen is offered by the host and requested by the workbench', async (
         .evaluate((el) => el.style.getPropertyValue('--instrument-height')),
     )
     .toBe('100vh');
+});
+
+/**
+ * Fix-wave item 1: the "cannot download" notice now renders inside the instrument's footer
+ * (`Instrument`'s `notice` slot), not a band above the frame, so it can never grow the document
+ * the host resizes to. `?nodownload` opens the dev host without the `downloadFile` capability
+ * (`e2e/host/host.ts`), the same shape a host that offers no downloads at all would present.
+ */
+test('a host without downloadFile shows its notice inside the frame, height unchanged', async ({
+  page,
+}) => {
+  const frame = await openWorkbench(page, 'ev-valid', { nodownload: true });
+  await toExport(frame);
+  await frame.getByTestId('export-aasJson').click();
+  await expect(frame.getByTestId('host-notice')).toBeVisible();
+
+  const sizes = await page.evaluate(
+    () => (window as unknown as { __sizes: { height?: number }[] }).__sizes,
+  );
+  expect(sizes.length).toBeGreaterThan(0);
+  expect(new Set(sizes.map((s) => s.height))).toEqual(new Set([640]));
 });

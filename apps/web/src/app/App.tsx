@@ -88,6 +88,7 @@ function ProjectStep({
   derived,
   dispatch,
   top,
+  notice,
   onImport,
   onReset,
 }: {
@@ -97,6 +98,7 @@ function ProjectStep({
   derived: Derived | null;
   dispatch: Store['dispatch'];
   top: ReactNode;
+  notice?: ReactNode;
   onImport(text: string): { ok: true } | { ok: false; message: LangText };
   onReset(): void;
 }) {
@@ -122,6 +124,7 @@ function ProjectStep({
       isNew={state.project === null}
       draftUrn={draftUrn}
       top={top}
+      notice={notice}
       {...(state.project
         ? { resume: { files: state.files.map((f) => f.name), updatedAt: state.updatedAt } }
         : {})}
@@ -358,6 +361,22 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   const groups = buildGroups(derived?.proposals ?? [], state.decisions);
   const pending = groups.filter((g) => !g.decision).length;
 
+  const notice = (
+    <>
+      {storageNotice && (
+        <InlineStatus
+          kind="info"
+          text={t(
+            lang,
+            storageNotice === 'version' ? 'app.storage.version' : 'app.storage.unavailable',
+          )}
+          data-testid="storage-notice"
+        />
+      )}
+      {hostNotice && <InlineStatus kind="info" text={hostNotice} data-testid="host-notice" />}
+    </>
+  );
+
   const display = platform.display;
   const canFullscreen = display?.available().includes('fullscreen') ?? false;
   const top = (
@@ -456,6 +475,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             derived={derived}
             dispatch={dispatch}
             top={top}
+            notice={notice}
             onImport={(text) => {
               const r = importDraftJson(text);
               if (r.ok) dispatch({ type: 'importDraft', draft: r.draft, at: nowIso() });
@@ -469,6 +489,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
           <UploadView
             lang={lang}
             top={top}
+            notice={notice}
             files={state.files}
             busy={busy}
             proposalCount={derived?.proposals.length ?? 0}
@@ -484,6 +505,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
           <FactsView
             lang={lang}
             top={top}
+            notice={notice}
             facts={derived.facts.facts}
             documents={state.files.map((f) => f.name)}
             edits={state.factEdits}
@@ -524,6 +546,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
             key={reviewSearch}
             lang={lang}
             top={top}
+            notice={notice}
             category={derived.meta.category}
             groups={groups}
             manual={manualEntries(state.decisions)}
@@ -569,6 +592,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
           <GapsView
             lang={lang}
             top={top}
+            notice={notice}
             report={derived.report}
             gap={derived.gap}
             onFixInReview={(attributeId) => {
@@ -586,6 +610,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
           <ExportView
             lang={lang}
             top={top}
+            notice={notice}
             report={derived.report}
             gap={derived.gap}
             carrier={derived.carrier}
@@ -597,25 +622,8 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
   })();
 
   return (
-    <>
-      {(storageNotice || hostNotice) && (
-        <div className="mx-auto max-w-[1024px] px-4 py-1">
-          {storageNotice && (
-            <InlineStatus
-              kind="info"
-              text={t(
-                lang,
-                storageNotice === 'version' ? 'app.storage.version' : 'app.storage.unavailable',
-              )}
-              data-testid="storage-notice"
-            />
-          )}
-          {hostNotice && <InlineStatus kind="info" text={hostNotice} data-testid="host-notice" />}
-        </div>
-      )}
-      <ErrorBoundary lang={lang} onReset={reset}>
-        {view}
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary lang={lang} onReset={reset}>
+      {view}
+    </ErrorBoundary>
   );
 }

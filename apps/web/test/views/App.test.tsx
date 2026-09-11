@@ -68,6 +68,12 @@ describe('App', () => {
     expect(screen.getByTestId('storage-notice')).toBeTruthy();
   });
 
+  it('renders the storage notice inside the instrument footer, not above the frame', () => {
+    mount(<App store={createStore(initialState)} platform={platform} storageNotice="version" />);
+    const footer = screen.getByTestId('storage-notice').closest('[data-region="footer"]');
+    expect(footer).toBeTruthy();
+  });
+
   it('drops an upload that finishes after the project was replaced', async () => {
     let finish: (out: IngestOutcome) => void = () => undefined;
     ingestFiles.mockReturnValueOnce(

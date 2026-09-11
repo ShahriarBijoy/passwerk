@@ -38,6 +38,8 @@ export interface ProjectViewProps {
   /** The placeholder draft URN generated at mount; reused when switching back into draft mode. */
   draftUrn: string;
   resume?: { files: string[]; updatedAt: string };
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onChange(project: Project): void;
   onContinue(): void;
   onImport(text: string): { ok: true } | { ok: false; message: LangText };
@@ -151,6 +153,7 @@ export function ProjectView(props: ProjectViewProps & { top: ReactNode; children
   return (
     <Instrument
       top={top}
+      notice={props.notice}
       hero={
         resume ? (
           <div className="flex w-full items-end justify-between gap-4" data-testid="resume-card">

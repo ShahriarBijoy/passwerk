@@ -18,6 +18,8 @@ export interface GapsViewProps {
   top: ReactNode;
   report: ValidationReport;
   gap: GapReport;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onFixInReview(attributeId: string): void;
   onContinue(): void;
   children?: ReactNode;
@@ -89,6 +91,7 @@ export function GapsView(props: GapsViewProps) {
   return (
     <Instrument
       top={props.top}
+      notice={props.notice}
       hero={
         <>
           <HeroNumber
