@@ -27,11 +27,15 @@ export function Instrument({
   children: ReactNode;
   'data-testid'?: string;
 }) {
-  // A callback ref into state (not an effect): the container is known after the first commit
-  // and portals re-render once it is.
+  // Callback refs into state (not effects): each container is known after the first commit and
+  // portals re-render once it is.
   const [container, setContainer] = useState<HTMLElement | null>(null);
+  // The list wrapper (already `position: relative`), not the scrolling list itself: the sheet
+  // portals here so its `max-h-[45%]` and `absolute inset-x-0 bottom-0` are measured against the
+  // list region alone, leaving the footer's primary button reachable while a sheet is open.
+  const [listContainer, setListContainer] = useState<HTMLElement | null>(null);
   return (
-    <InstrumentContext.Provider value={{ container }}>
+    <InstrumentContext.Provider value={{ container, listContainer }}>
       <div
         ref={setContainer}
         className="relative mx-auto grid w-full max-w-[1024px] grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_auto_1fr_auto] overflow-hidden bg-background text-foreground"
@@ -55,7 +59,7 @@ export function Instrument({
         <div data-region="toolbar" className="flex h-9 min-w-0 items-center gap-6 px-4">
           {toolbar}
         </div>
-        <div className="relative min-h-0 min-w-0">
+        <div ref={setListContainer} className="relative min-h-0 min-w-0">
           <div
             data-region="list"
             className="h-full overflow-y-auto overscroll-contain px-4 [scrollbar-color:var(--border-visible)_transparent] [scrollbar-width:thin]"
@@ -66,9 +70,7 @@ export function Instrument({
             aria-hidden
             className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent"
           />
-          <div data-region="sheet" className="contents">
-            {sheet}
-          </div>
+          {sheet}
         </div>
         <div
           data-region="footer"

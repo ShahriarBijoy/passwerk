@@ -1,12 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  closeSheet,
-  fixturePaths,
-  openRow,
-  PASSPORT_ID,
-  pinClock,
-  startProject,
-} from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
 
 test('decisions and step survive a reload', async ({ page }) => {
   await pinClock(page);
@@ -24,8 +17,6 @@ test('decisions and step survive a reload', async ({ page }) => {
   await page.getByTestId('fact-edit-save').click();
   await expect(row.getByTestId('fact-edited')).toBeVisible();
 
-  // The edited fact's sheet is still open; close it first (see `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('facts-continue').click();
   await page.getByTestId('filter-all').click();
   for (let i = 0; i < 3; i++) {

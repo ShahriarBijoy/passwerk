@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fixturePaths, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
 
 for (const viewport of [
   { width: 735, height: 800 },
@@ -86,3 +86,34 @@ for (const viewport of [
     });
   }
 }
+
+test('the sheet never covers the footer: a row sheet open leaves the primary button reachable', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 735, height: 800 });
+  await pinClock(page);
+  await startProject(page, { identifier: { mode: 'https', uri: PASSPORT_ID } });
+  await page.getByTestId('file-input').setInputFiles(fixturePaths());
+  await expect(page.getByTestId('upload-busy')).toHaveCount(0, { timeout: 60_000 });
+  await page.getByTestId('continue').click();
+  await page.getByTestId('facts-continue').click();
+  await page.getByTestId('filter-all').click();
+  await openRow(page, '[data-testid="group"] >> nth=0');
+
+  const sheetBox = await page.getByTestId('review-sheet').boundingBox();
+  const buttonBox = await page.getByTestId('to-gaps').boundingBox();
+  expect(sheetBox).not.toBeNull();
+  expect(buttonBox).not.toBeNull();
+  if (!sheetBox || !buttonBox) throw new Error('unreachable');
+  // Fix wave item 3: the sheet portals into the list region's own wrapper (`Instrument`'s
+  // `listContainer`), not the instrument root, so its `max-h-[45%]` never reaches into the
+  // footer row. The two boxes must not overlap on either axis.
+  const overlapsX =
+    sheetBox.x < buttonBox.x + buttonBox.width && buttonBox.x < sheetBox.x + sheetBox.width;
+  const overlapsY =
+    sheetBox.y < buttonBox.y + buttonBox.height && buttonBox.y < sheetBox.y + sheetBox.height;
+  expect(overlapsX && overlapsY).toBe(false);
+  // The button is still clickable, not merely geometrically clear.
+  await page.getByTestId('to-gaps').click();
+  await expect(page.getByTestId('verdict')).toBeVisible();
+});

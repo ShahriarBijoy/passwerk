@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import {
-  closeSheet,
   expectedMusterwerk,
   fixturePaths,
   lastContext,
@@ -53,9 +52,6 @@ test('Musterwerk track inside the MCP App iframe', async ({ page }) => {
     String(expected.decisions.length),
   );
 
-  // The last decision's sheet is still open (filter-all does not advance it away); close it
-  // first (see `closeSheet` in helpers.ts).
-  await closeSheet(frame);
   await frame.getByTestId('to-gaps').click();
   await expect(frame.getByTestId('verdict')).toHaveAttribute(
     'data-verdict',

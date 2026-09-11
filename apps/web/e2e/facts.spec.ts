@@ -1,14 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import {
-  closeSheet,
-  fixturePaths,
-  openRow,
-  PASSPORT_ID,
-  pinClock,
-  startProject,
-  toExport,
-} from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject, toExport } from './helpers.ts';
 
 // The first proposed fact of lieferantenerklaerung.pdf (in facts.facts order) maps to
 // manufacturerInformation#name.de, a composite leaf holding a free-text string, not a decimal
@@ -57,8 +49,6 @@ test('facts: an edited value reaches the draft; a mapped fact keeps its provenan
     'mapped',
   );
 
-  // The mapped fact's sheet is still open; close it first (see `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('facts-continue').click();
   await page.getByTestId('filter-all').click();
   await openRow(page, `[data-testid="group"][data-key="${PINNED_ATTRIBUTE_ID}"]`);

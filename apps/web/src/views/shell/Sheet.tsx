@@ -39,7 +39,10 @@ export function Sheet({
   children: ReactNode;
   'data-testid'?: string;
 }) {
-  const { container } = useContext(InstrumentContext);
+  // Portals into the list region's own wrapper, not the instrument root: `max-h-[45%]` and the
+  // `absolute inset-x-0 bottom-0` positioning are then measured against the list alone, so the
+  // sheet never covers the footer (fix wave item 3; dialogs and popovers keep the root).
+  const { listContainer } = useContext(InstrumentContext);
   // `←` / `→` stay on the content's own bubbled keydown; they only ever matter while focus is
   // still inside the sheet (an input's own left/right editing is excluded below), so there is no
   // equivalent gap to close for them.
@@ -85,7 +88,7 @@ export function Sheet({
   }, []);
   return (
     <DialogPrimitive.Root open={open} modal={false} onOpenChange={(o) => !o && onClose()}>
-      <DialogPrimitive.Portal container={container ?? undefined}>
+      <DialogPrimitive.Portal container={listContainer ?? undefined}>
         <DialogPrimitive.Content
           ref={escapeRef}
           onKeyDown={onKeyDown}

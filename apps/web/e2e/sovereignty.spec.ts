@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import {
-  closeSheet,
   fixturePaths,
   openRow,
   openSection,
@@ -49,15 +48,11 @@ test('no request leaves the preview origin during the Musterwerk track', async (
   await page.getByTestId('add-unit-input').fill('V');
   await page.getByTestId('add-submit').click();
 
-  // The mapped fact's sheet is still open; close it first (see `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('facts-continue').click();
   await page.getByTestId('filter-all').click();
   const firstGroupKey = await page.getByTestId('group').first().getAttribute('data-key');
   await openRow(page, `[data-testid="group"][data-key="${firstGroupKey}"]`);
   await page.getByTestId('accept').first().click();
-  // The decided group's sheet is still open; close it first (see `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toBeVisible();
 

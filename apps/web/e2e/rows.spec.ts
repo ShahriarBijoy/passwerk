@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyMappings, getSample, validate, validateSchema } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
-import { CLOCK, closeSheet, openRow, openSection, pinClock } from './helpers.ts';
+import { CLOCK, openRow, openSection, pinClock } from './helpers.ts';
 
 test('row editor: rows saved on ev-valid equal core for the same draft', async ({ page }) => {
   const parsed = validateSchema(getSample('ev-valid'));
@@ -51,9 +51,6 @@ test('row editor: rows saved on ev-valid equal core for the same draft', async (
     page.locator('[data-testid="array-entry"][data-attribute="criticalRawMaterials"]'),
   ).toHaveText(/\b2 Zeilen/);
 
-  // The array-entry sheet is still open behind the row editor dialog; close it first (see
-  // `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toHaveAttribute('data-verdict', expected.verdict);
   await page.getByTestId('to-export').click();

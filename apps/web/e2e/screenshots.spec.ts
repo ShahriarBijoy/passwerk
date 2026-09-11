@@ -83,14 +83,12 @@ test('workbench screenshots: the six steps on the Musterwerk fixtures', async ({
   await page.setViewportSize({ width: 735, height: 800 });
 
   // 05 GAPS: an item's sheet open over the by-owner grouping.
-  await closeSheet(page);
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toBeVisible();
   await openRow(page, '[data-testid="gap-item"] >> nth=0');
   await shot(page, '05-gaps');
 
   // 06 EXPORT.
-  await closeSheet(page);
   await page.getByTestId('to-export').click();
   await expect(page.getByTestId('export-aasx')).toBeVisible();
   await shot(page, '06-export');

@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import {
-  closeSheet,
   expectedMusterwerk,
   fixturePaths,
   MUSTERWERK_FILES,
@@ -47,9 +46,6 @@ test('Musterwerk track: upload, accept >= 0.7, gaps match core', async ({ page }
   }
   await expect(page.getByTestId('review-summary')).toContainText(String(expected.decisions.length));
 
-  // The last decision's sheet is still open (filter-all does not advance it away); close it
-  // first (see `closeSheet` in helpers.ts).
-  await closeSheet(page);
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toHaveAttribute(
     'data-verdict',

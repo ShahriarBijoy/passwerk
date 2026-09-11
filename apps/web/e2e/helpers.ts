@@ -94,11 +94,9 @@ export async function openRow(scope: Page | FrameLocator, selector: string): Pro
 }
 
 /**
- * From the review screen: continue to gaps, wait for the verdict, then continue to export. Closes
- * a sheet left open from a previous decision first (see `closeSheet`): it covers the footer.
+ * From the review screen: continue to gaps, wait for the verdict, then continue to export.
  */
 export async function toExport(scope: Page | FrameLocator): Promise<void> {
-  await closeSheet(scope);
   await scope.getByTestId('to-gaps').click();
   await expect(scope.getByTestId('verdict')).toBeVisible();
   await scope.getByTestId('to-export').click();

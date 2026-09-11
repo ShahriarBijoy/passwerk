@@ -25,7 +25,11 @@ describe('Instrument', () => {
     expect(root.querySelector('[data-region="toolbar"]')?.textContent).toBe('bar');
     expect(root.querySelector('[data-region="list"]')?.textContent).toBe('list');
     expect(root.querySelector('[data-region="footer"]')?.textContent).toBe('foot');
-    expect(root.querySelector('[data-region="sheet"]')?.textContent).toBe('sheet');
+    // The sheet has no `data-region` slot of its own (fix wave item 3): it renders inside the
+    // list region's own wrapper, the element `Sheet` portals into, so it can never cover the
+    // footer.
+    const list = root.querySelector('[data-region="list"]');
+    expect(list?.parentElement?.textContent).toContain('sheet');
   });
   it('pins its one grid column to the frame width so no region can widen the instrument', () => {
     mount(
