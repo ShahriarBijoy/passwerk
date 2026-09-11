@@ -67,8 +67,18 @@ const readTheme = (): 'dark' | 'light' => {
     : 'light';
 };
 
+const domTheme = (): 'dark' | 'light' =>
+  document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
 export const applyTheme = (theme: 'dark' | 'light') =>
   document.documentElement.classList.toggle('dark', theme === 'dark');
+
+// Whether `set()` has run in this session. Before it, `current()` reads storage (falling back to
+// the system preference); after it, it reads the DOM directly. `set()` already applies the theme
+// to the DOM unconditionally, even when `localStorage.setItem` throws (a blocked or full store),
+// so reading storage back in `current()` after that point could disagree with the toggle a
+// reviewer just clicked - the DOM is the one place the choice is guaranteed to have landed.
+let themeSet = false;
 
 export const browserPlatform: Platform = {
   download: downloadFile,
@@ -83,7 +93,7 @@ export const browserPlatform: Platform = {
     clearKey: clearAssistKey,
   },
   theme: {
-    current: readTheme,
+    current: () => (themeSet ? domTheme() : readTheme()),
     set(theme) {
       try {
         localStorage.setItem(THEME_KEY, theme);
@@ -91,6 +101,7 @@ export const browserPlatform: Platform = {
         /* keep in DOM only */
       }
       applyTheme(theme);
+      themeSet = true;
     },
   },
 };
