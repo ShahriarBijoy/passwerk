@@ -1052,7 +1052,9 @@ commits on `feat/workbench-redesign`.
    sheet portal into the instrument, not `document.body`, so neither can exceed the frame.
    `apps/mcp-app/e2e`'s host page records every `ui/notifications/size-changed` it receives and
    asserts every reported height across all six steps is 640, and that a fullscreen request
-   round-trips through `app.requestDisplayMode`.
+   round-trips through `app.requestDisplayMode`. That six-step assertion lives in
+   `musterwerk.spec.ts` (the one track that walks every step, `toExport` included), not in
+   `context.spec.ts` as spec §10 named it — a placement inconsistency, accepted as minor.
 2. **Six steps.** `Step` gains `'export'`: the verdict is stated once, on its own screen,
    instead of sharing the gaps screen. `STATE_VERSION` stays 3 — the persisted shape did not
    change, so a saved `step: 'gaps'` is still valid and `reachable('export')` equals
@@ -1096,10 +1098,9 @@ commits on `feat/workbench-redesign`.
    sheet; Radix's own `onEscapeKeyDown` is prevented so `onClose` fires exactly once. Under a
    filter, deciding a row advances the sheet to the row now at the same index (else the
    previous row, else it closes) rather than stranding on a row the decision just removed from
-   the current view — spec §6.4 describes a continuous open → decide → next loop. **Open owner
-   decision:** the document-level Escape closes the sheet even while an in-sheet text input has
-   focus, discarding an unsaved edit; the alternative (Escape blurs the input first) was not
-   built because it is unclear which behaviour a reviewer mid-edit actually wants.
+   the current view — spec §6.4 describes a continuous open → decide → next loop. One open
+   question this raises — whether the document-level Escape should discard an unsaved in-sheet
+   edit — is recorded once, in the "Open for the owner" list below.
 8. **The date picker.** An owner finding during the visual review (2026-09-11) asked for a real
    date picker on the project screen in place of the native `<input type="date">`; the Nothing
    skill's "no calendar popovers" note and the plan's mono ISO text input yielded to the
@@ -1139,8 +1140,9 @@ none blocking, none touching a verdict, a finding or an export byte):
 - Font `PROVENANCE.md`'s table follows the brief's sample shape (Family + Ref) rather than the
   design document's prose, and its subset includes U+2212 beyond the glyph list the spec named.
 - The start-over `AlertDialog`'s placeholder text uses `--text-disabled` (the plan's own class
-  string); its focus indicator is border-only (an accessibility note); two Biome
-  `noImportantStyles` warnings sit on the reduced-motion block.
+  string); it also carries an inert `size` prop on `AlertDialogContent`; its focus indicator is
+  border-only (an accessibility note); two Biome `noImportantStyles` warnings sit on the
+  reduced-motion block.
 - The reducer's `Step` report undercounts keys (51 vs. 55 in the generated summary); its new
   test case sits inside the `facts/edits` describe block rather than its own.
 - `Row`'s `data-*` guard against an unknown tag is compile-time only; `SegmentedBar`'s cells are
@@ -1165,3 +1167,6 @@ none blocking, none touching a verdict, a finding or an export byte):
   spec §3.1's "numbers only under 640 px").
 - The project screen's resume state renders two Doto heroes side by side (the resume count and
   the obligation verdict), which decision 10 above did not consolidate into one.
+- Decision 7's document-level Escape closes the sheet even while an in-sheet text input has
+  focus, discarding an unsaved edit; the alternative (Escape blurs the input first) was not
+  built because it is unclear which behaviour a reviewer mid-edit actually wants.
