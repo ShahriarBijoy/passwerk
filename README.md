@@ -138,7 +138,8 @@ IndexedDB keeps your decisions, the extracted facts and the proposals, but never
 files. Inside Claude Desktop the same workbench (`apps/mcp-app`) runs as a fixed-height
 instrument in the host's iframe rather than a scrolling document (ADR D-040).
 
-![passwerk web app: upload, review, gaps, export](docs/media/passwerk-web.gif)
+![passwerk web app: the review screen, dark](docs/screenshots/workbench-04-review.png)
+![passwerk web app: the review screen, light](docs/screenshots/workbench-light-04-review.png)
 
 ```sh
 pnpm install
