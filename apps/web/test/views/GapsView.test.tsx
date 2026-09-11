@@ -46,13 +46,14 @@ describe('GapsView', () => {
     fireEvent.click(screen.getByTestId('gaps-fix'));
     expect(onFix).toHaveBeenCalledWith(first.getAttribute('data-attribute'));
   });
-  it('links a finding to its attribute in the sheet', () => {
+  it('links a finding to its attribute even after a nonmatching gap search', () => {
     const byId = new Map(gap.items.map((i) => [i.attributeId, i]));
     const finding = report.findings.find((f) => f.attributeId && byId.has(f.attributeId));
     expect(finding).toBeTruthy();
     const item = byId.get(finding?.attributeId ?? '');
     expect(item).toBeTruthy();
     mount(<GapsView {...props} />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'no-matching-attribute' } });
     fireEvent.click(screen.getByTestId('gaps-view-findings'));
     const findingRow = screen
       .getAllByTestId('finding')

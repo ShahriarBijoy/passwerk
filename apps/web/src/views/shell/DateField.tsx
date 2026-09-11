@@ -6,17 +6,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type Language, t } from '../../i18n/index.ts';
+import { parseIso } from '../../workflow/date.ts';
 import { Field } from './Field.tsx';
-
-const ISO = /^\d{4}-\d{2}-\d{2}$/;
-
-/** The ISO string as a local date, or `undefined`: `new Date('2027-03-01')` is UTC midnight. */
-export function parseIso(value: string): Date | undefined {
-  if (!ISO.test(value)) return undefined;
-  const [y, m, d] = value.split('-').map(Number) as [number, number, number];
-  const date = new Date(y, m - 1, d);
-  return Number.isNaN(date.getTime()) || date.getMonth() !== m - 1 ? undefined : date;
-}
 
 /**
  * A date field in the Nothing tokens: a mono underline input holding the ISO `YYYY-MM-DD` string
@@ -24,8 +15,8 @@ export function parseIso(value: string): Date | undefined {
  * `<input type="date">`, whose native control draws the browser's own calendar glyph and its own
  * locale order (`mm/dd/yyyy` on a German screen), neither of which this app can style.
  *
- * `onChange` fires only for a value the project can use: a valid ISO date, or the empty string
- * when the reviewer clears the field.
+ * Every edit reaches the project, including incomplete dates, so its obligation result never
+ * uses an older date hidden behind the text the reviewer sees.
  */
 export function DateField({
   lang,
@@ -67,7 +58,7 @@ export function DateField({
           onChange={(e) => {
             const next = e.target.value;
             setText(next);
-            if (next === '' || parseIso(next)) onChange(next);
+            onChange(next);
           }}
         />
         <Popover open={open} onOpenChange={setOpen}>

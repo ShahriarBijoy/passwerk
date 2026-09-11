@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ProjectView } from '@/views/ProjectView.tsx';
 import { deriveProject } from '@/workflow/derive/project.ts';
@@ -36,6 +37,49 @@ function view(project: Project, over: Partial<Parameters<typeof ProjectView>[0]>
 }
 
 describe('ProjectView', () => {
+  it.each(['2027-0', '2027-13-01', '2027-02-30'])(
+    'invalid replacement %s clears the previous obligation and blocks Continue',
+    (invalidDate) => {
+      function EditableProject() {
+        const [project, setProject] = useState<Project>({
+          ...base,
+          placedOnMarketDate: '2026-01-01',
+          manualCategory: 'EV',
+        });
+        return (
+          <ProjectView
+            lang="en"
+            project={project}
+            derived={deriveProject(project, AT)}
+            isNew
+            draftUrn={DRAFT_URN}
+            top={<span>top</span>}
+            onChange={setProject}
+            onContinue={() => undefined}
+            onImport={() => ({ ok: true })}
+            onResume={() => undefined}
+            onReset={() => undefined}
+          />
+        );
+      }
+      mount(<EditableProject />);
+      const input = screen.getByTestId('placed-on-market');
+      expect(screen.getByTestId('obligation-verdict').getAttribute('data-verdict')).toBe(
+        'not_required',
+      );
+      fireEvent.change(input, { target: { value: invalidDate } });
+      expect(screen.getByTestId('obligation-verdict').getAttribute('data-verdict')).toBe(
+        'insufficient_input',
+      );
+      expect((screen.getByTestId('project-continue') as HTMLButtonElement).disabled).toBe(true);
+      expect(screen.getByTestId('obligation-reason').textContent).not.toContain('2026-01-01');
+      fireEvent.change(input, { target: { value: '2027-03-01' } });
+      expect(screen.getByTestId('obligation-verdict').getAttribute('data-verdict')).toBe(
+        'required',
+      );
+      expect((screen.getByTestId('project-continue') as HTMLButtonElement).disabled).toBe(false);
+    },
+  );
   it('shows the verdict, the derived category and enables Continue for an EV manufacturer', () => {
     const { onContinue } = view(base);
     expect(screen.getByTestId('obligation-verdict').getAttribute('data-verdict')).toBe('required');

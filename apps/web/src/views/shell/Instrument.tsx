@@ -33,6 +33,7 @@ export function Instrument({
   // The list wrapper (already `position: relative`), not the scrolling list itself: the sheet
   // portals here so its `max-h-[45%]` and `absolute inset-x-0 bottom-0` are measured against the
   // list region alone, leaving the footer's primary button reachable while a sheet is open.
+  // Clip the translated entrance/exit animation too, so it cannot intercept footer clicks.
   const [listContainer, setListContainer] = useState<HTMLElement | null>(null);
   return (
     <InstrumentContext.Provider value={{ container, listContainer }}>
@@ -59,7 +60,7 @@ export function Instrument({
         <div data-region="toolbar" className="flex h-9 min-w-0 items-center gap-6 px-4">
           {toolbar}
         </div>
-        <div ref={setListContainer} className="relative min-h-0 min-w-0">
+        <div ref={setListContainer} className="relative min-h-0 min-w-0 overflow-hidden">
           <div
             data-region="list"
             className="h-full overflow-y-auto overscroll-contain px-4 [scrollbar-color:var(--border-visible)_transparent] [scrollbar-width:thin]"

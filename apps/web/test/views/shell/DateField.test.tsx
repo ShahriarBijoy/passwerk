@@ -20,14 +20,14 @@ const field = (value = '') => {
 };
 
 describe('DateField', () => {
-  it('reports a complete ISO date and keeps an incomplete one to itself', () => {
+  it('reports incomplete and invalid input so the project cannot retain an older date', () => {
     const { onChange, input } = field();
     fireEvent.change(input, { target: { value: '2027-0' } });
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith('2027-0');
     // What the reviewer sees is what they typed, even while it is not a date yet.
     expect(input.value).toBe('2027-0');
     fireEvent.change(input, { target: { value: '2027-13-01' } });
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith('2027-13-01');
     fireEvent.change(input, { target: { value: '2027-03-01' } });
     expect(onChange).toHaveBeenCalledWith('2027-03-01');
   });

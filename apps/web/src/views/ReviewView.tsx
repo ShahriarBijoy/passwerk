@@ -265,7 +265,7 @@ export function ReviewView(props: ReviewViewProps) {
         const critique = critiqueOf(openGroup, p);
         return (
           <Candidate
-            key={p.factId}
+            key={`${openGroup.key}:${p.factId}`}
             lang={lang}
             group={openGroup}
             p={p}
@@ -447,7 +447,11 @@ export function ReviewView(props: ReviewViewProps) {
         </p>
       )}
       {visible.map((g) => {
-        const best = g.proposals[0];
+        const decision = g.decision;
+        const best =
+          (decision && decision.kind !== 'manual'
+            ? g.proposals.find((p) => p.factId === decision.factId)
+            : undefined) ?? g.proposals[0];
         const hasCritique = g.proposals.some((p) => critiqueOf(g, p));
         return (
           <Row

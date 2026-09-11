@@ -257,6 +257,7 @@ export function GapsView(props: GapsViewProps) {
                       onClick={() => {
                         setView('owner');
                         setOnlyOpen(false);
+                        setSearch('');
                         setOpenKey(openFinding.attributeId ?? null);
                       }}
                     >

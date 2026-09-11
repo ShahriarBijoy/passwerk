@@ -26,6 +26,74 @@ const groups = buildGroups(
 const noArrays = { arrays: [], arrayRows: () => undefined };
 
 describe('ReviewView', () => {
+  it('resets candidate edits when another attribute uses the same fact', () => {
+    const proposals = [
+      groups[0]!.proposals[0]!,
+      { ...groups[0]!.proposals[0]!, attributeId: 'batteryMass', value: '412', unit: 'kg' },
+    ];
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={buildGroups(proposals, {})}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    fireEvent.click(screen.getByTestId('edit'));
+    fireEvent.change(screen.getByTestId('edit-value'), { target: { value: '999' } });
+    fireEvent.click(screen.getAllByTestId('group')[1]!);
+    expect(screen.queryByTestId('edit-value')).toBeNull();
+    fireEvent.click(screen.getByTestId('edit'));
+    expect((screen.getByTestId('edit-value') as HTMLInputElement).value).toBe('94.5');
+    expect((screen.getByTestId('edit-unit') as HTMLInputElement).value).toBe('Ah');
+  });
+
+  it('summarizes the accepted candidate rather than the first proposal', () => {
+    const proposals = [
+      groups[0]!.proposals[0]!,
+      { ...groups[0]!.proposals[0]!, factId: 'f2', value: '105', unit: 'mAh', confidence: 0.8 },
+    ];
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={buildGroups(proposals, {
+          ratedCapacity: {
+            kind: 'accept',
+            attributeId: 'ratedCapacity',
+            factId: 'f2',
+          },
+        })}
+        manual={[]}
+        conflicts={[]}
+        accepted={1}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('filter-accepted'));
+    const row = screen.getByTestId('group');
+    expect(row.textContent).toContain('105');
+    expect(row.textContent).toContain('mAh');
+    expect(row.textContent).toContain('80 %');
+    expect(row.textContent).not.toContain('94.5');
+  });
+
   it('renders a group and dispatches accept', () => {
     const onDecide = vi.fn();
     mount(

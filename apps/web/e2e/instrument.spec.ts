@@ -100,6 +100,23 @@ test('the sheet never covers the footer: a row sheet open leaves the primary but
   await page.getByTestId('filter-all').click();
   await openRow(page, '[data-testid="group"] >> nth=0');
 
+  await page.getByTestId('review-sheet').evaluate((el) => {
+    for (const animation of el.getAnimations()) {
+      animation.pause();
+      animation.currentTime = 0;
+    }
+  });
+  // At the start of the slide the transformed box extends below the list. Its paint and
+  // hit area must stay clipped to that region, including on slower CI runners.
+  expect(
+    await page.getByTestId('to-gaps').evaluate((button) => {
+      const box = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + 1));
+    }),
+  ).toBe(true);
+  await page.getByTestId('review-sheet').evaluate((el) => {
+    for (const animation of el.getAnimations()) animation.finish();
+  });
   const sheetBox = await page.getByTestId('review-sheet').boundingBox();
   const buttonBox = await page.getByTestId('to-gaps').boundingBox();
   expect(sheetBox).not.toBeNull();

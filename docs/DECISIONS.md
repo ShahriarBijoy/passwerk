@@ -1175,3 +1175,20 @@ none blocking, none touching a verdict, a finding or an export byte):
 - Decision 7's document-level Escape closes the sheet even while an in-sheet text input has
   focus, discarding an unsaved edit; the alternative (Escape blurs the input first) was not
   built because it is unclear which behaviour a reviewer mid-edit actually wants.
+
+## D-041: Invalid date edits invalidate the project (2026-09-12)
+
+**Context.** PR #32's date picker kept incomplete text locally while obligations continued
+using the last valid date. Core's obligation checker accepts date strings and compares them;
+passing an incomplete string through unchanged would not solve the mismatch.
+
+**Decision.** Every typed date reaches project state. The web workflow checks calendar validity
+before deriving obligations and metadata. For an invalid supplied date it requests core's existing
+missing-date result, omitting both the date and the `asOf` fallback, and withholds project metadata
+so Continue stays disabled, including when a voluntary category is selected. Clearing the optional
+date retains the existing `asOf` fallback. The picker and workflow share the same calendar parser.
+No new legal explanation is authored and core's contract is unchanged.
+
+The same review found that the sheet's entrance transform could cover the footer during its
+200 ms animation. The list wrapper now clips painting and hit testing; the browser regression
+checks footer reachability at animation start and layout after completion.
