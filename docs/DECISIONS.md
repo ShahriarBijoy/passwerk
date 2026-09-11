@@ -825,7 +825,10 @@ the gaps screen showed 15 of 47 mandatory data points (31.9 %), the figure D-029
 core in Node. The AASX export was saved to the Downloads folder through the host. Asked "what is
 the gap report for the current draft", Claude called `gap_report` on the synced id
 `drf_f2fca2876baa3f01` and answered with the same 15/47 and 32 open required attributes, so the
-model and the user look at one draft. Screenshots: `docs/screenshots/mcp-app-*.png`.
+model and the user look at one draft. That session was recorded in
+`docs/screenshots/mcp-app-*.png`; the workbench redesign replaced those images with
+`docs/screenshots/workbench-*.png`, so the screens above no longer look the way they did, and
+the measurement stands as written.
 
 **Consequences.** Twelve tools. The server tarball and the Docker image carry the workbench
 (`ui/`). CI builds it, runs the Playwright host page, and the pack and docker smokes read the
