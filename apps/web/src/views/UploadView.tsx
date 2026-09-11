@@ -103,7 +103,10 @@ export function UploadView(props: UploadViewProps) {
               name={f.name}
               {...(f.error
                 ? {}
-                : { value: String(f.pages), unit: t(lang, 'upload.col.pages').toLowerCase() })}
+                : {
+                    value: <span data-testid="file-pages">{f.pages}</span>,
+                    unit: t(lang, 'upload.col.pages').toLowerCase(),
+                  })}
               tags={
                 f.error
                   ? [{ label: t(lang, `upload.error.${f.error.code}` as Key), tone: 'accent' }]
@@ -121,11 +124,7 @@ export function UploadView(props: UploadViewProps) {
               }
               data-testid="file-row"
               data-file={f.name}
-            >
-              <span hidden data-testid="file-pages">
-                {f.error ? '' : f.pages}
-              </span>
-            </Row>
+            />
           ))}
         </div>
       )}
