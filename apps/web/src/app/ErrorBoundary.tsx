@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="grid min-h-[60vh] place-content-center gap-3 px-4 text-center" role="alert">
         <p className="label text-destructive">[ERROR]</p>
         <p className="text-muted-foreground">{t(lang, 'app.error.title')}</p>
-        <pre className="max-w-[560px] overflow-auto text-left font-mono text-[12px] text-disabled">
+        <pre className="max-w-[560px] overflow-auto text-left font-mono text-[12px] text-muted-foreground">
           {this.state.error.message}
         </pre>
         <div className="flex justify-center gap-2">
