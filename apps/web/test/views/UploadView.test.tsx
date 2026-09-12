@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { InlineStatus } from '@/views/shell/InlineStatus.tsx';
 import { UploadView } from '@/views/UploadView.tsx';
 import { mount } from './render.tsx';
 
@@ -9,6 +10,7 @@ describe('UploadView', () => {
     const onContinue = vi.fn();
     mount(
       <UploadView
+        top={<span />}
         lang="en"
         busy={false}
         proposalCount={7}
@@ -31,13 +33,22 @@ describe('UploadView', () => {
     );
     expect(screen.getByText('a.pdf')).toBeTruthy();
     expect(screen.getByText('Unsupported format')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to facts (7 proposals)' }));
+    // A sentence, so Space Grotesk sentence case (`.note`), never the mono caps of a label
+    // (spec 2): `.label` upper-cases in CSS, which shouted the whole line. The toolbar's hint is
+    // "PDF, XLSX, DOCX, CSV or TXT. Files never leave the browser." - two sentences.
+    const hint = screen.getByText(/never leave the browser/i);
+    expect(hint.className).toContain('note');
+    expect(hint.className).not.toContain('label');
+    const continueButton = screen.getByTestId('continue');
+    expect(continueButton.textContent).toContain('7 proposals');
+    fireEvent.click(continueButton);
     expect(onContinue).toHaveBeenCalled();
   });
 
   it('uses the singular form for a single proposal', () => {
     mount(
       <UploadView
+        top={<span />}
         lang="en"
         busy={false}
         proposalCount={1}
@@ -47,13 +58,14 @@ describe('UploadView', () => {
         onContinue={() => undefined}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Continue to facts (1 proposal)' })).toBeTruthy();
+    expect(screen.getByTestId('continue').textContent).toContain('1 proposal');
   });
 
   it('passes chosen files to onFiles', () => {
     const onFiles = vi.fn();
     mount(
       <UploadView
+        top={<span />}
         lang="de"
         busy={false}
         proposalCount={0}
@@ -67,5 +79,40 @@ describe('UploadView', () => {
     const file = new File(['x'], 'c.csv', { type: 'text/csv' });
     fireEvent.change(input, { target: { files: [file] } });
     expect(onFiles).toHaveBeenCalledWith([file]);
+  });
+
+  it('shows the busy state as an inline status', () => {
+    mount(
+      <UploadView
+        top={<span />}
+        lang="en"
+        busy
+        proposalCount={0}
+        files={[]}
+        onFiles={() => undefined}
+        onRemove={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    expect(screen.getByTestId('upload-busy')).toBeTruthy();
+  });
+
+  it('renders the caught-failure notice the shell passes in, in the footer', () => {
+    mount(
+      <UploadView
+        top={<span />}
+        lang="en"
+        busy={false}
+        proposalCount={0}
+        files={[]}
+        notice={<InlineStatus kind="error" text="body too large" data-testid="upload-error" />}
+        onFiles={() => undefined}
+        onRemove={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+    const notice = screen.getByTestId('upload-error');
+    expect(notice.textContent).toContain('body too large');
+    expect(notice.closest('[data-region="footer"]')).toBeTruthy();
   });
 });

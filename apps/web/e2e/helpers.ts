@@ -10,7 +10,7 @@ import {
   suggestMappings,
   validate,
 } from '@passwerk/core';
-import { expect, type Page } from '@playwright/test';
+import { expect, type FrameLocator, type Page } from '@playwright/test';
 
 export const CLOCK = '2026-09-05T12:00:00.000Z';
 export const FIXTURES = join(
@@ -46,6 +46,61 @@ export interface StartOptions {
 }
 
 /**
+ * Opens the collapsible `section-<id>` row on the project screen if its content is not already
+ * visible. The identifier section opens itself when the identifier is invalid, so this is a
+ * no-op in that case.
+ */
+export async function openSection(page: Page, id: 'identifier' | 'import'): Promise<void> {
+  const probe =
+    id === 'identifier'
+      ? page.getByTestId('identifier-mode-https')
+      : page.getByTestId('import-draft');
+  if (!(await probe.isVisible())) await page.getByTestId(`section-${id}`).click();
+  await expect(probe).toBeVisible();
+}
+
+/**
+ * Closes an open sheet via `Escape`, if one is open. The sheet is a genuine bottom sheet
+ * (Sheet.tsx, spec §3.2): non-modal in the sense that the toolbar and scrolling stay live, but it
+ * still covers the bottom ~45% of the list region, so a row rendered under it is exactly as
+ * unclickable for a real reviewer as for Playwright (the footer is unaffected: the sheet portals
+ * into the list region's own wrapper, not the instrument root - fix wave item 3). Sheet.tsx
+ * installs its own document-level `keydown` listener through a React 19 callback ref, attached
+ * once the sheet's content mounts, so `Escape` closes it regardless of where focus landed -
+ * including after a nested modal dialog (the row editor, the add-value dialog) returns focus
+ * somewhere `<body>` rather than back into the sheet's own content. Idempotent: a no-op when
+ * nothing is open.
+ */
+export async function closeSheet(scope: Page | FrameLocator): Promise<void> {
+  const openSheet = scope.locator('[data-testid$="-sheet"]');
+  if (await openSheet.count()) {
+    await openSheet.first().page().keyboard.press('Escape');
+    await expect(openSheet).toHaveCount(0);
+  }
+}
+
+/**
+ * Clicks a row and waits for the sheet it opens (a `data-testid` ending in `-sheet`) to appear.
+ * Closes any sheet already open first (see `closeSheet`), so the next row is never asked to
+ * receive a click through an overlay sitting on top of it.
+ */
+export async function openRow(scope: Page | FrameLocator, selector: string): Promise<void> {
+  await closeSheet(scope);
+  await scope.locator(selector).click();
+  await expect(scope.locator('[data-testid$="-sheet"]')).toBeVisible();
+}
+
+/**
+ * From the review screen: continue to gaps, wait for the verdict, then continue to export.
+ */
+export async function toExport(scope: Page | FrameLocator): Promise<void> {
+  await scope.getByTestId('to-gaps').click();
+  await expect(scope.getByTestId('verdict')).toBeVisible();
+  await scope.getByTestId('to-export').click();
+  await expect(scope.getByTestId('export-aasx')).toBeVisible();
+}
+
+/**
  * Fill the project screen and continue to the upload step. The default battery type is EV, so
  * every caller gets the EV category assertion; a spec that needs a different battery type or
  * energy value drives the `battery-type` / `energy-kwh` selects directly (see project.spec.ts).
@@ -55,6 +110,7 @@ export async function startProject(page: Page, opts: StartOptions): Promise<void
   // The pinned CLOCK is before 2027-02-18, so the derived category is always shown (verdict
   // not_required) for the default EV battery type.
   await expect(page.getByTestId('obligation-category')).toContainText('EV');
+  await openSection(page, 'identifier');
   await page.getByTestId(`identifier-mode-${opts.identifier.mode}`).click();
   if (opts.identifier.mode === 'https') {
     await page.getByTestId('identifier-uri').fill(opts.identifier.uri);

@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -24,6 +23,7 @@ import type { Decision } from '../workflow/state.ts';
 import { validateValue } from '../workflow/validateValue.ts';
 import { RowEditor } from './RowEditor.tsx';
 import { attributeChoices, compositeLeaves } from './reviewModel.ts';
+import { Field } from './shell/Field.tsx';
 
 export interface AddValueDialogProps {
   lang: Language;
@@ -99,7 +99,7 @@ export function AddValueDialog(props: AddValueDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button variant="outline" data-testid="add-value">
+          <Button variant="secondary" data-testid="add-value">
             {t(lang, 'review.addValue')}
           </Button>
         </DialogTrigger>
@@ -109,26 +109,27 @@ export function AddValueDialog(props: AddValueDialogProps) {
           <DialogTitle>{t(lang, 'review.addValue')}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-3">
-          <Label>{t(lang, 'review.addValue.attribute')}</Label>
-          <Select
-            value={attributeId}
-            onValueChange={(v) => {
-              setAttributeId(v);
-              setLeaf(compositeLeaves(v)[0] ?? '');
-              setRecordedAt('');
-            }}
-          >
-            <SelectTrigger data-testid="add-attribute">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {choices.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {pick(lang, c.name)} ({c.id})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Field label={t(lang, 'review.addValue.attribute')}>
+            <Select
+              value={attributeId}
+              onValueChange={(v) => {
+                setAttributeId(v);
+                setLeaf(compositeLeaves(v)[0] ?? '');
+                setRecordedAt('');
+              }}
+            >
+              <SelectTrigger data-testid="add-attribute">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {choices.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {pick(lang, c.name)} ({c.id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
           {attributeId && isArrayComposite(attributeId) ? (
             <RowEditor
               key={attributeId}
@@ -149,8 +150,7 @@ export function AddValueDialog(props: AddValueDialogProps) {
           ) : (
             <>
               {leaves.length > 0 && (
-                <>
-                  <Label>{t(lang, 'review.addValue.leaf')}</Label>
+                <Field label={t(lang, 'review.addValue.leaf')}>
                   <Select value={leaf} onValueChange={setLeaf}>
                     <SelectTrigger data-testid="add-leaf">
                       <SelectValue />
@@ -163,37 +163,38 @@ export function AddValueDialog(props: AddValueDialogProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                </>
+                </Field>
               )}
-              <Label>{t(lang, 'review.value')}</Label>
-              <Input
-                data-testid="add-value-input"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
-              <Label>{t(lang, 'review.unit')}</Label>
-              <Input
-                data-testid="add-unit-input"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-              />
+              <Field label={t(lang, 'review.value')}>
+                <Input
+                  data-testid="add-value-input"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+              </Field>
+              <Field label={t(lang, 'review.unit')}>
+                <Input
+                  data-testid="add-unit-input"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                />
+              </Field>
               {dynamic && (
-                <>
-                  <Label>{t(lang, 'review.recordedAt')}</Label>
+                <Field label={t(lang, 'review.recordedAt')}>
                   <Input
                     data-testid="add-recorded-at"
                     type="datetime-local"
                     value={recordedAt}
                     onChange={(e) => setRecordedAt(e.target.value)}
                   />
-                </>
+                </Field>
               )}
               {error && (
-                <p className="text-destructive text-sm" data-testid="value-error">
+                <p className="text-[12px] text-destructive" data-testid="value-error">
                   {pick(lang, error)}
                 </p>
               )}
-              <Button data-testid="add-submit" onClick={submit}>
+              <Button variant="primary" data-testid="add-submit" onClick={submit}>
                 {t(lang, 'review.addValue.add')}
               </Button>
             </>

@@ -1,8 +1,7 @@
 import type { Fact } from '@passwerk/core';
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { getAttribute } from '@passwerk/rules';
+import { type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -11,39 +10,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { factsCount, type Key, type Language, t } from '../i18n/index.ts';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { factsCount, type Key, type Language, pick, t } from '../i18n/index.ts';
 import { type FactStatus, type FactsFilter, filterFacts } from '../workflow/factsModel.ts';
 import type { FactEdit } from '../workflow/state.ts';
 import { SourceRef } from './parts/SourceRef.tsx';
+import { HeroNumber } from './shell/HeroNumber.tsx';
+import { Instrument } from './shell/Instrument.tsx';
+import { Row, type RowTag } from './shell/Row.tsx';
+import { Sheet } from './shell/Sheet.tsx';
 
 export interface FactsViewProps {
   lang: Language;
+  top: ReactNode;
   facts: Fact[];
   documents: string[];
   edits: Record<string, FactEdit>;
   statuses: Record<string, FactStatus>;
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onEdit(factId: string, edit: FactEdit): void;
   onClearEdit(factId: string): void;
   onMap(fact: Fact): void;
   onContinue(): void;
+  children?: ReactNode;
 }
 
 const STATUS_TABS: Array<'all' | FactStatus['status']> = ['all', 'mapped', 'proposed', 'unmapped'];
+const TONE: Record<FactStatus['status'], NonNullable<RowTag['tone']>> = {
+  mapped: 'success',
+  proposed: 'default',
+  unmapped: 'dim',
+};
 
-function FactRow({
+function FactSheet({
   lang,
   fact,
   edit,
   status,
+  position,
+  onPrev,
+  onNext,
+  onClose,
   onEdit,
   onClearEdit,
   onMap,
@@ -52,129 +60,170 @@ function FactRow({
   fact: Fact;
   edit?: FactEdit;
   status: FactStatus;
-  onEdit(factId: string, edit: FactEdit): void;
-  onClearEdit(factId: string): void;
-  onMap(fact: Fact): void;
+  position: { index: number; total: number };
+  onPrev?(): void;
+  onNext?(): void;
+  onClose(): void;
+  onEdit(id: string, e: FactEdit): void;
+  onClearEdit(id: string): void;
+  onMap(f: Fact): void;
 }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('');
-  const displayValue = edit?.value ?? fact.value ?? fact.raw;
+  const shown = edit?.value ?? fact.value ?? fact.raw;
   const openEditor = () => {
-    // Seed from the current edit (or its absence) rather than once at mount, so a discarded
-    // edit does not resurface: a reset between two openings must show the fact's own value.
     setValue(edit?.value ?? fact.value ?? fact.raw);
     setUnit(edit?.unit ?? fact.unit ?? '');
     setEditing(true);
   };
+  const mapped = status.status === 'mapped' ? getAttribute(status.attributeId) : undefined;
   return (
-    <TableRow data-testid="fact-row" data-fact={fact.id} data-status={status.status}>
-      <TableCell>{fact.label}</TableCell>
-      <TableCell>
-        {editing ? (
+    <Sheet
+      lang={lang}
+      open
+      title={fact.label}
+      meta={
+        <>
+          {fact.kind} · <SourceRef lang={lang} source={[fact.source]} />
+        </>
+      }
+      position={position}
+      {...(onPrev ? { onPrev } : {})}
+      {...(onNext ? { onNext } : {})}
+      onClose={onClose}
+      actions={
+        editing ? (
+          <Button
+            variant="primary"
+            size="md"
+            data-testid="fact-edit-save"
+            onClick={() => {
+              onEdit(fact.id, { value, ...(unit ? { unit } : {}) });
+              setEditing(false);
+            }}
+          >
+            {t(lang, 'facts.save')}
+          </Button>
+        ) : (
+          <>
+            <Button size="md" data-testid="fact-edit" onClick={openEditor}>
+              {t(lang, 'facts.editValue')}
+            </Button>
+            {edit && (
+              <Button
+                variant="ghost"
+                size="md"
+                data-testid="fact-edit-reset"
+                onClick={() => onClearEdit(fact.id)}
+              >
+                {t(lang, 'facts.reset')}
+              </Button>
+            )}
+            <Button size="md" data-testid="fact-map" onClick={() => onMap(fact)}>
+              {t(lang, 'facts.mapTo')}
+            </Button>
+          </>
+        )
+      }
+      data-testid="fact-sheet"
+    >
+      {editing ? (
+        <div className="flex items-end gap-3">
           <Input
-            className="w-32"
+            className="w-40"
             data-testid="fact-edit-value"
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
-        ) : (
-          <span className="flex items-center gap-1">
-            <span className="font-mono" data-testid="fact-value">
-              {displayValue}
-            </span>
-            {edit && (
-              <span className="text-xs" data-testid="fact-edited">
-                {t(lang, 'facts.edited')}
-              </span>
-            )}
-          </span>
-        )}
-      </TableCell>
-      <TableCell>
-        {editing ? (
           <Input
-            className="w-16"
+            className="w-20"
             data-testid="fact-edit-unit"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
           />
-        ) : (
-          (edit?.unit ?? fact.unit ?? '')
-        )}
-      </TableCell>
-      <TableCell>{fact.kind}</TableCell>
-      <TableCell>
-        <SourceRef lang={lang} source={[fact.source]} />
-      </TableCell>
-      <TableCell>
-        <Badge variant={status.status === 'mapped' ? 'default' : 'outline'}>
-          {t(lang, `facts.status.${status.status}` as Key)}
-          {status.status === 'mapped' ? ` (${status.attributeId})` : ''}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <span className="flex gap-1">
-          {editing ? (
-            <Button
-              size="sm"
-              data-testid="fact-edit-save"
-              onClick={() => {
-                onEdit(fact.id, { value, ...(unit ? { unit } : {}) });
-                setEditing(false);
-              }}
-            >
-              {t(lang, 'facts.save')}
-            </Button>
-          ) : (
-            <Button size="sm" variant="ghost" data-testid="fact-edit" onClick={openEditor}>
-              {t(lang, 'facts.edit')}
-            </Button>
-          )}
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-[22px] text-display">{shown}</span>
+          <span className="label">{edit?.unit ?? fact.unit ?? ''}</span>
           {edit && (
-            <Button
-              size="sm"
-              variant="ghost"
-              data-testid="fact-edit-reset"
-              onClick={() => onClearEdit(fact.id)}
-            >
-              {t(lang, 'facts.reset')}
-            </Button>
+            <span className="label" data-testid="fact-edited-sheet">
+              {t(lang, 'facts.edited')}
+            </span>
           )}
-          <Button size="sm" variant="outline" data-testid="fact-map" onClick={() => onMap(fact)}>
-            {t(lang, 'facts.map')}
-          </Button>
-        </span>
-      </TableCell>
-    </TableRow>
+        </div>
+      )}
+      {mapped && (
+        <p className="mt-2 text-[12px]">
+          {t(lang, 'facts.mappedTo')}: {pick(lang, mapped.name)} ({mapped.id})
+        </p>
+      )}
+      {status.status === 'proposed' && (
+        <p className="mt-2 text-[12px]">
+          {t(lang, 'facts.feeds')}: {t(lang, 'facts.status.proposed')}
+        </p>
+      )}
+    </Sheet>
   );
 }
 
 export function FactsView(props: FactsViewProps) {
   const { lang } = props;
   const [filter, setFilter] = useState<FactsFilter>({ document: 'all', status: 'all', search: '' });
-  // A document can vanish from the list (its file removed, or replaced under a new hash) while
-  // the filter still names it; falling back at render time avoids a table stranded empty until
-  // the reviewer notices and reselects "All documents" themselves.
+  const [openId, setOpenId] = useState<string | null>(null);
   const selectedDocument =
     filter.document !== 'all' && !props.documents.includes(filter.document)
       ? 'all'
       : filter.document;
-  const effectiveFilter: FactsFilter = { ...filter, document: selectedDocument };
-  const visible = filterFacts(props.facts, props.statuses, effectiveFilter, lang);
+  const visible = filterFacts(
+    props.facts,
+    props.statuses,
+    { ...filter, document: selectedDocument },
+    lang,
+  );
+  const openIndex = visible.findIndex((f) => f.id === openId);
+  const openFact = openIndex >= 0 ? visible[openIndex] : undefined;
+  const counts = { proposed: 0, mapped: 0, unmapped: 0 };
+  for (const f of props.facts) counts[props.statuses[f.id]?.status ?? 'unmapped'] += 1;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t(lang, 'facts.title')}</CardTitle>
-        <p className="text-muted-foreground text-sm">{t(lang, 'facts.hint')}</p>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="flex flex-wrap items-center gap-3">
+    <Instrument
+      top={props.top}
+      notice={props.notice}
+      hero={
+        <>
+          <HeroNumber label={t(lang, 'hero.facts')} value={String(props.facts.length)} />
+          <span className="label pb-1.5">
+            {t(lang, 'hero.facts.meta', { documents: props.documents.length, ...counts })}
+          </span>
+        </>
+      }
+      toolbar={
+        <>
+          <ToggleGroup
+            className="shrink-0"
+            type="single"
+            value={filter.status}
+            onValueChange={(v) =>
+              v && setFilter((f) => ({ ...f, status: v as FactsFilter['status'] }))
+            }
+          >
+            {STATUS_TABS.map((s) => (
+              <ToggleGroupItem key={s} value={s} data-testid={`facts-status-${s}`}>
+                {t(lang, `facts.status.${s}` as Key)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+          {/* The toolbar is one line at every width (spec 3.2): the four filters and the count
+              keep their size, the document trigger truncates, and the search takes the slack. */}
           <Select
             value={selectedDocument}
             onValueChange={(v) => setFilter((f) => ({ ...f, document: v }))}
           >
-            <SelectTrigger data-testid="facts-document">
+            <SelectTrigger
+              className="label ml-auto max-w-44 shrink border-0 [&>span]:truncate"
+              data-testid="facts-document"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -186,64 +235,91 @@ export function FactsView(props: FactsViewProps) {
               ))}
             </SelectContent>
           </Select>
-          <Tabs
-            value={filter.status}
-            onValueChange={(v) => setFilter((f) => ({ ...f, status: v as FactsFilter['status'] }))}
-          >
-            <TabsList>
-              {STATUS_TABS.map((s) => (
-                <TabsTrigger key={s} value={s} data-testid={`facts-status-${s}`}>
-                  {t(lang, `facts.status.${s}` as Key)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
           <Input
-            className="w-48"
+            className="min-w-16 flex-1"
             data-testid="facts-search"
             placeholder={t(lang, 'facts.search')}
             value={filter.search}
             onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
           />
-          <span data-testid="facts-count">
+        </>
+      }
+      footer={
+        <>
+          {/* The four German filter names, the document trigger and the search already fill the
+              toolbar at 735 px; the filtered count reads just as well from the footer's status
+              slot, which is otherwise empty on this screen. */}
+          <span className="label whitespace-nowrap" data-testid="facts-count">
             {factsCount(lang, visible.length, props.facts.length)}
           </span>
-          <Button className="ml-auto" data-testid="facts-continue" onClick={props.onContinue}>
-            {t(lang, 'facts.continue')}
+          <span className="flex-1" />
+          <Button variant="primary" data-testid="facts-continue" onClick={props.onContinue}>
+            {t(lang, 'facts.continue')} →
           </Button>
-        </div>
-        {visible.length === 0 ? (
-          <p className="text-muted-foreground">{t(lang, 'facts.empty')}</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t(lang, 'facts.col.label')}</TableHead>
-                <TableHead>{t(lang, 'facts.col.value')}</TableHead>
-                <TableHead>{t(lang, 'facts.col.unit')}</TableHead>
-                <TableHead>{t(lang, 'facts.col.kind')}</TableHead>
-                <TableHead>{t(lang, 'facts.col.source')}</TableHead>
-                <TableHead>{t(lang, 'facts.col.status')}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((f) => (
-                <FactRow
-                  key={f.id}
-                  lang={lang}
-                  fact={f}
-                  {...(props.edits[f.id] ? { edit: props.edits[f.id] } : {})}
-                  status={props.statuses[f.id] ?? { status: 'unmapped' }}
-                  onEdit={props.onEdit}
-                  onClearEdit={props.onClearEdit}
-                  onMap={props.onMap}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      }
+      sheet={
+        openFact && (
+          <FactSheet
+            key={openFact.id}
+            lang={lang}
+            fact={openFact}
+            {...(props.edits[openFact.id] ? { edit: props.edits[openFact.id] } : {})}
+            status={props.statuses[openFact.id] ?? { status: 'unmapped' }}
+            position={{ index: openIndex + 1, total: visible.length }}
+            {...(openIndex > 0
+              ? { onPrev: () => setOpenId(visible[openIndex - 1]?.id ?? null) }
+              : {})}
+            {...(openIndex < visible.length - 1
+              ? { onNext: () => setOpenId(visible[openIndex + 1]?.id ?? null) }
+              : {})}
+            onClose={() => setOpenId(null)}
+            onEdit={props.onEdit}
+            onClearEdit={props.onClearEdit}
+            onMap={props.onMap}
+          />
+        )
+      }
+    >
+      {visible.length === 0 ? (
+        <p className="py-6 text-center text-[13px] text-muted-foreground">
+          {t(lang, 'facts.empty')}
+        </p>
+      ) : (
+        visible.map((f) => {
+          const status = props.statuses[f.id] ?? { status: 'unmapped' as const };
+          const edit = props.edits[f.id];
+          return (
+            <Row
+              key={f.id}
+              name={f.label}
+              value={<span data-testid="fact-value">{edit?.value ?? f.value ?? f.raw}</span>}
+              unit={edit?.unit ?? f.unit ?? ''}
+              tags={[
+                ...(edit
+                  ? [
+                      {
+                        label: t(lang, 'facts.edited'),
+                        tone: 'dim' as const,
+                        testId: 'fact-edited',
+                      },
+                    ]
+                  : []),
+                {
+                  label: t(lang, `facts.status.${status.status}` as Key),
+                  tone: TONE[status.status],
+                },
+              ]}
+              open={f.id === openId}
+              onOpen={() => setOpenId(f.id)}
+              data-testid="fact-row"
+              data-fact={f.id}
+              data-status={status.status}
+            />
+          );
+        })
+      )}
+      {props.children}
+    </Instrument>
   );
 }

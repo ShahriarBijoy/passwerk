@@ -29,23 +29,53 @@ const store = createStore(initialState);
 const host = new HostApp({ name: 'passwerk workbench', version: __WORKBENCH_VERSION__ });
 let sync: SyncState = {};
 
+// The host's "cannot download" message is not workflow state: it lives beside the store and
+// re-renders the tree through `render()`.
+let notice: string | undefined;
+
+const applyHeight = (mode: string | undefined) =>
+  document.documentElement.style.setProperty(
+    '--instrument-height',
+    mode === 'fullscreen' ? '100vh' : '640px',
+  );
+applyHeight('inline');
+
 const platform: Platform = {
-  download: (file) => void hostDownload(host, file, store.getState().language, sync.draftId),
+  download: (file) =>
+    void hostDownload(host, file, store.getState().language, sync.draftId, (text) => {
+      notice = text;
+      render();
+    }),
   // The host owns the instance's lifetime; nothing is persisted, so nothing is cleared.
   clearPersisted: () => {},
   pdfWorkerSrc: workerUrlOf(pdfWorkerUrl),
+  display: {
+    available: () =>
+      (host.getHostContext()?.availableDisplayModes ?? []).filter(
+        (m): m is 'inline' | 'fullscreen' => m === 'inline' || m === 'fullscreen',
+      ),
+    current: () => (host.getHostContext()?.displayMode === 'fullscreen' ? 'fullscreen' : 'inline'),
+    request: async (mode) => {
+      await host.requestDisplayMode({ mode });
+      applyHeight(host.getHostContext()?.displayMode);
+      render();
+    },
+  },
 };
 
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
-createRoot(root).render(
-  <ErrorBoundary
-    lang={store.getState().language}
-    onReset={() => store.dispatch({ type: 'reset', at: nowIso() })}
-  >
-    <App store={store} platform={platform} />
-  </ErrorBoundary>,
-);
+const reactRoot = createRoot(root);
+const render = () =>
+  reactRoot.render(
+    <ErrorBoundary
+      lang={store.getState().language}
+      onReset={() => store.dispatch({ type: 'reset', at: nowIso() })}
+    >
+      <App store={store} platform={platform} {...(notice ? { hostNotice: notice } : {})} />
+    </ErrorBoundary>,
+  );
+render();
 
 // Handlers before connect(): the host may notify immediately after the handshake.
 host.ontoolresult = (result) => {
@@ -59,6 +89,8 @@ host.onhostcontextchanged = (ctx) => {
   if (ctx.locale) {
     store.dispatch({ type: 'setLanguage', language: languageOf(ctx.locale), at: nowIso() });
   }
+  applyHeight(ctx.displayMode);
+  render();
 };
 
 void host
@@ -66,7 +98,9 @@ void host
   .then(() => {
     const ctx = host.getHostContext();
     applyTheme(ctx?.theme);
+    applyHeight(ctx?.displayMode);
     store.dispatch({ type: 'setLanguage', language: languageOf(ctx?.locale), at: nowIso() });
+    render();
     attachSync(host, store, {
       asOf: nowIso,
       debounceMs: SYNC_DEBOUNCE_MS,

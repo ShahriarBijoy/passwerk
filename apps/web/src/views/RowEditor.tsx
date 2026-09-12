@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { type Language, pick, t } from '../i18n/index.ts';
 import { arrayElementLeaves, type ElementLeaf } from '../workflow/compositeSchema.ts';
 import {
@@ -13,6 +12,7 @@ import {
   type RowDraft,
   rowsFromValue,
 } from '../workflow/rows.ts';
+import { Field } from './shell/Field.tsx';
 
 function RowFields({
   lang,
@@ -40,68 +40,70 @@ function RowFields({
     <div className="grid gap-2 md:grid-cols-2">
       {leaves.map((leaf) =>
         leaf.kind === 'rows' ? (
-          <div key={leaf.path} className="grid gap-1 border-l pl-2 md:col-span-2">
-            <Label>
-              {leaf.path}
-              {leaf.required ? ` (${t(lang, 'rows.required')})` : ''}
-            </Label>
-            {(row.nested[leaf.path] ?? []).map((sub, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: draft rows have no stable id
-              <div key={`${leaf.path}-${i}`} className="grid gap-1" data-testid="rows-nested">
-                <RowFields
-                  lang={lang}
-                  leaves={leaf.rows ?? []}
-                  row={sub}
-                  prefix={prefix === '' ? `${leaf.path}-${i}` : `${prefix}-${leaf.path}-${i}`}
-                  domPrefix={`${domPrefix}-r${i}`}
-                  onChange={(next) => {
-                    const list = [...(row.nested[leaf.path] ?? [])];
-                    list[i] = next;
-                    onChange({ ...row, nested: { ...row.nested, [leaf.path]: list } });
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  data-testid={`rows-remove-${leaf.path}`}
-                  onClick={() => {
-                    const list = (row.nested[leaf.path] ?? []).filter((_, j) => j !== i);
-                    onChange({ ...row, nested: { ...row.nested, [leaf.path]: list } });
-                  }}
-                >
-                  {t(lang, 'rows.remove')}
-                </Button>
-              </div>
-            ))}
-            <Button
-              size="sm"
-              variant="outline"
-              data-testid={`rows-add-${leaf.path}`}
-              onClick={() =>
-                onChange({
-                  ...row,
-                  nested: {
-                    ...row.nested,
-                    [leaf.path]: [...(row.nested[leaf.path] ?? []), emptyRow()],
-                  },
-                })
-              }
-            >
-              {t(lang, 'rows.add')}
-            </Button>
-          </div>
+          <Field
+            key={leaf.path}
+            label={`${leaf.path}${leaf.required ? ` (${t(lang, 'rows.required')})` : ''}`}
+          >
+            <div className="grid gap-1 border-l border-border pl-2 md:col-span-2">
+              {(row.nested[leaf.path] ?? []).map((sub, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: draft rows have no stable id
+                <div key={`${leaf.path}-${i}`} className="grid gap-1" data-testid="rows-nested">
+                  <RowFields
+                    lang={lang}
+                    leaves={leaf.rows ?? []}
+                    row={sub}
+                    prefix={prefix === '' ? `${leaf.path}-${i}` : `${prefix}-${leaf.path}-${i}`}
+                    domPrefix={`${domPrefix}-r${i}`}
+                    onChange={(next) => {
+                      const list = [...(row.nested[leaf.path] ?? [])];
+                      list[i] = next;
+                      onChange({ ...row, nested: { ...row.nested, [leaf.path]: list } });
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    data-testid={`rows-remove-${leaf.path}`}
+                    onClick={() => {
+                      const list = (row.nested[leaf.path] ?? []).filter((_, j) => j !== i);
+                      onChange({ ...row, nested: { ...row.nested, [leaf.path]: list } });
+                    }}
+                  >
+                    {t(lang, 'rows.remove')}
+                  </Button>
+                </div>
+              ))}
+              <Button
+                size="sm"
+                variant="secondary"
+                data-testid={`rows-add-${leaf.path}`}
+                onClick={() =>
+                  onChange({
+                    ...row,
+                    nested: {
+                      ...row.nested,
+                      [leaf.path]: [...(row.nested[leaf.path] ?? []), emptyRow()],
+                    },
+                  })
+                }
+              >
+                {t(lang, 'rows.add')}
+              </Button>
+            </div>
+          </Field>
         ) : (
-          <div key={leaf.path} className="grid gap-1">
-            <Label htmlFor={domId(leaf.path)}>
-              {leaf.path}
-              {leaf.required ? ` (${t(lang, 'rows.required')})` : ''}
-              {leaf.kind === 'list' ? ` · ${t(lang, 'rows.list.hint')}` : ''}
-            </Label>
+          <Field
+            key={leaf.path}
+            label={`${leaf.path}${leaf.required ? ` (${t(lang, 'rows.required')})` : ''}${
+              leaf.kind === 'list' ? ` · ${t(lang, 'rows.list.hint')}` : ''
+            }`}
+            htmlFor={domId(leaf.path)}
+          >
             {leaf.kind === 'list' ? (
               <textarea
                 id={domId(leaf.path)}
                 data-testid={testId(leaf.path)}
-                className="min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30"
+                className="min-h-16 w-full border border-border-visible bg-transparent px-2.5 py-1.5 font-mono text-sm text-display outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-display disabled:text-disabled disabled:border-border"
                 value={row.fields[leaf.path] ?? ''}
                 onChange={(e) =>
                   onChange({ ...row, fields: { ...row.fields, [leaf.path]: e.target.value } })
@@ -117,7 +119,7 @@ function RowFields({
                 }
               />
             )}
-          </div>
+          </Field>
         ),
       )}
     </div>
@@ -168,7 +170,7 @@ export function RowEditor({
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: draft rows have no stable id
           key={`row-${i}`}
-          className="grid gap-2 rounded-md border p-2"
+          className="grid gap-2 border border-border p-3"
           data-testid="rows-row"
           data-row={i}
         >
@@ -198,19 +200,19 @@ export function RowEditor({
       ))}
       {errors.map((e, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: errors have no stable id
-        <p key={`err-${i}`} className="text-destructive text-sm" data-testid="rows-error">
+        <p key={`err-${i}`} className="text-[13px] text-destructive" data-testid="rows-error">
           {e.row < 0 ? e.reason : t(lang, 'rows.error', { row: e.row + 1, reason: e.reason })}
         </p>
       ))}
       <div className="flex gap-2">
         <Button
-          variant="outline"
+          variant="secondary"
           data-testid="rows-add"
           onClick={() => setRows([...rows, emptyRow()])}
         >
           {t(lang, 'rows.add')}
         </Button>
-        <Button data-testid="rows-save" onClick={save}>
+        <Button variant="primary" data-testid="rows-save" onClick={save}>
           {t(lang, 'rows.save')}
         </Button>
         {onCancel && (
@@ -234,7 +236,7 @@ export function RowEditorDialog(props: {
   const name = getAttribute(props.attributeId)?.name;
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-[640px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {t(props.lang, 'rows.title', {

@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { getSample, type PassportDraft } from '@passwerk/core';
 import { fireEvent, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ReviewView } from '@/views/ReviewView.tsx';
 import { buildGroups } from '@/views/reviewModel.ts';
@@ -25,10 +26,79 @@ const groups = buildGroups(
 const noArrays = { arrays: [], arrayRows: () => undefined };
 
 describe('ReviewView', () => {
+  it('resets candidate edits when another attribute uses the same fact', () => {
+    const proposals = [
+      groups[0]!.proposals[0]!,
+      { ...groups[0]!.proposals[0]!, attributeId: 'batteryMass', value: '412', unit: 'kg' },
+    ];
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={buildGroups(proposals, {})}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    fireEvent.click(screen.getByTestId('edit'));
+    fireEvent.change(screen.getByTestId('edit-value'), { target: { value: '999' } });
+    fireEvent.click(screen.getAllByTestId('group')[1]!);
+    expect(screen.queryByTestId('edit-value')).toBeNull();
+    fireEvent.click(screen.getByTestId('edit'));
+    expect((screen.getByTestId('edit-value') as HTMLInputElement).value).toBe('94.5');
+    expect((screen.getByTestId('edit-unit') as HTMLInputElement).value).toBe('Ah');
+  });
+
+  it('summarizes the accepted candidate rather than the first proposal', () => {
+    const proposals = [
+      groups[0]!.proposals[0]!,
+      { ...groups[0]!.proposals[0]!, factId: 'f2', value: '105', unit: 'mAh', confidence: 0.8 },
+    ];
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={buildGroups(proposals, {
+          ratedCapacity: {
+            kind: 'accept',
+            attributeId: 'ratedCapacity',
+            factId: 'f2',
+          },
+        })}
+        manual={[]}
+        conflicts={[]}
+        accepted={1}
+        pending={0}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('filter-accepted'));
+    const row = screen.getByTestId('group');
+    expect(row.textContent).toContain('105');
+    expect(row.textContent).toContain('mAh');
+    expect(row.textContent).toContain('80 %');
+    expect(row.textContent).not.toContain('94.5');
+  });
+
   it('renders a group and dispatches accept', () => {
     const onDecide = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -44,6 +114,7 @@ describe('ReviewView', () => {
       />,
     );
     expect(screen.getByText('94.5')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('group'));
     expect(screen.getByText('Match')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
     expect(onDecide).toHaveBeenCalledWith({
@@ -56,6 +127,7 @@ describe('ReviewView', () => {
     const onDecide = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -70,6 +142,7 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     fireEvent.change(screen.getByTestId('edit-value'), { target: { value: '94,5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -80,6 +153,7 @@ describe('ReviewView', () => {
     const onClear = vi.fn();
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -106,6 +180,7 @@ describe('ReviewView', () => {
     const bilingual = { de: 'Erwartet eine Dezimalzahl', en: 'Expected a decimal number' };
     const { unmount } = mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -127,6 +202,7 @@ describe('ReviewView', () => {
     unmount();
     mount(
       <ReviewView
+        top={<span />}
         lang="de"
         category="EV"
         groups={groups}
@@ -150,6 +226,7 @@ describe('ReviewView', () => {
   it('renders a mapping conflict with both values', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -207,12 +284,16 @@ describe('ReviewView', () => {
       ...noArrays,
     };
 
-    const { unmount } = mount(<ReviewView {...props} groups={groups} onDecide={onDecide} />);
+    const { unmount } = mount(
+      <ReviewView top={<span />} {...props} groups={groups} onDecide={onDecide} />,
+    );
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     expect(screen.queryByTestId('edit-recorded-at')).toBeNull();
     unmount();
 
-    mount(<ReviewView {...props} groups={dynamic} onDecide={onDecide} />);
+    mount(<ReviewView top={<span />} {...props} groups={dynamic} onDecide={onDecide} />);
+    fireEvent.click(screen.getByTestId('group'));
     fireEvent.click(screen.getByTestId('edit'));
     const field = screen.getByTestId('edit-recorded-at');
     expect(field.getAttribute('type')).toBe('datetime-local');
@@ -232,6 +313,7 @@ describe('ReviewView', () => {
   it('renders German chrome', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="de"
         category="EV"
         groups={groups}
@@ -246,12 +328,13 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
-    expect(screen.getByText('0 übernommen, 1 offen')).toBeTruthy();
+    expect(screen.getByTestId('review-summary').textContent).toBe('0 übernommen, 1 offen');
   });
 
   it('lists array values and opens the row editor from an array-edit button', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={[]}
@@ -278,6 +361,7 @@ describe('ReviewView', () => {
     );
     const entry = screen.getByTestId('array-entry');
     expect(entry.textContent).toContain('3 rows');
+    fireEvent.click(entry);
     fireEvent.click(screen.getByTestId('array-edit'));
     expect(screen.getAllByTestId('rows-row')).toHaveLength(3);
   });
@@ -285,6 +369,7 @@ describe('ReviewView', () => {
   it('uses the singular form for a single row', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={[]}
@@ -315,6 +400,7 @@ describe('ReviewView', () => {
   it('marks a proposal the assist flagged, without changing its state', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -332,6 +418,7 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     const chip = screen.getByTestId('assist-critique-chip');
     expect(chip.textContent).toContain('looks like the C/3 capacity');
     // A second opinion is a prompt to the reviewer, never a decision.
@@ -341,6 +428,7 @@ describe('ReviewView', () => {
   it('leaves a proposal alone when the critique is about another one', () => {
     mount(
       <ReviewView
+        top={<span />}
         lang="en"
         category="EV"
         groups={groups}
@@ -356,6 +444,186 @@ describe('ReviewView', () => {
         {...noArrays}
       />,
     );
+    fireEvent.click(screen.getByTestId('group'));
     expect(screen.queryByTestId('assist-critique-chip')).toBeNull();
+  });
+
+  it('walks the pending queue with next and keeps the list', () => {
+    const two = buildGroups(
+      [
+        { ...groups[0]!.proposals[0]!, attributeId: 'ratedCapacity', factId: 'f1' },
+        {
+          ...groups[0]!.proposals[0]!,
+          attributeId: 'batteryMass',
+          factId: 'f2',
+          value: '412',
+          unit: 'kg',
+        },
+      ],
+      {},
+    );
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={two}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    expect(screen.getByTestId('review-sheet').textContent).toContain('1 of 2');
+    fireEvent.keyDown(screen.getByTestId('review-sheet'), { key: 'ArrowRight' });
+    expect(screen.getByTestId('review-sheet').textContent).toContain('2 of 2');
+    expect(screen.getAllByTestId('group')).toHaveLength(2);
+  });
+
+  it('starts the search from initialSearch, and shows the empty state when nothing matches it', () => {
+    const { unmount } = mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        initialSearch="Rated"
+        {...noArrays}
+      />,
+    );
+    expect(screen.getByTestId('group')).toBeTruthy();
+    unmount();
+
+    mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={groups}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={1}
+        verdict="invalid"
+        onDecide={() => undefined}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        initialSearch="zzz"
+        {...noArrays}
+      />,
+    );
+    expect(screen.queryByTestId('group')).toBeNull();
+    expect(screen.getByText('No proposals for this filter.')).toBeTruthy();
+  });
+
+  it('advances the sheet to the next group when a decision drops the open one from the filter', () => {
+    const onDecide = vi.fn();
+    const proposals = [
+      { ...groups[0]!.proposals[0]!, attributeId: 'ratedCapacity', factId: 'f1' },
+      {
+        ...groups[0]!.proposals[0]!,
+        attributeId: 'batteryMass',
+        factId: 'f2',
+        value: '412',
+        unit: 'kg',
+      },
+    ];
+    const two = buildGroups(proposals, {});
+    const { rerender } = mount(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={two}
+        manual={[]}
+        conflicts={[]}
+        accepted={0}
+        pending={2}
+        verdict="invalid"
+        onDecide={onDecide}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    // `buildGroups` sorts alphabetically by attributeId, so `batteryMass` opens first.
+    fireEvent.click(screen.getAllByTestId('group')[0]!);
+    fireEvent.click(screen.getByTestId('accept'));
+    expect(onDecide).toHaveBeenCalledWith({
+      kind: 'accept',
+      attributeId: 'batteryMass',
+      factId: 'f2',
+    });
+
+    const decided = buildGroups(proposals, {
+      batteryMass: { kind: 'accept', attributeId: 'batteryMass', factId: 'f2' },
+    });
+    rerender(
+      <ReviewView
+        top={<span />}
+        lang="en"
+        category="EV"
+        groups={decided}
+        manual={[]}
+        conflicts={[]}
+        accepted={1}
+        pending={1}
+        verdict="invalid"
+        onDecide={onDecide}
+        onClear={() => undefined}
+        onContinue={() => undefined}
+        {...noArrays}
+      />,
+    );
+    const sheet = screen.getByTestId('review-sheet');
+    expect(sheet.textContent).toContain('Rated capacity');
+    expect(sheet.textContent).toContain('1 of 1');
+  });
+
+  it('toggling ASSIST closes a row sheet that was open, so the assist sheet actually shows', () => {
+    function Harness() {
+      const [assistOpen, setAssistOpen] = useState(false);
+      return (
+        <ReviewView
+          top={<span />}
+          lang="en"
+          category="EV"
+          groups={groups}
+          manual={[]}
+          conflicts={[]}
+          accepted={0}
+          pending={1}
+          verdict="invalid"
+          onDecide={() => undefined}
+          onClear={() => undefined}
+          onContinue={() => undefined}
+          assistPanel={<p>assist panel</p>}
+          assistOpen={assistOpen}
+          onAssistToggle={() => setAssistOpen((o) => !o)}
+          {...noArrays}
+        />
+      );
+    }
+    mount(<Harness />);
+    fireEvent.click(screen.getByTestId('group'));
+    expect(screen.getByTestId('review-sheet')).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId('assist-toggle'));
+    expect(screen.queryByTestId('review-sheet')).toBeNull();
+    expect(screen.getByTestId('assist-sheet').textContent).toContain('assist panel');
   });
 });

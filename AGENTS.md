@@ -226,6 +226,11 @@ so no build is needed before `pnpm test`.
   and the two owner measurements the ADR leaves blank: the `.mcpb` one-click install on macOS and
   Windows, and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md` is a
   deliberately open item.
+- **Workbench redesign: done (2026-09-11).** `apps/web` and `apps/mcp-app` are a fixed-height
+  instrument in the Nothing idiom (dark-first, mono-caps labels, bundled Space Grotesk / Space
+  Mono / Doto) instead of a scrolling document, with six steps (export is now its own screen)
+  and no toasts. `views/shell` is the reusable design system both apps share; see ADR D-040 for
+  the ten places implementation ruled against the approved design.
 - **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
   test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
   supplier via BIBA).

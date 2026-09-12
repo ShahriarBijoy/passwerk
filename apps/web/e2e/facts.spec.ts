@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { fixturePaths, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject, toExport } from './helpers.ts';
 
 // The first proposed fact of lieferantenerklaerung.pdf (in facts.facts order) maps to
 // manufacturerInformation#name.de, a composite leaf holding a free-text string, not a decimal
@@ -9,6 +9,7 @@ import { fixturePaths, PASSPORT_ID, pinClock, startProject } from './helpers.ts'
 // decimal attribute ratedCapacity, whose schema accepts a plain "777". Pinning this id keeps the
 // oracle comparison meaningful instead of relying on whatever proposal happens to render first.
 const PINNED_FACT_ID = 'lieferantenerklaerung.pdf#1:5';
+const PINNED_ATTRIBUTE_ID = 'ratedCapacity';
 
 test('facts: an edited value reaches the draft; a mapped fact keeps its provenance', async ({
   page,
@@ -23,16 +24,18 @@ test('facts: an edited value reaches the draft; a mapped fact keeps its provenan
   await page.getByTestId('facts-status-proposed').click();
   const row = page.locator(`[data-testid="fact-row"][data-fact="${PINNED_FACT_ID}"]`);
   const factId = PINNED_FACT_ID;
-  await row.getByTestId('fact-edit').click();
-  await row.getByTestId('fact-edit-value').fill('777');
-  await row.getByTestId('fact-edit-save').click();
+  await openRow(page, `[data-testid="fact-row"][data-fact="${PINNED_FACT_ID}"]`);
+  await page.getByTestId('fact-edit').click();
+  await page.getByTestId('fact-edit-value').fill('777');
+  await page.getByTestId('fact-edit-save').click();
   await expect(row.getByTestId('fact-edited')).toBeVisible();
 
   // Map the first unmapped fact to nominalVoltage.
   await page.getByTestId('facts-status-unmapped').click();
   const unmapped = page.getByTestId('fact-row').first();
   const unmappedId = await unmapped.getAttribute('data-fact');
-  await unmapped.getByTestId('fact-map').click();
+  await openRow(page, `[data-testid="fact-row"][data-fact="${unmappedId}"]`);
+  await page.getByTestId('fact-map').click();
   await page.getByTestId('add-attribute').click();
   await page.getByRole('option', { name: /nominalVoltage/ }).click();
   await page.getByTestId('add-value-input').fill('400');
@@ -48,12 +51,13 @@ test('facts: an edited value reaches the draft; a mapped fact keeps its provenan
 
   await page.getByTestId('facts-continue').click();
   await page.getByTestId('filter-all').click();
+  await openRow(page, `[data-testid="group"][data-key="${PINNED_ATTRIBUTE_ID}"]`);
   await page
     .locator(`[data-testid="proposal"][data-fact="${factId}"]`)
     .first()
     .getByTestId('accept')
     .click();
-  await page.getByTestId('to-gaps').click();
+  await toExport(page);
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByTestId('export-draft').click(),

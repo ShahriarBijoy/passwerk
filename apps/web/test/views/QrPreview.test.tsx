@@ -19,6 +19,7 @@ describe('QrPreview', () => {
     const img = screen.getByTestId('qr-image') as HTMLImageElement;
     expect(img.src.startsWith('data:image/svg+xml')).toBe(true);
     expect(screen.getByTestId('qr-payload').textContent).toBe('https://p.example/1');
+    expect(screen.getByTestId('qr-copy')).toBeTruthy();
   });
   it('shows the reason in the chosen language when there is no QR', () => {
     mount(

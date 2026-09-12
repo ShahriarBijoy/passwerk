@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fixturePaths, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
+import { fixturePaths, openRow, PASSPORT_ID, pinClock, startProject } from './helpers.ts';
 
 test('decisions and step survive a reload', async ({ page }) => {
   await pinClock(page);
@@ -10,15 +10,19 @@ test('decisions and step survive a reload', async ({ page }) => {
 
   // Facts screen: edit the first fact so there is something to restore after reload.
   const row = page.getByTestId('fact-row').first();
-  await row.getByTestId('fact-edit').click();
-  await row.getByTestId('fact-edit-value').fill('123');
-  await row.getByTestId('fact-edit-save').click();
+  const factId = await row.getAttribute('data-fact');
+  await openRow(page, `[data-testid="fact-row"][data-fact="${factId}"]`);
+  await page.getByTestId('fact-edit').click();
+  await page.getByTestId('fact-edit-value').fill('123');
+  await page.getByTestId('fact-edit-save').click();
   await expect(row.getByTestId('fact-edited')).toBeVisible();
 
   await page.getByTestId('facts-continue').click();
   await page.getByTestId('filter-all').click();
   for (let i = 0; i < 3; i++) {
-    await page.getByTestId('group').nth(i).getByTestId('accept').first().click();
+    const key = await page.getByTestId('group').nth(i).getAttribute('data-key');
+    await openRow(page, `[data-testid="group"][data-key="${key}"]`);
+    await page.getByTestId('accept').first().click();
   }
   const summary = await page.getByTestId('review-summary').textContent();
   // The debounce is 300 ms; the poll only proves the IndexedDB database exists before waiting

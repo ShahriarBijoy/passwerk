@@ -825,7 +825,10 @@ the gaps screen showed 15 of 47 mandatory data points (31.9 %), the figure D-029
 core in Node. The AASX export was saved to the Downloads folder through the host. Asked "what is
 the gap report for the current draft", Claude called `gap_report` on the synced id
 `drf_f2fca2876baa3f01` and answered with the same 15/47 and 32 open required attributes, so the
-model and the user look at one draft. Screenshots: `docs/screenshots/mcp-app-*.png`.
+model and the user look at one draft. That session was recorded in
+`docs/screenshots/mcp-app-*.png`; the workbench redesign replaced those images with
+`docs/screenshots/workbench-*.png`, so the screens above no longer look the way they did, and
+the measurement stands as written.
 
 **Consequences.** Twelve tools. The server tarball and the Docker image carry the workbench
 (`ui/`). CI builds it, runs the Playwright host page, and the pack and docker smokes read the
@@ -1030,3 +1033,162 @@ phase, which stays a checklist item under "Definition of done for v1.0" (`docs/B
      passwerk@personal` today loads the skill but not the tools (`docs/install/codex.md`). The
      tools half of this measurement cannot be recorded until that publish happens.
    - *(owner to fill in — Codex version, session transcript or note)*
+
+## D-040: The workbench is a fixed-height instrument (2026-09-11)
+
+**Context.** Inside Claude Desktop the workbench rendered as a wall of cards the whole chat
+scrolled through. The cause was structural: the MCP Apps SDK's `autoResize` reports the
+document's height to the host, the host grows the iframe to match (up to 5000 px, ADR D-037),
+and the app was laid out as a document — `max-w-6xl`, stacked cards, every list expanded, one
+text size for everything. The design document
+(`docs/superpowers/specs/2026-09-10-workbench-redesign-design.md`) was approved 2026-09-10;
+this ADR records the ten places implementation ruled differently from that draft, across the
+commits on `feat/workbench-redesign` (`git rev-list --count 4837ddf..HEAD` counts them exactly;
+`4837ddf` is the packaging PR's merge commit into `main`, so the count moves every time this
+branch gains a commit and is not repeated here as a number that would immediately go stale).
+
+**Decision.**
+
+1. **The app owns its height.** `--instrument-height` is 640 px inline in a host, `100vh` in
+   the host's fullscreen mode and in the web app; only the list region scrolls; dialogs and the
+   sheet portal into the instrument, not `document.body`, so neither can exceed the frame.
+   `apps/mcp-app/e2e`'s host page records every `ui/notifications/size-changed` it receives and
+   asserts every reported height across all six steps is 640, and that a fullscreen request
+   round-trips through `app.requestDisplayMode`. That six-step assertion lives in
+   `musterwerk.spec.ts` (the one track that walks every step, `toExport` included), not in
+   `context.spec.ts` as spec §10 named it — a placement inconsistency, accepted as minor.
+2. **Six steps.** `Step` gains `'export'`: the verdict is stated once, on its own screen,
+   instead of sharing the gaps screen. `STATE_VERSION` stays 3 — the persisted shape did not
+   change, so a saved `step: 'gaps'` is still valid and `reachable('export')` equals
+   `reachable('gaps')`. The former `GapsExportView` splits into `GapsView` and `ExportView`
+   with the same props divided between them.
+3. **The Nothing idiom is the design system**, with the two adaptations the spec named — mono
+   caps only for labels of one to four words (prose stays sentence case in Space Grotesk), and
+   `--text-disabled` (below WCAG AA by design) reserved for disabled controls and decorative
+   brackets, never for text a person must read — plus what building the screens showed that
+   rule actually costs: the spec's own §6.5 line ("`/ total` in `--text-disabled`") and the
+   plan's verbatim `HeroNumber` code both violated it. `HeroNumber`'s unit renders
+   `text-muted-foreground`, not `--text-disabled`; `Row`'s default tag is `text-foreground` and
+   its dim tag `text-muted-foreground`, keeping two readable emphasis levels instead of one
+   readable and one that fails contrast; `ConfidenceBadge` is `text-foreground` at confidence
+   ≥ 0.7 and `text-muted-foreground` below; every export row's note and the gaps sheet's note
+   are `text-muted-foreground`. Colour otherwise appears only on values; `--accent` red is the
+   one interrupt (invalid, conflict, error).
+4. **Fonts are bundled.** Space Grotesk, Space Mono and Doto (OFL) from a pinned commit of
+   `google/fonts`, subsetted to WOFF2 by `apps/web/scripts/fonts.mjs`, committed with
+   `apps/web/src/fonts/PROVENANCE.md` (source, licence, commit, sha256 of the download and of
+   the output) and verified offline by `apps/web/test/fonts.test.ts`. No font host is
+   contacted; the sovereignty specs are unchanged.
+5. **ReUI was evaluated and not adopted.** Its registry answers `401` for the base primitives
+   without a licence key (`toggle-group`, `toggle`, `scroll-area`, `kbd`, `spinner` all
+   checked 2026-09-10) and its icons are a paid, animated tier; only its blocks are public. The
+   primitives the design needs — `toggle-group`, `toggle`, `scroll-area`, `kbd`, `spinner`, and
+   (decision 8 below) `calendar` and `popover` — come from the official shadcn registry
+   instead, MIT, `https://ui.shadcn.com/r/styles/radix-nova/<name>.json`. `lucide-react` stays
+   the only icon set: no filled icon, no animated icon. `card`, `progress`, `separator`,
+   `sonner` and `next-themes` are removed; nothing in the redesign is a card, `SegmentedBar`
+   replaces `progress`, a `1px --border` replaces `separator`, and the app now follows
+   `prefers-color-scheme` on first load with a manual toggle remembered in `localStorage`
+   rather than `next-themes`.
+6. **No toasts.** `sonner` is gone; every failure that reached a toast is an `InlineStatus`
+   next to its trigger — ingest errors and export failures in the footer's status slot, assist
+   errors inside the assist sheet.
+7. **The sheet's keyboard model.** `Sheet` installs its own document-level `keydown` listener
+   through a React 19 callback ref with a cleanup function (this project's sanctioned
+   alternative to `useEffect`) so `Esc` closes the sheet regardless of where focus landed,
+   including after a nested dialog (`AddValueDialog`, the row editor) returns focus into the
+   sheet; Radix's own `onEscapeKeyDown` is prevented so `onClose` fires exactly once. Under a
+   filter, deciding a row advances the sheet to the row now at the same index (else the
+   previous row, else it closes) rather than stranding on a row the decision just removed from
+   the current view — spec §6.4 describes a continuous open → decide → next loop. One open
+   question this raises — whether the document-level Escape should discard an unsaved in-sheet
+   edit — is recorded once, in the "Open for the owner" list below. Every sheet's own `actions`
+   button is `size="md"` (36 px), not the 44 px a touch target guideline would otherwise suggest:
+   the sheet is capped at 45 % of a 640 px frame (fix wave item 14), so a 44 px action row would
+   have spent an eighth of that budget on the action bar alone.
+8. **The date picker.** An owner finding during the visual review (2026-09-11) asked for a real
+   date picker on the project screen in place of the native `<input type="date">`; the Nothing
+   skill's "no calendar popovers" note and the plan's mono ISO text input yielded to the
+   explicit request. `DateField` (`apps/web/src/views/shell/DateField.tsx`) pairs a
+   Nothing-styled `calendar` + `popover` (react-day-picker, date-fns — the two dependencies this
+   phase adds) with a mono ISO text input that keeps the `placed-on-market` test id, so typing
+   the date still works and the picker is an alternative entry path, not the only one.
+9. **The instrument's overflow guard.** `instrument.spec.ts` asserts
+   `document.documentElement.scrollHeight === clientHeight` and no horizontal overflow at
+   735 × 800 and 1280 × 900, in both themes; it caught a real defect (commit `1eee656`, "the
+   instrument never renders wider than its frame") where a grid rendered 875 px inside a 735 px
+   frame. The fix is a guard, not a one-off patch: the instrument's grid columns are bounded so
+   a future screen cannot reintroduce the same overflow.
+10. **The Doto grayscale hint and the 26 px multi-word hero.** Doto is a dot-matrix font;
+    Windows Chromium rendered each dot with LCD subpixel antialiasing, putting red and blue
+    fringes on what should read as monochrome. `.display` (`apps/web/src/index.css`) promotes
+    the hero to its own compositing layer (`will-change: transform`, `transform:
+    translateZ(0)`) plus `-webkit-font-smoothing: antialiased` for macOS, which makes Chromium
+    fall back to grayscale antialiasing. Separately, spec §4.2's "Doto never renders text
+    longer than one word" is unmet by German verdict phrases ("Kein Pass erforderlich",
+    "Gültig mit Warnungen"): `HeroNumber` drops a multi-word value to 26 px on one line rather
+    than wrapping into a second row of dot matrix. 26 px, not the 28 px first suggested: at
+    28 px the longest German verdict needs 357 px against the 349 px the obligation column
+    offers at 735 px wide, so the string lost its last letters to the ellipsis; at 26 px the
+    longest string on either screen in either language is 332 px, so `truncate` stays a guard
+    that never fires.
+
+**Consequences.** `views/shell` is the component library Phase 7b reuses unchanged; the
+`data-testid` contract survived name-for-name, and the Musterwerk, golden and sovereignty
+assertions are the proof that the redesign moved pixels and not results. `docs/screenshots/
+workbench-*.png` (produced by the guarded `apps/web/e2e/screenshots.spec.ts`, `SCREENSHOTS=1`)
+replace the Phase 7b `mcp-app-0*.png` screenshots referenced in D-037.
+
+*Open for the owner* (deferred minors and questions carried from the task-by-task rulings,
+none blocking, none touching a verdict, a finding or an export byte):
+
+- Font `PROVENANCE.md`'s table follows the brief's sample shape (Family + Ref) rather than the
+  design document's prose, and its subset includes U+2212 beyond the glyph list the spec named.
+- The start-over `AlertDialog`'s placeholder text uses `--text-disabled` (the plan's own class
+  string); it also carries an inert `size` prop on `AlertDialogContent`; its focus indicator is
+  border-only (an accessibility note); two Biome `noImportantStyles` warnings sit on the
+  reduced-motion block.
+- The reducer's `Step` report undercounts keys (51 vs. 55 in the generated summary); its new
+  test case sits inside the `facts/edits` describe block rather than its own.
+- `Row`'s `data-*` guard against an unknown tag is compile-time only; `SegmentedBar`'s cells are
+  not `aria-hidden`.
+- `QrPreview`'s "Copied" status never auto-dismisses.
+- The documents screen's "0 proposals derived" line shows even when every uploaded file
+  errored, which reads as "we looked and found nothing" rather than "nothing could be read".
+- The facts sheet's "Proposed for: proposed" copy is redundant — `FactStatus` carries no
+  separate target to name.
+- Review's `MANUAL` and `ROWS` group headers are permanently open with a no-op toggle;
+  `assist-critique-chip` prose renders in `text-warning`, one step stronger than the other
+  sheet prose.
+- The fix wave removed nine dead i18n keys; `App.tsx`'s top-bar JSX could be pulled into its own
+  component.
+- `apps/mcp-app/dist-host` has been tracked since `eee1cec` (Phase 7b) and was re-staged by
+  this branch's `build:host` runs; whether it should be gitignored is a separate chore this ADR
+  does not resolve.
+- The gaps sheet's row-value column is ragged across differently-named attributes — parked, it
+  needs an owner design decision, not a default; group names under `BY OWNER` may truncate
+  (accepted, per spec §5.1's `Row` row: "name truncates"); the stepper shows only the
+  current step's name between 640 and 920 px for German labels (accepted as an improvement on
+  spec §3.1's "numbers only under 640 px").
+- The project screen's resume state renders two Doto heroes side by side (the resume count and
+  the obligation verdict), which decision 10 above did not consolidate into one.
+- Decision 7's document-level Escape closes the sheet even while an in-sheet text input has
+  focus, discarding an unsaved edit; the alternative (Escape blurs the input first) was not
+  built because it is unclear which behaviour a reviewer mid-edit actually wants.
+
+## D-041: Invalid date edits invalidate the project (2026-09-12)
+
+**Context.** PR #32's date picker kept incomplete text locally while obligations continued
+using the last valid date. Core's obligation checker accepts date strings and compares them;
+passing an incomplete string through unchanged would not solve the mismatch.
+
+**Decision.** Every typed date reaches project state. The web workflow checks calendar validity
+before deriving obligations and metadata. For an invalid supplied date it requests core's existing
+missing-date result, omitting both the date and the `asOf` fallback, and withholds project metadata
+so Continue stays disabled, including when a voluntary category is selected. Clearing the optional
+date retains the existing `asOf` fallback. The picker and workflow share the same calendar parser.
+No new legal explanation is authored and core's contract is unchanged.
+
+The same review found that the sheet's entrance transform could cover the footer during its
+200 ms animation. The list wrapper now clips painting and hit testing; the browser regression
+checks footer reachability at animation start and layout after completion.

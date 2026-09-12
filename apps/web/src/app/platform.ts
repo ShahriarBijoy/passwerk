@@ -43,7 +43,42 @@ export interface Platform {
   pdfWorkerSrc?: string;
   /** Absent means no assist: the panel does not render and no endpoint is bundled. */
   assist?: AssistPlatform;
+  /** Web app only: the reviewer's theme choice. Absent in an MCP host, which owns the theme. */
+  theme?: { current(): 'dark' | 'light'; set(theme: 'dark' | 'light'): void };
+  /** MCP host only: fullscreen when the host offers it. Absent in the web app. */
+  display?: {
+    available(): ('inline' | 'fullscreen')[];
+    current(): 'inline' | 'fullscreen';
+    request(mode: 'inline' | 'fullscreen'): Promise<void>;
+  };
 }
+
+const THEME_KEY = 'passwerk.theme';
+
+const readTheme = (): 'dark' | 'light' => {
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v === 'dark' || v === 'light') return v;
+  } catch {
+    /* storage blocked: follow the system */
+  }
+  return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+};
+
+const domTheme = (): 'dark' | 'light' =>
+  document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
+export const applyTheme = (theme: 'dark' | 'light') =>
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+
+// Whether `set()` has run in this session. Before it, `current()` reads storage (falling back to
+// the system preference); after it, it reads the DOM directly. `set()` already applies the theme
+// to the DOM unconditionally, even when `localStorage.setItem` throws (a blocked or full store),
+// so reading storage back in `current()` after that point could disagree with the toggle a
+// reviewer just clicked - the DOM is the one place the choice is guaranteed to have landed.
+let themeSet = false;
 
 export const browserPlatform: Platform = {
   download: downloadFile,
@@ -56,5 +91,17 @@ export const browserPlatform: Platform = {
     loadKey: loadAssistKey,
     saveKey: saveAssistKey,
     clearKey: clearAssistKey,
+  },
+  theme: {
+    current: () => (themeSet ? domTheme() : readTheme()),
+    set(theme) {
+      try {
+        localStorage.setItem(THEME_KEY, theme);
+      } catch {
+        /* keep in DOM only */
+      }
+      applyTheme(theme);
+      themeSet = true;
+    },
   },
 };

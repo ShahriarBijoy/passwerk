@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyMappings, getSample, validate, validateSchema } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
-import { CLOCK, pinClock } from './helpers.ts';
+import { CLOCK, openRow, openSection, pinClock } from './helpers.ts';
 
 test('row editor: rows saved on ev-valid equal core for the same draft', async ({ page }) => {
   const parsed = validateSchema(getSample('ev-valid'));
@@ -23,11 +23,10 @@ test('row editor: rows saved on ev-valid equal core for the same draft', async (
 
   await pinClock(page);
   await page.goto('/');
+  await openSection(page, 'import');
   await page.getByTestId('import-draft').setInputFiles(path);
-  await page
-    .locator('[data-testid="array-entry"][data-attribute="criticalRawMaterials"]')
-    .getByTestId('array-edit')
-    .click();
+  await openRow(page, '[data-testid="array-entry"][data-attribute="criticalRawMaterials"]');
+  await page.getByTestId('array-edit').click();
   // count() does not auto-wait; without this the dialog may not have mounted yet, the removal
   // loop below would be skipped, and the later unscoped rows-field-name fill would hit a
   // strict-mode violation against more than one row.
@@ -54,6 +53,7 @@ test('row editor: rows saved on ev-valid equal core for the same draft', async (
 
   await page.getByTestId('to-gaps').click();
   await expect(page.getByTestId('verdict')).toHaveAttribute('data-verdict', expected.verdict);
+  await page.getByTestId('to-export').click();
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByTestId('export-draft').click(),

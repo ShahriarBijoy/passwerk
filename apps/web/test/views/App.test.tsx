@@ -59,11 +59,19 @@ describe('App', () => {
     fireEvent.click(screen.getByTestId('project-continue'));
     expect(store.getState().step).toBe('upload');
     expect(store.getState().project?.batteryType).toBe('EV');
-    expect(screen.getByText('Upload documents')).toBeTruthy();
+    expect(
+      screen.getByText('PDF, XLSX, DOCX, CSV or TXT. Files never leave the browser.'),
+    ).toBeTruthy();
   });
   it('shows the storage notice', () => {
     mount(<App store={createStore(initialState)} platform={platform} storageNotice="version" />);
     expect(screen.getByTestId('storage-notice')).toBeTruthy();
+  });
+
+  it('renders the storage notice inside the instrument footer, not above the frame', () => {
+    mount(<App store={createStore(initialState)} platform={platform} storageNotice="version" />);
+    const footer = screen.getByTestId('storage-notice').closest('[data-region="footer"]');
+    expect(footer).toBeTruthy();
   });
 
   it('drops an upload that finishes after the project was replaced', async () => {
@@ -112,7 +120,7 @@ describe('App', () => {
     expect(continueButton.textContent).toContain('facts');
     fireEvent.click(continueButton);
     expect(store.getState().step).toBe('facts');
-    expect(screen.getByText('Extracted facts')).toBeTruthy();
+    expect(screen.getByTestId('facts-count')).toBeTruthy();
   });
 
   it('the facts-screen map dialog passes existing array rows through arrayRows', () => {
@@ -142,6 +150,7 @@ describe('App', () => {
     });
     store.dispatch({ type: 'goTo', step: 'facts', at: AT });
     mount(<App store={store} platform={platform} />);
+    fireEvent.click(screen.getByTestId('fact-row'));
     fireEvent.click(screen.getByTestId('fact-map'));
     chooseAttribute('criticalRawMaterials');
     // Without `arrayRows` wired through, the row editor would open with a single empty row
@@ -236,6 +245,108 @@ describe('App', () => {
     expect(urnInput.value).not.toBe(firstUrn);
   });
 
+  it('shows six steps and reaches export exactly when gaps is reachable', () => {
+    const store = createStore(initialState);
+    mount(<App store={store} platform={platform} />);
+    expect(screen.getAllByTestId(/^step-/)).toHaveLength(6);
+    expect((screen.getByTestId('step-export') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId('step-gaps') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('names the theme it switches to rather than drawing a glyph the bundled fonts lack', () => {
+    const set = vi.fn();
+    mount(
+      <App
+        store={createStore(initialState)}
+        platform={{ ...platform, theme: { current: () => 'dark', set } }}
+      />,
+    );
+    // The subset in `scripts/fonts.mjs` carries the glyphs the shell draws, and a sun and a moon
+    // are not among them, so the control used to fall back to whatever the system had and read
+    // as a stray dot. A mono caps word is a control the way `EN` beside it is.
+    const toggle = screen.getByTestId('theme-toggle');
+    expect(toggle.textContent).toBe('Hell');
+    fireEvent.click(toggle);
+    expect(set).toHaveBeenCalledWith('light');
+  });
+
+  it('shows the fullscreen control only when the platform offers it', () => {
+    const request = vi.fn(async () => undefined);
+    const { unmount } = mount(<App store={createStore(initialState)} platform={platform} />);
+    expect(screen.queryByTestId('display-toggle')).toBeNull();
+    unmount();
+    mount(
+      <App
+        store={createStore(initialState)}
+        platform={{
+          ...platform,
+          display: { available: () => ['inline', 'fullscreen'], current: () => 'inline', request },
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('display-toggle'));
+    expect(request).toHaveBeenCalledWith('fullscreen');
+  });
+
+  it('shows an export exception on the export screen through the same notice mechanism', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:export-error', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    store.dispatch({ type: 'goTo', step: 'export', at: AT });
+    const download = vi.fn(() => {
+      throw new Error('disk full');
+    });
+    mount(<App store={store} platform={{ ...platform, download }} />);
+    fireEvent.click(screen.getByTestId('export-aasJson'));
+    expect(screen.getByTestId('shell-error').textContent).toContain('disk full');
+  });
+
+  it('clears a stale shell error when the reviewer navigates to another step', () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:export-error', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    store.dispatch({ type: 'goTo', step: 'export', at: AT });
+    const download = vi.fn(() => {
+      throw new Error('disk full');
+    });
+    mount(<App store={store} platform={{ ...platform, download }} />);
+    fireEvent.click(screen.getByTestId('export-aasJson'));
+    expect(screen.getByTestId('shell-error').textContent).toContain('disk full');
+    fireEvent.click(screen.getByTestId('step-gaps'));
+    expect(screen.queryByTestId('shell-error')).toBeNull();
+  });
+
+  it('reports an ingest failure inline, not as a toast', async () => {
+    ingestFiles.mockRejectedValueOnce(new Error('body too large'));
+    const store = createStore(initialState);
+    mount(<App store={store} platform={platform} />);
+    fireEvent.click(screen.getByTestId('project-continue'));
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('file-input'), {
+        target: { files: [new File(['a'], 'a.csv', { type: 'text/csv' })] },
+      });
+    });
+    expect(screen.getByTestId('upload-error').textContent).toContain('body too large');
+  });
+
   it('resume stays on the project step when the derived meta is null', () => {
     const store = createStore(initialState);
     // PORTABLE resolves no obligations category and the project has no manual category either,
@@ -249,6 +360,27 @@ describe('App', () => {
     // Default state language is 'de'.
     fireEvent.click(screen.getByText('Fortsetzen'));
     expect(store.getState().step).toBe('project');
+  });
+
+  it('"fix in review" prefills the search, but leaving and returning to review clears it', () => {
+    const store = reviewStore();
+    store.dispatch({ type: 'goTo', step: 'gaps', at: AT });
+    mount(<App store={store} platform={platform} />);
+
+    const [firstGapItem] = screen.getAllByTestId('gap-item');
+    if (!firstGapItem) throw new Error('expected at least one gap item');
+    fireEvent.click(firstGapItem);
+    fireEvent.click(screen.getByTestId('gaps-fix'));
+    expect(store.getState().step).toBe('review');
+    const search = screen.getByPlaceholderText('Suchen …') as HTMLInputElement;
+    expect(search.value).not.toBe('');
+
+    // Leave review (the stepper) and come back: the earlier fix-in-review search must not
+    // still be prefilled for this unrelated arrival.
+    fireEvent.click(screen.getByTestId('step-facts'));
+    fireEvent.click(screen.getByTestId('step-review'));
+    const searchAgain = screen.getByPlaceholderText('Suchen …') as HTMLInputElement;
+    expect(searchAgain.value).toBe('');
   });
 });
 

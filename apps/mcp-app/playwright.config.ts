@@ -21,10 +21,7 @@ export default defineConfig({
     baseURL: 'http://localhost:4174/',
     browserName: 'chromium',
     trace: 'retain-on-failure',
-    // Tall enough for the whole 1800 px workbench iframe: a fixed-position dialog inside an
-    // iframe cannot be scrolled into a shorter outer viewport, and a real host sizes the view
-    // to what the app requests.
-    viewport: { width: 1280, height: 2000 },
+    viewport: { width: 1280, height: 900 },
   },
   webServer: [
     {

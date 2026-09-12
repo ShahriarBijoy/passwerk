@@ -1,6 +1,6 @@
 import { buildGs1DigitalLink, checkObligations } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
-import { CLOCK, pinClock } from './helpers.ts';
+import { CLOCK, openSection, pinClock } from './helpers.ts';
 
 test('industrial battery: threshold, voluntary category, timeline as core', async ({ page }) => {
   await pinClock(page);
@@ -64,6 +64,7 @@ test('GS1 identifier: QR preview payload equals core, wrong check digit blocks',
 }) => {
   await pinClock(page);
   await page.goto('/');
+  await openSection(page, 'identifier');
   await page.getByTestId('identifier-mode-gs1').click();
   await page.getByTestId('identifier-resolver').fill('https://id.example.com');
   await page.getByTestId('identifier-gtin').fill('96385075');

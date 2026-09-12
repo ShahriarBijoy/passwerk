@@ -9,7 +9,7 @@ import {
   validateSchema,
 } from '@passwerk/core';
 import { expect, test } from '@playwright/test';
-import { CLOCK, pinClock } from './helpers.ts';
+import { CLOCK, openSection, pinClock } from './helpers.ts';
 
 for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
   test(`golden track: ${name}`, async ({ page }) => {
@@ -20,10 +20,12 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
 
     await pinClock(page);
     await page.goto('/');
+    await openSection(page, 'import');
     await page.getByTestId('import-draft').setInputFiles(path);
     await expect(page.getByTestId('review-summary')).toBeVisible();
     await page.getByTestId('to-gaps').click();
     await expect(page.getByTestId('verdict')).toHaveAttribute('data-verdict', expected.verdict);
+    await page.getByTestId('gaps-view-findings').click();
     const shown = await page
       .getByTestId('finding')
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-rule')).sort());
@@ -33,6 +35,7 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
     // carrierError for a urn: id instead of rendering qr-image/qr-download (the HTML sheet
     // itself needs no https id).
     if (validateSchema(draft).draft !== undefined) {
+      await page.getByTestId('to-export').click();
       const [download] = await Promise.all([
         page.waitForEvent('download'),
         page.getByTestId('export-html').click(),

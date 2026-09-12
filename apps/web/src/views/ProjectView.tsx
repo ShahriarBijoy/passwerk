@@ -1,10 +1,9 @@
 import type { BatteryType, Role } from '@passwerk/core';
 import { BATTERY_TYPES, ROLES } from '@passwerk/core';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -12,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { type Key, type LangText, type Language, pick, t } from '../i18n/index.ts';
 import type { ProjectDerived } from '../workflow/derive/project.ts';
 import {
@@ -20,8 +20,14 @@ import {
   type IdentifierMode,
   type Project,
 } from '../workflow/project.ts';
-import { ObligationsCard } from './parts/ObligationsCard.tsx';
+import { ObligationsPanel } from './parts/ObligationsPanel.tsx';
 import { QrPreview } from './parts/QrPreview.tsx';
+import { DateField } from './shell/DateField.tsx';
+import { Field } from './shell/Field.tsx';
+import { GroupHeader } from './shell/GroupHeader.tsx';
+import { HeroNumber } from './shell/HeroNumber.tsx';
+import { InlineStatus } from './shell/InlineStatus.tsx';
+import { Instrument } from './shell/Instrument.tsx';
 
 export interface ProjectViewProps {
   lang: Language;
@@ -32,6 +38,8 @@ export interface ProjectViewProps {
   /** The placeholder draft URN generated at mount; reused when switching back into draft mode. */
   draftUrn: string;
   resume?: { files: string[]; updatedAt: string };
+  /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
+  notice?: ReactNode;
   onChange(project: Project): void;
   onContinue(): void;
   onImport(text: string): { ok: true } | { ok: false; message: LangText };
@@ -82,14 +90,13 @@ function IdField({
   onValue: (value: string) => void;
 }) {
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
+    <Field label={label} htmlFor={id}>
       <Input id={id} data-testid={id} value={value} onChange={(e) => onValue(e.target.value)} />
-    </div>
+    </Field>
   );
 }
 
-export function ProjectView(props: ProjectViewProps) {
+export function ProjectView(props: ProjectViewProps & { top: ReactNode; children?: ReactNode }) {
   const {
     lang,
     project,
@@ -102,6 +109,8 @@ export function ProjectView(props: ProjectViewProps) {
     onImport,
     onResume,
     onReset,
+    top,
+    children,
   } = props;
   const [importError, setImportError] = useState<string | null>(null);
   const identifier = project.identifier;
@@ -135,39 +144,68 @@ export function ProjectView(props: ProjectViewProps) {
     }
   };
 
+  const identifierInvalid = !derived.identifier.ok;
+  const [openSection, setOpenSection] = useState<'identifier' | 'import' | null>(null);
+  const identifierOpen = openSection === 'identifier' || identifierInvalid;
+  const importOpen = openSection === 'import';
+  const toggleSection = (s: 'identifier' | 'import') => setOpenSection((o) => (o === s ? null : s));
+
   return (
-    <div className="grid gap-4">
-      <h2 className="font-semibold text-lg">{t(lang, 'project.title')}</h2>
-
-      {resume && (
-        <Card data-testid="resume-card">
-          <CardHeader>
-            <CardTitle>{t(lang, 'start.resume.title')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <span className="text-muted-foreground">
-              {t(lang, 'start.resume.files', { count: resume.files.length })}
+    <Instrument
+      top={top}
+      notice={props.notice}
+      hero={
+        resume ? (
+          <div className="flex w-full items-end justify-between gap-4" data-testid="resume-card">
+            <HeroNumber
+              label={t(lang, 'start.resume.title')}
+              value={String(resume.files.length)}
+              unit={t(lang, 'hero.documents').toLowerCase()}
+            />
+            <span className="flex items-center gap-2 pb-1">
+              <span className="label">
+                {t(lang, 'start.resume.saved', {
+                  at: new Date(resume.updatedAt).toLocaleString(lang),
+                })}
+              </span>
+              <Button variant="primary" size="sm" onClick={onResume}>
+                {t(lang, 'start.resume.button')}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onReset}>
+                {t(lang, 'app.startOver')}
+              </Button>
             </span>
-            <span className="text-muted-foreground">
-              {t(lang, 'start.resume.saved', {
-                at: new Date(resume.updatedAt).toLocaleString(lang),
-              })}
-            </span>
-            <Button onClick={onResume}>{t(lang, 'start.resume.button')}</Button>
-            <Button variant="outline" onClick={onReset}>
-              {t(lang, 'app.startOver')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(lang, 'project.battery.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="battery-type">{t(lang, 'project.batteryType')}</Label>
+          </div>
+        ) : (
+          // The obligation verdict is this screen's one hero (spec 6.1). The battery type is a
+          // value, so it reads as a value: mono 14 px, not a second Doto display that competes
+          // with the verdict for the eye - and "Elektrofahrzeugbatterie" is 23 characters of
+          // dot matrix, which is not what Doto is for either.
+          <div data-testid="project-hero">
+            <div className="label">{t(lang, 'project.title')}</div>
+            <div className="font-mono text-[14px] text-display">
+              {t(lang, `project.batteryType.${project.batteryType}` as Key)}
+            </div>
+          </div>
+        )
+      }
+      footer={
+        <>
+          <span className="flex-1" />
+          <Button
+            variant="primary"
+            data-testid="project-continue"
+            disabled={derived.meta === null}
+            onClick={onContinue}
+          >
+            {t(lang, isNew ? 'project.create' : 'project.continue')} →
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-6 py-2 sm:grid-cols-[330px_1fr]">
+        <div className="grid content-start gap-4 sm:border-r sm:border-border sm:pr-6">
+          <Field label={t(lang, 'project.batteryType')} htmlFor="battery-type">
             <Select
               value={project.batteryType}
               onValueChange={(v) => onChange({ ...project, batteryType: v as BatteryType })}
@@ -183,9 +221,8 @@ export function ProjectView(props: ProjectViewProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="role">{t(lang, 'project.role')}</Label>
+          </Field>
+          <Field label={t(lang, 'project.role')} htmlFor="role">
             <Select
               value={project.role}
               onValueChange={(v) => onChange({ ...project, role: v as Role })}
@@ -201,177 +238,172 @@ export function ProjectView(props: ProjectViewProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="energy-kwh">{t(lang, 'project.energyKwh')}</Label>
-            <Input
-              id="energy-kwh"
-              data-testid="energy-kwh"
-              inputMode="decimal"
-              value={project.energyKwh ?? ''}
-              onChange={(e) => onEnergyChange(e.target.value)}
-            />
-            <p className="text-muted-foreground text-xs">{t(lang, 'project.energyKwh.hint')}</p>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="placed-on-market">{t(lang, 'project.placedOnMarketDate')}</Label>
-            <Input
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field
+              label={t(lang, 'project.energyKwh')}
+              htmlFor="energy-kwh"
+              hint={t(lang, 'project.energyKwh.hint')}
+            >
+              <Input
+                id="energy-kwh"
+                data-testid="energy-kwh"
+                inputMode="decimal"
+                value={project.energyKwh ?? ''}
+                onChange={(e) => onEnergyChange(e.target.value)}
+              />
+            </Field>
+            <DateField
+              lang={lang}
               id="placed-on-market"
               data-testid="placed-on-market"
-              type="date"
+              label={t(lang, 'project.placedOnMarketDate')}
               value={project.placedOnMarketDate ?? ''}
-              onChange={(e) => onDateChange(e.target.value)}
+              onChange={onDateChange}
             />
           </div>
-        </CardContent>
-      </Card>
-
-      <ObligationsCard
-        lang={lang}
-        result={derived.obligations}
-        {...(project.manualCategory !== undefined
-          ? { manualCategory: project.manualCategory }
-          : {})}
-        onManualCategory={(c) => {
-          const { manualCategory: _dropped, ...rest } = project;
-          onChange(c ? { ...rest, manualCategory: c } : rest);
-        }}
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(lang, 'project.identifier.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-3">
-            <div
-              role="radiogroup"
-              aria-label={t(lang, 'project.identifier.title')}
-              className="flex flex-wrap gap-2"
-            >
-              {IDENTIFIER_MODES.map((mode) => {
-                const active = mode === identifier.mode;
-                return (
-                  <Button
-                    key={mode}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    variant={active ? 'default' : 'outline'}
-                    size="sm"
-                    data-testid={`identifier-mode-${mode}`}
-                    onClick={() => {
-                      if (mode !== identifier.mode) onIdentifierModeChange(mode);
-                    }}
-                  >
+          <div>
+            <GroupHeader
+              name={`${t(lang, 'project.identifier.section')} · ${t(lang, `project.identifier.mode.${identifier.mode}` as Key)}`}
+              count=""
+              open={identifierOpen}
+              onToggle={() => toggleSection('identifier')}
+              data-testid="section-identifier"
+            />
+            <div hidden={!identifierOpen} className="grid gap-3 py-3">
+              <ToggleGroup
+                type="single"
+                className="w-full flex-wrap"
+                value={identifier.mode}
+                aria-label={t(lang, 'project.identifier.title')}
+                onValueChange={(mode) => {
+                  if (mode && mode !== identifier.mode)
+                    onIdentifierModeChange(mode as IdentifierMode);
+                }}
+              >
+                {IDENTIFIER_MODES.map((mode) => (
+                  <ToggleGroupItem key={mode} value={mode} data-testid={`identifier-mode-${mode}`}>
                     {t(lang, `project.identifier.mode.${mode}` as Key)}
-                  </Button>
-                );
-              })}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              {identifier.mode === 'gs1' && (
+                <>
+                  <IdField
+                    id="identifier-resolver"
+                    label={t(lang, 'project.identifier.resolverBase')}
+                    value={identifier.resolverBase}
+                    onValue={(v) =>
+                      onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
+                    }
+                  />
+                  <IdField
+                    id="identifier-gtin"
+                    label={t(lang, 'project.identifier.gtin')}
+                    value={identifier.gtin}
+                    onValue={(v) =>
+                      onChange({ ...project, identifier: { ...identifier, gtin: v } })
+                    }
+                  />
+                  <IdField
+                    id="identifier-serial"
+                    label={t(lang, 'project.identifier.serial')}
+                    value={identifier.serial}
+                    onValue={(v) =>
+                      onChange({ ...project, identifier: { ...identifier, serial: v } })
+                    }
+                  />
+                </>
+              )}
+              {identifier.mode === 'gs1-giai' && (
+                <>
+                  <IdField
+                    id="identifier-resolver"
+                    label={t(lang, 'project.identifier.resolverBase')}
+                    value={identifier.resolverBase}
+                    onValue={(v) =>
+                      onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
+                    }
+                  />
+                  <IdField
+                    id="identifier-giai"
+                    label={t(lang, 'project.identifier.giai')}
+                    value={identifier.giai}
+                    onValue={(v) =>
+                      onChange({ ...project, identifier: { ...identifier, giai: v } })
+                    }
+                  />
+                </>
+              )}
+              {identifier.mode === 'https' && (
+                <IdField
+                  id="identifier-uri"
+                  label={t(lang, 'project.identifier.uri')}
+                  value={identifier.uri}
+                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, uri: v } })}
+                />
+              )}
+              {identifier.mode === 'draft' && (
+                <>
+                  <IdField
+                    id="identifier-urn"
+                    label={t(lang, 'project.identifier.urn')}
+                    value={identifier.urn}
+                    onValue={(v) => onChange({ ...project, identifier: { ...identifier, urn: v } })}
+                  />
+                  <p className="text-[12px] text-muted-foreground">
+                    {t(lang, 'project.identifier.draft.hint')}
+                  </p>
+                </>
+              )}
+              {!derived.identifier.ok && (
+                <InlineStatus
+                  kind="error"
+                  text={pick(lang, derived.identifier.message)}
+                  data-testid="identifier-error"
+                />
+              )}
+              <QrPreview lang={lang} carrier={derived.carrier} />
             </div>
-            {identifier.mode === 'gs1' && (
-              <>
-                <IdField
-                  id="identifier-resolver"
-                  label={t(lang, 'project.identifier.resolverBase')}
-                  value={identifier.resolverBase}
-                  onValue={(v) =>
-                    onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
-                  }
-                />
-                <IdField
-                  id="identifier-gtin"
-                  label={t(lang, 'project.identifier.gtin')}
-                  value={identifier.gtin}
-                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, gtin: v } })}
-                />
-                <IdField
-                  id="identifier-serial"
-                  label={t(lang, 'project.identifier.serial')}
-                  value={identifier.serial}
-                  onValue={(v) =>
-                    onChange({ ...project, identifier: { ...identifier, serial: v } })
-                  }
-                />
-              </>
-            )}
-            {identifier.mode === 'gs1-giai' && (
-              <>
-                <IdField
-                  id="identifier-resolver"
-                  label={t(lang, 'project.identifier.resolverBase')}
-                  value={identifier.resolverBase}
-                  onValue={(v) =>
-                    onChange({ ...project, identifier: { ...identifier, resolverBase: v } })
-                  }
-                />
-                <IdField
-                  id="identifier-giai"
-                  label={t(lang, 'project.identifier.giai')}
-                  value={identifier.giai}
-                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, giai: v } })}
-                />
-              </>
-            )}
-            {identifier.mode === 'https' && (
-              <IdField
-                id="identifier-uri"
-                label={t(lang, 'project.identifier.uri')}
-                value={identifier.uri}
-                onValue={(v) => onChange({ ...project, identifier: { ...identifier, uri: v } })}
+            <GroupHeader
+              name={t(lang, 'project.import.section')}
+              count=""
+              open={importOpen}
+              onToggle={() => toggleSection('import')}
+              data-testid="section-import"
+            />
+            <div hidden={!importOpen} className="grid gap-2 py-3">
+              <Input
+                data-testid="import-draft"
+                type="file"
+                accept="application/json,.json"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  // Clearing the input makes re-picking the same path fire `change` again, so a
+                  // corrected file of the same name can be imported without a detour.
+                  e.target.value = '';
+                  void onFile(file);
+                }}
               />
-            )}
-            {identifier.mode === 'draft' && (
-              <>
-                <IdField
-                  id="identifier-urn"
-                  label={t(lang, 'project.identifier.urn')}
-                  value={identifier.urn}
-                  onValue={(v) => onChange({ ...project, identifier: { ...identifier, urn: v } })}
-                />
-                <p className="text-muted-foreground text-xs">
-                  {t(lang, 'project.identifier.draft.hint')}
-                </p>
-              </>
-            )}
-            {!derived.identifier.ok && (
-              <p className="text-destructive text-sm" data-testid="identifier-error">
-                {pick(lang, derived.identifier.message)}
-              </p>
-            )}
+              {importError && (
+                <InlineStatus kind="error" text={importError} data-testid="import-error" />
+              )}
+            </div>
           </div>
-          <QrPreview lang={lang} carrier={derived.carrier} />
-        </CardContent>
-      </Card>
-
-      <Button data-testid="project-continue" disabled={derived.meta === null} onClick={onContinue}>
-        {t(lang, isNew ? 'project.create' : 'project.continue')}
-      </Button>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(lang, 'start.import')}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <Input
-            data-testid="import-draft"
-            type="file"
-            accept="application/json,.json"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              // Clearing the input makes re-picking the same path fire `change` again, so a
-              // corrected file of the same name can be imported without a detour.
-              e.target.value = '';
-              void onFile(file);
-            }}
-          />
-          {importError && (
-            <p className="text-destructive text-sm" data-testid="import-error">
-              {importError}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+        <ObligationsPanel
+          lang={lang}
+          result={derived.obligations}
+          {...(project.manualCategory !== undefined
+            ? { manualCategory: project.manualCategory }
+            : {})}
+          onManualCategory={(c) => {
+            const { manualCategory: _dropped, ...rest } = project;
+            onChange(c ? { ...rest, manualCategory: c } : rest);
+          }}
+        />
+      </div>
+      {children}
+    </Instrument>
   );
 }
