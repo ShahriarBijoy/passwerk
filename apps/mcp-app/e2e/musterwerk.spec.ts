@@ -18,6 +18,10 @@ import {
  * verdict the screen shows.
  */
 test('Musterwerk track inside the MCP App iframe', async ({ page }) => {
+  // Every accepted proposal opens and closes a sheet through the host round trip. Measured at
+  // 1.1 min locally and 2.0 min on the ubuntu runner, which is the whole default budget, so
+  // the run on the pull request for #37 timed out at the same point twice. Triple it.
+  test.slow();
   const expected = await expectedMusterwerk();
   const frame = await openWorkbench(page, 'none');
   await startProject(frame, PASSPORT_ID);
