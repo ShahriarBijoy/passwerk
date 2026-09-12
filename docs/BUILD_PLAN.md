@@ -487,8 +487,8 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
   and Windows. See ADR D-039 for the corrections made during implementation, including
   `mcpb` 2.1.2's required `prompts[].text`. Two owner measurements are still outstanding and
   recorded blank in D-039: the `.mcpb` one-click install in Claude Desktop on macOS and Windows,
-  and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md` remains a
-  deliberately open item.
+  and `codex plugin add passwerk@personal` in a new Codex session. `SECURITY.md`, left open by
+  D-039, was written on 2026-09-10.
 
 ### Phase 8 — Proof & pilot (ongoing)
 - Run emitted AASX through AASX Package Explorer and the BatteryPass-Ready public test environment; record reports in `CONFORMANCE.md`.
@@ -505,7 +505,7 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 - [ ] Gap report with legal citations in DE and EN
 - [ ] `apps/web` runs the whole workflow client-side; MCP App renders in Claude Desktop
 - [ ] One pilot / case study (even anonymized) or a recorded run on realistic fixtures
-- [ ] Apache-2.0, `PROVENANCE.md`, `SECURITY.md`
+- [x] Apache-2.0, `PROVENANCE.md`, `SECURITY.md`
 
 ---
 
