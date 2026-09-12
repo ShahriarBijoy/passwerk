@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GapBucket, type GapStatus, getSample, type MappingProposal } from '@passwerk/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { proposalLine, sourceText } from '../src/tools/suggestMappings.ts';
 import { call, connect, memoryFileSystem } from './harness.ts';
 
 const FIX = join(import.meta.dirname, '..', '..', 'core', 'test', 'fixtures', 'musterwerk');
@@ -77,6 +78,60 @@ describe('suggest_mappings detail and attributeIds', () => {
       expect(r.text).toContain(p.source[0]?.file ?? '');
     }
     for (const line of bulletLines) expect(line).toContain('·');
+  });
+
+  it('detail: full renders page and cell from real Musterwerk provenance, in both languages', async () => {
+    const en = await suggest({ detail: 'full' });
+    const de = await suggest({ detail: 'full', lang: 'de' });
+    expect(en.isError).toBe(false);
+
+    const withPage = en.structured.proposals.find((p) =>
+      p.source.some((s) => s.page !== undefined),
+    );
+    expect(
+      withPage,
+      'expected a Musterwerk proposal whose source has a page (the PDF/CSV/XLSX fixtures all carry one)',
+    ).toBeDefined();
+    const page = withPage?.source.find((s) => s.page !== undefined)?.page;
+    expect(en.text).toContain(`· page ${page} ·`);
+    expect(de.text).toContain(`· Seite ${page} ·`);
+
+    const withCell = en.structured.proposals.find((p) =>
+      p.source.some((s) => s.cell !== undefined),
+    );
+    expect(
+      withCell,
+      'expected a Musterwerk proposal whose source has a cell (the XLSX/CSV fixtures carry one)',
+    ).toBeDefined();
+    const cell = withCell?.source.find((s) => s.cell !== undefined)?.cell;
+    expect(en.text).toContain(`cell ${cell}`);
+    expect(de.text).toContain(`Zelle ${cell}`);
+  });
+
+  it('joins several sources with "; " (unit test on the exported renderer: no Musterwerk proposal has two sources)', () => {
+    const proposal: MappingProposal = {
+      attributeId: 'batteryMass',
+      value: '412.7',
+      unit: 'kg',
+      source: [
+        { file: 'docs/datasheet-en.csv', page: 1, cell: 'R4C2' },
+        { file: 'docs/stueckliste.xlsx', cell: 'Stammdaten!B5' },
+      ],
+      confidence: 0.95,
+      factId: 'fact-1',
+      why: { de: 'weil beide Quellen übereinstimmen', en: 'because both sources agree' },
+      checks: { label: 1, matched: 'battery mass', unit: 'match', kind: 'ok' },
+    };
+    expect(sourceText(proposal.source, 'en')).toBe(
+      'docs/datasheet-en.csv · page 1 · cell R4C2; docs/stueckliste.xlsx · cell Stammdaten!B5',
+    );
+    expect(sourceText(proposal.source, 'de')).toBe(
+      'docs/datasheet-en.csv · Seite 1 · Zelle R4C2; docs/stueckliste.xlsx · Zelle Stammdaten!B5',
+    );
+    const line = proposalLine(proposal, 'en', true);
+    expect(line).toContain(
+      'docs/datasheet-en.csv · page 1 · cell R4C2; docs/stueckliste.xlsx · cell Stammdaten!B5',
+    );
   });
 
   it('attributeIds filters proposals and the text even in summary mode, and reports unknown ids', async () => {

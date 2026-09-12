@@ -44,7 +44,7 @@ const outputSchema = out({
   counts: z.object({ total: z.number(), atLeast07: z.number(), listed: z.number() }).optional(),
 });
 
-function sourceText(sources: readonly Provenance[], lang: 'de' | 'en'): string {
+export function sourceText(sources: readonly Provenance[], lang: 'de' | 'en'): string {
   return sources
     .map((s) => {
       const parts = [s.file];
@@ -55,7 +55,11 @@ function sourceText(sources: readonly Provenance[], lang: 'de' | 'en'): string {
     .join('; ');
 }
 
-function proposalLine(p: MappingProposal, lang: 'de' | 'en', withProvenance: boolean): string {
+export function proposalLine(
+  p: MappingProposal,
+  lang: 'de' | 'en',
+  withProvenance: boolean,
+): string {
   const head = `${p.attributeId}${p.path ? `.${p.path}` : ''} = ${JSON.stringify(p.value)}${p.unit ? ` ${p.unit}` : ''} (${p.confidence.toFixed(2)})`;
   return withProvenance
     ? `- ${head} · ${sourceText(p.source, lang)} · ${p.why[lang]}`
