@@ -231,6 +231,12 @@ so no build is needed before `pnpm test`.
   Mono / Doto) instead of a scrolling document, with six steps (export is now its own screen)
   and no toasts. `views/shell` is the reusable design system both apps share; see ADR D-040 for
   the ten places implementation ruled against the approved design.
+- **Server tool detail and filters: done (2026-09-12).** `suggest_mappings` gains `attributeIds`
+  and `gap_report` gains `status`/`bucket` filters; both gain the `ingest_documents`-style
+  `detail: 'summary' | 'full'` switch, so a text-only host (Claude Desktop shows a tool's text,
+  not its `structuredContent`) can close gaps from extracted facts without guessing: `full`
+  prints every filtered proposal or item as one line with provenance or legal reference, no cap.
+  Completeness stays unfiltered and says so. The default output is unchanged. See ADR D-042.
 - **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
   test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
   supplier via BIBA).

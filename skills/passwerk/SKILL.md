@@ -31,7 +31,12 @@ calls; you do the semantic work. Before the first call, read `list_capabilities`
    loops, then report where things stand. `explain_attribute` with an attribute or rule id
    explains what a finding means and who typically has the data.
 5. **`gap_report`**: present it as a to-do list grouped by `byDataOwner` (who typically has the
-   data), each item with its legal reference. Do not estimate missing values.
+   data), each item with its legal reference. Do not estimate missing values. In a text-only
+   host, close gaps straight from the extracted facts: `gap_report(detail:'full',
+   bucket:['required','conditional'], status:['missing','invalid'])` to see every open
+   attribute unabridged, then `suggest_mappings(attributeIds: <those ids>, detail:'full')` to
+   see every matching candidate with its file, page and cell, then `apply_mappings` with the
+   proposals' `source` copied through unchanged.
    In a host that renders MCP Apps (Claude Desktop, Claude web), **`review_passport`** with the
    `draftId` opens the passwerk workbench instead: the user uploads, reviews and fixes
    visually, and the draft id stays in sync for the tools below. Skip it in terminal hosts.

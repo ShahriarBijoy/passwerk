@@ -1192,3 +1192,34 @@ No new legal explanation is authored and core's contract is unchanged.
 The same review found that the sheet's entrance transform could cover the footer during its
 200 ms animation. The list wrapper now clips painting and hit testing; the browser regression
 checks footer reachability at animation start and layout after completion.
+
+## D-042: Tool text is sufficient for a text-only host (2026-09-12)
+
+**Context.** Claude Desktop hands the model a tool's `content` text, not its
+`structuredContent`. `suggest_mappings`' text listed only the first 10 proposals with no
+provenance, and `gap_report`'s text ended every list at 10 items with "… N more". An agent
+that wanted to close a passport's open gaps from the facts already extracted could not see
+the low-confidence candidates or their file, page and cell, so it had to guess a value or
+stop and ask the user to read the structured block it never sees. `ingest_documents` already
+solved the same problem for itself with a `detail: 'summary' | 'full'` switch.
+
+**Decision.** `suggest_mappings` and `gap_report` get the same `detail` switch plus filters,
+so the whole loop works from text alone: `suggest_mappings` gains `attributeIds` (keep only
+those proposals; unknown ids are reported, not an error) and, in `detail: 'full'` or whenever
+`attributeIds` is given, prints every filtered proposal as one line with its provenance
+(file, page, cell) instead of a name-only line. `gap_report` gains `status` and `bucket`
+array filters and, in `detail: 'full'`, prints every filtered item grouped by data owner with
+its status, bucket, legal references and suggested action, unabridged. Completeness
+(`mandatory`/`overall`) is never filtered — it describes the whole passport — and both the
+structured `filter` echo and, in the text, an explicit note say so whenever a filter narrowed
+the list. The default output (no `detail`, no filter) stays byte-identical to before this
+change; the new formatting exists only when a caller asks for it, so existing snapshots and
+the CLI's text contract do not move.
+
+**Consequence.** The skill's mapping step now names the closing-the-loop call sequence:
+`gap_report(detail:'full', bucket:['required','conditional'], status:['missing','invalid'])`,
+then `suggest_mappings(attributeIds: <those ids>, detail:'full')`, then `apply_mappings` with
+the proposals' provenance carried through unchanged. `packaging/mcpb`'s manifest derives tool
+schemas from the installed server's own registry at build time (ADR D-039), so this change
+needed no manifest or packaging edit. No core, rules or web change; filtering and formatting
+are presentation, not domain logic, and stay in `packages/server`.
