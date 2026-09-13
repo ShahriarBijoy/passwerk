@@ -43,7 +43,9 @@ and downloads and checksums `mcp-publisher`, but publishes nothing.
 ## Every release
 
 1. Bump the version in the four `package.json` files, `packages/server/server.json`,
-   `packages/server/src/meta.ts` and `packages/cli/src/meta.ts` (tests enforce agreement),
+   `packages/server/src/meta.ts` and `packages/cli/src/meta.ts` (tests enforce agreement), and
+   the `passwerk: @passwerk/core <version>` line of `docs/CONFORMANCE.md` (or run `pnpm oracle`;
+   CI diffs the regenerated file against the committed one),
    update `README.md` status if needed, merge to `main`.
 2. `git tag v<version> && git push origin v<version>`.
 3. Watch the workflow: verify (checks, pack smoke), npm, image (amd64 and arm64 on GHCR),
