@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.title="passwerk" \
       org.opencontainers.image.description="Offline EU Digital Battery Passport toolkit: MCP server in Streamable HTTP mode" \
       org.opencontainers.image.source="https://github.com/ShahriarBijoy/passwerk" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      io.modelcontextprotocol.server.name="io.github.shahriarbijoy/passwerk"
+      io.modelcontextprotocol.server.name="io.github.ShahriarBijoy/passwerk"
 WORKDIR /app
 COPY --from=build --chown=nonroot:nonroot /out /app
 COPY --from=build --chown=nonroot:nonroot /data /data

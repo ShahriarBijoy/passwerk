@@ -2,7 +2,7 @@
 
 Generated: 2026-09-08T19:28:15Z
 Oracle: aas-test-engines 1.0.3
-passwerk: @passwerk/core 0.1.0
+passwerk: @passwerk/core 0.1.1
 Parity: 16/16
 
 | Sample | Format | passwerk L2 | Oracle | Parity | Oracle messages |

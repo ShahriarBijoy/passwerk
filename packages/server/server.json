@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.shahriarbijoy/passwerk",
+  "name": "io.github.ShahriarBijoy/passwerk",
   "title": "passwerk",
   "description": "Offline EU Battery Passport compiler: ingest documents, map, validate (IDTA 02035), emit AASX.",
   "websiteUrl": "https://github.com/ShahriarBijoy/passwerk#readme",
   "repository": { "url": "https://github.com/ShahriarBijoy/passwerk", "source": "github" },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@passwerk/server",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "runtimeHint": "npx",
       "transport": { "type": "stdio" },
       "environmentVariables": [

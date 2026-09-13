@@ -1,6 +1,6 @@
 {
   "name": "@passwerk/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The passwerk command line: audit, extract, emit, gaps, obligations, tools and the chat demo",
   "license": "Apache-2.0",
   "type": "module",

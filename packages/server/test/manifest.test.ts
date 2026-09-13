@@ -31,7 +31,7 @@ describe('MCP registry manifest (packages/server/server.json)', () => {
     expect(manifest.$schema).toBe(
       'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
     );
-    expect(manifest.name).toBe('io.github.shahriarbijoy/passwerk');
+    expect(manifest.name).toBe('io.github.ShahriarBijoy/passwerk');
     expect(pkg.mcpName).toBe(manifest.name);
     expect(manifest.version).toBe(pkg.version);
     expect(pkg.version).toBe(SERVER_VERSION);
