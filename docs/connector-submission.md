@@ -99,5 +99,5 @@ part of this MCP server submission.
 - **`SECURITY.md` does not exist yet.** This is a known gap, deliberately out of scope for
   this packaging phase. It should be written before or alongside the eventual submission.
 - **npm publish and registry listing.** `@passwerk/server` has not yet had its first publish
-  to the npm registry; the `server.json` entry (`io.github.shahriarbijoy/passwerk`) needs a
+  to the npm registry; the `server.json` entry (`io.github.ShahriarBijoy/passwerk`) needs a
   live, matching npm package before submission, per `docs/RELEASE.md`.

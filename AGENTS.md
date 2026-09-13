@@ -177,7 +177,7 @@ so no build is needed before `pnpm test`.
   `Dockerfile` (distroless Node 22,
   non-root, HTTP mode only), `docker-compose.yml`, `.github/workflows/release.yml` (npm trusted
   publishing, GHCR amd64/arm64, `mcp-publisher`) and `packages/server/server.json`
-  (`io.github.shahriarbijoy/passwerk`) are new; the owner's one-time and per-release steps are
+  (`io.github.ShahriarBijoy/passwerk`) are new; the owner's one-time and per-release steps are
   in `docs/RELEASE.md`. See ADRs D-033 and D-034.
 - **Phase 7a, second slice (`apps/web`): done.** Project screen (obligations check, voluntary
   category, four identifier modes, QR preview), facts screen (edit, map to attribute), row
