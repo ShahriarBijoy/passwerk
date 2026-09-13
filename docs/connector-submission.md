@@ -96,8 +96,8 @@ part of this MCP server submission.
 
 - **Hosted endpoint.** No publicly reachable Streamable HTTP endpoint exists yet; the owner
   must stand one up (or point the submission at the Docker image) before review can begin.
-- **`SECURITY.md` does not exist yet.** This is a known gap, deliberately out of scope for
-  this packaging phase. It should be written before or alongside the eventual submission.
-- **npm publish and registry listing.** `@passwerk/server` has not yet had its first publish
-  to the npm registry; the `server.json` entry (`io.github.ShahriarBijoy/passwerk`) needs a
-  live, matching npm package before submission, per `docs/RELEASE.md`.
+- **`SECURITY.md`** exists since PR #34 (2026-09-12): reporting channel, supported versions,
+  trust boundaries.
+- **npm publish and registry listing.** Done: `@passwerk/server` is on npm since 0.1.0
+  (2026-09-12) and the registry lists `io.github.ShahriarBijoy/passwerk` since 0.1.1
+  (2026-09-13), per `docs/RELEASE.md`.

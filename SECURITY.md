@@ -32,9 +32,9 @@ not to be.
 
 ## Supported versions
 
-As of 2026-09-10 nothing is published: version `0.1.0` is unreleased, and there is no npm
-package, container image or release asset to fix. Once published, fixes land on the newest
-published version only. Before `1.0.0` there are no backports to older minors.
+The first release, `0.1.0`, went out on 2026-09-12 and `0.1.1` on 2026-09-13 (npm packages,
+container image, `.mcpb` bundle, registry entry). Fixes land on the newest published version
+only. Before `1.0.0` there are no backports to older minors.
 
 ## The promises, and what breaking them means
 
