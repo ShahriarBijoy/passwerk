@@ -44,3 +44,6 @@ output/
 
 # MCP App workbench copied in by `pnpm build:mcp-app` (ADR D-037); ships in the server tarball
 packages/server/ui/
+
+# Local screen recordings; the compressed demo lives on the release page
+demo/

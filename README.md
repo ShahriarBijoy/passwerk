@@ -12,6 +12,10 @@ declarations). Get back a conformant Digital Battery Passport in the official AA
 Codex, Cursor and OpenCode, a scriptable CLI, a plain TypeScript library, and a client-side
 web app with QR preview.
 
+![passwerk in Claude Desktop: from five supplier documents to the gap report and the workbench](docs/screenshots/demo.webp)
+
+*Claude Desktop with the `.mcpb` bundle: the model ingests the Musterwerk documents, maps and validates, then opens the workbench inside the chat. [Full-resolution MP4](https://github.com/ShahriarBijoy/passwerk/releases/download/v0.1.1/passwerk-demo.mp4), 71 seconds.*
+
 ## Quick start
 
 **Claude Desktop:** download `passwerk-<version>.mcpb` from the
@@ -86,8 +90,6 @@ passwerk carrier passport.draft.json --out passport.qr.svg
 review, gaps and export. Documents never leave the browser; the autosave keeps your decisions,
 facts and proposals in IndexedDB, never the uploaded files. Inside Claude Desktop the same
 workbench runs as a fixed-height instrument in the host's iframe.
-
-![passwerk web app: the review screen](docs/screenshots/workbench-04-review.png)
 
 ```sh
 pnpm install && pnpm build
