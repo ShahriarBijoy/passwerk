@@ -10,9 +10,9 @@ downloaded file. Claude Desktop shows an install dialog; confirm it and set the 
 folder it asks for (this becomes `PASSWERK_ROOT`). Restart Claude Desktop. The hammer icon
 lists the twelve passwerk tools.
 
-No release carries a `.mcpb` yet — the first one ships from the next tag (`docs/DECISIONS.md`
-D-039). Until then, build it yourself from a checkout: `pnpm build && pnpm build:mcp-app &&
-pnpm release:pack && pnpm package:mcpb` produces `out/mcpb/passwerk-<version>.mcpb`.
+Every release since v0.1.0 attaches the bundle. To build it from a checkout instead:
+`pnpm build && pnpm build:mcp-app && pnpm release:pack && pnpm package:mcpb` produces
+`out/mcpb/passwerk-<version>.mcpb`.
 
 The bundle carries the server, `@passwerk/core` and `@passwerk/rules` pinned to one version;
 there is nothing to install separately and no `npx` network fetch at startup.

@@ -73,11 +73,10 @@ PowerShell; use `$HOME` or `%USERPROFILE%`, and `New-Item -ItemType Directory -F
 registration step is needed. Start a new Codex session afterwards; the skill and the passwerk
 tools only appear from then on.
 
-The plugin's `.mcp.json` runs `npx -y @passwerk/server`, and `@passwerk/server` is not
-published to npm yet (see `docs/DECISIONS.md` D-039). Until the first publish, `codex plugin
-add passwerk@personal` loads the skill but not the MCP tools — `npx` cannot resolve the
-package and the server never starts. Use the "From source" or "Server" configuration above for
-the tools in the meantime.
+The plugin's `.mcp.json` runs `npx -y @passwerk/server`, published to npm since 0.1.0. The
+first start downloads the package, so the machine needs network access once; after that the
+server runs offline from the npm cache. If your npm config sets `min-release-age`, `npx`
+refuses a version younger than that many days.
 
 ## First prompt
 
