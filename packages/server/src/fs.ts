@@ -4,10 +4,12 @@
  * With a root configured, `resolve` is only the lexical gate. Every operation canonicalises
  * its target with `realpath` (symlinks followed) and checks the result against the canonical
  * root, so a link inside the root cannot read or write outside it (PR #25 review, P1). Writes
- * additionally refuse a target that is itself a symlink.
+ * additionally refuse a target that is itself a symlink, and create missing folders only after
+ * the nearest folder that already exists canonicalises inside the root, so a link above a new
+ * folder cannot make `mkdir` create folders outside it (ADR D-045).
  */
 import { realpathSync } from 'node:fs';
-import { lstat, readdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve as resolvePath, sep } from 'node:path';
 import { type FileSystemAdapter, PathOutsideRootError } from './types.js';
 
@@ -46,6 +48,27 @@ export function nodeFileSystem(root?: string): FileSystemAdapter {
     return real;
   };
 
+  /** The deepest folder on the way from `dir` up to the file system root that exists. */
+  const nearestExisting = async (dir: string): Promise<string> => {
+    let current = dir;
+    for (;;) {
+      try {
+        await lstat(current);
+        return current;
+      } catch (e) {
+        if (!isEnoent(e)) throw e;
+        const up = dirname(current);
+        if (up === current) return current;
+        current = up;
+      }
+    }
+  };
+
+  const assertWithin = async (dir: string, p: string, canonicalRoot: string): Promise<void> => {
+    if (!within(await realpath(dir), canonicalRoot))
+      throw new PathOutsideRootError(p, canonicalRoot);
+  };
+
   return {
     resolve: lexical,
     join: (...parts) => join(...parts),
@@ -61,14 +84,18 @@ export function nodeFileSystem(root?: string): FileSystemAdapter {
     },
     async writeFile(p, bytes) {
       const abs = lexical(p);
+      const parent = dirname(abs);
       if (realRoot !== undefined) {
-        const dir = await realpath(dirname(abs));
-        if (!within(dir, realRoot)) throw new PathOutsideRootError(p, realRoot);
+        await assertWithin(await nearestExisting(parent), p, realRoot);
+        await mkdir(parent, { recursive: true });
+        await assertWithin(parent, p, realRoot);
         try {
           if ((await lstat(abs)).isSymbolicLink()) throw new PathOutsideRootError(p, realRoot);
         } catch (e) {
           if (!isEnoent(e)) throw e;
         }
+      } else {
+        await mkdir(parent, { recursive: true });
       }
       await writeFile(abs, bytes);
     },

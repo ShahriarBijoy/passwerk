@@ -37,6 +37,20 @@ describe('nodeFileSystem', () => {
     expect(fs.basename(fs.resolve('a.txt'))).toBe('a.txt');
   });
 
+  it('creates missing folders under the root before writing (emit into a new outDir)', async () => {
+    const fs = nodeFileSystem(dir);
+    const target = fs.join(fs.resolve('passwerk-exports/deeper'), 'x.bin');
+    await fs.writeFile(target, new Uint8Array([4, 2]));
+    expect(await fs.readFile(target)).toEqual(new Uint8Array([4, 2]));
+  });
+
+  it('creates missing folders without a root too', async () => {
+    const fs = nodeFileSystem();
+    const target = join(dir, 'unrooted-new', 'y.bin');
+    await fs.writeFile(target, new Uint8Array([9]));
+    expect(await fs.readFile(target)).toEqual(new Uint8Array([9]));
+  });
+
   it.runIf(process.platform === 'win32')(
     'accepts a root given as a Windows 8.3 short path (CI runner temp dir)',
     async () => {
@@ -118,6 +132,14 @@ describe('nodeFileSystem: symlinks cannot escape the root (PR #25 review, P1)', 
       fs.writeFile(fs.join(fs.resolve('link'), 'out.txt'), new Uint8Array([1])),
     ).rejects.toThrow(/outside the configured root/);
     expect(existsSync(join(outside, 'out.txt'))).toBe(false);
+  });
+
+  it('refuses to create a new folder below a link that leaves the root', async () => {
+    const fs = nodeFileSystem(root);
+    await expect(
+      fs.writeFile(fs.join(fs.resolve('link/new-dir/deeper'), 'out.txt'), new Uint8Array([1])),
+    ).rejects.toThrow(/outside the configured root/);
+    expect(existsSync(join(outside, 'new-dir'))).toBe(false);
   });
 
   it('the same reads work without a root', async () => {

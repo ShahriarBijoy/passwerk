@@ -1379,6 +1379,14 @@ with `downloadFile` (Claude Desktop) are unchanged. The notice for a host with n
 host-neutral ("ask the assistant", no `outDir`, which would point at a remote disk).
 `Platform.download` gains the export kind; the web app ignores it.
 
+The first click in the desktop app failed with `ENOENT … realpath …\passwerk-exports`: the Node
+file system adapter never created folders, and with a root it ran `realpath` on the missing
+parent for its symlink check, so every `outDir` that did not exist yet failed (for the model
+as well; the bridge tests used the in-memory adapter, which accepts any path). `writeFile` now
+checks that the nearest existing folder canonicalises inside the root, creates the missing
+folders, checks the new parent again and writes; a new folder below a link that leaves the
+root is refused before anything is created (`packages/server/test/fs.test.ts`).
+
 **Consequence.** The ChatGPT desktop app is a local target like Claude Desktop, installed as a
 Codex plugin (`passwerk@passwerk`, ADR D-044): the agent guide sends desktop users to a Codex
 conversation, and keeps ChatGPT on the web at "no ready-made install" (ADR D-043, whose four
