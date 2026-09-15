@@ -123,12 +123,20 @@ Stop here.
   Step 3B. passwerk then runs on their own machine, the workbench opens inside the conversation
   and exports are saved into a `passwerk-exports` folder (tested 2026-09-15, ADR D-045).
   Chat mode conversations were not tested.
-- **ChatGPT on the web or mobile:** tell the person there is no ready-made install yet. ChatGPT
-  there only connects to a server on a public HTTPS address, and the released passwerk server
-  needs a login ChatGPT can use first. The workbench does run there through such a connection,
-  but files cannot be downloaded
-  (https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043). Suggest
-  the desktop app, Claude Desktop, Claude Code or Codex. Stop here.
+- **ChatGPT on the web or mobile:** tell the person the current state:
+  - passwerk's workbench **does run there** through a remote connection (tested 2026-09-15):
+    the tools, the six workbench steps and autosave work.
+  - **Downloading the exported files does not work there yet.** ChatGPT does not offer the file
+    download that the workbench uses.
+  - There is **no ready-made install yet**. ChatGPT there only connects to a server on a public
+    HTTPS address in developer mode, and the released passwerk server needs changes before it
+    accepts ChatGPT without extra glue: a login ChatGPT can use, and a flag that tells ChatGPT
+    the tools need no login. The 2026-09-15 test bridged that with a temporary local proxy and
+    a tunnel.
+
+  Details: https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043.
+  Until that lands, suggest the ChatGPT desktop app, Claude Desktop (workbench and downloads),
+  Claude Code or Codex. Stop here.
 
 ## Step 4: Documents folder (optional)
 
