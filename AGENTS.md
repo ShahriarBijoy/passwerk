@@ -246,6 +246,11 @@ so no build is needed before `pnpm test`.
   install `passwerk@passwerk` without a checkout. `docs/install/agent.md` is the page a person
   links in one pasted prompt; the agent picks its host's commands, checks the install and
   explains known failures. See ADR D-044. The ChatGPT probe is ADR D-043.
+- **Save to folder: done (2026-09-15).** The ChatGPT desktop app runs passwerk as a local
+  Codex server and renders the workbench, but offers no `downloadFile`. A stdio server now
+  passes `workspace` to `createServer`, `review_passport` returns `saveToFolder`, and the
+  workbench saves exports through `emit_passport` / `generate_carrier` into `passwerk-exports`
+  ("Save to folder"). The HTTP transport never sets a workspace. See ADR D-045.
 - **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
   test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
   supplier via BIBA).

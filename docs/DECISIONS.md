@@ -1349,3 +1349,55 @@ guide names the exact commands the manifests make work.
 test catches a forgotten one. `packaging/codex-plugin` and `pnpm package:codex` stay, as the
 build-from-checkout path of ADR D-039. The plugin installs track `main` of this repository,
 while the server they run is whatever `npx` resolves from npm.
+
+## D-045: The ChatGPT desktop app runs passwerk locally; its workbench saves exports into a folder (2026-09-15)
+
+**Context.** ADR D-043 measured the workbench in ChatGPT through a remote connection and took
+"ChatGPT connects only to a public HTTPS server" as given. That holds for ChatGPT on the web.
+It does not hold for the ChatGPT desktop app: since OpenAI merged ChatGPT and Codex into one
+desktop app (July 2026), that app is a Codex host that reads `~/.codex/config.toml` and runs
+local STDIO servers (OpenAI's MCP page: "The ChatGPT desktop app, Codex CLI, and IDE extension
+support MCP servers"). On 2026-09-15 the owner's Windows app (package `OpenAI.Codex`
+26.908.9136.0) ran a local `passwerk-local` entry (`node packages/server/dist/bin.js`,
+`PASSWERK_ROOT` = the Musterwerk fixtures) in a **Codex** mode conversation: `review_passport`
+rendered the workbench inline with no tunnel, proxy, login or `securitySchemes`, the export
+step showed the "cannot save files" notice because the app advertises no `downloadFile`, and
+the model's `emit_passport` with `outDir: exports` then wrote the AAS JSON, AASX and HTML for
+the workbench's synced draft into that folder. Chat mode conversations were not tried.
+
+**Decision.** A host without `downloadFile` but with a local server saves exports into a
+folder instead of refusing them. The server passes `workspace: { root }` to `createServer` for
+the stdio transport only (`bin.ts`; the HTTP transport never sets it, so a remote server never
+invites the workbench to write the user's files onto itself), and `review_passport` returns
+`saveToFolder: { root }` when a workspace and a file system are present. The workbench
+remembers that root; its export buttons read "Save to folder" / "In Ordner speichern"
+(`Platform.exportAction`), and `hostDownload` calls the tools the model would call, with the
+draft the workbench derived and its `asOf`: `emit_passport` with `outDir: passwerk-exports` for
+AAS JSON, AASX, HTML and the draft JSON, and `generate_carrier` with `format: svg` for the QR.
+It shows the written path, or the tool's error; nothing is dropped. The gap report has no file
+target in any tool, so its button asks the user to have the assistant run `gap_report`. Hosts
+with `downloadFile` (Claude Desktop) are unchanged. The notice for a host with neither is now
+host-neutral ("ask the assistant", no `outDir`, which would point at a remote disk).
+`Platform.download` gains the export kind; the web app ignores it.
+
+The first click in the desktop app failed with `ENOENT … realpath …\passwerk-exports`: the Node
+file system adapter never created folders, and with a root it ran `realpath` on the missing
+parent for its symlink check, so every `outDir` that did not exist yet failed (for the model
+as well; the bridge tests used the in-memory adapter, which accepts any path). `writeFile` now
+checks that the nearest existing folder canonicalises inside the root, creates the missing
+folders, checks the new parent again and writes; a new folder below a link that leaves the
+root is refused before anything is created (`packages/server/test/fs.test.ts`).
+
+The result line is a highlighted `InlineStatus` (`emphasis`): green for a saved path, red for a
+failed save, amber for what to ask the assistant, because a plain label line was easy to miss
+at the foot of the instrument. Claude Desktop runs passwerk over stdio too, so it also receives
+`saveToFolder`; the order in `hostDownload` and `exportActionOf` keeps it on `downloadFile`
+whenever the host advertises it, which a bridge test pins (download sent, nothing written).
+
+**Consequence.** The ChatGPT desktop app is a local target like Claude Desktop, installed as a
+Codex plugin (`passwerk@passwerk`, ADR D-044): the agent guide sends desktop users to a Codex
+conversation, and keeps ChatGPT on the web at "no ready-made install" (ADR D-043, whose four
+gaps now apply to the web only). The emitted file can differ from what the screen would have
+downloaded only by the `asOf` of the click, since the draft is re-derived at that moment. Not
+verified: saving through the button in the desktop app itself (the tests drive the real
+server through the SDK's host bridge), and the plugin install path in that app.

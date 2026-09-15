@@ -30,7 +30,7 @@ key once installed. Source: https://github.com/ShahriarBijoy/passwerk
 | If you are | Go to |
 |---|---|
 | Claude Code (CLI, IDE extension or desktop app's Code tab) | Step 3A |
-| Codex (CLI, IDE extension or Codex app) | Step 3B |
+| Codex (CLI, IDE extension, or Codex mode in the ChatGPT desktop app) | Step 3B |
 | Cursor, OpenCode, VS Code, Windsurf or another MCP-capable agent | Step 3C |
 | Claude Desktop (the chat app, not Claude Code) | Step 3D |
 | ChatGPT | Step 3E |
@@ -87,7 +87,9 @@ version, use instead:
 codex mcp add passwerk -- npx -y @passwerk/server
 ```
 
-Codex shows passwerk's tools, not its visual workbench; everything works through the tools.
+In the ChatGPT desktop app (Codex mode), asking to open the passwerk workbench shows it inside
+the conversation, and its export buttons save the files into a `passwerk-exports` folder. The
+Codex CLI and IDE extension show the tools only; everything works through them.
 Then go to Step 4.
 
 ## Step 3C: Other MCP-capable agents
@@ -116,20 +118,25 @@ Stop here.
 
 ## Step 3E: ChatGPT
 
-You cannot install into ChatGPT from a chat. Tell the person the current state:
+- **ChatGPT desktop app (macOS, Windows):** it includes Codex. Tell the person to open a
+  **Codex** conversation in the desktop app and paste the install prompt there, then follow
+  Step 3B. passwerk then runs on their own machine, the workbench opens inside the conversation
+  and exports are saved into a `passwerk-exports` folder (tested 2026-09-15, ADR D-045).
+  Chat mode conversations were not tested.
+- **ChatGPT on the web or mobile:** tell the person the current state:
+  - passwerk's workbench **does run there** through a remote connection (tested 2026-09-15):
+    the tools, the six workbench steps and autosave work.
+  - **Downloading the exported files does not work there yet.** ChatGPT does not offer the file
+    download that the workbench uses.
+  - There is **no ready-made install yet**. ChatGPT there only connects to a server on a public
+    HTTPS address in developer mode, and the released passwerk server needs changes before it
+    accepts ChatGPT without extra glue: a login ChatGPT can use, and a flag that tells ChatGPT
+    the tools need no login. The 2026-09-15 test bridged that with a temporary local proxy and
+    a tunnel.
 
-- passwerk's workbench **does run inside ChatGPT** (web and desktop app, tested 2026-09-15):
-  the tools, the six workbench steps and autosave work.
-- **Downloading the exported files does not work there yet.** ChatGPT does not offer the file
-  download that the workbench uses.
-- There is **no ready-made install yet**. ChatGPT only connects to a server on a public HTTPS
-  address in developer mode, and the released passwerk server needs changes before it accepts
-  ChatGPT without extra glue: a login ChatGPT can use, and a flag that tells ChatGPT the tools
-  need no login. The 2026-09-15 test bridged that with a temporary local proxy and a tunnel.
-
-Details: https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043.
-Until that lands, suggest Claude Desktop (workbench and downloads), Claude Code or Codex.
-Stop here.
+  Details: https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043.
+  Until that lands, suggest the ChatGPT desktop app, Claude Desktop (workbench and downloads),
+  Claude Code or Codex. Stop here.
 
 ## Step 4: Documents folder (optional)
 

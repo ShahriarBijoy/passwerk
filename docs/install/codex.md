@@ -13,7 +13,9 @@ codex plugin add passwerk@passwerk
 No checkout or build: Codex reads the marketplace at this repository's root and installs
 `plugins/passwerk`, which carries `skills/passwerk` and runs `npx -y @passwerk/server`. Start a
 new session afterwards. Remove it with `codex plugin remove passwerk@passwerk` and
-`codex plugin marketplace remove passwerk`. The local build further down is the same plugin,
+`codex plugin marketplace remove passwerk`. In the ChatGPT desktop app, which includes Codex,
+the same plugin opens the passwerk workbench inside a Codex conversation, and its export
+buttons save into a `passwerk-exports` folder (ADR D-045). The local build further down is the same plugin,
 assembled from a checkout.
 
 ## Server only

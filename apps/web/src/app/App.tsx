@@ -58,7 +58,8 @@ export interface AppProps {
   /** A key remembered on this device, read before mount so no effect has to fetch it. */
   initialAssistKey?: string;
   /** Where a host-level message lands when no screen owns it (the MCP app's "ask Claude to run emit_passport"). */
-  hostNotice?: string;
+  /** A host's result line (saved, failed, or what to ask the assistant), shown highlighted. */
+  hostNotice?: { kind: 'ok' | 'error' | 'info'; text: string };
 }
 
 type ShellStatus = { kind: 'error' | 'info'; text: string } | null;
@@ -356,7 +357,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         return;
       }
       setExportError(undefined);
-      if (file) platform.download(file);
+      if (file) platform.download(file, kind);
     } catch (e) {
       fail(e);
     }
@@ -408,7 +409,14 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
           data-testid="storage-notice"
         />
       )}
-      {hostNotice && <InlineStatus kind="info" text={hostNotice} data-testid="host-notice" />}
+      {hostNotice && (
+        <InlineStatus
+          kind={hostNotice.kind}
+          text={hostNotice.text}
+          emphasis
+          data-testid="host-notice"
+        />
+      )}
     </>
   );
 
@@ -636,6 +644,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         if (!derived) return null;
         return (
           <ExportView
+            saveToFolder={platform.exportAction?.() === 'save'}
             lang={lang}
             top={top}
             notice={notice}

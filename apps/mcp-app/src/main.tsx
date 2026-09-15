@@ -10,14 +10,18 @@ import { App } from '@/app/App.tsx';
 import { nowIso } from '@/app/clock.ts';
 import { ErrorBoundary } from '@/app/ErrorBoundary.tsx';
 import type { Platform } from '@/app/platform.ts';
+import { derive } from '@/workflow/derive/index.ts';
 import { initialState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
 import {
   applyTheme,
   attachSync,
+  exportActionOf,
+  type HostNotice,
   hostDownload,
   languageOf,
   type SyncState,
+  saveRootOf,
   seedActions,
   workerUrlOf,
 } from './bridge.ts';
@@ -31,7 +35,9 @@ let sync: SyncState = {};
 
 // The host's "cannot download" message is not workflow state: it lives beside the store and
 // re-renders the tree through `render()`.
-let notice: string | undefined;
+let notice: HostNotice | undefined;
+// The folder a local server lets exports be saved into (ADR D-045); set by `review_passport`.
+let saveRoot: string | undefined;
 
 const applyHeight = (mode: string | undefined) =>
   document.documentElement.style.setProperty(
@@ -41,11 +47,26 @@ const applyHeight = (mode: string | undefined) =>
 applyHeight('inline');
 
 const platform: Platform = {
-  download: (file) =>
-    void hostDownload(host, file, store.getState().language, sync.draftId, (text) => {
-      notice = text;
-      render();
-    }),
+  download: (file, kind) => {
+    const state = store.getState();
+    const d = derive(state, nowIso());
+    void hostDownload(
+      host,
+      {
+        file,
+        kind,
+        lang: state.language,
+        ...(sync.draftId !== undefined ? { draftId: sync.draftId } : {}),
+        ...(d ? { draft: d.draft, asOf: d.asOf } : {}),
+        ...(saveRoot !== undefined ? { saveRoot } : {}),
+      },
+      (n) => {
+        notice = n;
+        render();
+      },
+    );
+  },
+  exportAction: () => exportActionOf(host.getHostCapabilities(), saveRoot),
   // The host owns the instance's lifetime; nothing is persisted, so nothing is cleared.
   clearPersisted: () => {},
   pdfWorkerSrc: workerUrlOf(pdfWorkerUrl),
@@ -80,6 +101,7 @@ render();
 // Handlers before connect(): the host may notify immediately after the handshake.
 host.ontoolresult = (result) => {
   const structured = result.structuredContent as Record<string, unknown> | undefined;
+  saveRoot = saveRootOf(structured) ?? saveRoot;
   for (const a of seedActions(structured, host.getHostContext()?.locale, nowIso())) {
     store.dispatch(a);
   }
