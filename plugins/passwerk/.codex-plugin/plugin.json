@@ -1,0 +1,23 @@
+{
+  "name": "passwerk",
+  "version": "0.1.1",
+  "description": "Build and validate EU Digital Battery Passports offline (AAS / IDTA 02035).",
+  "keywords": [
+    "battery-passport",
+    "digital-product-passport",
+    "aas",
+    "idta-02035"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "passwerk",
+    "shortDescription": "Turn supplier documents into a conformant EU battery passport, offline.",
+    "longDescription": "passwerk ingests BOMs, Excel exports, energy bills and supplier declarations, proposes mappings with page and cell provenance, validates the result against the official IDTA 02035 templates and the AAS metamodel, reports the gaps with legal citations in German and English, and emits AAS JSON, AASX, an HTML passport sheet and a GS1 Digital Link QR code. No network calls, no model calls. It reports gaps and cites the regulation; it is not legal advice.",
+    "developerName": "Shahriar Bijoy",
+    "category": "Productivity",
+    "capabilities": [],
+    "websiteURL": "https://github.com/ShahriarBijoy/passwerk",
+    "defaultPrompt": "Build an EU battery passport from the documents in ./supplier-docs."
+  }
+}

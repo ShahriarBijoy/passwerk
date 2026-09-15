@@ -18,6 +18,24 @@ web app with QR preview.
 
 ## Quick start
 
+**Let your agent install it.** Paste this into Claude Code, Codex, Cursor, OpenCode or any
+other coding agent. It checks Node, picks the right commands for its host, installs passwerk
+and tells you how to check that it works:
+
+```
+Install passwerk for me by following
+https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/install/agent.md
+```
+
+**Or run the commands yourself** (Node >= 22.13):
+
+| Host | Skill and tools (plugin) | Tools only |
+|---|---|---|
+| Claude Code | `claude plugin marketplace add ShahriarBijoy/passwerk`<br>`claude plugin install passwerk@passwerk` | `claude mcp add passwerk --scope user -- npx -y @passwerk/server` |
+| Codex | `codex plugin marketplace add ShahriarBijoy/passwerk`<br>`codex plugin add passwerk@passwerk` | `codex mcp add passwerk -- npx -y @passwerk/server` |
+
+Start a new session afterwards, then ask the agent to call `list_capabilities`.
+
 **Claude Desktop:** download `passwerk-<version>.mcpb` from the
 [releases page](https://github.com/ShahriarBijoy/passwerk/releases) and open it. Claude Desktop
 installs the server, asks for your document folder, and the twelve passwerk tools are ready
@@ -27,7 +45,6 @@ after a restart. Details in [docs/install/claude-desktop.md](docs/install/claude
 
 ```sh
 npx -y @passwerk/server            # MCP server over stdio, offline, no keys
-claude mcp add passwerk -- npx -y @passwerk/server
 npx -y @passwerk/cli audit passport.draft.json
 docker run -e PASSWERK_AUTH_TOKEN=$(openssl rand -hex 32) -p 127.0.0.1:3777:3777 ghcr.io/shahriarbijoy/passwerk
 ```

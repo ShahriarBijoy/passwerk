@@ -1308,3 +1308,43 @@ instructions only, so it gets the tools and the skill, not the workbench. Claude
 unaffected: its path (stdio, `downloadFile` advertised, one session per connection) is the
 one ADR D-037 measured. The probe's setup (proxy, quick tunnel, developer-mode app) is the
 repeatable way to re-measure after each gap closes.
+
+## D-044: Claude Code and Codex install passwerk from this repository; agents follow one guide (2026-09-15)
+
+**Context.** Installing the skill together with the server took a checkout, `pnpm install`,
+`pnpm package:codex`, three copy commands and a hand-merged marketplace file (ADR D-039). Both
+hosts can install a plugin straight from a GitHub repository instead: `claude plugin
+marketplace add owner/repo` reads `.claude-plugin/marketplace.json`, and `codex plugin
+marketplace add owner/repo` reads a marketplace at the repository root (worktrunk ships both
+files that way). The repository root is not usable as the plugin itself: it already has a
+development `.mcp.json` (`node packages/server/dist/bin.js`), and the Claude Code reference
+does not say which wins when a plugin root has both a `.mcp.json` and a `plugin.json`.
+
+**Decision.** The plugin lives in `plugins/passwerk/`, with `.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`, `.mcp.json` (`npx -y @passwerk/server`) and a copy of
+`skills/passwerk`. The root carries `.claude-plugin/marketplace.json` and
+`.agents/plugins/marketplace.json`, both named `passwerk` and pointing at `./plugins/passwerk`,
+so both hosts install `passwerk@passwerk`. The directory is committed, because a Git
+marketplace installs without a build, and generated: `packaging/agent-plugin/scripts/sync.mjs`
+(`pnpm sync:plugin`) derives every file from its one source (the Claude manifest template in
+`packaging/agent-plugin`, the Codex manifest and `.mcp.json` in `packaging/codex-plugin`, the
+version from `packages/server`, the skill from `skills/passwerk`), and
+`packaging/agent-plugin/test/plugin.test.ts` fails on any drift (`--check`), on a skill copy
+that is not byte-identical, and on a marketplace path that does not exist. The Claude manifest
+declares neither `skills` nor `mcpServers`: the defaults find `skills/` and `.mcp.json`, and the
+reference calls `skills` additive, so declaring it could load the skill twice. Biome ignores
+`plugins/passwerk`, which is formatted by the generator.
+
+`docs/install/agent.md` is written for an agent, not a person: the README's quick start tells
+people to paste one prompt that links it. It tells the agent to identify its host, check Node
+and pre-fetch the package (`npx -y @passwerk/server --version`), run the plugin commands or
+the tools-only `claude mcp add` / `codex mcp add`, hand Claude Desktop users the `.mcpb`, tell
+ChatGPT users it is not supported yet (ADR D-043), never overwrite configuration or change
+npm settings, explain known failures (an `ETARGET` from `min-release-age` above all), and
+check the install with `list_capabilities` in a new session. The same test asserts that the
+guide names the exact commands the manifests make work.
+
+**Consequence.** A release now also runs `pnpm sync:plugin` (docs/RELEASE.md, step 1); the
+test catches a forgotten one. `packaging/codex-plugin` and `pnpm package:codex` stay, as the
+build-from-checkout path of ADR D-039. The plugin installs track `main` of this repository,
+while the server they run is whatever `npx` resolves from npm.

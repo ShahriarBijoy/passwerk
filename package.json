@@ -31,7 +31,8 @@
     "release:smoke": "node tools/release/pack-smoke.mjs",
     "package:mcpb": "node packaging/mcpb/scripts/build.mjs",
     "package:smoke": "node packaging/mcpb/scripts/smoke.mjs",
-    "package:codex": "node packaging/codex-plugin/scripts/build.mjs"
+    "package:codex": "node packaging/codex-plugin/scripts/build.mjs",
+    "sync:plugin": "node packaging/agent-plugin/scripts/sync.mjs"
   },
   "devDependencies": {
     "@anthropic-ai/mcpb": "2.1.2",

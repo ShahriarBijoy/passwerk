@@ -1,6 +1,28 @@
 # Install: Codex CLI
 
-## Server
+Or paste this into Codex and let it do the steps below:
+`Install passwerk for me by following https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/install/agent.md`
+
+## Plugin from GitHub: skill and server together (recommended)
+
+```sh
+codex plugin marketplace add ShahriarBijoy/passwerk
+codex plugin add passwerk@passwerk
+```
+
+No checkout or build: Codex reads the marketplace at this repository's root and installs
+`plugins/passwerk`, which carries `skills/passwerk` and runs `npx -y @passwerk/server`. Start a
+new session afterwards. Remove it with `codex plugin remove passwerk@passwerk` and
+`codex plugin marketplace remove passwerk`. The local build further down is the same plugin,
+assembled from a checkout.
+
+## Server only
+
+```sh
+codex mcp add passwerk -- npx -y @passwerk/server
+```
+
+Or by hand:
 
 Add to `~/.codex/config.toml` (user) or the project's `.codex/config.toml`:
 

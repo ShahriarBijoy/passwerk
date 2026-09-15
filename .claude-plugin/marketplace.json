@@ -1,0 +1,14 @@
+{
+  "name": "passwerk",
+  "owner": { "name": "Shahriar Bijoy" },
+  "metadata": {
+    "description": "passwerk: build and validate EU Digital Battery Passports offline."
+  },
+  "plugins": [
+    {
+      "name": "passwerk",
+      "source": "./plugins/passwerk",
+      "description": "The passwerk skill plus the passwerk MCP server (npx -y @passwerk/server)."
+    }
+  ]
+}

@@ -292,6 +292,8 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
 
+  packaging/agent-plugin: {}
+
   packaging/codex-plugin: {}
 
   packaging/mcpb:
