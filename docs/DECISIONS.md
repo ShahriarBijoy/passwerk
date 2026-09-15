@@ -1339,7 +1339,8 @@ reference calls `skills` additive, so declaring it could load the skill twice. B
 people to paste one prompt that links it. It tells the agent to identify its host, check Node
 and pre-fetch the package (`npx -y @passwerk/server --version`), run the plugin commands or
 the tools-only `claude mcp add` / `codex mcp add`, hand Claude Desktop users the `.mcpb`, tell
-ChatGPT users it is not supported yet (ADR D-043), never overwrite configuration or change
+ChatGPT users that the workbench runs there but downloads do not and there is no ready-made
+install yet (ADR D-043), never overwrite configuration or change
 npm settings, explain known failures (an `ETARGET` from `min-release-age` above all), and
 check the install with `list_capabilities` in a new session. The same test asserts that the
 guide names the exact commands the manifests make work.

@@ -116,10 +116,20 @@ Stop here.
 
 ## Step 3E: ChatGPT
 
-Tell the person that passwerk does not support ChatGPT yet: ChatGPT connects only to remote
-servers, and passwerk's export and login paths are not ready for that (see
-https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043). Suggest
-Claude Desktop, Claude Code or Codex instead. Stop here.
+You cannot install into ChatGPT from a chat. Tell the person the current state:
+
+- passwerk's workbench **does run inside ChatGPT** (web and desktop app, tested 2026-09-15):
+  the tools, the six workbench steps and autosave work.
+- **Downloading the exported files does not work there yet.** ChatGPT does not offer the file
+  download that the workbench uses.
+- There is **no ready-made install yet**. ChatGPT only connects to a server on a public HTTPS
+  address in developer mode, and the released passwerk server needs changes before it accepts
+  ChatGPT without extra glue: a login ChatGPT can use, and a flag that tells ChatGPT the tools
+  need no login. The 2026-09-15 test bridged that with a temporary local proxy and a tunnel.
+
+Details: https://github.com/ShahriarBijoy/passwerk/blob/main/docs/DECISIONS.md, ADR D-043.
+Until that lands, suggest Claude Desktop (workbench and downloads), Claude Code or Codex.
+Stop here.
 
 ## Step 4: Documents folder (optional)
 
