@@ -195,6 +195,24 @@ export function saveRootOf(structured: Record<string, unknown> | undefined): str
   return typeof root === 'string' ? root : undefined;
 }
 
+/** A result line for the reviewer: saved (ok), failed (error), or what to ask (info). */
+export interface HostNotice {
+  kind: 'ok' | 'error' | 'info';
+  text: string;
+}
+
+/**
+ * What the export buttons do. A host that downloads (Claude Desktop) always downloads, even
+ * though its local server also names a save root; only a host without `downloadFile` and
+ * with a local server saves into the folder (the ChatGPT desktop app, ADR D-045).
+ */
+export function exportActionOf(
+  caps: ReturnType<HostLink['getHostCapabilities']>,
+  saveRoot: string | undefined,
+): 'download' | 'save' {
+  return caps?.downloadFile || saveRoot === undefined ? 'download' : 'save';
+}
+
 /** Subfolder of the save root the workbench writes into. */
 export const EXPORT_DIR = 'passwerk-exports';
 
@@ -236,7 +254,7 @@ const writtenPath = (structured: Record<string, unknown> | undefined): string | 
 export async function hostDownload(
   link: HostLink,
   req: DownloadRequest,
-  notify: (text: string) => void,
+  notify: (notice: HostNotice) => void,
 ): Promise<void> {
   const { file, kind, lang, draftId } = req;
   if (link.getHostCapabilities()?.downloadFile) {
@@ -255,11 +273,11 @@ export async function hostDownload(
     return;
   }
   if (req.saveRoot === undefined || req.draft === undefined) {
-    notify(noDownload(lang, draftId));
+    notify({ kind: 'info', text: noDownload(lang, draftId) });
     return;
   }
   if (kind === 'gaps') {
-    notify(noGapFile(lang, draftId));
+    notify({ kind: 'info', text: noGapFile(lang, draftId) });
     return;
   }
   const call =
@@ -283,11 +301,14 @@ export async function hostDownload(
     const path = r.isError ? undefined : writtenPath(r.structuredContent);
     if (path === undefined) {
       const reason = String(r.structuredContent?.['error'] ?? 'no file was written');
-      notify(saveFailed(lang, file.name, reason));
+      notify({ kind: 'error', text: saveFailed(lang, file.name, reason) });
       return;
     }
-    notify(saved(lang, path));
+    notify({ kind: 'ok', text: saved(lang, path) });
   } catch (e) {
-    notify(saveFailed(lang, file.name, e instanceof Error ? e.message : String(e)));
+    notify({
+      kind: 'error',
+      text: saveFailed(lang, file.name, e instanceof Error ? e.message : String(e)),
+    });
   }
 }

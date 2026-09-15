@@ -16,6 +16,8 @@ import { createStore } from '@/workflow/store.ts';
 import {
   applyTheme,
   attachSync,
+  exportActionOf,
+  type HostNotice,
   hostDownload,
   languageOf,
   type SyncState,
@@ -33,7 +35,7 @@ let sync: SyncState = {};
 
 // The host's "cannot download" message is not workflow state: it lives beside the store and
 // re-renders the tree through `render()`.
-let notice: string | undefined;
+let notice: HostNotice | undefined;
 // The folder a local server lets exports be saved into (ADR D-045); set by `review_passport`.
 let saveRoot: string | undefined;
 
@@ -58,14 +60,13 @@ const platform: Platform = {
         ...(d ? { draft: d.draft, asOf: d.asOf } : {}),
         ...(saveRoot !== undefined ? { saveRoot } : {}),
       },
-      (text) => {
-        notice = text;
+      (n) => {
+        notice = n;
         render();
       },
     );
   },
-  exportAction: () =>
-    host.getHostCapabilities()?.downloadFile || saveRoot === undefined ? 'download' : 'save',
+  exportAction: () => exportActionOf(host.getHostCapabilities(), saveRoot),
   // The host owns the instance's lifetime; nothing is persisted, so nothing is cleared.
   clearPersisted: () => {},
   pdfWorkerSrc: workerUrlOf(pdfWorkerUrl),

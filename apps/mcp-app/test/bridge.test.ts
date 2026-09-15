@@ -12,6 +12,7 @@ import { memoryFileSystem } from '../../../packages/server/test/harness.ts';
 import {
   applyTheme,
   attachSync,
+  exportActionOf,
   hostDownload,
   languageOf,
   saveRootOf,
@@ -248,12 +249,36 @@ describe('hostDownload', () => {
     );
     expect(h.downloads).toHaveLength(0);
     expect(notify).toHaveBeenCalledOnce();
-    const text = notify.mock.calls[0]?.[0] as string;
+    const notice = notify.mock.calls[0]?.[0] as { kind: string; text: string };
+    expect(notice.kind).toBe('info');
+    const text = notice.text;
     expect(text).toContain('emit_passport');
     expect(text).toContain('drf_1');
     expect(text).toMatch(/^Dieser Host/);
     expect(text).not.toContain('Claude');
     expect(text).not.toContain('outDir');
+    await h.close();
+  });
+
+  it('downloads through the host even when a local server names a save root (Claude Desktop)', async () => {
+    const fsys = memoryFileSystem({});
+    const h = await harness({ downloadFile: {} }, { fs: fsys, workspace: { root: '/work' } });
+    const notify = vi.fn();
+    await hostDownload(
+      h.app,
+      {
+        file: json('x.aas.json'),
+        kind: 'aasJson',
+        lang: 'en',
+        draft,
+        asOf: CLOCK,
+        saveRoot: '/work',
+      },
+      notify,
+    );
+    expect(h.downloads).toHaveLength(1);
+    expect(fsys.written.size).toBe(0);
+    expect(notify).not.toHaveBeenCalled();
     await h.close();
   });
 
@@ -279,7 +304,8 @@ describe('hostDownload', () => {
     expect(new TextDecoder().decode(bytes)).toBe(expected);
     expect(h.downloads).toHaveLength(0);
     expect(notify).toHaveBeenCalledOnce();
-    expect(notify.mock.calls[0]?.[0]).toContain(path);
+    expect(notify.mock.calls[0]?.[0]).toMatchObject({ kind: 'ok' });
+    expect(notify.mock.calls[0]?.[0].text).toContain(path);
     await h.close();
   });
 
@@ -294,7 +320,8 @@ describe('hostDownload', () => {
     );
     const [path] = [...fsys.written][0] ?? [];
     expect(path).toMatch(/[.]svg$/);
-    expect(notify.mock.calls[0]?.[0]).toContain(path);
+    expect(notify.mock.calls[0]?.[0]).toMatchObject({ kind: 'ok' });
+    expect(notify.mock.calls[0]?.[0].text).toContain(path);
     await h.close();
   });
 
@@ -316,7 +343,8 @@ describe('hostDownload', () => {
       notify,
     );
     expect(fsys.written.size).toBe(0);
-    expect(notify.mock.calls[0]?.[0]).toContain('gap_report');
+    expect(notify.mock.calls[0]?.[0]).toMatchObject({ kind: 'info' });
+    expect(notify.mock.calls[0]?.[0].text).toContain('gap_report');
     await h.close();
   });
 
@@ -336,8 +364,19 @@ describe('hostDownload', () => {
       notify,
     );
     expect(notify).toHaveBeenCalledOnce();
-    expect(notify.mock.calls[0]?.[0]).toMatch(/^Could not save/);
+    expect(notify.mock.calls[0]?.[0]).toMatchObject({ kind: 'error' });
+    expect(notify.mock.calls[0]?.[0].text).toMatch(/^Could not save/);
     await h.close();
+  });
+});
+
+describe('exportActionOf', () => {
+  it('downloads whenever the host can, and saves only without downloads but with a save root', () => {
+    expect(exportActionOf({ downloadFile: {} }, '/work')).toBe('download');
+    expect(exportActionOf({ downloadFile: {} }, undefined)).toBe('download');
+    expect(exportActionOf({}, '/work')).toBe('save');
+    expect(exportActionOf({}, undefined)).toBe('download');
+    expect(exportActionOf(undefined, undefined)).toBe('download');
   });
 });
 

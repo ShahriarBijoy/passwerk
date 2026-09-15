@@ -1387,6 +1387,12 @@ checks that the nearest existing folder canonicalises inside the root, creates t
 folders, checks the new parent again and writes; a new folder below a link that leaves the
 root is refused before anything is created (`packages/server/test/fs.test.ts`).
 
+The result line is a highlighted `InlineStatus` (`emphasis`): green for a saved path, red for a
+failed save, amber for what to ask the assistant, because a plain label line was easy to miss
+at the foot of the instrument. Claude Desktop runs passwerk over stdio too, so it also receives
+`saveToFolder`; the order in `hostDownload` and `exportActionOf` keeps it on `downloadFile`
+whenever the host advertises it, which a bridge test pins (download sent, nothing written).
+
 **Consequence.** The ChatGPT desktop app is a local target like Claude Desktop, installed as a
 Codex plugin (`passwerk@passwerk`, ADR D-044): the agent guide sends desktop users to a Codex
 conversation, and keeps ChatGPT on the web at "no ready-made install" (ADR D-043, whose four
