@@ -1,5 +1,20 @@
 # Install: Claude Code
 
+Or paste this into Claude Code and let it do the steps below:
+`Install passwerk for me by following https://raw.githubusercontent.com/ShahriarBijoy/passwerk/main/docs/install/agent.md`
+
+## Plugin: skill and server together (recommended)
+
+```sh
+claude plugin marketplace add ShahriarBijoy/passwerk
+claude plugin install passwerk@passwerk
+```
+
+Inside a session the same works as `/plugin marketplace add ShahriarBijoy/passwerk` and
+`/plugin install passwerk@passwerk`. The plugin (`plugins/passwerk` in this repository) carries
+`skills/passwerk` and runs `npx -y @passwerk/server`; start a new session afterwards. Remove it
+with `claude plugin uninstall passwerk@passwerk` and `claude plugin marketplace remove passwerk`.
+
 ## User-scoped server (any directory)
 
 ```sh

@@ -33,7 +33,8 @@ proves zero network calls.
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
 | `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
 | `apps/mcp-app` | `@passwerk/mcp-app` | MCP App: the web app's workflow in the host's iframe, served by the server as `ui://passwerk/workbench.html` (ADR D-037) |
-| `packaging` (Phase 7c) | | MCPB bundle for Claude Desktop, Codex plugin, connector submission checklist |
+| `packaging` (Phase 7c) | | MCPB bundle for Claude Desktop, Codex plugin, connector submission checklist, and the generator of `plugins/passwerk` |
+| `plugins/passwerk` | | Generated, committed Claude Code and Codex plugin installed from GitHub via `.claude-plugin/` and `.agents/plugins/` marketplaces (ADR D-044). Edit its sources, then `pnpm sync:plugin` |
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
 
@@ -58,6 +59,7 @@ pnpm e2e                # Playwright suite of apps/web (after pnpm build:web; ne
 pnpm package:mcpb       # build out/mcpb/passwerk-<version>.mcpb (after build, build:mcp-app, release:pack)
 pnpm package:smoke      # unzip that bundle and drive it over stdio
 pnpm package:codex      # build out/codex-plugin/ (manifests plus a copy of skills/passwerk)
+pnpm sync:plugin        # regenerate plugins/passwerk after changing skills/passwerk or a manifest (--check to verify)
 ```
 
 Tests import workspace packages by name (`@passwerk/core`). Vitest aliases them to `src/`,
@@ -238,6 +240,12 @@ so no build is needed before `pnpm test`.
   not its `structuredContent`) can close gaps from extracted facts without guessing: `full`
   prints every filtered proposal or item as one line with provenance or legal reference, no cap.
   Completeness stays unfiltered and says so. The default output is unchanged. See ADR D-042.
+- **Install from GitHub and the agent guide: done (2026-09-15).** `plugins/passwerk` (generated
+  by `pnpm sync:plugin`, committed) with root marketplaces for Claude Code
+  (`.claude-plugin/marketplace.json`) and Codex (`.agents/plugins/marketplace.json`), so both
+  install `passwerk@passwerk` without a checkout. `docs/install/agent.md` is the page a person
+  links in one pasted prompt; the agent picks its host's commands, checks the install and
+  explains known failures. See ADR D-044. The ChatGPT probe is ADR D-043.
 - **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
   test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
   supplier via BIBA).

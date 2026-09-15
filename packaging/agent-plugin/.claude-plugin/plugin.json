@@ -1,0 +1,9 @@
+{
+  "name": "passwerk",
+  "description": "Build and validate EU Digital Battery Passports offline (AAS / IDTA 02035): the passwerk skill plus the passwerk MCP server.",
+  "author": { "name": "Shahriar Bijoy" },
+  "homepage": "https://github.com/ShahriarBijoy/passwerk",
+  "repository": "https://github.com/ShahriarBijoy/passwerk",
+  "license": "Apache-2.0",
+  "keywords": ["battery-passport", "digital-product-passport", "aas", "idta-02035", "mcp"]
+}
