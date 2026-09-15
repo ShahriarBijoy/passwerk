@@ -47,3 +47,6 @@ packages/server/ui/
 
 # Local screen recordings; the compressed demo lives on the release page
 demo/
+
+# Dev-only MCP App host page, rebuilt by `build:host` before every e2e run (CI does the same)
+apps/mcp-app/dist-host/
