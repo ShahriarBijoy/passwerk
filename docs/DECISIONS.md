@@ -1016,22 +1016,25 @@ actually answers tool calls, not just that `mcpb validate` accepts the manifest.
 phase, which stays a checklist item under "Definition of done for v1.0" (`docs/BUILD_PLAN.md`
 §8) rather than something Phase 7c silently closed.
 
-**Owner measurements (outstanding — Phase 7c is not fully done until both are recorded here).**
+**Owner measurements (Windows recorded; macOS and Codex still outstanding).**
 
 1. `.mcpb` one-click install, macOS and Windows: download `out/mcpb/passwerk-<version>.mcpb`
    (or the CI packaging job's artifact), open it in Claude Desktop, confirm the document-folder
    prompt (`user_config.documents_directory`), that all twelve tools are listed, and that asking
    Claude to open the passwerk workbench renders the MCP App via `review_passport`.
    - macOS: *(owner to fill in — version, build, screenshot or note)*
-   - Windows: *(owner to fill in — version, build, screenshot or note)*
+   - Windows: recorded 2026-09-13 by the owner on Windows 11 Pro 10.0.26200 with
+     `passwerk-0.1.1.mcpb` from the GitHub release: opening the file installed it, the twelve
+     tools were listed after the restart, and `review_passport` rendered the workbench. The
+     71-second recording at the top of `README.md` (`docs/screenshots/demo.webp`) is that
+     install. Claude Desktop build not noted.
 2. Codex CLI plugin: run `pnpm package:codex`, follow the three printed commands (`cp -r
    out/codex-plugin ~/plugins/passwerk`, install `marketplace.json`, `codex plugin add
    passwerk@personal`), then in a new Codex session confirm the `passwerk` skill and its MCP
    tools are present.
-   - This measurement is gated on the first npm publish: the plugin's `.mcp.json` runs `npx -y
-     @passwerk/server`, and `@passwerk/server` is not on npm yet, so `codex plugin add
-     passwerk@personal` today loads the skill but not the tools (`docs/install/codex.md`). The
-     tools half of this measurement cannot be recorded until that publish happens.
+   - The gate on this measurement, the first npm publish, cleared on 2026-09-12 (0.1.0) and
+     2026-09-13 (0.1.1): `npx -y @passwerk/server` resolves from the registry, so the tools
+     half can now be recorded.
    - *(owner to fill in — Codex version, session transcript or note)*
 
 ## D-040: The workbench is a fixed-height instrument (2026-09-11)

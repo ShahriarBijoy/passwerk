@@ -498,13 +498,13 @@ Each phase lists: goal · tasks · definition of done · the prompt to start the
 ---
 
 ## 8. Definition of "done" for v1.0 (CV checklist)
-- [ ] `npx -y @passwerk/server` runs offline; listed in Official MCP Registry
-- [ ] Works in Claude Code, Codex CLI, OpenCode, Claude Desktop (screenshots/GIFs in README)
-- [ ] `docs/CONFORMANCE.md`: N/N golden passports pass official `aas-test-engines`, replayed every CI run
-- [ ] `sovereignty.test.ts` + `--network none` job green
-- [ ] Gap report with legal citations in DE and EN
-- [ ] `apps/web` runs the whole workflow client-side; MCP App renders in Claude Desktop
-- [ ] One pilot / case study (even anonymized) or a recorded run on realistic fixtures
+- [x] `npx -y @passwerk/server` runs offline; listed in Official MCP Registry (0.1.1, 2026-09-13, `io.github.ShahriarBijoy/passwerk`)
+- [ ] Works in Claude Code, Codex CLI, OpenCode, Claude Desktop (screenshots/GIFs in README) — Claude Desktop recorded (README demo, D-039); Codex, OpenCode and Claude Code runs not yet recorded
+- [x] `docs/CONFORMANCE.md`: 16/16 golden passports agree with the official `aas-test-engines`, replayed every CI run
+- [x] `sovereignty.test.ts` + `--network none` job green
+- [x] Gap report with legal citations in DE and EN (Phase 5)
+- [x] `apps/web` runs the whole workflow client-side; MCP App renders in Claude Desktop (D-037, D-039)
+- [x] One pilot / case study (even anonymized) or a recorded run on realistic fixtures — recorded run on the Musterwerk fixtures in Claude Desktop (README demo, 2026-09-13); the pilot itself is Phase 8
 - [x] Apache-2.0, `PROVENANCE.md`, `SECURITY.md`
 
 ---
