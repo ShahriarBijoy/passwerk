@@ -1166,8 +1166,8 @@ none blocking, none touching a verdict, a finding or an export byte):
 - The fix wave removed nine dead i18n keys; `App.tsx`'s top-bar JSX could be pulled into its own
   component.
 - `apps/mcp-app/dist-host` has been tracked since `eee1cec` (Phase 7b) and was re-staged by
-  this branch's `build:host` runs; whether it should be gitignored is a separate chore this ADR
-  does not resolve.
+  this branch's `build:host` runs. Resolved 2026-09-15: it is gitignored and untracked, because
+  CI's `mcp-app` job runs `build:host` before `e2e:mcp-app` and nothing reads the committed copy.
 - The gaps sheet's row-value column is ragged across differently-named attributes — parked, it
   needs an owner design decision, not a default; group names under `BY OWNER` may truncate
   (accepted, per spec §5.1's `Row` row: "name truncates"); the stepper shows only the
