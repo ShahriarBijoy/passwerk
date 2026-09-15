@@ -1226,3 +1226,85 @@ the proposals' provenance carried through unchanged. `packaging/mcpb`'s manifest
 schemas from the installed server's own registry at build time (ADR D-039), so this change
 needed no manifest or packaging edit. No core, rules or web change; filtering and formatting
 are presentation, not domain logic, and stay in `packages/server`.
+
+## D-043: ChatGPT renders the workbench; four gaps stand between that and shipping it (2026-09-15)
+
+**Context.** ChatGPT implements the MCP Apps standard (spec 2026-01-26) that the workbench
+already uses (ADR D-037), so the question was whether the same `ui://passwerk/workbench.html`
+works there unchanged, and what does not. ChatGPT connects only to a public HTTPS endpoint
+(or its Secure MCP Tunnel), never to stdio, and its developer-mode apps offer "No Auth" or
+OAuth, not a static bearer token. The probe therefore ran the unmodified 0.1.1 server
+(`--http 3777`, `PASSWERK_ROOT` = the Musterwerk fixtures) behind a throwaway local proxy
+that added the bearer token, rewrote `Host` to loopback (the server's DNS-rebinding guard,
+`packages/server/src/http.ts`) and logged each JSON-RPC method, exposed through a
+`cloudflared` 2026.9.1 quick tunnel. The owner connected it as a developer-mode app with
+"No Auth" and "Enforce CSP in developer mode" on, on chatgpt.com and in the ChatGPT desktop
+app for Windows. The proxy, the tunnel and a temporary download diagnostic in
+`apps/mcp-app/src/bridge.ts` were removed afterwards; nothing from the probe is committed
+except this record.
+
+**Measured.**
+
+- **Tool calls need `securitySchemes`.** With the server's tool list as it is, ChatGPT showed
+  a "Connect passwerk-test" card, reported "connected", and then sent no request at all; two
+  attempts, zero `tools/call`. After the proxy added `securitySchemes: [{ "type": "noauth" }]`
+  to every tool (as a top-level field and in `_meta`, the two places OpenAI's auth guide
+  names) and the owner pressed Refresh on the app, `review_passport` was called and the
+  workbench rendered. The Refresh and the field changed together, so which of the two
+  locations ChatGPT reads, and whether the Refresh alone would have sufficed, is not
+  separated.
+- **The workbench renders and syncs.** Web (dark theme) and Windows desktop app (light theme)
+  both rendered the fixed-height instrument through all six steps; the empty CSP
+  (`connectDomains: []`, `resourceDomains: []`) is accepted with CSP enforcement on, and the
+  debounced autosave arrived as `tools/call validate_passport`. Whether document upload inside
+  the iframe works was not confirmed: the owner reached the export step, but did not report
+  how the values got there.
+- **Host capabilities** reported to the app: `openLinks`, `serverTools`, `serverResources`,
+  `logging`, `message` (text, image), `updateModelContext` (text, image, structuredContent),
+  `sandbox.csp` (echoing the declared empty lists plus `frameDomains` and `baseUriDomains`),
+  and `experimental` `openai/files` and `openai/skillsDeepLinks`. **No `downloadFile`.**
+- **`ui/download-file` is not implemented.** Called regardless of the missing capability, with
+  a `passwerk://` URI and base64 blob, a `file:///` URI and blob, and a `file:///` URI and
+  text, all three returned `MCP error -32601: Method not found`, although OpenAI's "MCP Apps
+  in ChatGPT" page lists the method. The workbench therefore showed its fallback notice, which
+  says "Ask Claude to run emit_passport … with an outDir": the wrong host name, and an
+  `outDir` on the server's disk that a ChatGPT user cannot reach.
+- **`window.openai`** carried `callTool`, `notifyIntrinsicWidth`, `openExternal`,
+  `requestConnectSheet`, `requestDisplayMode`, `sendFollowUpMessage`, `displayMode`,
+  `maxHeight`, `maxWidth`, `theme`, `locale`, `userAgent`, `appPackageName`, `isSidebarOpen`,
+  `widget`, `toolInput`, `toolOutput`, `toolResponseMetadata`, `widgetState`, `subjectId`,
+  `setWidgetState`, `view`, `safeArea`, `surfaceBackgroundColor`. None of the documented file
+  methods (`uploadFile`, `selectFiles`, `getFileDownloadUrl`) was present for this
+  developer-mode app.
+- **A new MCP session for nearly every call.** ChatGPT re-ran `initialize` before most
+  requests, often first sent the request without a session id (answered 404, then retried on a
+  fresh session), opened a `GET /mcp` stream per session, never closed one, and probed
+  `server/discover` (404, ignored).
+
+**Decision.** ChatGPT is a supported target for the workbench in principle, and the
+following four gaps are recorded as the work that must precede any ChatGPT release; none is
+implemented by this ADR, and gaps 3 and 4 need the owner's decision first.
+
+1. The server declares `securitySchemes` on every tool, in whichever location a follow-up
+   probe shows ChatGPT reads, so no proxy is needed.
+2. Drafts outlive an MCP session. The session store (`http.ts`, one store per session) cannot
+   serve a host that opens a session per call: a draft the workbench stores through
+   `validate_passport` is, by reading the code, unreachable from the model's next call. The
+   store's scope (per server, bounded, content-addressed) and session eviction are to be
+   decided; this failure was inferred, not reproduced in ChatGPT.
+3. Exports need a path that does not depend on `ui/download-file`. The candidate is
+   `openLinks`: the server keeps an emitted file behind a short-lived, unguessable HTTPS link
+   and the workbench opens it. That adds an HTTP download route and puts the exported bytes
+   on the server, which the promises in `PRIVACY.md` and `SECURITY.md` must then state.
+4. Auth for a real deployment: "No Auth" behind an unguessable tunnel URL was acceptable for
+   a probe on test fixtures and is not acceptable for a user's documents. OAuth, a
+   per-user self-hosted server, or ChatGPT's Secure MCP Tunnel are the options.
+
+The fallback notice becomes host-neutral in any case ("ask the assistant"), and it stops
+suggesting an `outDir` when the server is remote.
+
+**Consequence.** Codex is unaffected: its MCP documentation covers tools and server
+instructions only, so it gets the tools and the skill, not the workbench. Claude Desktop is
+unaffected: its path (stdio, `downloadFile` advertised, one session per connection) is the
+one ADR D-037 measured. The probe's setup (proxy, quick tunnel, developer-mode app) is the
+repeatable way to re-measure after each gap closes.
