@@ -22,6 +22,10 @@ const outputSchema = out({
     })
     .optional(),
   gap: z.looseObject({ items: z.array(z.looseObject({})) }).optional(),
+  saveToFolder: z
+    .object({ root: z.string() })
+    .optional()
+    .describe('Present when the server runs on the user’s machine: exports may be saved there'),
 });
 
 const OPENED: LangText = {
@@ -37,7 +41,7 @@ export const reviewPassportTool: ToolDefinition<typeof inputSchema, typeof outpu
   name: 'review_passport',
   title: 'Review a passport in the workbench',
   description:
-    'Opens the interactive passwerk workbench in hosts that render MCP Apps (Claude Desktop, Claude web): upload documents, accept or edit mapping proposals, read the gap report and export, all on the user’s machine. Pass the current draft so the user reviews it visually; the workbench keeps the draft id in sync so gap_report and emit_passport can continue on it. Hosts without a UI receive the same draft, validation report and gap report as text.',
+    'Opens the interactive passwerk workbench in hosts that render MCP Apps (Claude Desktop, Claude web, the ChatGPT desktop app): upload documents, accept or edit mapping proposals, read the gap report and export, all on the user’s machine. Pass the current draft so the user reviews it visually; the workbench keeps the draft id in sync so gap_report and emit_passport can continue on it. Hosts without a UI receive the same draft, validation report and gap report as text.',
   inputSchema,
   outputSchema,
   annotations: {
@@ -48,7 +52,9 @@ export const reviewPassportTool: ToolDefinition<typeof inputSchema, typeof outpu
   },
   ui: { resourceUri: WORKBENCH_URI },
   async handler(input, ctx) {
-    const structured: Record<string, unknown> = {};
+    // A local server names its folder, so a host without downloads can still save (D-045).
+    const structured: Record<string, unknown> =
+      ctx.workspace && ctx.fs ? { saveToFolder: { root: ctx.workspace.root } } : {};
     const de: string[] = [];
     const en: string[] = [];
     if (input.draft !== undefined) {

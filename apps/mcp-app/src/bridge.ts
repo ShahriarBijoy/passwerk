@@ -4,10 +4,10 @@
  * routes exports through the host. Written against {@link HostLink}, the slice of ext-apps'
  * `App` it needs, so tests can pass the real `App` or a fake.
  */
-import { canonicalJson, type FactSet, validateSchema } from '@passwerk/core';
+import { canonicalJson, type FactSet, type PassportDraft, validateSchema } from '@passwerk/core';
 import type { Language } from '@/i18n/index.ts';
 import { derive } from '@/workflow/derive/index.ts';
-import type { ExportFile } from '@/workflow/exports.ts';
+import type { ExportFile, ExportKind } from '@/workflow/exports.ts';
 import type { Action } from '@/workflow/reducer.ts';
 import type { FileSummary } from '@/workflow/state.ts';
 import type { Store } from '@/workflow/store.ts';
@@ -171,35 +171,123 @@ function base64Of(bytes: Uint8Array): string {
 
 const noDownload = (lang: Language, draftId: string | undefined): string =>
   lang === 'de'
-    ? `Dieser Host kann keine Dateien speichern. Bitten Sie Claude, emit_passport für den Entwurf ${draftId ?? '(noch nicht synchronisiert)'} mit einem outDir auszuführen.`
-    : `This host cannot save files. Ask Claude to run emit_passport for draft ${draftId ?? '(not synced yet)'} with an outDir.`;
+    ? `Dieser Host kann aus der Werkbank keine Dateien speichern. Bitten Sie den Assistenten, den Entwurf ${draftId ?? '(noch nicht synchronisiert)'} mit emit_passport zu exportieren.`
+    : `This host cannot save files from the workbench. Ask the assistant to export draft ${draftId ?? '(not synced yet)'} with emit_passport.`;
+
+const noGapFile = (lang: Language, draftId: string | undefined): string =>
+  lang === 'de'
+    ? `Der Lückenbericht wird hier nicht als Datei gespeichert. Bitten Sie den Assistenten, gap_report für den Entwurf ${draftId ?? '(noch nicht synchronisiert)'} auszuführen.`
+    : `The gap report is not saved as a file here. Ask the assistant to run gap_report for draft ${draftId ?? '(not synced yet)'}.`;
+
+const saved = (lang: Language, path: string): string =>
+  lang === 'de' ? `Gespeichert unter ${path}.` : `Saved to ${path}.`;
+
+const saveFailed = (lang: Language, name: string, reason: string): string =>
+  lang === 'de'
+    ? `${name} konnte nicht gespeichert werden: ${reason}`
+    : `Could not save ${name}: ${reason}`;
+
+/** The folder a local server lets the workbench save into, from a `review_passport` result. */
+export function saveRootOf(structured: Record<string, unknown> | undefined): string | undefined {
+  const save = structured?.['saveToFolder'];
+  const root =
+    typeof save === 'object' && save !== null ? (save as { root?: unknown }).root : undefined;
+  return typeof root === 'string' ? root : undefined;
+}
+
+/** Subfolder of the save root the workbench writes into. */
+export const EXPORT_DIR = 'passwerk-exports';
+
+const EMIT_TARGET: Partial<Record<ExportKind, string>> = {
+  aasJson: 'aas-json',
+  aasx: 'aasx',
+  html: 'html',
+  draft: 'draft-json',
+};
+
+export interface DownloadRequest {
+  file: ExportFile;
+  kind: ExportKind;
+  lang: Language;
+  /** The id the sync last stored; named when the user has to ask the assistant. */
+  draftId?: string;
+  /** The draft the file was built from and its "now", which a local server emits again. */
+  draft?: PassportDraft;
+  asOf?: string;
+  /** The folder a local server named in `saveToFolder`; absent for a remote server. */
+  saveRoot?: string;
+}
+
+const writtenPath = (structured: Record<string, unknown> | undefined): string | undefined => {
+  const files = structured?.['files'];
+  const first = Array.isArray(files) ? (files[0] as { path?: unknown } | undefined) : undefined;
+  const image = structured?.['image'] as { path?: unknown } | undefined;
+  const path = first?.path ?? image?.path;
+  return typeof path === 'string' ? path : undefined;
+};
 
 /**
- * Sandboxed iframes cannot start downloads themselves. When the host advertises
- * `downloadFile`, the export goes through it; otherwise the user is told how to get the file
- * from the model, naming the draft id the sync last stored.
+ * Sandboxed iframes cannot start downloads themselves. A host that advertises `downloadFile`
+ * gets the bytes. A host without it (the ChatGPT desktop app, ADR D-045) but with a local
+ * server gets the file saved into that server's folder by the same tools the model would call:
+ * `emit_passport`, or `generate_carrier` for the QR. Otherwise the user is told what to ask
+ * the assistant, naming the draft id the sync last stored. Failures are shown, never dropped.
  */
 export async function hostDownload(
   link: HostLink,
-  file: ExportFile,
-  lang: Language,
-  draftId: string | undefined,
+  req: DownloadRequest,
   notify: (text: string) => void,
 ): Promise<void> {
-  if (!link.getHostCapabilities()?.downloadFile) {
+  const { file, kind, lang, draftId } = req;
+  if (link.getHostCapabilities()?.downloadFile) {
+    await link.downloadFile({
+      contents: [
+        {
+          type: 'resource',
+          resource: {
+            uri: `passwerk://export/${file.name}`,
+            mimeType: file.type,
+            blob: base64Of(file.bytes),
+          },
+        },
+      ],
+    });
+    return;
+  }
+  if (req.saveRoot === undefined || req.draft === undefined) {
     notify(noDownload(lang, draftId));
     return;
   }
-  await link.downloadFile({
-    contents: [
-      {
-        type: 'resource',
-        resource: {
-          uri: `passwerk://export/${file.name}`,
-          mimeType: file.type,
-          blob: base64Of(file.bytes),
-        },
-      },
-    ],
-  });
+  if (kind === 'gaps') {
+    notify(noGapFile(lang, draftId));
+    return;
+  }
+  const call =
+    kind === 'qr'
+      ? {
+          name: 'generate_carrier',
+          arguments: { draft: req.draft, format: 'svg', outDir: EXPORT_DIR },
+        }
+      : {
+          name: 'emit_passport',
+          arguments: {
+            draft: req.draft,
+            targets: [EMIT_TARGET[kind]],
+            outDir: EXPORT_DIR,
+            htmlLang: lang,
+            ...(req.asOf !== undefined ? { asOf: req.asOf } : {}),
+          },
+        };
+  try {
+    const r = await link.callServerTool(call);
+    const path = r.isError ? undefined : writtenPath(r.structuredContent);
+    if (path === undefined) {
+      const reason = String(r.structuredContent?.['error'] ?? 'no file was written');
+      notify(saveFailed(lang, file.name, reason));
+      return;
+    }
+    notify(saved(lang, path));
+  } catch (e) {
+    notify(saveFailed(lang, file.name, e instanceof Error ? e.message : String(e)));
+  }
 }

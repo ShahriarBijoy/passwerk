@@ -305,6 +305,7 @@ export const de = {
   'gaps.verify.short': 'Prüfen',
   'gaps.showAttribute': 'Attribut anzeigen',
   'export.download': 'Herunterladen',
+  'export.save': 'In Ordner speichern',
   'export.aasJson.note': 'IDTA 02035-1…7',
   'export.html.note': 'DE / EN',
   'export.gaps.note': 'JSON',

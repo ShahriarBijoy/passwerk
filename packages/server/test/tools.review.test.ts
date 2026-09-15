@@ -8,7 +8,7 @@ import {
 } from '@passwerk/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { WORKBENCH_URI } from '../src/ui.ts';
-import { call, connect, TEST_CLOCK } from './harness.ts';
+import { call, connect, memoryFileSystem, TEST_CLOCK } from './harness.ts';
 
 let s: Awaited<ReturnType<typeof connect>>;
 beforeAll(async () => {
@@ -95,5 +95,30 @@ describe('review_passport (Phase 7b, ADR D-037)', () => {
       const ids = new Set(r.structured.report?.findings.map((f) => f.ruleId));
       for (const id of expectedFindings) expect(ids.has(id), `${name}: ${id}`).toBe(true);
     }
+  });
+});
+
+describe('review_passport names where the workbench may save (ADR D-045)', () => {
+  it('returns the save root when the server runs next to the user, with or without a draft', async () => {
+    const local = await connect({ fs: memoryFileSystem({}), workspace: { root: '/work' } });
+    const empty = await call<{ saveToFolder?: { root: string } }>(
+      local.client,
+      'review_passport',
+      {},
+    );
+    expect(empty.structured.saveToFolder).toEqual({ root: '/work' });
+    const draft = validateSchema(getSample('ev-valid')).draft;
+    const full = await call<{ saveToFolder?: { root: string } }>(local.client, 'review_passport', {
+      draft,
+    });
+    expect(full.structured.saveToFolder).toEqual({ root: '/work' });
+    await local.close();
+  });
+
+  it('says nothing without a workspace, which is how the HTTP transport runs', async () => {
+    const remote = await connect({ fs: memoryFileSystem({}) });
+    const r = await call<{ saveToFolder?: unknown }>(remote.client, 'review_passport', {});
+    expect(r.structured.saveToFolder).toBeUndefined();
+    await remote.close();
   });
 });

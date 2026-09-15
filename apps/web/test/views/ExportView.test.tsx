@@ -59,3 +59,21 @@ describe('ExportView', () => {
     expect(screen.getByTestId('export-error').textContent).toContain('broken');
   });
 });
+
+describe('ExportView in a host that saves to a folder (ADR D-045)', () => {
+  it('labels every file button "Save to folder" instead of "Download"', () => {
+    mount(
+      <ExportView
+        lang="en"
+        top={<span />}
+        report={report}
+        gap={gap}
+        carrier={ok}
+        saveToFolder
+        onExport={vi.fn()}
+      />,
+    );
+    for (const k of ['aasJson', 'aasx', 'html', 'gaps', 'draft'])
+      expect(screen.getByTestId(`export-${k}`).textContent).toBe('Save to folder');
+  });
+});

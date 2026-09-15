@@ -1,6 +1,6 @@
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import type { AssistClient, AssistConfig, AssistProvider } from '../workflow/assist/types.ts';
-import type { ExportFile } from '../workflow/exports.ts';
+import type { ExportFile, ExportKind } from '../workflow/exports.ts';
 import { makeAssistClient } from './assist/client.ts';
 import { clearAssistKey, loadAssistKey, saveAssistKey } from './assist/key.ts';
 import { DEFAULT_MODELS, endpointLabel } from './assist/providers.ts';
@@ -36,7 +36,12 @@ export interface AssistPlatform {
  * Apps bridge and never touches IndexedDB (ADR D-037).
  */
 export interface Platform {
-  download(file: ExportFile): void;
+  download(file: ExportFile, kind: ExportKind): void;
+  /**
+   * MCP host only: 'save' when an export is written into a folder on the user's machine
+   * instead of downloaded (ADR D-045). Absent means download.
+   */
+  exportAction?(): 'download' | 'save';
   /** Called on "start over"; the web app clears IndexedDB, the MCP App does nothing. */
   clearPersisted(): void;
   /** pdf.js worker URL; core's PDF reader needs one outside Node. */

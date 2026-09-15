@@ -37,8 +37,8 @@ calls; you do the semantic work. Before the first call, read `list_capabilities`
    attribute unabridged, then `suggest_mappings(attributeIds: <those ids>, detail:'full')` to
    see every matching candidate with its file, page and cell, then `apply_mappings` with the
    proposals' `source` copied through unchanged.
-   In a host that renders MCP Apps (Claude Desktop, Claude web), **`review_passport`** with the
-   `draftId` opens the passwerk workbench instead: the user uploads, reviews and fixes
+   In a host that renders MCP Apps (Claude Desktop, Claude web, the ChatGPT desktop app),
+   **`review_passport`** with the `draftId` opens the passwerk workbench instead: the user uploads, reviews and fixes
    visually, and the draft id stays in sync for the tools below. Skip it in terminal hosts.
 6. **`emit_passport`** (`aas-json`, `aasx`, `draft-json`, `html`) only when the verdict is `valid`
    or the user explicitly accepts `valid_with_warnings`. Quote the re-validation verdict. The

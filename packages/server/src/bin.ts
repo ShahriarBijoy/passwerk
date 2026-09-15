@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 /**
  * `passwerk-server`: stdio by default, `--http [port]` for Streamable HTTP.
  * The only place the wall clock and process environment are read.
  */
-import { realpathSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DEFAULT_INGEST_LIMITS } from '@passwerk/core';
@@ -115,6 +116,8 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
 
   const { server } = createServer({
     fs: nodeFileSystem(args.root),
+    // stdio runs on the user's machine, so the workbench may save exports there (ADR D-045).
+    workspace: { root: resolvePath(args.root ?? process.cwd()) },
     clock: clock(),
     log,
     logPayloads,

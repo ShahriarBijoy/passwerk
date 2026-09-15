@@ -3,16 +3,18 @@ import { App } from '@modelcontextprotocol/ext-apps';
 import { AppBridge } from '@modelcontextprotocol/ext-apps/app-bridge';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { getSample } from '@passwerk/core';
-import { createServer } from '@passwerk/server';
+import { emitAasJson, getSample, type PassportDraft, validateSchema } from '@passwerk/core';
+import { createServer, type ServerOptions } from '@passwerk/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '@/workflow/state.ts';
 import { createStore } from '@/workflow/store.ts';
+import { memoryFileSystem } from '../../../packages/server/test/harness.ts';
 import {
   applyTheme,
   attachSync,
   hostDownload,
   languageOf,
+  saveRootOf,
   seedActions,
   workerUrlOf,
 } from '../src/bridge.ts';
@@ -26,9 +28,12 @@ type HostCaps = { downloadFile?: object; updateModelContext?: object };
  * passwerk server, joined to the view side (`App`) over an in-memory pair. What the bridge
  * sends is what a host would receive.
  */
-async function harness(hostCaps: HostCaps = { updateModelContext: { text: {} } }) {
+async function harness(
+  hostCaps: HostCaps = { updateModelContext: { text: {} } },
+  serverOptions: ServerOptions = {},
+) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
-  const { server, ctx } = createServer({ clock: CLOCK });
+  const { server, ctx } = createServer({ clock: CLOCK, ...serverOptions });
   const client = new Client({ name: 'host-test', version: '0' });
   await server.connect(st);
   await client.connect(ct);
@@ -196,14 +201,19 @@ describe('attachSync', () => {
 });
 
 describe('hostDownload', () => {
+  const draft = validateSchema(getSample('ev-valid')).draft as PassportDraft;
+  const json = (name: string) => ({
+    name,
+    bytes: new TextEncoder().encode('{}'),
+    type: 'application/json',
+  });
+
   it('sends the file through the host when downloadFile is advertised', async () => {
     const h = await harness({ downloadFile: {} });
     const notify = vi.fn();
     await hostDownload(
       h.app,
-      { name: 'x.aas.json', bytes: new TextEncoder().encode('{}'), type: 'application/json' },
-      'en',
-      'drf_1',
+      { file: json('x.aas.json'), kind: 'aasJson', lang: 'en', draftId: 'drf_1' },
       notify,
     );
     expect(notify).not.toHaveBeenCalled();
@@ -223,14 +233,17 @@ describe('hostDownload', () => {
     await h.close();
   });
 
-  it('otherwise explains what to ask Claude, naming the synced draft', async () => {
+  it('otherwise asks the assistant, host-neutral, naming the synced draft', async () => {
     const h = await harness({});
     const notify = vi.fn();
     await hostDownload(
       h.app,
-      { name: 'x.aasx', bytes: new Uint8Array(), type: 'application/octet-stream' },
-      'de',
-      'drf_1',
+      {
+        file: { name: 'x.aasx', bytes: new Uint8Array(), type: 'application/octet-stream' },
+        kind: 'aasx',
+        lang: 'de',
+        draftId: 'drf_1',
+      },
       notify,
     );
     expect(h.downloads).toHaveLength(0);
@@ -239,7 +252,101 @@ describe('hostDownload', () => {
     expect(text).toContain('emit_passport');
     expect(text).toContain('drf_1');
     expect(text).toMatch(/^Dieser Host/);
+    expect(text).not.toContain('Claude');
+    expect(text).not.toContain('outDir');
     await h.close();
+  });
+
+  it('saves into the folder a local server named, through emit_passport, byte for byte', async () => {
+    const fsys = memoryFileSystem({});
+    const h = await harness({}, { fs: fsys, workspace: { root: '/work' } });
+    const notify = vi.fn();
+    const expected = emitAasJson(draft, { asOf: CLOCK }).output;
+    await hostDownload(
+      h.app,
+      {
+        file: json('ignored.aas.json'),
+        kind: 'aasJson',
+        lang: 'en',
+        draft,
+        asOf: CLOCK,
+        saveRoot: '/work',
+      },
+      notify,
+    );
+    const [path, bytes] = [...fsys.written][0] ?? [];
+    expect(path).toMatch(/^[/]work[/]passwerk-exports[/].+[.]aas[.]json$/);
+    expect(new TextDecoder().decode(bytes)).toBe(expected);
+    expect(h.downloads).toHaveLength(0);
+    expect(notify).toHaveBeenCalledOnce();
+    expect(notify.mock.calls[0]?.[0]).toContain(path);
+    await h.close();
+  });
+
+  it('saves the QR through generate_carrier', async () => {
+    const fsys = memoryFileSystem({});
+    const h = await harness({}, { fs: fsys, workspace: { root: '/work' } });
+    const notify = vi.fn();
+    await hostDownload(
+      h.app,
+      { file: json('x.qr.svg'), kind: 'qr', lang: 'en', draft, asOf: CLOCK, saveRoot: '/work' },
+      notify,
+    );
+    const [path] = [...fsys.written][0] ?? [];
+    expect(path).toMatch(/[.]svg$/);
+    expect(notify.mock.calls[0]?.[0]).toContain(path);
+    await h.close();
+  });
+
+  it('points to gap_report for the gap file, which no tool writes', async () => {
+    const fsys = memoryFileSystem({});
+    const h = await harness({}, { fs: fsys, workspace: { root: '/work' } });
+    const notify = vi.fn();
+    await hostDownload(
+      h.app,
+      {
+        file: json('x.gaps.json'),
+        kind: 'gaps',
+        lang: 'en',
+        draftId: 'drf_1',
+        draft,
+        asOf: CLOCK,
+        saveRoot: '/work',
+      },
+      notify,
+    );
+    expect(fsys.written.size).toBe(0);
+    expect(notify.mock.calls[0]?.[0]).toContain('gap_report');
+    await h.close();
+  });
+
+  it('reports a failed save instead of dropping it', async () => {
+    const h = await harness({}, { fs: memoryFileSystem({}), workspace: { root: '/work' } });
+    const notify = vi.fn();
+    await hostDownload(
+      h.app,
+      {
+        file: json('x.aas.json'),
+        kind: 'aasJson',
+        lang: 'en',
+        draft: { meta: {} } as unknown as PassportDraft,
+        asOf: CLOCK,
+        saveRoot: '/work',
+      },
+      notify,
+    );
+    expect(notify).toHaveBeenCalledOnce();
+    expect(notify.mock.calls[0]?.[0]).toMatch(/^Could not save/);
+    await h.close();
+  });
+});
+
+describe('saveRootOf', () => {
+  it('reads the root a local server names and ignores anything else', () => {
+    expect(saveRootOf({ saveToFolder: { root: '/work' } })).toBe('/work');
+    expect(saveRootOf({ saveToFolder: { root: 3 } })).toBeUndefined();
+    expect(saveRootOf({})).toBeUndefined();
+    expect(saveRootOf(undefined)).toBeUndefined();
   });
 });
 

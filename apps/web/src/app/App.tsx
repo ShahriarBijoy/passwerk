@@ -356,7 +356,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         return;
       }
       setExportError(undefined);
-      if (file) platform.download(file);
+      if (file) platform.download(file, kind);
     } catch (e) {
       fail(e);
     }
@@ -636,6 +636,7 @@ export function App({ store, platform, storageNotice, initialAssistKey, hostNoti
         if (!derived) return null;
         return (
           <ExportView
+            saveToFolder={platform.exportAction?.() === 'save'}
             lang={lang}
             top={top}
             notice={notice}

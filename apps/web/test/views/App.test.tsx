@@ -560,3 +560,40 @@ describe('App: the assist while the model is still answering', () => {
     expect(store.getState().assist?.suggestions).toHaveLength(1);
   });
 });
+
+describe('App exports through the platform (ADR D-045)', () => {
+  const atExport = () => {
+    const store = createStore(initialState);
+    store.dispatch({
+      type: 'setProject',
+      project: defaultProject('urn:passwerk:test:save', AT),
+      at: AT,
+    });
+    store.dispatch({
+      type: 'filesIngested',
+      summaries: [{ name: 'a.csv', size: 3, sha256: 'x', format: 'csv', pages: 1, lang: 'de' }],
+      facts: { facts: [], tables: [], documents: [] },
+      at: AT,
+    });
+    store.dispatch({ type: 'goTo', step: 'export', at: AT });
+    return store;
+  };
+
+  it('hands the platform the file and its kind', () => {
+    const download = vi.fn();
+    mount(<App store={atExport()} platform={{ ...platform, download }} />);
+    fireEvent.click(screen.getByTestId('export-aasx'));
+    expect(download).toHaveBeenCalledOnce();
+    const [file, kind] = (download.mock.calls[0] ?? []) as unknown as [{ name: string }, string];
+    expect(kind).toBe('aasx');
+    expect(file.name).toMatch(/[.]aasx$/);
+  });
+
+  it('labels the buttons for saving when the platform saves to a folder', () => {
+    mount(
+      <App store={atExport()} platform={{ ...platform, exportAction: () => 'save' as const }} />,
+    );
+    // The shell opens in German; the English label is covered by ExportView.test.tsx.
+    expect(screen.getByTestId('export-aasJson').textContent).toBe('In Ordner speichern');
+  });
+});

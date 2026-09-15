@@ -19,6 +19,8 @@ export interface ExportViewProps {
   exportError?: LangText;
   /** A footer-slot status line, forwarded to `Instrument` (storage, host or a caught failure). */
   notice?: ReactNode;
+  /** The host saves exports into a folder instead of downloading them (ADR D-045). */
+  saveToFolder?: boolean;
   onExport(kind: ExportKind): void;
   children?: ReactNode;
 }
@@ -79,7 +81,7 @@ export function ExportView(props: ExportViewProps) {
                   data-testid={`export-${f.kind}`}
                   onClick={() => props.onExport(f.kind)}
                 >
-                  {t(lang, 'export.download')}
+                  {t(lang, props.saveToFolder ? 'export.save' : 'export.download')}
                 </Button>
               }
             />

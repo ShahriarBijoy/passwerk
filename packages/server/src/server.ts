@@ -32,6 +32,11 @@ export interface ServerOptions {
    * answers with the not-built error and `review_passport` stays a text tool.
    */
   ui?: UiLoader;
+  /**
+   * The user's own folder, for a server that runs on the user's machine (stdio). Never set it
+   * for a remote transport: the workbench would save the user's exports onto the server.
+   */
+  workspace?: { root: string };
 }
 
 const noopLog: Logger = () => {};
@@ -84,6 +89,7 @@ export function createServer(options: ServerOptions = {}): {
   const ctx: ToolContext = {
     store: options.store ?? new SessionStore(),
     ...(options.fs ? { fs: options.fs } : {}),
+    ...(options.workspace ? { workspace: options.workspace } : {}),
     clock: options.clock ?? new Date().toISOString(),
     log,
   };

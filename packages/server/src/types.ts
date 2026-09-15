@@ -51,6 +51,11 @@ export type Logger = (level: LogLevel, message: string, data?: unknown) => void;
 export interface ToolContext {
   store: SessionStore;
   fs?: FileSystemAdapter;
+  /**
+   * Set only when the server runs next to the user (stdio): the folder `fs` resolves against,
+   * which `review_passport` names so the workbench may save exports there (ADR D-045).
+   */
+  workspace?: { root: string };
   /** ISO date-time used as "now" when a caller gives no date. The only wall-clock input. */
   clock: string;
   log: Logger;
