@@ -1401,3 +1401,66 @@ gaps now apply to the web only). The emitted file can differ from what the scree
 downloaded only by the `asOf` of the click, since the draft is re-derived at that moment. Not
 verified: saving through the button in the desktop app itself (the tests drive the real
 server through the SDK's host bridge), and the plugin install path in that app.
+
+## D-046: The hosted connector is a Cloudflare Worker with GitHub sign-in; state lives in one Durable Object per user (2026-10-22)
+
+**Context.** `docs/connector-submission.md` left one open item: no public Streamable HTTP
+endpoint. The existing HTTP mode (`packages/server/src/http.ts`) takes one shared bearer token,
+which suits a team deployment but not a Claude custom connector that strangers add by URL:
+Claude's connector dialog expects OAuth (Client ID Metadata Documents, or Dynamic Client
+Registration) for a server that knows who is calling. The owner already deploys on Cloudflare
+Workers. Cloudflare's `agents` package (`McpAgent`) was considered and not taken: its current
+release (0.29.0, 2026-10-20) is younger than the three-day `minimumReleaseAge`, and it pins
+`@modelcontextprotocol/sdk` to 1.32.1 as a peer while `@passwerk/server` is on 1.30.0.
+
+**Decision.** A new private workspace package, `apps/connector` (`@passwerk/connector`), is one
+Worker that is both the OAuth authorization server and the MCP endpoint at `/mcp`:
+
+- `@cloudflare/workers-oauth-provider` 1.2.3 serves discovery (RFC 8414, RFC 9728), the token
+  endpoint and registration, with `clientIdMetadataDocumentEnabled` (Claude's "published
+  identity") and DCR both on. One scope, `mcp`, granted at consent and checked on every request.
+- The consent page and the GitHub hand-off use the library's helpers (`beginConsent`,
+  `approveConsent`, `beginUpstream`, `finishUpstream`), so consent is per client, the page cannot
+  be framed or forged, and `state` is bound to the browser. Every client-chosen string is escaped.
+- GitHub is the identity step: PKCE, **no scopes**, and the token is dropped once the login and
+  numeric id are known. Grants store `{ githubId, login }` only. `ALLOWED_GITHUB_LOGINS`
+  (comma-separated, or `*`) is checked at sign-in and again on every MCP request; empty means
+  closed, so a fresh deployment admits nobody by accident.
+- `/mcp` is forwarded to a Durable Object named `github:<id>`. The object holds that user's
+  `SessionStore` in memory; each request builds `createServer({ store, ui, log })` with no `fs`
+  and no `workspace` (D-045) and a stateless `WebStandardStreamableHTTPServerTransport`
+  (`sessionIdGenerator: undefined`, JSON responses). The protocol carries no session; the
+  content-addressed store does, which fits the stateless 2026-07-28 revision and survives the
+  request landing on any isolate.
+- Documents arrive as `ingest_documents.inline` bytes and files leave as bytes, so nothing is
+  written to a disk. The workbench (`packages/server/ui/workbench.html`) is bundled as a Text
+  module; deploys therefore run after `pnpm build:mcp-app`.
+- pdf.js loads its worker with a runtime `import()` that workerd cannot resolve
+  (`No such module "pdf.worker.mjs"`, both Musterwerk PDFs failed in the first smoke run). The
+  connector bundles `pdfjs-dist/legacy/build/pdf.worker.mjs` and sets `globalThis.pdfjsWorker`,
+  which pdf.js checks first (`apps/connector/src/pdf-worker.ts`). Core is unchanged.
+
+Outbound network exists only in the connector (GitHub, CIMD documents, under
+`global_fetch_strictly_public`); `core` and `server` still make no network calls and no model
+calls (D-002), and their sovereignty tests are untouched.
+
+**Measured (2026-10-22, local workerd via `wrangler dev` 4.151.1).** Discovery answers on the
+configured origin, `/mcp` without a token returns `401` with `resource_metadata`, DCR → consent →
+approve redirects to GitHub with PKCE and no scope, a GitHub cancel returns `access_denied` with
+`state` and `iss` to the client, and a forged `state` gets `400`. Through a throwaway Worker that
+skipped sign-in, the SDK client listed the twelve tools and ran seven of them plus the workbench
+resource: the five Musterwerk documents ingest (both PDFs included), 59 facts, 32 proposals at
+confidence ≥ 0.7 for `EV` (the Node recall gate's number), `ev-valid` validates `valid`, emits AAS
+JSON, AASX and HTML, `gap_report` and `generate_carrier` answer, and the ids returned by one
+request resolve in the next. `apply_mappings`, `review_passport`, `check_obligations`,
+`explain_attribute` and `list_capabilities` were not called. Bundle: 12.6 MiB raw, **2.64 MiB gzip**.
+
+**Consequences.** The Free plan's 3 MiB compressed limit leaves about 360 KiB of headroom; the
+workbench is half the bundle and is the first thing to move to static assets if the Worker grows.
+Workers Free also has a short CPU limit per request, which a large PDF may exceed; the Paid plan
+lifts both. The store is memory only: when the object is evicted after a quiet spell the ids are
+gone and the tools answer `UnknownIdError` ("re-send the object"); re-ingesting returns the same
+ids. Persisting it to the object's SQLite storage is a later step. A hosted connector stays a
+convenience mode with the operator's retention policy, never described as offline (D-019).
+Not verified: a real GitHub sign-in end to end, a deployed Worker, and Claude connecting to it;
+those need the owner's Cloudflare account and GitHub OAuth App (`docs/install/connector.md`).

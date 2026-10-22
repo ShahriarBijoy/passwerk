@@ -1,0 +1,27 @@
+// The hosted passwerk connector (ADR D-046). Setup: docs/install/connector.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "passwerk-connector",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: required by workers-oauth-provider to fetch Client ID
+  // Metadata Documents safely (no private or internal addresses).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // The MCP App workbench (packages/server/ui/workbench.html) is bundled as a text module.
+  "rules": [{ "type": "Text", "globs": ["**/*.html"], "fallthrough": false }],
+  "kv_namespaces": [
+    // `wrangler kv namespace create OAUTH_KV`, then paste the id it prints.
+    { "binding": "OAUTH_KV", "id": "REPLACE_WITH_KV_NAMESPACE_ID" }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "PASSWERK_SESSION", "class_name": "PasswerkSession" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PasswerkSession"] }],
+  "vars": {
+    // Your deployment's origin. The MCP URL for Claude is PUBLIC_URL + "/mcp".
+    "PUBLIC_URL": "https://passwerk-connector.YOUR-SUBDOMAIN.workers.dev",
+    // Comma-separated GitHub logins, or "*" for any GitHub account. Empty lets nobody in.
+    "ALLOWED_GITHUB_LOGINS": "ShahriarBijoy"
+  },
+  "observability": { "enabled": true }
+}

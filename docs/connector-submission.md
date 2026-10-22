@@ -94,8 +94,11 @@ part of this MCP server submission.
 
 ## 6. Open items
 
-- **Hosted endpoint.** No publicly reachable Streamable HTTP endpoint exists yet; the owner
-  must stand one up (or point the submission at the Docker image) before review can begin.
+- **Hosted endpoint.** `apps/connector` (ADR D-046, 2026-10-22) is the deployable answer: a
+  Cloudflare Worker with OAuth (Client ID Metadata Documents and DCR) and GitHub sign-in, set up
+  as in `docs/install/connector.md`. The directory's Authentication step is "OAuth with client ID
+  metadata documents" or "dynamic client registration". Still open: deploying it, a real sign-in
+  from Claude, and a reviewer test account (an `ALLOWED_GITHUB_LOGINS` entry, or `*`).
 - **`SECURITY.md`** exists since PR #34 (2026-09-12): reporting channel, supported versions,
   trust boundaries.
 - **npm publish and registry listing.** Done: `@passwerk/server` is on npm since 0.1.0
