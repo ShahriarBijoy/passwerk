@@ -1,0 +1,7 @@
+# Copy to .dev.vars for `pnpm --filter @passwerk/connector dev`. Never commit .dev.vars.
+# A separate GitHub OAuth App for local use, with callback URL http://localhost:8787/callback
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+# 32+ random characters, e.g. `openssl rand -hex 32`
+CONSENT_SECRET=
+PUBLIC_URL=http://localhost:8787

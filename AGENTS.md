@@ -32,6 +32,7 @@ proves zero network calls.
 | `packages/server` | `@passwerk/server` | MCP server, stdio + Streamable HTTP. Adapter only, no domain logic |
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
 | `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
+| `apps/connector` | `@passwerk/connector` | Hosted MCP server on Cloudflare Workers: OAuth (GitHub sign-in) plus `createServer` in one Durable Object per user (ADR D-046). Private, never published |
 | `apps/mcp-app` | `@passwerk/mcp-app` | MCP App: the web app's workflow in the host's iframe, served by the server as `ui://passwerk/workbench.html` (ADR D-037) |
 | `packaging` (Phase 7c) | | MCPB bundle for Claude Desktop, Codex plugin, connector submission checklist, and the generator of `plugins/passwerk` |
 | `plugins/passwerk` | | Generated, committed Claude Code and Codex plugin installed from GitHub via `.claude-plugin/` and `.agents/plugins/` marketplaces (ADR D-044). Edit its sources, then `pnpm sync:plugin` |
@@ -39,7 +40,8 @@ proves zero network calls.
 | `tools/oracle` (Phase 3) | | Python `aas-test-engines` runner that writes `docs/CONFORMANCE.md` |
 
 Dependency direction is strict: `rules`, then `core`, then `server`, then `cli`; `web` depends
-on `core` only. Never import upward. The CLI imports the server's tool registry (ADR D-031).
+on `core` only, `connector` on `server`. Never import upward. The CLI imports the server's tool
+registry (ADR D-031).
 
 ## Commands
 
@@ -251,6 +253,14 @@ so no build is needed before `pnpm test`.
   passes `workspace` to `createServer`, `review_passport` returns `saveToFolder`, and the
   workbench saves exports through `emit_passport` / `generate_carrier` into `passwerk-exports`
   ("Save to folder"). The HTTP transport never sets a workspace. See ADR D-045.
+- **Hosted connector: built, not deployed (2026-10-22).** `apps/connector` is one Worker that is
+  the OAuth authorization server (`@cloudflare/workers-oauth-provider`, CIMD and DCR, one `mcp`
+  scope) and the MCP endpoint: `/mcp` goes to a Durable Object per GitHub user holding the
+  `SessionStore`, with a stateless Web-standard transport and no `fs`. GitHub sign-in asks for no
+  scopes; `ALLOWED_GITHUB_LOGINS` gates access. The connector registers pdf.js's worker on
+  `globalThis.pdfjsWorker` because workerd cannot resolve its runtime import. Verified in local
+  workerd; deploying needs the owner's Cloudflare account (`docs/install/connector.md`,
+  `pnpm build:connector`, `pnpm deploy:connector`). See ADR D-046.
 - **Next:** Phase 8, proof and pilot (AASX Package Explorer and the BatteryPass-Ready public
   test environment against `docs/CONFORMANCE.md`; a pilot case study with a Northern-German
   supplier via BIBA).
