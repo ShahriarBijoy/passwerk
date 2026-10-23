@@ -2,12 +2,13 @@
   "name": "@passwerk/fixtures",
   "version": "0.0.0",
   "private": true,
-  "description": "Generates the deterministic fake supplier documents used by core's ingest and mapping tests, plus the held-out evaluation set and docs/EVALUATION.md",
+  "description": "Generates the deterministic fake supplier documents used by core's ingest and mapping tests, the hosted demo series in demo/series, and the held-out evaluation set and docs/EVALUATION.md",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "generate": "tsx src/generate.ts",
-    "heldout": "tsx src/heldout/generate.ts && tsx src/heldout/evaluate.ts"
+    "heldout": "tsx src/heldout/generate.ts && tsx src/heldout/evaluate.ts",
+    "series": "tsx src/series.ts"
   },
   "devDependencies": {
     "@passwerk/core": "workspace:*",

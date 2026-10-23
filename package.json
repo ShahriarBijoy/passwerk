@@ -26,6 +26,7 @@
     "artefacts": "pnpm --filter @passwerk/rules run artefacts",
     "oracle": "pnpm --filter @passwerk/oracle run oracle",
     "heldout": "pnpm --filter @passwerk/fixtures run heldout",
+    "series": "pnpm --filter @passwerk/fixtures series",
     "review-sheet": "pnpm --filter @passwerk/rules run review-sheet",
     "release:pack": "rimraf out/pack && pnpm -r --filter \"./packages/*\" exec pnpm pack --pack-destination ../../out/pack",
     "release:smoke": "node tools/release/pack-smoke.mjs",
