@@ -198,6 +198,11 @@ Measured on 2026-10-24 from the laptop against a free `standard-medium` machine.
   POST bodies unchanged. The server must not check `Host` against the public name. The bearer
   token is the access control.
 - A round trip from the laptop took 0.75 to 0.80 s over 10 calls.
-- The free plan pauses the machine after 30 idle minutes or after 8 running hours. Start it
-  15 minutes before the demo and check `/healthz` through the public URL. If the check fails,
-  run `sudo docker start passwerk-hosted` on the machine.
+- The free plan pauses the machine after 30 idle minutes or after 8 running hours. A paused
+  machine answers `503` ("Sandbox offline") and a request does not wake it. Resume keeps the
+  running container, and `/healthz` answered on the first try after it.
+- A reboot from inside the machine (`sudo systemctl reboot`) stops it: the URL answers `502`
+  and then `503` until you press **Start** in the dashboard. After Start, the container came
+  back on its own and `/healthz` answered within 5 s, because Docker restarts it on boot.
+- Start or resume the machine 15 minutes before the demo and check `/healthz` through the
+  public URL. If the check fails, run `sudo docker start passwerk-hosted` on the machine.
