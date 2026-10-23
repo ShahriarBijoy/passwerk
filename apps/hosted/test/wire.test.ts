@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type HostedHandle, startHosted } from '../src/http.js';
+import { TaskRegistry } from '../src/tasks.js';
 import { client, MODERN, type RpcOptions, TASKS, TOKEN } from './rpc.js';
 
 let hosted: HostedHandle;
@@ -121,5 +122,42 @@ describe('tasks extension', () => {
   it('rejects seconds outside 1 to 120', async () => {
     const r = await callEcho({ text: 'x', seconds: 121 });
     expect(r.body.error?.code ?? (r.body.result?.isError ? 'tool-error' : undefined)).toBeDefined();
+  });
+});
+
+describe('concurrency cap', () => {
+  it('counts plain-result calls against the same cap as tasks', async () => {
+    const capped = await startHosted({
+      host: '127.0.0.1',
+      port: 0,
+      token: TOKEN,
+      tickMs: 20,
+      registry: new TaskRegistry({ maxRunning: 1 }),
+    });
+    try {
+      const c = client(() => capped.url);
+      const echo = (o: RpcOptions) =>
+        c.rpc(
+          'tools/call',
+          { name: 'slow_echo', arguments: { text: 'x', seconds: 100 } },
+          { ...o, name: 'slow_echo' },
+        );
+      const task = (await echo({})).body.result;
+      expect(task.status).toBe('working');
+      const plain = (await echo({ tasks: false })).body.result;
+      expect(plain.isError).toBe(true);
+      expect(plain.content[0].text).toMatch(/already running/);
+      await c.rpc('tasks/cancel', { taskId: task.taskId }, { name: task.taskId });
+      const after = (
+        await c.rpc(
+          'tools/call',
+          { name: 'slow_echo', arguments: { text: 'ok', seconds: 1 } },
+          { tasks: false, name: 'slow_echo' },
+        )
+      ).body.result;
+      expect(after.content).toEqual([{ type: 'text', text: 'ok' }]);
+    } finally {
+      await capped.close();
+    }
   });
 });

@@ -82,11 +82,10 @@ export function createServer(deps: ServerDeps): McpServer {
       // SDK's CallToolResult union cannot express.
       async (input, ctx): Promise<never> => {
         const job = tool.job(input as never, deps);
-        if (!clientAllowsTasks(ctx.mcpReq.envelope)) {
-          const controller = new AbortController();
-          return (await job({ signal: controller.signal, progress: () => {} })) as never;
-        }
         try {
+          if (!clientAllowsTasks(ctx.mcpReq.envelope)) {
+            return (await deps.registry.runInline(job, ctx.mcpReq.signal)) as never;
+          }
           const task = deps.registry.start(tool.name, job);
           // The SDK checks every tools/call result for `content`; the task answer has none.
           return { content: [], resultType: 'task', ...wireTask(task) } as never;
