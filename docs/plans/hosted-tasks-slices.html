@@ -228,6 +228,14 @@ The goal and the decisions in the plan stay. The order, a few facts, and two sco
     <li><input type="checkbox" id="c-s0-3"><label for="c-s0-3">Create the InstaBox machine (4 vCPU, 8 GiB). Publish one HTTPS port. Note the URL.</label></li>
     <li><input type="checkbox" id="c-s0-4"><label for="c-s0-4">Confirm <code>/status</code> in Claude Code shows a claude.ai sign-in.</label></li>
   </ul>
+  <h4 class="label">Measured on 2026-10-24</h4>
+  <ul class="plain">
+    <li>The machine is <code>passwerk-demo</code> on the free <code>standard-medium</code> template, with 4 vCPU, 8 GiB and 20 GiB (16 GiB usable on <code>/</code>). It runs Debian 13 on x86_64 with systemd as PID 1, passwordless sudo, git 2.47.3 and Node 22.23.3. GitHub and the npm registry both answer 200.</li>
+    <li>Docker 29.8.2 is enabled under systemd, and <code>user</code> is in the <code>docker</code> group. <code>hello-world</code> runs, and <code>node:22-bookworm-slim</code> runs with <code>--read-only</code> and reports v22.23.4. So S1 uses Docker with <code>--restart unless-stopped</code>.</li>
+    <li>Port 8080 is published as <code>https://8080-&lt;id&gt;.instabox.tech</code>. The real URL stays out of the repo.</li>
+    <li>The proxy passes <code>Authorization</code>, <code>Origin</code> and POST bodies. It adds <code>X-Forwarded-For</code>, <code>X-Forwarded-Host</code> and <code>X-Forwarded-Proto: https</code>. It rewrites <code>Host</code> to <code>127.0.0.1:8080</code>. A round trip from the laptop takes 0.75 to 0.80 s over 10 calls.</li>
+    <li>The proxy answers 502 if the first byte takes longer than about 20 s. Responses at 10 s and 18 s came back 200, and at 22 s, 30 s and 65 s came back 502 after 20.7 to 20.9 s. Once the first byte is sent, a stream survives 25 s silences and ran for 76 s. SSE events arrive one second apart, as written, so the proxy does not buffer them.</li>
+  </ul>
 </section>
 
 <!-- S1 -->
@@ -270,7 +278,8 @@ interface TaskStore { create; get; update; list }   // in memory now, SQLite in 
     <li><input type="checkbox" id="c-s1-b3"><label for="c-s1-b3"><code>tools/call</code> answers with a task only when <code>params._meta["io.modelcontextprotocol/clientCapabilities"].extensions</code> carries <code>"io.modelcontextprotocol/tasks"</code>. Otherwise it waits and returns a plain result. The server declares the extension under <code>capabilities.extensions</code>.</label></li>
     <li><input type="checkbox" id="c-s1-b4"><label for="c-s1-b4"><code>tasks/get</code> and <code>tasks/cancel</code> through the three-argument <code>setRequestHandler(method, { params, result }, handler)</code>. The modern era accepts them only in that form. Unknown id answers <code>-32602</code>. <code>tasks/update</code> waits for S4.</label></li>
     <li><input type="checkbox" id="c-s1-b5"><label for="c-s1-b5"><code>slow_echo { text, seconds }</code> with <code>statusMessage</code> "3 of 10 s".</label></li>
-    <li><input type="checkbox" id="c-s1-b6"><label for="c-s1-b6">Start on boot. Docker <code>--restart unless-stopped</code> or <code>systemctl enable</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-b6"><label for="c-s1-b6">Start on boot with Docker <code>--restart unless-stopped</code>. Docker is enabled under systemd on the machine (S0).</label></li>
+    <li><input type="checkbox" id="c-s1-b7"><label for="c-s1-b7">Do not validate <code>Host</code> against the public name. The proxy rewrites it to <code>127.0.0.1:8080</code>. If the SDK's host check is on, allow that value or check <code>X-Forwarded-Host</code>. The bearer token is the access control.</label></li>
   </ul>
   </div>
   </div>
@@ -293,7 +302,8 @@ interface TaskStore { create; get; update; list }   // in memory now, SQLite in 
   </ul>
   <h4 class="label">Verify, perf</h4>
   <ul class="box">
-    <li><input type="checkbox" id="c-s1-p1"><label for="c-s1-p1">Time from <code>tools/call</code> to task answer, 20 calls with <code>curl -w %{time_total}</code> against InstaBox. Budget p95 under 1 s. It fails at 1 s, because the 60-second timer has room but a slow answer means the proxy buffers.</label></li>
+    <li><input type="checkbox" id="c-s1-p1"><label for="c-s1-p1">Time from <code>tools/call</code> to task answer, 20 calls with <code>curl -w %{time_total}</code> against InstaBox. Budget p95 under 1.5 s, against a measured 0.8 s round trip. The real limit is the proxy's 20 s to first byte, not Claude Code's 60 s.</label></li>
+    <li><input type="checkbox" id="c-s1-p2"><label for="c-s1-p2">The plain-result path (no tasks extension) on <code>slow_echo seconds=30</code> through InstaBox. A JSON response hits the proxy's 20 s limit and returns 502. Either answer in SSE mode with an early keep-alive byte (<code>keepAliveMs</code> under 20 s), or record that this path is limited to 20 s on InstaBox.</label></li>
   </ul>
   <div class="done-when"><div class="label">Done when</div>
   Unit and live boxes are checked and the InstaBox run shows <code>1 MCP task</code> completing. If Claude Code never shows a task, stop and find out why before S2. Nothing later works without it.</div>

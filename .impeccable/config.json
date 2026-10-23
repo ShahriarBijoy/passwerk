@@ -12,9 +12,7 @@
       {
         "rule": "repeated-container-text",
         "value": "*",
-        "files": [
-          "docs/plans/hosted-tasks-slices.html"
-        ],
+        "files": ["docs/plans/hosted-tasks-slices.html"],
         "createdAt": "2026-10-23T22:26:42.673Z",
         "reason": "Claude triage: the repeat is tasks/get, an MCP protocol method name cited in separate checklist items of the S1 slice, not a repeated status label"
       }
