@@ -11,6 +11,7 @@ import {
   type ToolResult,
   TooManyTasksError,
 } from './tasks.js';
+import { runSeries } from './tools/runSeries.js';
 import { slowEcho } from './tools/slowEcho.js';
 
 export const TASKS_EXTENSION = 'io.modelcontextprotocol/tasks';
@@ -21,6 +22,9 @@ export interface ServerDeps {
   registry: TaskRegistry;
   /** Length of one slow_echo "second". Tests shorten it. */
   tickMs: number;
+  /** Folder holding one subfolder per demo series. */
+  seriesDir: string;
+  clock: () => Date;
 }
 
 /** A tool whose work runs as a task when the client allows it, inline otherwise. */
@@ -60,7 +64,8 @@ function errorResult(message: string): ToolResult {
   return { content: [{ type: 'text', text: message }], isError: true };
 }
 
-const TOOLS = [slowEcho];
+// Widened so registerTool sees one schema type rather than a union of tool shapes.
+const TOOLS: TaskTool<z.ZodObject>[] = [slowEcho, runSeries];
 
 export function createServer(deps: ServerDeps): McpServer {
   const server = new McpServer(

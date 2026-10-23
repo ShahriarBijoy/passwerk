@@ -16,9 +16,13 @@
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",
     "@modelcontextprotocol/server": "2.3.1",
+    "@passwerk/core": "workspace:*",
+    "@passwerk/rules": "workspace:*",
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "2.3.1"
+    "@modelcontextprotocol/client": "2.3.1",
+    "@passwerk/server": "workspace:*",
+    "tsx": "4.23.13"
   }
 }

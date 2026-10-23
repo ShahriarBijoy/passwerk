@@ -5,9 +5,10 @@
 import { timingSafeEqual } from 'node:crypto';
 import { createServer as createHttpServer, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { fileURLToPath } from 'node:url';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import { createMcpHandler } from '@modelcontextprotocol/server';
-import { createServer } from './server.js';
+import { createServer, type ServerDeps } from './server.js';
 import { TaskRegistry } from './tasks.js';
 
 export interface HostedOptions {
@@ -16,6 +17,9 @@ export interface HostedOptions {
   token: string;
   /** Length of one slow_echo "second". Default 1000. */
   tickMs?: number;
+  /** Folder holding one subfolder per demo series. Default `<app>/series`. */
+  seriesDir?: string;
+  clock?: () => Date;
   registry?: TaskRegistry;
   /** Largest accepted request body. Default 1 MiB. */
   maxBodyBytes?: number;
@@ -51,7 +55,12 @@ export async function startHosted(o: HostedOptions): Promise<HostedHandle> {
   }
   const token = Buffer.from(o.token);
   const log = o.log ?? (() => {});
-  const deps = { registry: o.registry ?? new TaskRegistry(), tickMs: o.tickMs ?? 1000 };
+  const deps: ServerDeps = {
+    registry: o.registry ?? new TaskRegistry(),
+    tickMs: o.tickMs ?? 1000,
+    seriesDir: o.seriesDir ?? fileURLToPath(new URL('../series', import.meta.url)),
+    clock: o.clock ?? (() => new Date()),
+  };
   const maxRequestBodySize = o.maxBodyBytes ?? 1024 * 1024;
   const mcp = createMcpHandler(() => createServer(deps), {
     legacy: 'reject',

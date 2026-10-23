@@ -1,11 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type HostedHandle, startHosted } from '../src/http.js';
-
-const TOKEN = 'a'.repeat(64);
-const TASKS = 'io.modelcontextprotocol/tasks';
-const MODERN = '2026-07-28';
+import { client, MODERN, type RpcOptions, TASKS, TOKEN } from './rpc.js';
 
 let hosted: HostedHandle;
+const { rpc, getTask, pollUntil } = client(() => hosted.url);
 
 beforeAll(async () => {
   hosted = await startHosted({ host: '127.0.0.1', port: 0, token: TOKEN, tickMs: 20 });
@@ -15,56 +13,8 @@ afterAll(async () => {
   await hosted.close();
 });
 
-interface RpcOptions {
-  tasks?: boolean;
-  token?: string | null;
-  name?: string;
-}
-
-async function rpc(method: string, params: Record<string, unknown>, o: RpcOptions = {}) {
-  const capabilities = o.tasks === false ? {} : { extensions: { [TASKS]: {} } };
-  const headers: Record<string, string> = {
-    'content-type': 'application/json',
-    accept: 'application/json, text/event-stream',
-    'mcp-protocol-version': MODERN,
-    'mcp-method': method,
-  };
-  if (o.name !== undefined) headers['mcp-name'] = o.name;
-  if (o.token !== null) headers['authorization'] = `Bearer ${o.token ?? TOKEN}`;
-  const res = await fetch(`${hosted.url}/mcp`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method,
-      params: {
-        ...params,
-        _meta: {
-          'io.modelcontextprotocol/protocolVersion': MODERN,
-          'io.modelcontextprotocol/clientCapabilities': capabilities,
-          'io.modelcontextprotocol/clientInfo': { name: 'wire-test', version: '0.0.0' },
-        },
-      },
-    }),
-  });
-  const text = await res.text();
-  return { status: res.status, body: text ? JSON.parse(text) : undefined };
-}
-
 const callEcho = (args: Record<string, unknown>, o: RpcOptions = {}) =>
   rpc('tools/call', { name: 'slow_echo', arguments: args }, { ...o, name: 'slow_echo' });
-
-const getTask = (taskId: string) => rpc('tasks/get', { taskId }, { name: taskId });
-
-async function pollUntil(taskId: string, done: (status: string) => boolean) {
-  for (let i = 0; i < 200; i++) {
-    const r = await getTask(taskId);
-    if (done(r.body.result.status)) return r.body.result;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error(`task ${taskId} never settled`);
-}
 
 describe('HTTP edge', () => {
   it('answers /healthz without a token', async () => {

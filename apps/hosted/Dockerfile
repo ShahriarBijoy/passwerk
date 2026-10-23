@@ -21,8 +21,10 @@ LABEL org.opencontainers.image.title="passwerk-hosted" \
 WORKDIR /app
 # Root-owned on purpose: the nonroot process can read its code but not rewrite it.
 COPY --from=build /out /app
+# The demo series run_series offers. loadSeries reads only documents, so expected.json is inert.
+COPY --from=build /src/packages/core/test/fixtures/musterwerk /app/series/musterwerk
 # Inside the container the port forward arrives on eth0, so loopback would be unreachable.
 # Bind the published port to 127.0.0.1 on the host instead (docs/install/instabox-demo.md).
-ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080 PASSWERK_SERIES_DIR=/app/series
 EXPOSE 8080
 CMD ["dist/main.js"]
