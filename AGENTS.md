@@ -33,6 +33,7 @@ proves zero network calls.
 | `packages/cli` | `@passwerk/cli` | `passwerk` binary. Adapter only, no domain logic |
 | `apps/web` (Phase 7a) | | Client-side web app bundling core, with QR preview. The primary product (ADR D-019) |
 | `apps/mcp-app` | `@passwerk/mcp-app` | MCP App: the web app's workflow in the host's iframe, served by the server as `ui://passwerk/workbench.html` (ADR D-037) |
+| `apps/hosted` | `@passwerk/hosted` | Hosted MCP server on SDK v2 that runs long jobs as MCP tasks for the Claude Code CLI (Phase 9a, ADR D-047). Network code lives only here |
 | `packaging` (Phase 7c) | | MCPB bundle for Claude Desktop, Codex plugin, connector submission checklist, and the generator of `plugins/passwerk` |
 | `plugins/passwerk` | | Generated, committed Claude Code and Codex plugin installed from GitHub via `.claude-plugin/` and `.agents/plugins/` marketplaces (ADR D-044). Edit its sources, then `pnpm sync:plugin` |
 | `skills/passwerk` (Phase 6) | | Agent Skill teaching the ingest, map, validate, fix, emit workflow |

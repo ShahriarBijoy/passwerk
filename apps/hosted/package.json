@@ -1,0 +1,24 @@
+{
+  "name": "@passwerk/hosted",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hosted passwerk MCP server on protocol revision 2026-07-28: long jobs run as MCP tasks",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.1.1",
+    "@modelcontextprotocol/server": "2.3.1",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1"
+  }
+}

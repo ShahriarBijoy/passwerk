@@ -26,6 +26,7 @@ export default defineConfig({
       'packaging/*/test/**/*.test.ts',
       'apps/web/test/**/*.test.{ts,tsx}',
       'apps/mcp-app/test/**/*.test.{ts,tsx}',
+      'apps/hosted/test/**/*.test.ts',
     ],
     passWithNoTests: false,
     coverage: {
