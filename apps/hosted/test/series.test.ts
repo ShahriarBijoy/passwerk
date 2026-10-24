@@ -7,6 +7,7 @@ import { type HostedHandle, startHosted } from '../src/http.js';
 import { liveWorkers, runInWorker, type WorkerEntry } from '../src/series/runner.js';
 import type { SeriesModel, WorkerStart } from '../src/series/types.js';
 import { client, TOKEN } from './rpc.js';
+import { expectedEntries, fetchZip } from './zip.js';
 
 const SERIES = fileURLToPath(new URL('../../../demo/series', import.meta.url));
 const AS_OF = '2026-10-24T12:00:00.000Z';
@@ -160,6 +161,11 @@ describe('run_series over the wire', () => {
     );
     expect([...seen].every((line) => /^Model \d+ of 12$/.test(line))).toBe(true);
     expect(seen.size).toBeGreaterThan(1);
+
+    expect(structuredContent.download.file).toBe('passwerk-musterwerk-12.zip');
+    const zip = await fetchZip(structuredContent.download.url);
+    expect(zip.entries).toEqual(expectedEntries(structuredContent.models));
+    expect(new Set(zip.entries.map(([path]) => path.split('/')[0])).size).toBe(12);
   }, 120_000);
 });
 

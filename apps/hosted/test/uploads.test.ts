@@ -112,7 +112,13 @@ describe('create_upload, PUT, run_series { upload }', () => {
     expect(sc.models[0].modelId).toBe('pack-1');
     expect(sc.models[0].facts).toBeGreaterThan(0);
     expect(VERDICTS).toContain(sc.models[0].verdict);
-    expect(content[0].text.split('\n').at(-1)).toBe('AI reading: off');
+    expect(content[0].text.split('\n').slice(-2)).toEqual([
+      'AI reading: off',
+      `Download (one use, 15 minutes): curl -fsS -o passwerk-pack-1.zip "${sc.download.url}"`,
+    ]);
+    expect(sc.download.url).toMatch(
+      new RegExp(`^${hosted.url}/download/dl_[a-z2-7]{32}/passwerk-pack-1\\.zip$`),
+    );
 
     expect(refusal(await callSeries({ upload: slot.uploadId, category: 'EV' }))).toMatch(
       /already used/,

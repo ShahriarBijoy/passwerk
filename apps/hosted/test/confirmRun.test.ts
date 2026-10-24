@@ -15,6 +15,7 @@ import { loadSeries } from '../src/series/load.js';
 import { runModel } from '../src/series/pipeline.js';
 import type { ModelOutcome, SeriesModel } from '../src/series/types.js';
 import { client, TOKEN } from './rpc.js';
+import { expectedEntries, fetchZip } from './zip.js';
 
 const SERIES = fileURLToPath(new URL('../../../demo/series', import.meta.url));
 const AS_OF = '2026-10-24T12:00:00.000Z';
@@ -119,8 +120,16 @@ describe('run_series asks to confirm the values the AI reading held', () => {
     await runModel(files, options, keeping);
     if (!recorded) throw new Error('the reader never ran');
     const all = { ...recorded, held: [], confirmed: recorded.held };
-    const expected = await runModel(files, options, recordedReader(all));
+    const expected = (await runModel(files, options, recordedReader(all))).outcome;
     expect(model?.artefacts).toEqual(expected.artefacts);
+
+    // The zip holds the resumed files, not the ones the first pass emitted before asking.
+    const zip = await fetchZip(result.structuredContent.download.url);
+    expect(zip.entries).toEqual(expectedEntries([model as ModelOutcome]));
+    const [path, aasJson] = zip.entries[0] ?? [];
+    expect(path).toBe(`${COMPLETE}/${COMPLETE}.aas.json`);
+    expect(aasJson).toBe(model?.artefacts[0]?.sha256);
+    expect(aasJson).not.toBe(held.artefacts[0]?.sha256);
   }, 120_000);
 
   it('gives the held outcome when every value is skipped or declined', async () => {

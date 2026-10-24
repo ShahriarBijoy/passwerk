@@ -15,7 +15,7 @@ import type { WorkerMessage, WorkerReading, WorkerStart } from './types.js';
 
 if (parentPort === null) throw new Error('worker.ts must run as a worker thread');
 const port = parentPort;
-const post = (m: WorkerMessage) => port.postMessage(m);
+const post = (m: WorkerMessage, transfer: ArrayBuffer[] = []) => port.postMessage(m, transfer);
 
 /** The configured reader, built once; a recorded reading per model is built per model. */
 function readers(reading: WorkerReading): (model: number) => Reader | undefined {
@@ -49,7 +49,7 @@ try {
     const keeping: Reader | undefined = reader && {
       read: async (input) => (kept = await reader.read(input)),
     };
-    const outcome = await runModel(
+    const { outcome, files } = await runModel(
       model,
       {
         category,
@@ -66,7 +66,9 @@ try {
       },
       keeping,
     );
-    post({ type: 'model', outcome, ...(kept ? { reading: kept } : {}) });
+    // Transferred rather than copied: this thread never reads the bytes again.
+    const buffers = new Set(files.map((f) => f.bytes.buffer as ArrayBuffer));
+    post({ type: 'model', outcome, files, ...(kept ? { reading: kept } : {}) }, [...buffers]);
   }
   post({ type: 'done' });
 } catch (e) {

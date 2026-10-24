@@ -37,7 +37,7 @@ beforeAll(async () => {
   const models = await loadSeries(FIXTURES, 'musterwerk');
   expect(models).toHaveLength(1);
   musterwerk = models[0] as SeriesModel;
-  outcome = await runModel(musterwerk, OPTIONS);
+  outcome = (await runModel(musterwerk, OPTIONS)).outcome;
 });
 
 async function call(
@@ -153,13 +153,13 @@ describe('runModel', () => {
   });
 
   it('gives a byte-identical outcome on a second run', async () => {
-    const again = await runModel(musterwerk, OPTIONS);
+    const again = (await runModel(musterwerk, OPTIONS)).outcome;
     expect(canonicalJson(again)).toBe(canonicalJson(outcome));
   });
 
   it('reports the six steps in order with counts once known', async () => {
     const seen: StepProgress[] = [];
-    const r = await runModel(musterwerk, { ...OPTIONS, onStep: (p) => seen.push(p) });
+    const r = (await runModel(musterwerk, { ...OPTIONS, onStep: (p) => seen.push(p) })).outcome;
     const steps = seen.map((p) => p.step).filter((s, i, a) => a.indexOf(s) === i);
     expect(steps).toEqual(['ingest', 'extract', 'suggest', 'apply', 'validate', 'emit']);
     expect(seen[0]).toEqual({ step: 'ingest' });
@@ -242,7 +242,7 @@ describe('runModel on the complete Musterwerk pack', () => {
   });
 
   it('fills every mandatory EV attribute except those beyond the chain, without conflicts', async () => {
-    const r = await runModel(complete, OPTIONS);
+    const r = (await runModel(complete, OPTIONS)).outcome;
     expect(r.conflicts).toBe(0);
     expect(r.gap.missingRequired).toEqual(BEYOND_THE_CHAIN);
     expect(r.gap.mandatoryCompleteness).toBe(61.7);

@@ -70,7 +70,7 @@ try {
   const [model, ...rest] = await loadSeries(join(ROOT, 'demo', 'series'), series);
   if (!model || rest.length > 0) throw new Error(`${series} is not a single-model series`);
   const started = performance.now();
-  const outcome = await runModel(
+  const { outcome } = await runModel(
     model,
     { category: 'EV', asOf: AS_OF, read: true },
     createReader(recording.ask),

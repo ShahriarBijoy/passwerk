@@ -19,6 +19,7 @@
     "@passwerk/core": "workspace:*",
     "@passwerk/rules": "workspace:*",
     "@typesafe-ai/sdk": "0.7.0",
+    "fflate": "0.8.3",
     "zod": "4.5.4"
   },
   "devDependencies": {

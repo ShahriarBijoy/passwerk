@@ -24,8 +24,10 @@ import {
 } from '@passwerk/core';
 import { type HeldValue, openTargets, type Reader, slotKey } from '../reading/index.js';
 import type {
+  Artefact,
   ArtefactDigest,
   ModelOutcome,
+  ModelResult,
   PipelineStep,
   ReadingProposal,
   ReadingSummary,
@@ -226,7 +228,7 @@ const RANK: Record<Verdict, number> = { valid: 0, valid_with_warnings: 1, invali
 
 const utf8 = (s: string): Uint8Array => new TextEncoder().encode(s);
 
-async function digest(file: string, bytes: Uint8Array): Promise<ArtefactDigest> {
+async function digest({ file, bytes }: Artefact): Promise<ArtefactDigest> {
   return { file, bytes: bytes.byteLength, sha256: await sha256Hex(bytes) };
 }
 
@@ -238,7 +240,7 @@ export async function runModel(
   model: SeriesModel,
   o: RunModelOptions,
   reader?: Reader,
-): Promise<ModelOutcome> {
+): Promise<ModelResult> {
   const { modelId } = model;
   const automatic = await mapModel(model, o);
   const read = o.read ? await readModel(modelId, automatic, o, reader) : undefined;
@@ -263,14 +265,15 @@ export async function runModel(
     if (RANK[r.verdict] > RANK[worst.verdict]) worst = r;
   }
 
-  const artefacts = await Promise.all([
-    digest(`${modelId}.aas.json`, utf8(emitted.json.output)),
-    digest(`${modelId}.aasx`, emitted.aasx.output),
-    digest(`${modelId}.html`, utf8(emitted.html.output)),
-    digest(`${modelId}.gaps.json`, utf8(canonicalJson(emitted.gap))),
-  ]);
+  const files: Artefact[] = [
+    { file: `${modelId}.aas.json`, bytes: utf8(emitted.json.output) },
+    { file: `${modelId}.aasx`, bytes: emitted.aasx.output },
+    { file: `${modelId}.html`, bytes: utf8(emitted.html.output) },
+    { file: `${modelId}.gaps.json`, bytes: utf8(canonicalJson(emitted.gap)) },
+  ];
+  const artefacts = await Promise.all(files.map(digest));
 
-  return {
+  const outcome: ModelOutcome = {
     modelId,
     verdict: worst.verdict,
     facts,
@@ -292,4 +295,5 @@ export async function runModel(
     artefacts,
     ...(read ? { reading: read.reading } : {}),
   };
+  return { outcome, files };
 }
