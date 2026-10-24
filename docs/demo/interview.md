@@ -41,8 +41,11 @@ Claude desktop app, local passwerk (stdio, no network).
 - Say: from February 2027 every EV, LMT and industrial battery over 2 kWh needs a digital passport
   (Regulation (EU) 2023/1542, Art. 77). The supplier who has the data in PDFs and spreadsheets has
   no tool for it.
-- Prompt: `Review the Musterwerk passport.` The workbench opens inside the chat
-  (`review_passport`). Show the gaps view and the QR carrier. Do not edit anything.
+- In a new chat, prompt: `Open the passwerk workbench with review_passport and load the Musterwerk
+  sample documents.` The workbench opens inside the chat. Show the gaps view and the QR carrier.
+  Do not edit anything.
+- A vaguer prompt such as `Review the Musterwerk passport.` can make Claude run the pipeline in the
+  chat and never open the workbench. If that happens, say `Open it in the workbench.`
 - Bridge: this all runs on my laptop. Now the same engine on a server, for jobs that take minutes.
 
 Skip part 1 if time is short; part 2 stands alone.
