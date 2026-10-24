@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "paths": {
+      "@passwerk/rules": ["../../packages/rules/src/index.ts"],
+      "@passwerk/core": ["../../packages/core/src/index.ts"]
+    }
+  }
+}
