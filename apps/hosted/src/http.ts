@@ -17,7 +17,7 @@ export interface HostedOptions {
   token: string;
   /** Length of one slow_echo "second". Default 1000. */
   tickMs?: number;
-  /** Folder holding one subfolder per demo series. Default `<app>/series`. */
+  /** Folder holding one subfolder per demo series. Default the repository's `demo/series`. */
   seriesDir?: string;
   clock?: () => Date;
   registry?: TaskRegistry;
@@ -58,7 +58,7 @@ export async function startHosted(o: HostedOptions): Promise<HostedHandle> {
   const deps: ServerDeps = {
     registry: o.registry ?? new TaskRegistry(),
     tickMs: o.tickMs ?? 1000,
-    seriesDir: o.seriesDir ?? fileURLToPath(new URL('../series', import.meta.url)),
+    seriesDir: o.seriesDir ?? fileURLToPath(new URL('../../../demo/series', import.meta.url)),
     clock: o.clock ?? (() => new Date()),
   };
   const maxRequestBodySize = o.maxBodyBytes ?? 1024 * 1024;

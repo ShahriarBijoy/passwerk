@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as c from './content.js';
+import { type ModelVariant, MUSTERWERK, musterwerkContent } from './content.js';
 import { writeCsv1252 } from './writers/csv.js';
 import { writeDocx } from './writers/docx.js';
 import { writePdf } from './writers/pdf.js';
@@ -19,22 +19,28 @@ export const FIXTURE_DIR = join(
   'musterwerk',
 );
 
-export async function generateFixtures(): Promise<Record<string, Uint8Array>> {
+/** The five supplier documents of one Musterwerk battery model, keyed by file name. */
+export async function musterwerkDocuments(v: ModelVariant): Promise<Record<string, Uint8Array>> {
+  const c = musterwerkContent(v);
   return {
     'lieferantenerklaerung.pdf': await writePdf({
-      title: 'Lieferantenerklärung Batteriesystem MW-EV-2026-000123',
-      kv: c.DECLARATION_LINES,
-      table: { header: c.DECLARATION_TABLE_HEADER, rows: c.DECLARATION_TABLE_ROWS },
+      title: c.declarationTitle,
+      kv: c.declarationLines,
+      table: { header: c.declarationTableHeader, rows: c.declarationTableRows },
     }),
     'stueckliste.xlsx': writeXlsx([
-      { name: 'Stammdaten', rows: c.STAMMDATEN.map(([k, v]) => [k, v]) },
-      { name: 'Stückliste', rows: [c.BOM_HEADER, ...c.BOM_ROWS] },
-      { name: 'Leistung', rows: [c.LEISTUNG_HEADER, ...c.LEISTUNG_ROWS] },
+      { name: 'Stammdaten', rows: c.stammdaten.map(([k, v]) => [k, v]) },
+      { name: 'Stückliste', rows: [c.bomHeader, ...c.bomRows] },
+      { name: 'Leistung', rows: [c.leistungHeader, ...c.leistungRows] },
     ]),
-    'energierechnung.pdf': await writePdf({ title: 'Stromrechnung August 2026', kv: c.BILL_LINES }),
-    'datasheet-en.csv': writeCsv1252(c.DATASHEET_ROWS),
-    'handover-notes.docx': writeDocx(c.HANDOVER_PARAGRAPHS, c.HANDOVER_TABLE),
+    'energierechnung.pdf': await writePdf({ title: c.billTitle, kv: c.billLines }),
+    'datasheet-en.csv': writeCsv1252(c.datasheetRows),
+    'handover-notes.docx': writeDocx(c.handoverParagraphs, c.handoverTable),
   };
+}
+
+export function generateFixtures(): Promise<Record<string, Uint8Array>> {
+  return musterwerkDocuments(MUSTERWERK);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

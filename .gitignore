@@ -45,8 +45,10 @@ output/
 # MCP App workbench copied in by `pnpm build:mcp-app` (ADR D-037); ships in the server tarball
 packages/server/ui/
 
-# Local screen recordings; the compressed demo lives on the release page
-demo/
+# Local screen recordings; the compressed demo lives on the release page. The generated demo
+# series (`pnpm series`) is tracked.
+demo/*
+!demo/series/
 
 # Dev-only MCP App host page, rebuilt by `build:host` before every e2e run (CI does the same)
 apps/mcp-app/dist-host/

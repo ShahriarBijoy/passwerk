@@ -8,7 +8,7 @@ import { liveWorkers, runInWorker, type WorkerEntry } from '../src/series/runner
 import type { SeriesModel, WorkerStart } from '../src/series/types.js';
 import { client, TOKEN } from './rpc.js';
 
-const FIXTURES = fileURLToPath(new URL('../../../packages/core/test/fixtures', import.meta.url));
+const SERIES = fileURLToPath(new URL('../../../demo/series', import.meta.url));
 const AS_OF = '2026-10-24T12:00:00.000Z';
 const VERDICTS = ['valid', 'valid_with_warnings', 'invalid'];
 
@@ -44,7 +44,7 @@ beforeAll(async () => {
     host: '127.0.0.1',
     port: 0,
     token: TOKEN,
-    seriesDir: FIXTURES,
+    seriesDir: SERIES,
     clock,
   });
   emptySeries = await startHosted({
@@ -137,6 +137,30 @@ describe('run_series over the wire', () => {
       /^1 models: \d+ valid, \d+ valid_with_warnings, \d+ invalid$/,
     );
   }, 70_000);
+
+  it('runs the twelve-model series as one task, model by model', async () => {
+    const { taskId } = (await callSeries({ series: 'musterwerk-12', category: 'EV' })).body.result;
+    const seen = new Set<string>();
+    let task: { status: string; statusMessage?: string } = { status: 'working' };
+    while (task.status === 'working') {
+      task = (await getTask(taskId)).body.result;
+      if (task.statusMessage) seen.add(task.statusMessage.split(' · ')[0] ?? '');
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    const done = (await getTask(taskId)).body.result;
+    expect(done.status).toBe('completed');
+    const { structuredContent, content } = done.result;
+    expect(structuredContent.summary).toBe(content[0].text);
+    expect(structuredContent.summary.split('\n')[0]).toMatch(/^12 models: /);
+    expect(structuredContent.models.map((m: { modelId: string }) => m.modelId)).toEqual(
+      Array.from({ length: 12 }, (_, i) => `model-${String(i + 1).padStart(2, '0')}`),
+    );
+    expect(structuredContent.models.every((m: { conflicts: number }) => m.conflicts === 0)).toBe(
+      true,
+    );
+    expect([...seen].every((line) => /^Model \d+ of 12$/.test(line))).toBe(true);
+    expect(seen.size).toBeGreaterThan(1);
+  }, 120_000);
 });
 
 describe('runInWorker', () => {

@@ -48,7 +48,12 @@ export interface TaskRegistryOptions {
   newId?: () => TaskId;
   /** How long a task stays readable after it was created. Default one hour. */
   ttlMs?: number;
+  /** Poll interval asked for while the task is young. Default 2000. */
   pollIntervalMs?: number;
+  /** Poll interval once the task is older than `slowPollAfterMs`. Default 5000. */
+  slowPollIntervalMs?: number;
+  /** Default 30 000. */
+  slowPollAfterMs?: number;
   /** Tasks held at once, finished ones included. Default 200. */
   maxTasks?: number;
   /** Tasks running at once. Default 4. */
@@ -75,6 +80,8 @@ export class TaskRegistry {
   private readonly newId: () => TaskId;
   private readonly ttlMs: number;
   private readonly pollIntervalMs: number;
+  private readonly slowPollIntervalMs: number;
+  private readonly slowPollAfterMs: number;
   private readonly maxTasks: number;
   private readonly maxRunning: number;
 
@@ -83,6 +90,8 @@ export class TaskRegistry {
     this.newId = o.newId ?? randomTaskId;
     this.ttlMs = o.ttlMs ?? 60 * 60 * 1000;
     this.pollIntervalMs = o.pollIntervalMs ?? 2000;
+    this.slowPollIntervalMs = o.slowPollIntervalMs ?? 5000;
+    this.slowPollAfterMs = o.slowPollAfterMs ?? 30_000;
     this.maxTasks = o.maxTasks ?? 200;
     this.maxRunning = o.maxRunning ?? 4;
   }
@@ -133,7 +142,13 @@ export class TaskRegistry {
 
   get(id: string): Task | undefined {
     this.purgeExpired();
-    return this.tasks.get(id);
+    const task = this.tasks.get(id);
+    if (task === undefined) return undefined;
+    // Claude Code re-reads the interval from every tasks/get, so a long run is polled less.
+    const age = this.now().getTime() - Date.parse(task.createdAt);
+    const pollIntervalMs =
+      age < this.slowPollAfterMs ? this.pollIntervalMs : this.slowPollIntervalMs;
+    return { ...task, pollIntervalMs };
   }
 
   /** Cancelling a finished task changes nothing. */

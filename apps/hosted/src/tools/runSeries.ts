@@ -37,9 +37,11 @@ export const runSeries: TaskTool<typeof Input> = {
       const asOf = clock().toISOString();
       const models = await loadSeries(seriesDir, series);
       const outcomes = await runInWorker({ models, category, asOf }, ctx);
+      const summary = seriesSummary(outcomes);
       return {
-        content: [{ type: 'text', text: seriesSummary(outcomes) }],
-        structuredContent: { series, category, asOf, models: outcomes },
+        content: [{ type: 'text', text: summary }],
+        // Claude Code hands the model this object, not `content`, for a task result.
+        structuredContent: { summary, series, category, asOf, models: outcomes },
       };
     },
 };

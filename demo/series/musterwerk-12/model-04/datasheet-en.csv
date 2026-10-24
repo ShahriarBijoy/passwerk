@@ -1,0 +1,8 @@
+Parameter;Value;Unit
+Rated capacity;90.0;Ah
+Nominal voltage;355.2;V
+Battery mass;398.1;kg
+Cycle life;2900;cycles
+Rated energy;32000;Wh
+Temperature range – idle, lower;-20;°C
+Temperature range – idle, upper;45;°C

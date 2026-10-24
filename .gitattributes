@@ -10,3 +10,6 @@ packages/rules/artefacts/** -text
 
 # Test fixtures are byte-exact (a test regenerates and compares them)
 packages/core/test/fixtures/** -text
+
+# The generated demo series is byte-exact too (tools/fixtures/test/series.test.ts)
+demo/series/** -text
