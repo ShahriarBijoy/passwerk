@@ -1,6 +1,6 @@
 /**
  * The HTTP edge: `GET /healthz` open, `POST /mcp` behind a bearer token, `PUT /upload/<id>/<name>`
- * behind the upload id it names, everything else 404.
+ * and `GET /download/<id>/<name>` behind the id they name, everything else 404.
  * Only revision 2026-07-28 is served; 2025-era requests are rejected by the SDK.
  */
 import { timingSafeEqual } from 'node:crypto';
@@ -13,6 +13,7 @@ import type { AddressInfo } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import { createMcpHandler } from '@modelcontextprotocol/server';
+import { DownloadStore } from './downloads.js';
 import type { ReadingConfig } from './series/types.js';
 import { createServer, type ServerDeps } from './server.js';
 import { TaskRegistry } from './tasks.js';
@@ -29,7 +30,8 @@ export interface HostedOptions {
   clock?: () => Date;
   registry?: TaskRegistry;
   uploads?: UploadStore;
-  /** Base of the upload URLs handed out, e.g. `https://8080-<id>.instabox.tech`. */
+  downloads?: DownloadStore;
+  /** Base of the upload and download URLs handed out, e.g. `https://8080-<id>.instabox.tech`. */
   publicUrl?: string;
   /** How series runs read documents with Jev. Default off. */
   reading?: ReadingConfig;
@@ -159,6 +161,39 @@ function receive(
   });
 }
 
+const DOWNLOAD_PATH = /^\/download\/([^/?#]+)\/([^/?#]+)$/;
+
+/**
+ * The raw request target is matched whole: a query, a percent-encoding or an extra segment can
+ * never equal the stored name, so each answers the same 404 as an unknown id.
+ */
+function getDownload(res: ServerResponse, downloads: DownloadStore, url: string): Promise<number> {
+  const [, id = '', name = ''] = DOWNLOAD_PATH.exec(url) ?? [];
+  const transfer = downloads.open(id, name);
+  if (transfer === undefined) {
+    json(res, 404, NOT_FOUND);
+    return Promise.resolve(404);
+  }
+  res.writeHead(200, {
+    'content-type': 'application/zip',
+    'content-disposition': `attachment; filename="${name}"`,
+    'cache-control': 'no-store',
+    'content-length': String(transfer.bytes.byteLength),
+  });
+  res.end(transfer.bytes);
+  return new Promise((resolve) => {
+    res.once('close', () => {
+      if (res.writableFinished) {
+        transfer.commit();
+        resolve(200);
+      } else {
+        transfer.abort();
+        resolve(499);
+      }
+    });
+  });
+}
+
 async function putUpload(
   req: IncomingMessage,
   res: ServerResponse,
@@ -211,6 +246,7 @@ export async function startHosted(o: HostedOptions): Promise<HostedHandle> {
     seriesDir: o.seriesDir ?? fileURLToPath(new URL('../../../demo/series', import.meta.url)),
     clock,
     uploads: o.uploads ?? new UploadStore({ now: clock }),
+    downloads: o.downloads ?? new DownloadStore({ now: clock }),
     reading: o.reading ?? { kind: 'off' },
   };
   const maxRequestBodySize = o.maxBodyBytes ?? 1536 * 1024;
@@ -235,6 +271,16 @@ export async function startHosted(o: HostedOptions): Promise<HostedHandle> {
           log(`PUT /upload failed: ${e instanceof Error ? e.name : 'error'}`);
           if (!res.headersSent) json(res, 500, { error: 'internal error' });
         },
+      );
+      return;
+    }
+    if (rawPath.startsWith('/download/')) {
+      if (req.method !== 'GET') {
+        log(`${req.method} /download 405`);
+        return json(res, 405, { error: 'method not allowed' }, { allow: 'GET' });
+      }
+      getDownload(res, deps.downloads, req.url ?? '').then((status) =>
+        log(`GET /download ${status}`),
       );
       return;
     }

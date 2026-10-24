@@ -4,6 +4,7 @@
  */
 import { McpServer, ProtocolError, ProtocolErrorCode } from '@modelcontextprotocol/server';
 import { z } from 'zod';
+import type { DownloadStore } from './downloads.js';
 import type { ReadingConfig } from './series/types.js';
 import {
   type Job,
@@ -29,6 +30,7 @@ export interface ServerDeps {
   seriesDir: string;
   clock: () => Date;
   uploads: UploadStore;
+  downloads: DownloadStore;
   /** On when a TypeSafe key is set and `PASSWERK_AI_READING` is not `off` (ADR D-048). */
   reading: ReadingConfig;
 }
@@ -44,10 +46,13 @@ export interface TaskTool<S extends z.ZodType> {
   name: string;
   description: string;
   inputSchema: S;
-  /** The job of a task, which may ask the client through `input_required`. */
-  job(input: z.infer<S>, deps: ServerDeps): Job;
+  /**
+   * The job of a task, which may ask the client through `input_required`. It runs after the
+   * request returned, so whatever it needs of the request comes through `scope`.
+   */
+  job(input: z.infer<S>, deps: ServerDeps, scope: RequestScope): Job;
   /** The job of an inline run, which has no way to ask. */
-  inline(input: z.infer<S>, deps: ServerDeps): Job<ToolResult>;
+  inline(input: z.infer<S>, deps: ServerDeps, scope: RequestScope): Job<ToolResult>;
 }
 
 /** A tool that answers at once with a plain result, task extension or not. */
@@ -107,10 +112,10 @@ export function createServer(deps: ServerDeps, scope: RequestScope): McpServer {
       async (input, ctx): Promise<never> => {
         try {
           if (!clientAllowsTasks(ctx.mcpReq.envelope)) {
-            const job = tool.inline(input as never, deps);
+            const job = tool.inline(input as never, deps, scope);
             return (await deps.registry.runInline(job, ctx.mcpReq.signal)) as never;
           }
-          const task = deps.registry.start(tool.name, tool.job(input as never, deps));
+          const task = deps.registry.start(tool.name, tool.job(input as never, deps, scope));
           // The SDK checks every tools/call result for `content`; the task answer has none.
           return { content: [], resultType: 'task', ...wireTask(task) } as never;
         } catch (e) {
