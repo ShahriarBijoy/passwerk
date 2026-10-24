@@ -5,5 +5,13 @@
     "outDir": "dist",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../packages/rules"
+    },
+    {
+      "path": "../../packages/core"
+    }
+  ]
 }

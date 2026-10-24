@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type HostedHandle, startHosted } from '../src/http.js';
-
-const TOKEN = 'a'.repeat(64);
-const TASKS = 'io.modelcontextprotocol/tasks';
-const MODERN = '2026-07-28';
+import { TaskRegistry } from '../src/tasks.js';
+import { client, MODERN, type RpcOptions, TASKS, TOKEN } from './rpc.js';
 
 let hosted: HostedHandle;
+const { rpc, getTask, pollUntil } = client(() => hosted.url);
 
 beforeAll(async () => {
   hosted = await startHosted({ host: '127.0.0.1', port: 0, token: TOKEN, tickMs: 20 });
@@ -15,56 +14,8 @@ afterAll(async () => {
   await hosted.close();
 });
 
-interface RpcOptions {
-  tasks?: boolean;
-  token?: string | null;
-  name?: string;
-}
-
-async function rpc(method: string, params: Record<string, unknown>, o: RpcOptions = {}) {
-  const capabilities = o.tasks === false ? {} : { extensions: { [TASKS]: {} } };
-  const headers: Record<string, string> = {
-    'content-type': 'application/json',
-    accept: 'application/json, text/event-stream',
-    'mcp-protocol-version': MODERN,
-    'mcp-method': method,
-  };
-  if (o.name !== undefined) headers['mcp-name'] = o.name;
-  if (o.token !== null) headers['authorization'] = `Bearer ${o.token ?? TOKEN}`;
-  const res = await fetch(`${hosted.url}/mcp`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method,
-      params: {
-        ...params,
-        _meta: {
-          'io.modelcontextprotocol/protocolVersion': MODERN,
-          'io.modelcontextprotocol/clientCapabilities': capabilities,
-          'io.modelcontextprotocol/clientInfo': { name: 'wire-test', version: '0.0.0' },
-        },
-      },
-    }),
-  });
-  const text = await res.text();
-  return { status: res.status, body: text ? JSON.parse(text) : undefined };
-}
-
 const callEcho = (args: Record<string, unknown>, o: RpcOptions = {}) =>
   rpc('tools/call', { name: 'slow_echo', arguments: args }, { ...o, name: 'slow_echo' });
-
-const getTask = (taskId: string) => rpc('tasks/get', { taskId }, { name: taskId });
-
-async function pollUntil(taskId: string, done: (status: string) => boolean) {
-  for (let i = 0; i < 200; i++) {
-    const r = await getTask(taskId);
-    if (done(r.body.result.status)) return r.body.result;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error(`task ${taskId} never settled`);
-}
 
 describe('HTTP edge', () => {
   it('answers /healthz without a token', async () => {
@@ -171,5 +122,42 @@ describe('tasks extension', () => {
   it('rejects seconds outside 1 to 120', async () => {
     const r = await callEcho({ text: 'x', seconds: 121 });
     expect(r.body.error?.code ?? (r.body.result?.isError ? 'tool-error' : undefined)).toBeDefined();
+  });
+});
+
+describe('concurrency cap', () => {
+  it('counts plain-result calls against the same cap as tasks', async () => {
+    const capped = await startHosted({
+      host: '127.0.0.1',
+      port: 0,
+      token: TOKEN,
+      tickMs: 20,
+      registry: new TaskRegistry({ maxRunning: 1 }),
+    });
+    try {
+      const c = client(() => capped.url);
+      const echo = (o: RpcOptions) =>
+        c.rpc(
+          'tools/call',
+          { name: 'slow_echo', arguments: { text: 'x', seconds: 100 } },
+          { ...o, name: 'slow_echo' },
+        );
+      const task = (await echo({})).body.result;
+      expect(task.status).toBe('working');
+      const plain = (await echo({ tasks: false })).body.result;
+      expect(plain.isError).toBe(true);
+      expect(plain.content[0].text).toMatch(/already running/);
+      await c.rpc('tasks/cancel', { taskId: task.taskId }, { name: task.taskId });
+      const after = (
+        await c.rpc(
+          'tools/call',
+          { name: 'slow_echo', arguments: { text: 'ok', seconds: 1 } },
+          { tasks: false, name: 'slow_echo' },
+        )
+      ).body.result;
+      expect(after.content).toEqual([{ type: 'text', text: 'ok' }]);
+    } finally {
+      await capped.close();
+    }
   });
 });

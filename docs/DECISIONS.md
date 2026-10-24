@@ -1476,6 +1476,21 @@ each one branch and one PR that deploys to InstaBox and ends with a live check i
 SDK v2. The hand-built tasks extension is the code to delete when an SDK release ships a tasks
 helper that passes `minimumReleaseAge`. On InstaBox a plain tool result that takes longer than
 20 s returns `502` unless the server sends an early byte, so long work must go through the task
-path. Not verified at the time of writing: Claude Code showing `1 MCP task` against the
-InstaBox URL, and the container coming back by itself after the machine restarts. Both are S1
-live checks.
+path. The S1 live checks (PR #49) confirmed both open points: Claude Code 2.1.309 ran 8 s and
+90 s `slow_echo` tasks through the InstaBox URL, and after a reboot and Start the container
+answered `/healthz` within 5 s.
+
+**Addendum, slice S2 (`run_series`).** `run_series { series, category }` runs a demo series as
+one task. In 9a it reads only server-side demo sets on an allowlist (`apps/hosted/src/series/load.ts`),
+never documents sent by the client, so a tool argument never becomes a path and no document
+bytes travel through the model. The per-model pipeline (`series/pipeline.ts`) runs in a
+`worker_threads` worker, so polls stay fast: over one Musterwerk run, 53 `tasks/get` calls had
+p95 3.8 ms. Headless runs accept, per attribute and per composite leaf, the single most
+confident proposal at or above 0.7, the Phase 4 recall-gate threshold, with ties going to the
+lower fact id. The verdict is the worst of `validate` and every emitter's own re-validation.
+The AAS JSON, AASX, HTML sheet and gap report are hashed (SHA-256 and size) and not stored,
+because nothing downloads them before 9b, and that keeps the container read-only. Cancel
+terminates the worker at once instead of messaging it to stop between steps: no step has a side
+effect, so nothing is left half-written. The Musterwerk set alone comes out `invalid` with 29.8 %
+mandatory completeness, the same as the server's own tool chain on the same files; the test in
+`apps/hosted/test/pipeline.test.ts` holds the two equal.

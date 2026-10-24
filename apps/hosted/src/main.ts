@@ -6,9 +6,10 @@ const log = (line: string) => process.stderr.write(`${new Date().toISOString()} 
 const token = process.env['PASSWERK_AUTH_TOKEN'] ?? '';
 const host = process.env['HOST'] ?? '127.0.0.1';
 const port = Number(process.env['PORT'] ?? 8080);
+const seriesDir = process.env['PASSWERK_SERIES_DIR'];
 
 try {
-  const hosted = await startHosted({ host, port, token, log });
+  const hosted = await startHosted({ host, port, token, log, ...(seriesDir ? { seriesDir } : {}) });
   log(`passwerk-hosted listening on ${hosted.url}`);
   const stop = () => {
     log('shutting down');

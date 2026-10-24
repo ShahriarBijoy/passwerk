@@ -70,6 +70,7 @@ const isTerminal = (t: Task) => t.status !== 'working';
 export class TaskRegistry {
   private readonly tasks = new Map<string, Task>();
   private readonly controllers = new Map<string, AbortController>();
+  private inline = 0;
   private readonly now: () => Date;
   private readonly newId: () => TaskId;
   private readonly ttlMs: number;
@@ -89,7 +90,7 @@ export class TaskRegistry {
   /** Accepts the job and returns its task at once; the job runs after this returns. */
   start(tool: string, job: Job): Task {
     this.purgeExpired();
-    if (this.controllers.size >= this.maxRunning) {
+    if (this.running() >= this.maxRunning) {
       throw new TooManyTasksError(`${this.maxRunning} tasks are already running; try again later`);
     }
     this.makeRoom();
@@ -108,6 +109,26 @@ export class TaskRegistry {
     this.controllers.set(task.taskId, controller);
     queueMicrotask(() => void this.run(task.taskId, job, controller.signal));
     return task;
+  }
+
+  /**
+   * Runs a job inside the caller's request, for clients without the tasks extension. It counts
+   * against the same running cap as tasks, and the caller's signal stops it.
+   */
+  async runInline(job: Job, signal: AbortSignal): Promise<ToolResult> {
+    if (this.running() >= this.maxRunning) {
+      throw new TooManyTasksError(`${this.maxRunning} tasks are already running; try again later`);
+    }
+    this.inline += 1;
+    try {
+      return await job({ signal, progress: () => {} });
+    } finally {
+      this.inline -= 1;
+    }
+  }
+
+  private running(): number {
+    return this.controllers.size + this.inline;
   }
 
   get(id: string): Task | undefined {
