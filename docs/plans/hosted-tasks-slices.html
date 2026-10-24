@@ -208,7 +208,7 @@ The goal and the decisions in the plan stay. The order, a few facts, and two sco
   <a class="stop" href="#s1"><div class="id">S1</div><div class="t">A task reaches Claude Code</div><div class="d"><code>slow_echo</code> on SDK v2, deployed on InstaBox.</div></a>
   <a class="stop" href="#s2"><div class="id">S2</div><div class="t">One passport as a task</div><div class="d">Musterwerk set through the real pipeline in a worker.</div></a>
   <a class="stop" href="#s3"><div class="id">S3</div><div class="t">Twelve models</div><div class="d">Generated series, live progress in <code>/tasks</code>.</div></a>
-  <a class="stop" href="#s4"><div class="id">S4</div><div class="t">Ask on conflict</div><div class="d"><code>input_required</code> dialog, answer lands in the draft.</div></a>
+  <a class="stop" href="#s4"><div class="id">S4</div><div class="t">Confirm held values</div><div class="d"><code>input_required</code> dialogs, confirmed values land in the passport.</div></a>
   <a class="stop optional" href="#s5"><div class="id">S5</div><div class="t">Survive a restart</div><div class="d">SQLite task store. Optional before the interview.</div></a>
   <a class="stop" href="#s6"><div class="id">S6</div><div class="t">Rehearsed demo</div><div class="d">Script runs twice in a row against InstaBox.</div></a>
 </nav>
@@ -378,32 +378,33 @@ ModelOutcome  = { modelId; verdict: 'valid' | 'valid_with_warnings' | 'invalid';
 
 <!-- S4 -->
 <section class="panel slice" id="s4">
-  <header><span class="sid">S4</span><h3>The task asks when two documents disagree</h3></header>
+  <header><span class="sid">S4</span><h3>The task asks about the values the AI reading held</h3></header>
   <div class="chips"><span class="chip">branch feat/hosted-tasks-s4</span><span class="chip">input_required</span><span class="chip gate">you review the dialog</span></div>
-  <p>Model 6 says <code>NMC811</code> in the supplier declaration and <code>NMC622</code> in the datasheet. Claude Code opens a dialog with both candidates and "skip". The chosen value lands in the draft with the provenance of the chosen fact.</p>
+  <p>With AI reading on, <code>musterwerk-complete</code> leaves 11 values held for a person (ADR D-048). <code>run_series</code> now asks about them before it finishes. Claude Code opens one dialog per held value with "apply" and "skip". Confirming all 11 turns the passport <code>valid</code> at 100 % mandatory completeness. This replaces the planted <code>NMC811</code> / <code>NMC622</code> conflict, see ADR D-049.</p>
   <div class="grid2">
   <div>
   <h4 class="label">Build</h4>
   <ul class="box">
-    <li><input type="checkbox" id="c-s4-b0"><label for="c-s4-b0">First write a failing test that the planted pair produces a conflict under the S2 accept policy. Two proposals for one attribute may resolve inside <code>suggestMappings</code> and never reach <code>applyMappings</code>. The test decides where the question is raised.</label></li>
-    <li><input type="checkbox" id="c-s4-b1"><label for="c-s4-b1">Plant the conflict in the generator for model 06 only.</label></li>
-    <li><input type="checkbox" id="c-s4-b2"><label for="c-s4-b2">Each conflict becomes one <code>inputRequests</code> key with <code>method: "elicitation/create"</code> and an enum of the candidates plus <code>skip</code>. At most 16 keys per round.</label></li>
-    <li><input type="checkbox" id="c-s4-b3"><label for="c-s4-b3"><code>tasks/update { taskId, inputResponses }</code> applies the choice with <code>override</code> and resumes the worker.</label></li>
-    <li><input type="checkbox" id="c-s4-b4"><label for="c-s4-b4"><code>onConflict: 'skip' | 'highest_confidence'</code> for headless runs.</label></li>
+    <li><input type="checkbox" id="c-s4-b1"><label for="c-s4-b1">The registry's <code>Task</code> gains <code>input_required</code> with <code>inputRequests</code>. A job may finish with a question, <code>{ inputRequests, resume(responses) }</code>. A waiting task holds no running slot, keeps the first answer per key and expires after its ttl.</label></li>
+    <li><input type="checkbox" id="c-s4-b2"><label for="c-s4-b2"><code>tasks/update { taskId, inputResponses }</code> through the three-argument <code>setRequestHandler</code>. It acknowledges with an empty <code>resultType: "complete"</code>, as the tasks extension specifies. The SDK lifts <code>inputResponses</code> off the params into <code>ctx.mcpReq.inputResponses</code>.</label></li>
+    <li><input type="checkbox" id="c-s4-b3"><label for="c-s4-b3">The first run keeps each model's reading on the server: applied decisions, vetoes as slot keys, held values with their provenance. The resumed run rebuilds only the models that held values, from that recording. Jev is not asked again.</label></li>
+    <li><input type="checkbox" id="c-s4-b4"><label for="c-s4-b4">One <code>elicitation/create</code> form per held value for a single model, one per held attribute across a series, at most 16. The 16th covers the rest.</label></li>
+    <li><input type="checkbox" id="c-s4-b5"><label for="c-s4-b5"><code>confirm: 'ask' | 'hold'</code>, default <code>ask</code>. <code>hold</code> is for non-interactive sessions, where a question cancels the task. Inline runs always hold.</label></li>
   </ul>
   </div>
   <div>
   <h4 class="label">Verify</h4>
   <ul class="box">
-    <li><input type="checkbox" id="c-s4-u1"><label for="c-s4-u1">Unit. Wire shapes of <code>input_required</code> and <code>tasks/update</code>. A second answer to the same key changes nothing.</label></li>
-    <li><input type="checkbox" id="c-s4-l1"><label for="c-s4-l1">Live. The dialog opens in the CLI. Pick <code>NMC622</code>. Model 6's draft shows <code>NMC622</code> with the datasheet as source.</label></li>
-    <li><input type="checkbox" id="c-s4-l2"><label for="c-s4-l2">Live. Quit Claude Code while the dialog is open, <code>claude --resume</code>, and answer. The result arrives.</label></li>
-    <li><input type="checkbox" id="c-s4-l3"><label for="c-s4-l3">Live. <code>claude -p</code> with <code>onConflict: 'ask'</code> ends <code>cancelled</code>, not <code>failed</code>. With <code>highest_confidence</code> it completes.</label></li>
+    <li><input type="checkbox" id="c-s4-u1"><label for="c-s4-u1">Unit. Registry states, a repeat answer, an unknown key, cancel while waiting, ttl expiry, the running cap. Wire shapes of <code>input_required</code> and <code>tasks/update</code>.</label></li>
+    <li><input type="checkbox" id="c-s4-u2"><label for="c-s4-u2">Unit. On replayed Jev answers, apply all gives <code>valid</code> at 100 % with every confirmed value in the draft and its source document. Skip all gives the <code>hold</code> outcome.</label></li>
+    <li><input type="checkbox" id="c-s4-l1"><label for="c-s4-l1">Live. The dialogs open in the CLI after closing <code>/tasks</code>. Apply all. The result says <code>valid</code> and 11 confirmed.</label></li>
+    <li><input type="checkbox" id="c-s4-l2"><label for="c-s4-l2">Live. Quit Claude Code while a dialog is open, <code>claude --resume</code>, and answer. The result arrives.</label></li>
+    <li><input type="checkbox" id="c-s4-l3"><label for="c-s4-l3">Live. A non-interactive session that gets tasks (Agent SDK, or <code>claude -p</code> with stream-json input) with <code>confirm: 'ask'</code> ends <code>cancelled</code>, not <code>failed</code>. With <code>hold</code> it completes.</label></li>
   </ul>
   </div>
   </div>
   <div class="done-when"><div class="label">Done when</div>
-  The planted conflict opens a dialog and the answer lands in the draft. You watch this one before merge, because it is the demo's key moment.</div>
+  The held values open dialogs in Claude Code and the confirmed values make the passport valid. You watch this one before merge, because it is the demo's key moment.</div>
 </section>
 
 <!-- S5 -->
@@ -446,7 +447,7 @@ ModelOutcome  = { modelId; verdict: 'valid' | 'valid_with_warnings' | 'invalid';
     <tr><td>Pin companion packages at least 3 days old.</td><td><code>@modelcontextprotocol/node</code> 2.1.1, not 2.1.2. <code>@modelcontextprotocol/client</code> 2.3.1.</td><td><code>npm view</code> shows node 2.1.2 published 2026-10-23 18:19 UTC and 2.1.1 on 2026-10-02. Client 2.3.1 is from 2026-10-05. Server 2.3.1 is from 2026-10-05 and 2.4.0 from today, as the plan says.</td></tr>
     <tr><td>Reuse <code>TOOLS</code>, <code>SessionStore</code> and the workbench loader.</td><td>9a exposes only <code>slow_echo</code> and <code>run_series</code>. The other tools wait for 9b.</td><td><code>registry.ts</code>, <code>types.ts</code> and <code>session.ts</code> are SDK-free. <code>ui.ts</code> imports SDK 1.x. <code>SessionStore</code> is per connection, which has no meaning in stateless per-request mode. The CLI does not render the workbench anyway.</td></tr>
     <tr><td>Move <code>SessionStore</code> to SQLite in 9a.2.</td><td>Deferred to 9b. S5 persists tasks only.</td><td>No 9a tool reads the session store.</td></tr>
-    <tr><td>Conflict between the datasheet and the safety data sheet.</td><td>Conflict between the supplier declaration PDF and the datasheet CSV.</td><td>The Musterwerk set has five documents and no safety data sheet. The declaration carries <code>Zellchemie: NMC811</code> in <code>tools/fixtures/src/content.ts</code>.</td></tr>
+    <tr><td>Plant an <code>NMC811</code> / <code>NMC622</code> conflict in model 6 and ask about it.</td><td>Ask about the values the AI reading held. No planted conflict.</td><td>On <code>musterwerk-complete</code> the reading holds 11 values, and confirming them is what makes the passport valid (ADR D-048). A planted disagreement would stage a question the real pack does not raise. ADR D-049.</td></tr>
     <tr><td>Generate the series with a new script under <code>demo/series/</code>.</td><td>Extend <code>tools/fixtures</code>.</td><td>That package already writes the Musterwerk set and the held-out set with its own PDF, XLSX, CSV and DOCX writers.</td></tr>
     <tr><td>Cancel through an <code>AbortController</code>.</td><td>The parent posts a cancel message. The worker owns the controller.</td><td>An <code>AbortSignal</code> does not cross a <code>worker_threads</code> boundary.</td></tr>
     <tr><td>Silent on how proposals are accepted.</td><td>Accept the top proposal per attribute at 0.7 or higher, recorded in D-047.</td><td>A headless run needs a rule, and 0.7 is the Phase 4 recall-gate threshold.</td></tr>
