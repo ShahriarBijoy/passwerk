@@ -4,6 +4,7 @@
  */
 import { McpServer, ProtocolError, ProtocolErrorCode } from '@modelcontextprotocol/server';
 import { z } from 'zod';
+import type { ReadingConfig } from './series/types.js';
 import {
   type Job,
   type Task,
@@ -28,8 +29,8 @@ export interface ServerDeps {
   seriesDir: string;
   clock: () => Date;
   uploads: UploadStore;
-  /** The AI reading step runs: a TypeSafe key is set and `PASSWERK_AI_READING` is not `off`. */
-  reading: boolean;
+  /** On when a TypeSafe key is set and `PASSWERK_AI_READING` is not `off` (ADR D-048). */
+  reading: ReadingConfig;
 }
 
 /** What one HTTP request contributes to its server instance. */

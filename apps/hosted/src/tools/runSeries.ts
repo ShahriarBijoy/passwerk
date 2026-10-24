@@ -156,8 +156,9 @@ function seriesJob(input: Input, deps: ServerDeps): Job<ToolResult> {
     const asOf = deps.clock().toISOString();
     const { category } = input;
     const models = await modelsOf(source, deps);
-    const outcomes = await runInWorker({ models, category, asOf, read: deps.reading }, ctx);
-    const reading = deps.reading ? 'on' : 'off';
+    const runs = await runInWorker({ models, category, asOf, reading: deps.reading }, ctx);
+    const outcomes = runs.map((r) => r.outcome);
+    const reading = deps.reading.kind === 'off' ? 'off' : 'on';
     const summary = `${seriesSummary(outcomes)}\nAI reading: ${reading}`;
     const origin =
       source.kind === 'series'

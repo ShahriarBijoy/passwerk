@@ -4,6 +4,7 @@
  * instances, bytes as Uint8Array.
  */
 import type { BatteryCategory, Verdict } from '@passwerk/core';
+import type { Cassette, ReadingResult } from '../reading/index.js';
 
 export type { BatteryCategory, Verdict };
 
@@ -80,7 +81,9 @@ export interface ReadingProposal {
 export interface ReadingSummary {
   /** Decisions applied automatically under the reading policy. */
   applied: number;
-  /** Decisions held back for confirmation. */
+  /** Held values a person confirmed through `input_required`. */
+  confirmed: number;
+  /** Decisions held back for confirmation, and not confirmed. */
   toConfirm: ReadingProposal[];
   /** Rule-based accepts the reader vetoed. */
   vetoed: number;
@@ -98,10 +101,32 @@ export interface RunModelOptions {
   read?: boolean;
 }
 
+/** One model's outcome plus the reading behind it, which stays on the server. */
+export interface ModelRun {
+  outcome: ModelOutcome;
+  /** Present when the reading step ran: enough to rebuild the draft without asking again. */
+  reading?: ReadingResult;
+}
+
+/**
+ * Where a reader's answers come from: the TypeSafe API, whose key the worker reads from its
+ * env, or answers recorded in a cassette (tests).
+ */
+export type ReaderSource = { kind: 'jev' } | { kind: 'replay'; cassette: Cassette };
+
+/** How the server runs the AI reading step (ADR D-048). */
+export type ReadingConfig = { kind: 'off' } | ReaderSource;
+
+/** How the worker runs the reading step: as configured, or from readings recorded earlier. */
+export type WorkerReading =
+  | ReadingConfig
+  /** One reading per model, in order, with the held values a person confirmed (ADR D-049). */
+  | { kind: 'recorded'; readings: ReadingResult[] };
+
 /** Messages the worker posts to the main thread. */
 export type WorkerMessage =
   | { type: 'progress'; model: number; of: number; modelId: string; progress: StepProgress }
-  | { type: 'model'; outcome: ModelOutcome }
+  | ({ type: 'model' } & ModelRun)
   | { type: 'done' }
   | { type: 'failed'; message: string };
 
@@ -110,6 +135,5 @@ export interface WorkerStart {
   models: SeriesModel[];
   category: BatteryCategory;
   asOf: string;
-  /** Whether the worker runs the AI reading step; the worker reads its key from the env. */
-  read: boolean;
+  reading: WorkerReading;
 }

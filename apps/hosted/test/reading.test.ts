@@ -7,8 +7,11 @@ import {
   emitAasx,
   emitHtml,
   gapReport,
+  getField,
+  getPath,
   ingest,
   type MappingDecision,
+  parsePath,
   type Verdict,
   validate,
 } from '@passwerk/core';
@@ -19,7 +22,10 @@ import {
   JEV_MODEL,
   jevAsk,
   parseCassette,
+  type Reader,
+  type ReadingResult,
   readerFromEnv,
+  recordedReader,
   replayReader,
 } from '../src/reading/index.js';
 import { DOCUMENT_LEAVES, ENTRY_LEAVES, leafKind, OBJECT_LEAVES } from '../src/reading/schema.js';
@@ -88,7 +94,7 @@ async function expectCopiedFromDocuments(
   }
 }
 
-const slot = (p: { attributeId: string; path?: string }) =>
+const slot = (p: { attributeId: string; path?: string | undefined }) =>
   `${p.attributeId}${p.path ? `.${p.path}` : ''}`;
 
 const RANK: Record<Verdict, number> = { valid: 0, valid_with_warnings: 1, invalid: 2 };
@@ -204,6 +210,66 @@ describe('AI reading on the complete Musterwerk pack, replayed', () => {
   it('gives a byte-identical outcome on a second replay', async () => {
     const again = await runModel(model, READ, replayReader(cassette('musterwerk-complete')));
     expect(canonicalJson(again)).toBe(canonicalJson(outcome));
+  });
+});
+
+/** Wraps a reader and keeps what it read last, as the series worker does. */
+function keeping(reader: Reader) {
+  const kept: { last?: ReadingResult } = {};
+  const wrapped: Reader = { read: async (input) => (kept.last = await reader.read(input)) };
+  return { reader: wrapped, kept };
+}
+
+describe('a recorded reading, replayed without asking Jev', () => {
+  let model: SeriesModel;
+  let first: ModelOutcome;
+  let recorded: ReadingResult;
+
+  beforeAll(async () => {
+    model = await single('musterwerk-complete');
+    const k = keeping(replayReader(cassette('musterwerk-complete')));
+    first = await runModel(model, READ, k.reader);
+    if (!k.kept.last) throw new Error('the reader never ran');
+    recorded = k.kept.last;
+  });
+
+  it('holds the eleven values with their documents, and confirms none on a first reading', () => {
+    expect(recorded.held).toHaveLength(11);
+    expect(recorded.confirmed).toEqual([]);
+    expect(first.reading?.confirmed).toBe(0);
+    for (const h of recorded.held) expect(h.decision.source.length).toBeGreaterThan(0);
+  });
+
+  it('gives the first outcome again when nothing is confirmed', async () => {
+    const again = await runModel(model, READ, recordedReader(recorded));
+    expect(canonicalJson(again)).toBe(canonicalJson(first));
+  });
+
+  it('applies every confirmed value with its document provenance: valid at 100 %', async () => {
+    const all: ReadingResult = { ...recorded, held: [], confirmed: recorded.held };
+    const outcome = await runModel(model, READ, recordedReader(all));
+    expect(outcome.verdict).toBe('valid');
+    expect(outcome.gap.mandatoryCompleteness).toBe(100);
+    expect(outcome.reading).toMatchObject({ applied: 16, confirmed: 11, toConfirm: [] });
+    expect(outcome.reading?.requests).toBe(first.reading?.requests);
+
+    const { draft } = await readModel(
+      'musterwerk-complete',
+      await mapModel(model, READ),
+      READ,
+      recordedReader(all),
+    );
+    for (const { decision: d } of recorded.held) {
+      const field = getField(draft, d.attributeId);
+      const value = d.path === undefined ? field?.value : getPath(field?.value, parsePath(d.path));
+      expect(canonicalJson(value), slot(d)).toBe(canonicalJson(d.value));
+      for (const s of d.source) {
+        expect(field?.source, slot(d)).toContainEqual({
+          ...s,
+          note: `${s.note}; confirmed by a person`,
+        });
+      }
+    }
   });
 });
 

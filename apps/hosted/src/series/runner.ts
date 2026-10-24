@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import type { JobContext } from '../tasks.js';
-import type { ModelOutcome, WorkerMessage, WorkerStart } from './types.js';
+import type { ModelRun, WorkerMessage, WorkerStart } from './types.js';
 
 export interface WorkerEntry {
   url: URL;
@@ -52,12 +52,12 @@ export function statusLine(
   return parts.join(' · ');
 }
 
-/** Resolves with one outcome per model, in order. */
+/** Resolves with one run per model, in order. */
 export function runInWorker(
   start: WorkerStart,
   { signal, progress }: JobContext,
   entry: WorkerEntry = DEFAULT_ENTRY,
-): Promise<ModelOutcome[]> {
+): Promise<ModelRun[]> {
   signal.throwIfAborted();
   return new Promise((resolve, reject) => {
     const worker = new Worker(entry.url, {
@@ -65,17 +65,17 @@ export function runInWorker(
       ...(entry.execArgv === undefined ? {} : { execArgv: entry.execArgv }),
     });
     live.add(worker);
-    const outcomes: ModelOutcome[] = [];
+    const runs: ModelRun[] = [];
     let counts: { model: number; facts?: number; mapped?: number } = { model: 0 };
     let settled = false;
 
-    const inFlight = () => start.models[outcomes.length]?.modelId ?? 'none';
+    const inFlight = () => start.models[runs.length]?.modelId ?? 'none';
     const finish = (error?: unknown) => {
       if (settled) return;
       settled = true;
       signal.removeEventListener('abort', onAbort);
       void worker.terminate();
-      if (error === undefined) resolve(outcomes);
+      if (error === undefined) resolve(runs);
       else reject(error);
     };
     const fail = (reason: string) => finish(new Error(`model ${inFlight()} failed: ${reason}`));
@@ -92,9 +92,11 @@ export function runInWorker(
           progress(statusLine(m.model, m.of, step, counts.facts, counts.mapped));
           return;
         }
-        case 'model':
-          outcomes.push(m.outcome);
+        case 'model': {
+          const { type: _type, ...run } = m;
+          runs.push(run);
           return;
+        }
         case 'done':
           return finish();
         case 'failed':

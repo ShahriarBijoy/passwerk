@@ -22,11 +22,12 @@ import {
   type Verdict,
   validate,
 } from '@passwerk/core';
-import { openTargets, type Reader } from '../reading/index.js';
+import { type HeldValue, openTargets, type Reader, slotKey } from '../reading/index.js';
 import type {
   ArtefactDigest,
   ModelOutcome,
   PipelineStep,
+  ReadingProposal,
   ReadingSummary,
   RunModelOptions,
   SeriesModel,
@@ -151,9 +152,27 @@ export async function mapModel(model: SeriesModel, o: RunModelOptions): Promise<
 const presentCount = (draft: PassportDraft) =>
   Object.values(draft.attributes).filter((f) => f?.status === 'present').length;
 
+/** A confirmed value keeps its document provenance, and says a person confirmed it. */
+const confirmedDecision = ({ decision: d }: HeldValue): MappingDecision => ({
+  ...d,
+  source: d.source.map((s) => ({ ...s, note: `${s.note ?? 'read'}; confirmed by a person` })),
+});
+
+const proposalOf = ({ decision: d, where, reason }: HeldValue): ReadingProposal => ({
+  attributeId: d.attributeId,
+  ...(d.path !== undefined ? { path: d.path } : {}),
+  value: d.value,
+  ...(d.unit !== undefined ? { unit: d.unit } : {}),
+  ...(d.recordedAt !== undefined ? { recordedAt: d.recordedAt } : {}),
+  source: where,
+  confidence: d.confidence,
+  reason,
+});
+
 /**
  * The reader reads the mapped model; its vetoes leave the accepted proposals, and the draft
- * is rebuilt from what remains plus its decisions, so a vetoed passport id falls back too.
+ * is rebuilt from what remains plus its decisions and the values a person confirmed, so a
+ * vetoed passport id falls back too.
  */
 export async function readModel(
   modelId: string,
@@ -174,7 +193,7 @@ export async function readModel(
     }),
   );
   const vetoed = new Set(r.vetoed);
-  const accepted = m.accepted.filter((p) => !vetoed.has(p));
+  const accepted = m.accepted.filter((p) => !vetoed.has(slotKey(p)));
   const result = await inStep(modelId, 'read', () =>
     applyMappings(
       newDraft({
@@ -183,7 +202,7 @@ export async function readModel(
         passportId: passportIdOf(modelId, accepted),
         createdAt: o.asOf,
       }),
-      [...accepted.map(decisionOf), ...r.decisions],
+      [...accepted.map(decisionOf), ...r.decisions, ...r.confirmed.map(confirmedDecision)],
     ),
   );
   return {
@@ -194,7 +213,8 @@ export async function readModel(
     mapped: presentCount(result.draft),
     reading: {
       applied: r.decisions.length,
-      toConfirm: r.toConfirm,
+      confirmed: r.confirmed.length,
+      toConfirm: r.held.map(proposalOf),
       vetoed: r.vetoed.length,
       inputTokens: r.inputTokens,
       requests: r.requests,

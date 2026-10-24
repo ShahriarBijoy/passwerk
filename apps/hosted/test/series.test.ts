@@ -168,7 +168,7 @@ describe('runInWorker', () => {
     { modelId: 'alpha', files: [{ name: 'a.txt', bytes: new Uint8Array([1]) }] },
     { modelId: 'beta', files: [{ name: 'b.txt', bytes: new Uint8Array([2]) }] },
   ];
-  const start: WorkerStart = { models, category: 'EV', asOf: AS_OF, read: false };
+  const start: WorkerStart = { models, category: 'EV', asOf: AS_OF, reading: { kind: 'off' } };
   const ctx = (signal = new AbortController().signal, lines: string[] = []) => ({
     signal,
     progress: (line: string) => void lines.push(line),
@@ -190,8 +190,8 @@ describe('runInWorker', () => {
       parentPort.postMessage({ type: 'done' });`,
     );
     const lines: string[] = [];
-    const outcomes = await runInWorker(start, ctx(undefined, lines), entry);
-    expect(outcomes.map((o) => o.modelId)).toEqual(['alpha', 'beta']);
+    const runs = await runInWorker(start, ctx(undefined, lines), entry);
+    expect(runs.map((r) => r.outcome.modelId)).toEqual(['alpha', 'beta']);
     expect(lines.slice(0, 6)).toEqual([
       'Model 1 of 2 · ingest',
       'Model 1 of 2 · 41 facts',

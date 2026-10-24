@@ -13,6 +13,7 @@ import type { AddressInfo } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import { createMcpHandler } from '@modelcontextprotocol/server';
+import type { ReadingConfig } from './series/types.js';
 import { createServer, type ServerDeps } from './server.js';
 import { TaskRegistry } from './tasks.js';
 import { type PutRefusal, UploadStore, type UploadWriter } from './uploads.js';
@@ -30,8 +31,8 @@ export interface HostedOptions {
   uploads?: UploadStore;
   /** Base of the upload URLs handed out, e.g. `https://8080-<id>.instabox.tech`. */
   publicUrl?: string;
-  /** Run the AI reading step in series runs. Default false. */
-  reading?: boolean;
+  /** How series runs read documents with Jev. Default off. */
+  reading?: ReadingConfig;
   /** Largest accepted /mcp request body. Default 1.5 MiB, room for 1 MiB of inline base64. */
   maxBodyBytes?: number;
   log?: (line: string) => void;
@@ -210,7 +211,7 @@ export async function startHosted(o: HostedOptions): Promise<HostedHandle> {
     seriesDir: o.seriesDir ?? fileURLToPath(new URL('../../../demo/series', import.meta.url)),
     clock,
     uploads: o.uploads ?? new UploadStore({ now: clock }),
-    reading: o.reading ?? false,
+    reading: o.reading ?? { kind: 'off' },
   };
   const maxRequestBodySize = o.maxBodyBytes ?? 1536 * 1024;
   const mcp = createMcpHandler(
