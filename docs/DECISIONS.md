@@ -1536,3 +1536,82 @@ EU region and no on-premise option, so customers who keep data in-house run with
 until TypeSafe confirms one. The evidence is one fictional supplier; real supplier packs will
 show wrong picks, and the thresholds must be recalibrated on them. Jev's probabilities moved by
 about 0.02 between identical requests, enough to cross the 0.9 line near it.
+
+## D-049: The series task asks the user to confirm the values the AI reading held (2026-10-24)
+
+**Context.** With AI reading on, `musterwerk-complete` comes out `invalid` at 87.2 % with 16
+applied and 11 held decisions, and confirming the 11 gives `valid` at 100 % (D-048). The first
+plan for slice S4 planted an `NMC811` / `NMC622` disagreement in model 06 and asked about it.
+That would stage a question the real pack never raises, while the held values are exactly the
+step between this demo's passport and a valid one. The planted conflict is dropped.
+
+What Claude Code does (code.claude.com/docs/en/mcp, "MCP tasks for server authors" and "Answer a
+question from an MCP task", read 2026-10-24): on `input_required` it reads `inputRequests`, a map
+from server-chosen keys to `{ method, params }`, and answers each key once through `tasks/update
+{ taskId, inputResponses }`. Keys beyond 16 per task are ignored. `elicitation/create` is served
+only in interactive terminal sessions; in a non-interactive session Claude Code asks the server to
+cancel a task that requests input, and a one-shot `claude -p "<prompt>"` gets no MCP task at all.
+Declining or pressing Esc is an answer. While `/tasks` is open the dialog stays hidden. The page
+does not say whether all keys arrive in one update.
+
+The tasks extension (SEP-2663, modelcontextprotocol.io/seps/2663-tasks-extension, Final, and the
+extension overview at modelcontextprotocol.io/extensions/tasks/overview) defines `tasks/update`
+params as `{ taskId, inputResponses }` and its result as an empty acknowledgement with
+`resultType: "complete"`. The server ignores responses to keys that are not outstanding, may
+accept a partial set, and should answer `-32602` for an unknown task id. A task in
+`input_required` returns its outstanding requests on `tasks/get` and goes back to `working` once
+it has what it needs. `@modelcontextprotocol/server` 2.3.1 lifts `inputResponses` off any request's
+params into `ctx.mcpReq.inputResponses` (a multi-round-trip field) and drops entries that are not
+plain objects or that carry `method` or `result`.
+
+**Decision.** The registry's `Task` gains `input_required` with `inputRequests`. A job ends with a
+`ToolResult` or a `Question { inputRequests, resume(responses) => Job }`; internally each task is
+one discriminated entry that holds the `AbortController` only while it works and the question and
+the answers only while it waits. A waiting task holds no running slot. The first response per key
+wins, unknown keys and repeats change nothing, an update to a task that is not waiting changes
+nothing, cancel works while waiting, and an unanswered task expires after its ttl like a finished
+one. Once every key has an answer the resumed job starts as the same task and counts against the
+running cap from then on; it starts even when the cap is reached, because the client has answered
+and will not ask again. `tasks/update` answers the empty acknowledgement the extension specifies,
+not the task, and `-32602` for an unknown id. `tasks/cancel` still answers with the task as before.
+
+The resume does not call Jev again. The reader's result is now plain data: applied decisions,
+held values (`{ decision, where, reason }`, the decision carrying its document provenance), a
+`confirmed` list that a first reading leaves empty, and vetoes as slot keys (`attributeId` or
+`attributeId.path`) instead of object identity, which works because the accept policy keeps one
+accept per slot. The worker hands each model's reading back beside its outcome. The main thread
+keeps the readings and the models' files in the job closure, never in `structuredContent`. After
+the answers it moves confirmed values from `held` to `confirmed` and runs only the models that
+held values again in a worker, with `recordedReader`, which gives the recorded reading back
+without a request. The pipeline then validates and emits as always, so the verdict still comes
+from the validators. A confirmed value is applied exactly as the reader built it, with its
+source note extended by "; confirmed by a person". Rebuilding from a recording is deterministic
+because ingest, extract, suggest and the accept policy are.
+
+Questions: for a run with one model, one key per held value in the reader's order
+(`01-componentPartNumbers`); for a series, one key per held attribute and path across the models,
+in code-point order, asking whether to apply the reading's value in every model that held it. At
+most 16 keys; with more, the 16th (`16-rest`) covers the rest and says so. Each key is
+`elicitation/create` in form mode with one required string field `answer`, titled options
+`apply` and `skip` (`oneOf` with `const` and `title`). The message names the attribute in
+English from the knowledge base, the value (lists show three rows and "and N more", cells clip at
+80 characters), the document and location, and the confidence. Only `action: "accept"` with
+`answer: "apply"` applies; decline, cancel, skip and missing or malformed content skip.
+
+`run_series` gains `confirm: 'ask' | 'hold'`, default `ask`. With `hold`, without held values or
+with AI reading off, the task completes at once as before. A client without the tasks extension
+runs inline, which never asks. The result keeps its shape; `reading` gains `confirmed`, and
+`toConfirm` lists what is still held. The summary line reads `AI reading: on, 16 applied, 11
+confirmed, 0 skipped` after questions and `..., 11 held for confirmation` without.
+
+For tests the server's reading config is `{ kind: 'off' } | { kind: 'jev' } | { kind: 'replay',
+cassette }`, and the worker can replay a cassette, so `apps/hosted/test/confirmRun.test.ts` drives
+the whole question round over HTTP on recorded Jev answers.
+
+**Consequence.** The demo's passport becomes valid inside one task, with every confirmed value
+traceable to its document. A waiting task keeps its models' files in memory until it is answered,
+cancelled or expires after an hour, and waiting tasks do not count against the running cap, so
+up to `maxTasks` (200) of them can hold uploads at once. That is acceptable behind one bearer
+token on the demo host and needs a cap per subject in 9b. The titled `oneOf` options have not yet
+been seen in a Claude Code dialog; the S4 live check settles that. Tasks still live in memory, so
+a restart loses a waiting task (S5).

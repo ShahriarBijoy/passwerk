@@ -18,7 +18,7 @@ try {
     port,
     token,
     log,
-    reading,
+    reading: reading ? { kind: 'jev' } : { kind: 'off' },
     ...(seriesDir ? { seriesDir } : {}),
     ...(publicUrl ? { publicUrl } : {}),
   });

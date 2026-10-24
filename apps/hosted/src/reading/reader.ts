@@ -22,7 +22,6 @@ import {
 import { type Attribute, attributes, getAttribute, getRule } from '@passwerk/rules';
 import type { ChoiceResponse, ContentValue, Question } from '@typesafe-ai/sdk';
 import type { z } from 'zod';
-import type { ReadingProposal } from '../series/types.js';
 import {
   columnQuestion,
   DOCUMENT_TARGET,
@@ -167,7 +166,7 @@ const tableWhere = (t: ReadingTable) =>
 
 /** One value the reader assembled; `hold` says why it waits for a person. */
 interface Found {
-  decision: MappingDecision & { confidence: number };
+  decision: MappingDecision & { confidence: number; source: Provenance[] };
   where: string;
   hold?: string | undefined;
 }
@@ -193,6 +192,10 @@ class Answers {
 }
 
 type State = { [key: string]: ContentValue };
+
+/** One rule-based accept per attribute and composite leaf, so the slot names it. */
+export const slotKey = (p: { attributeId: string; path?: string | undefined }): string =>
+  p.path === undefined ? p.attributeId : `${p.attributeId}.${p.path}`;
 
 export function createReader(ask: Ask, model: string = JEV_MODEL): Reader {
   return { read: (input) => read(ask, model, input) };
@@ -674,8 +677,11 @@ async function read(ask: Ask, model: string, input: ReadingInput): Promise<Readi
 
   return {
     decisions: found.filter((f) => f.hold === undefined).map((f) => f.decision),
-    toConfirm: found.flatMap((f) => (f.hold === undefined ? [] : [proposalOf(f, f.hold)])),
-    vetoed,
+    held: found.flatMap(({ decision, where, hold }) =>
+      hold === undefined ? [] : [{ decision, where, reason: hold }],
+    ),
+    confirmed: [],
+    vetoed: vetoed.map(slotKey),
     ...usage,
   };
 }
@@ -692,17 +698,4 @@ function schemaHold(d: MappingDecision): string | undefined {
   return r && !r.success
     ? `does not fit the passport schema: ${r.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`
     : undefined;
-}
-
-function proposalOf({ decision: d, where }: Found, reason: string): ReadingProposal {
-  return {
-    attributeId: d.attributeId,
-    ...(d.path !== undefined ? { path: d.path } : {}),
-    value: d.value,
-    ...(d.unit !== undefined ? { unit: d.unit } : {}),
-    ...(d.recordedAt !== undefined ? { recordedAt: d.recordedAt } : {}),
-    source: where,
-    confidence: d.confidence,
-    reason,
-  };
 }

@@ -86,13 +86,19 @@ with `apps/hosted`.
 - **Done when:** the 12-model set completes as one task with progress visible in `/tasks`.
 
 ### 9a.4 Questions with `input_required`
-- Plant one conflict in the demo set (model 6: datasheet says `NMC811`, safety data sheet says `NMC622`).
-- Turn `applyMappings` conflicts into `inputRequests` entries
-  (`method: "elicitation/create"`, `enum` of the candidates plus `skip`), max 16 keys per task.
-- `tasks/update` with `inputResponses` → apply the choice with provenance → resume.
-- `onConflict: 'skip' | 'highest_confidence'` for headless runs (Claude Code cancels tasks that ask
-  for input outside an interactive terminal).
-- **Done when:** the planted conflict opens a dialog in Claude Code and the answer lands in the draft.
+- The AI reading step (ADR D-048) holds values it is not sure enough to apply. On
+  `musterwerk-complete` it holds 11; confirming all of them gives `valid` at 100 %. `run_series`
+  turns them into `inputRequests` (`method: "elicitation/create"`, a form with one required
+  `answer` of `apply` or `skip`): one key per held value for a single model, one per held
+  attribute across a series, at most 16 keys per task, the 16th covering the rest.
+- `tasks/update` with `inputResponses` → once every key is answered, the models that held values
+  run again from their recorded readings (no second Jev call), with the confirmed values and
+  their document provenance → validate and emit as before.
+- `confirm: 'ask' | 'hold'` (default `ask`). `hold` is for headless runs, because Claude Code
+  cancels tasks that ask for input outside an interactive terminal. Inline runs always hold.
+- The planted `NMC811` / `NMC622` conflict of the first plan is dropped (ADR D-049).
+- **Done when:** the held values open dialogs in Claude Code and the confirmed values make the
+  passport valid.
 
 ### 9a.5 Deploy on InstaBox
 - `apps/hosted/Dockerfile` (multi-stage, distroless Node 22, non-root, read-only root, `/data` volume),
@@ -107,8 +113,8 @@ with `apps/hosted`.
 ### 9a.6 Demo script (`docs/demo/interview.md`, ~5 minutes)
 1. **Claude desktop app** (local stdio passwerk, already installed): "Review the Musterwerk passport"
    → `review_passport` opens the workbench (MCP App) → show gaps and the QR carrier.
-2. **Claude Code CLI**: "Build passports for the musterwerk-12 series, category EV, ask me on conflicts"
-   → footer shows `1 MCP task` → open `/tasks` to show progress → answer the NMC811/NMC622 dialog
+2. **Claude Code CLI**: "Build the passport for the musterwerk-complete series, category EV"
+   → footer shows `1 MCP task` → open `/tasks` to show progress → close it and confirm the held values
    → quit Claude Code → `claude --resume` → the result arrives.
 3. Talk track: why tasks (long jobs leave the chat), why SDK v2, how it scales (stateless API +
    Postgres queue + workers), why EU hosting.
@@ -165,6 +171,10 @@ Source: code.claude.com/docs/en/mcp, "MCP tasks for server authors" (read 2026-1
 - `input_required`: `inputRequests` maps your keys to `{ method, params }`; Claude Code answers each
   key once with `tasks/update { taskId, inputResponses }`. Max 16 keys. `elicitation/create` works only
   in interactive terminal sessions; `roots/list` works everywhere.
+  Answers may arrive in one `tasks/update` or several; keys beyond 16 per task are ignored; in a
+  non-interactive session (`claude -p`) Claude Code cancels a task that asks (read 2026-10-24).
+- `tasks/update` answer: an empty acknowledgement with `resultType: "complete"`; the client polls
+  `tasks/get` for the new state (tasks extension, SEP-2663, "Response" under `tasks/update`).
 - Unknown task id: JSON-RPC error `-32602`. `tasks/cancel` arrives when the user stops the task.
   Claude Code does not use `tasks/result`, `tasks/list` or task notifications.
 - Client side: Claude Code v2.1.304+, terminal CLI (or Agent SDK / GitHub Actions), claude.ai login

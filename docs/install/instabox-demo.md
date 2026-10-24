@@ -249,6 +249,22 @@ To switch AI reading off and keep the key, append `PASSWERK_AI_READING=off` to
 recreate the container. To remove the key, run
 `sudo sed -i '/^TYPESAFE_API_KEY=/d' /etc/passwerk/hosted.env` and recreate the container.
 
+### Confirm held values
+
+With AI reading on, a run holds the values the reading is not sure enough to apply on its own.
+On `musterwerk-complete` it holds 11. By default `run_series` then asks about each of them before
+it finishes, and confirming all 11 makes the passport `valid` at 100 % mandatory completeness.
+
+- The questions open only in the interactive Claude Code CLI. While `/tasks` is open the dialog
+  stays hidden, so close `/tasks` when the task asks for input.
+- Each dialog names the value, the document and place it was read from, and the reading's
+  confidence. Choose "Apply this value" or "Skip it". Esc or declining counts as skip.
+- In a non-interactive session (the Agent SDK, or `claude -p` with stream-json input) Claude
+  Code cancels a task that asks. Ask for `confirm: 'hold'` there, for example "Build the passport
+  for musterwerk-complete, category EV, with confirm hold". The run then finishes at once and
+  lists the held values in the result. A one-shot `claude -p "<prompt>"` gets no MCP task at all,
+  so the call runs inline, which never asks and always holds.
+
 ## Rotate the token
 
 Rotate after every interview, and at once if the token appeared anywhere it should not.
