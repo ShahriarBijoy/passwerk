@@ -53,6 +53,19 @@ export function hasAny(draft: PassportDraft, ids: readonly string[]): boolean {
   });
 }
 
+/**
+ * The string entries of a multilingual text, or null when none is left. A partial or
+ * L1-rejected value must never put `undefined` or a non-string into a LangString (ADR D-052).
+ */
+export function langStrings(text: unknown): Record<string, string> | null {
+  if (typeof text !== 'object' || text === null || Array.isArray(text)) return null;
+  const out: Record<string, string> = {};
+  for (const [lang, value] of Object.entries(text)) {
+    if (typeof value === 'string') out[lang] = value;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 /** Push `el` when defined; keeps emitter code linear. */
 export function push<T>(into: T[], el: T | null | undefined): void {
   if (el !== null && el !== undefined) into.push(el);

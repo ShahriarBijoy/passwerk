@@ -71,6 +71,18 @@ function completenessLines(gap: GapReport, filtered: boolean, lang: 'de' | 'en')
     : `Mandatory ${m.present}/${m.total} (${m.percent} %), overall ${o.present}/${o.total} (${o.percent} %). Open mandatory: ${open.length}. Not legal advice.${note}`;
 }
 
+/** " [partial, missing: clearName]" for a partly filled composite (ADR D-052), else "". */
+function partialNote(item: GapItem, lang: 'de' | 'en'): string {
+  if (!item.missingLeaves || item.missingLeaves.length === 0) return '';
+  const leaves = item.missingLeaves.join(', ');
+  if (item.status !== 'partial') {
+    return lang === 'de' ? ` [es fehlen auch: ${leaves}]` : ` [also missing: ${leaves}]`;
+  }
+  return lang === 'de'
+    ? ` [unvollständig, es fehlen: ${leaves}]`
+    : ` [partial, missing: ${leaves}]`;
+}
+
 function gapSummarySimple(gap: GapReport, items: readonly GapItem[], filtered: boolean): LangText {
   const open = filtered
     ? items
@@ -78,7 +90,10 @@ function gapSummarySimple(gap: GapReport, items: readonly GapItem[], filtered: b
   const lines = (lang: 'de' | 'en') => {
     const out = open
       .slice(0, MAX_LINES)
-      .map((i) => `- ${i.attributeId} (${i.name[lang]}): ${i.whoTypicallyHasIt[lang]}`);
+      .map(
+        (i) =>
+          `- ${i.attributeId} (${i.name[lang]})${partialNote(i, lang)}: ${i.whoTypicallyHasIt[lang]}`,
+      );
     if (open.length > MAX_LINES) {
       out.push(
         lang === 'de'
@@ -105,7 +120,7 @@ function ownerLines(gap: GapReport, items: readonly GapItem[], lang: 'de' | 'en'
     lines.push(`${group.owner[lang]}:`);
     for (const item of groupItems) {
       lines.push(
-        `- ${item.attributeId} — ${item.name[lang]} · ${item.status} · ${item.bucket} · ${item.legalRefs.join(', ')} · ${item.suggestedAction[lang]}`,
+        `- ${item.attributeId} — ${item.name[lang]} · ${item.status}${partialNote(item, lang)} · ${item.bucket} · ${item.legalRefs.join(', ')} · ${item.suggestedAction[lang]}`,
       );
     }
   }

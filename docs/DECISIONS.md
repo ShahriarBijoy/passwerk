@@ -1713,3 +1713,59 @@ before pdfjs first loads and compares the ingest bundle with the plain-Node gold
 second time with the launcher preloaded as an Electron utility process (`NODE_OPTIONS=--import`)
 and fails on any difference. A pdfjs upgrade that changes either the detection or the
 `globalThis.pdfjsWorker` hook shows up there.
+
+## D-052: A partly filled composite stays partial instead of invalid (2026-10-24)
+
+**Context.** A Claude Desktop run (draft `drf_7d16371797a42251`) accepted the two composite
+leaves the supplier documents held: `batteryChemistry.shortName` (NMC811) and
+`manufacturerInformation.name.de`. The passport got worse than with both left empty. L1 parsed
+each composite with its full Zod shape, so an absent `clearName` or `identifier` came back as
+`PW-L1-VALUE` ("expected string, received undefined"). The Part 1 emitter wrote
+`ManufacturerIdentifier` whenever a manufacturer existed, so the in-memory AAS JSON carried
+`value: undefined`, and L2 stopped at `PW-L2-DESERIALIZE` before checking anything else. The
+serialised file silently dropped the key instead, so the file differed from what L2 had read.
+A manufacturer with an identifier and no name threw out of `Object.keys(undefined)`. The gap
+report then marked both attributes `invalid`, the same status as a wrong value.
+
+**Decision.** A composite leaf the documents did not hold is missing, not wrong.
+
+- `checkComposite(attributeId, value)` in `model/composites.ts` runs the full shape and splits
+  its issues: a required leaf that is absent, undefined, an empty list or an empty object is a
+  missing leaf (dotted path, `clearName`, `0.identifier`); every other issue is a value issue.
+  The leaves that are present are checked exactly as before. The root value itself is never
+  "missing", so `[]` for a list composite or a string for an object one stays a value error.
+- L1 reports value issues as `PW-L1-VALUE` (only those) and missing leaves as the new
+  `PW-L1-COMPOSITE-INCOMPLETE`, severity `error`. A passport with a required leaf missing is
+  therefore never `valid`, whatever L3 sees. L4 does not hide an attribute whose only L1 error
+  is this one, so plausibility checks still read the leaves that are there.
+- Emitters never write `undefined`: Part 1 writes `ManufacturerName` and
+  `ManufacturerIdentifier` only when they hold a string, through a shared `langStrings` that
+  also guards the Part 7 supplier name. An absent mandatory element then shows up as an
+  ordinary `PW-L3-MISSING`. The other emitters already skipped absent leaves; a sweep test
+  removes each leaf of every modelled composite in turn and proves the AAS JSON is plain JSON
+  with no `PW-L2-DESERIALIZE`.
+- `gapReport` gains the status `partial` and `GapItem.missingLeaves`. A partial item does not
+  count toward completeness; it is computed from the draft, so it appears with or without a
+  validation report. An item whose present leaves are also wrong stays `invalid` and still lists
+  its missing leaves. The suggested action names the missing leaves in DE and EN.
+
+**Which leaves are required.** The composite's Zod shape decides: a leaf without `.optional()`
+is required for the value to count as complete. We compared the shapes with the template
+catalogue: every leaf the shapes require is `One` in its IDTA 02035 template, so a required leaf
+that is missing is always also a `PW-L3-MISSING` once the emitter leaves it out. The reverse is
+not true and we did not tighten the shapes in this change. `manufacturerInformation.address` is
+optional in the shape, while the knowledge base explanation calls the address mandatory and
+`1/AddressInformation` is `One`; the spare-part supplier's address, e-mail and web address are
+`One` in Part 7 but optional in the shape. L3 still reports those elements missing, so the
+verdict stays honest, but the gap item reads `present`. Making them required changes what
+counts as complete for existing drafts, and the address's own sub-fields come from the ZVEI
+Contact Information drop-in, which is not bundled (`verify`). That is a question for the owner.
+
+**Consequence.** The broken golden sample `ev-missing-material-identifier` now expects
+`PW-L1-COMPOSITE-INCOMPLETE` instead of `PW-L1-VALUE` (same draft values; its `$comment` and the
+gap snapshot follow). Its AAS output is unchanged, so oracle parity is unaffected. The server's
+`gap_report` accepts `status: ['partial']` and its text marks a partial item with
+`[partial, missing: …]`; the skill's gap-closing loop asks for `missing`, `partial` and
+`invalid`. The web and MCP App gaps view shows `partial` / `unvollständig` with the missing
+sub-fields in the item sheet. Leaf labels are paths, not DE/EN names: the knowledge base has no
+per-leaf labels, and we did not invent any.

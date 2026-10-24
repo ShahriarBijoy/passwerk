@@ -55,7 +55,8 @@ export interface ModelOutcome {
   findings: { errors: number; warnings: number };
   /**
    * `mandatoryCompleteness` is gapReport's percent (0 to 100, one decimal). `missingRequired`
-   * lists required attributes whose gap status is not `present` (missing, invalid or conflict).
+   * lists required attributes whose gap status is not `present` (partial, missing, invalid or
+   * conflict).
    */
   gap: { mandatoryCompleteness: number; missingRequired: string[] };
   /** AAS JSON, AASX, HTML sheet, gap report. The bytes travel beside the outcome (ADR D-050). */

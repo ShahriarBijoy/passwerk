@@ -29,6 +29,8 @@ type View = 'owner' | 'submodel' | 'findings';
 type Item = GapReport['items'][number];
 const DOT: Record<Item['status'], 'ok' | 'bad' | 'missing'> = {
   present: 'ok',
+  // Some sub-fields are there, the rest still has to be requested: open, not wrong (D-052).
+  partial: 'missing',
   missing: 'missing',
   conflict: 'bad',
   invalid: 'bad',
@@ -228,6 +230,12 @@ export function GapsView(props: GapsViewProps) {
               <span className="label">{t(lang, 'gaps.legalRefs')}</span>{' '}
               {open.legalRefs.join(' · ')}
             </p>
+            {open.missingLeaves && open.missingLeaves.length > 0 && (
+              <p className="mt-1" data-testid="gaps-missing-leaves">
+                <span className="label">{t(lang, 'gaps.missingLeaves')}</span>{' '}
+                <span className="font-mono">{open.missingLeaves.join(' · ')}</span>
+              </p>
+            )}
             <p className="mt-1">
               <span className="label">{t(lang, 'gaps.nextAction')}</span>{' '}
               {pick(lang, open.suggestedAction)}
@@ -324,6 +332,9 @@ export function GapsView(props: GapsViewProps) {
                                 tone: 'accent' as const,
                               },
                             ]
+                          : []),
+                        ...(item.status === 'partial'
+                          ? [{ label: t(lang, 'gaps.status.partial'), tone: 'warning' as const }]
                           : []),
                         ...(item.verify
                           ? [{ label: t(lang, 'gaps.verify.short'), tone: 'warning' as const }]

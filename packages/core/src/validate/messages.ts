@@ -27,6 +27,10 @@ const MESSAGES: Record<string, { de: string; en: string }> = {
     de: 'Zusammengesetztes Attribut "{detail}" hat in dieser Version noch keine feste Struktur; der Wert wird nicht geprüft.',
     en: 'Composite attribute "{detail}" has no fixed shape in this version yet; the value is not checked.',
   },
+  'PW-L1-COMPOSITE-INCOMPLETE': {
+    de: 'Zusammengesetzter Wert ist unvollständig, es fehlen Teilfelder: {detail}. Die vorhandenen Teilfelder sind geprüft; die fehlenden beim Datenhalter anfordern.',
+    en: 'Composite value is incomplete, sub-fields are missing: {detail}. The sub-fields that are present have been checked; request the missing ones from the data holder.',
+  },
   'PW-L1-CONFLICT-UNRESOLVED': {
     de: 'Attribut "{detail}" hat widersprüchliche Werte aus verschiedenen Quellen, die noch nicht aufgelöst sind. Prüfen Sie die Lieferantenangaben und übernehmen Sie einen Wert ausdrücklich (override).',
     en: 'Attribute "{detail}" has conflicting values from different sources that are not yet resolved. Review the supplier data and accept one value explicitly (override).',

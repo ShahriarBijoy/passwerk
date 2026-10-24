@@ -64,6 +64,26 @@ describe('GapsView', () => {
     expect(sheet.textContent).toContain(item?.name.en);
     expect(screen.getByTestId('gaps-view-owner').getAttribute('data-state')).toBe('on');
   });
+  it('shows a partly filled composite as partial, with its missing sub-fields in the sheet', () => {
+    mount(<GapsView {...props} />);
+    const row = screen
+      .getAllByTestId('gap-item')
+      .find((r) => r.getAttribute('data-attribute') === 'criticalRawMaterials') as HTMLElement;
+    expect(row.getAttribute('data-status')).toBe('partial');
+    expect(row.textContent).toContain('partial');
+    fireEvent.click(row);
+    expect(screen.getByTestId('gaps-missing-leaves').textContent).toContain('0.identifier');
+    expect(screen.getByTestId('gaps-sheet').textContent).toContain('Missing sub-fields');
+  });
+  it('renders the partial status in German', () => {
+    mount(<GapsView {...props} lang="de" />);
+    const row = screen
+      .getAllByTestId('gap-item')
+      .find((r) => r.getAttribute('data-attribute') === 'criticalRawMaterials') as HTMLElement;
+    expect(row.textContent).toContain('unvollständig');
+    fireEvent.click(row);
+    expect(screen.getByTestId('gaps-sheet').textContent).toContain('Fehlende Teilfelder');
+  });
   it('renders German', () => {
     mount(<GapsView {...props} lang="de" />);
     expect(screen.getByText('Pflichtangaben')).toBeTruthy();

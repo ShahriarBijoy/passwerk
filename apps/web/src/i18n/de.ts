@@ -127,6 +127,8 @@ export const de = {
   'gaps.bucket.optional': 'Optional',
   'gaps.status.present': 'vorhanden',
   'gaps.status.missing': 'fehlt',
+  'gaps.status.partial': 'unvollständig',
+  'gaps.missingLeaves': 'Fehlende Teilfelder',
   'gaps.status.conflict': 'Konflikt',
   'gaps.status.invalid': 'ungültig',
   'gaps.status.not_applicable': 'nicht anwendbar',

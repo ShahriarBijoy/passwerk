@@ -1,7 +1,7 @@
 import { getAttribute } from '@passwerk/rules';
 import type { z } from 'zod';
 import { isAttributeId } from '../model/attributeIds.js';
-import { COMPOSITE_SCHEMAS } from '../model/composites.js';
+import { checkComposite } from '../model/composites.js';
 import type { AnyFieldValue } from '../model/field.js';
 import { PassportDraft } from '../model/passport.js';
 import type { DocumentRef } from '../model/values.js';
@@ -16,6 +16,9 @@ export interface SchemaResult {
 }
 
 type Issue = z.core.$ZodIssue;
+
+/** Rule id for a composite value with required leaves absent (ADR D-052). */
+export const COMPOSITE_INCOMPLETE = 'PW-L1-COMPOSITE-INCOMPLETE';
 
 function issuePath(issue: Issue): string {
   return issue.path.map(String).join('.');
@@ -76,8 +79,8 @@ function attributeFindings(draft: PassportDraft): Finding[] {
     if (!attribute) continue; // cannot happen after the unknown-id check
 
     if (attribute.valueKind === 'composite') {
-      const shape = COMPOSITE_SCHEMAS[id];
-      if (!shape) {
+      const check = checkComposite(id, field.value);
+      if (!check) {
         findings.push({
           layer: 'L1',
           ruleId: 'PW-L1-COMPOSITE-UNMODELLED',
@@ -88,8 +91,22 @@ function attributeFindings(draft: PassportDraft): Finding[] {
         });
         continue;
       }
-      const r = shape.safeParse(field.value);
-      if (!r.success) findings.push(valueFinding(id, attribute.valueKind, r.error.issues));
+      // A leaf the documents did not hold is missing, not wrong (ADR D-052): the leaves that
+      // are present get PW-L1-VALUE exactly as before, the absent required ones are listed
+      // under PW-L1-COMPOSITE-INCOMPLETE. Both are errors, so a partial value is never valid.
+      if (check.valueIssues.length > 0) {
+        findings.push(valueFinding(id, attribute.valueKind, check.valueIssues));
+      }
+      if (check.missingLeaves.length > 0) {
+        findings.push({
+          layer: 'L1',
+          ruleId: COMPOSITE_INCOMPLETE,
+          severity: 'error',
+          path: `attributes.${id}.value`,
+          attributeId: id,
+          message: message(COMPOSITE_INCOMPLETE, `${id}: ${check.missingLeaves.join(', ')}`),
+        });
+      }
       continue;
     }
 

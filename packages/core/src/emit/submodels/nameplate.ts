@@ -11,7 +11,7 @@ import {
   property,
 } from '../elements.js';
 import type { EmitIds } from '../ids.js';
-import { hasAny, push, submodelFromTemplate } from './shared.js';
+import { hasAny, langStrings, push, submodelFromTemplate } from './shared.js';
 
 const P = '1';
 const M = `${P}/Markings/Markings__00__`;
@@ -41,6 +41,9 @@ export const NAMEPLATE_ATTRIBUTES: readonly string[] = [
   'euDeclarationOfConformity',
   'testReportsProvingCompliance',
 ];
+
+/** Loose input shape: the emitter must tolerate drafts that failed L1 (fail-honest emit). */
+type ManufacturerIn = Partial<ManufacturerInformation>;
 
 function address(
   info: ManufacturerInformation['address'],
@@ -91,11 +94,14 @@ export function emitNameplate(draft: PassportDraft, ids: EmitIds): aas.types.Sub
   if (!hasAny(draft, NAMEPLATE_ATTRIBUTES)) return null;
   const v = <T>(id: string) => presentValue<T>(draft, id);
   const els: aas.types.ISubmodelElement[] = [];
-  const manufacturer = v<ManufacturerInformation>('manufacturerInformation');
+  const manufacturer = v<ManufacturerIn>('manufacturerInformation');
 
   // Catalogue order for part 1.
   push(els, property(`${P}/URIOfTheProduct`, draft.meta.passportId));
-  if (manufacturer) push(els, multiLanguageProperty(`${P}/ManufacturerName`, manufacturer.name));
+  // A partial manufacturer (ADR D-052) emits only the leaves it holds; an absent mandatory
+  // leaf is left out so L3 reports it as missing, instead of an element with no value.
+  const name = langStrings(manufacturer?.name);
+  if (name) push(els, multiLanguageProperty(`${P}/ManufacturerName`, name));
   if (manufacturer) push(els, address(manufacturer.address));
   const serial = v<string>('batteryIdentifier');
   if (serial) push(els, property(`${P}/SerialNumber`, serial));
@@ -109,7 +115,10 @@ export function emitNameplate(draft: PassportDraft, ids: EmitIds): aas.types.Sub
   if (stage) push(els, property(`${P}/LifeCycleStage`, stage));
   const operator = v<string>('operatorIdentifier');
   if (operator) push(els, property(`${P}/OperatorIdentifier`, operator));
-  if (manufacturer) push(els, property(`${P}/ManufacturerIdentifier`, manufacturer.identifier));
+  const manufacturerId = manufacturer?.identifier;
+  if (typeof manufacturerId === 'string') {
+    push(els, property(`${P}/ManufacturerIdentifier`, manufacturerId));
+  }
 
   const markings: aas.types.ISubmodelElement[] = [];
   for (const { attributeId, name } of MARKINGS) {

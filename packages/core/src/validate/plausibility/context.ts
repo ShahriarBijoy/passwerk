@@ -3,6 +3,7 @@ import { Decimal } from 'decimal.js';
 import type { AnyFieldValue } from '../../model/field.js';
 import { getField, type PassportDraft, presentValue } from '../../model/passport.js';
 import type { Finding } from '../finding.js';
+import { COMPOSITE_INCOMPLETE } from '../schema.js';
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -25,10 +26,18 @@ export function createContext(
   draft: PassportDraft,
   options: { asOf?: string; l1Findings?: readonly Finding[] } = {},
 ): RuleContext {
-  // A value L1 rejected is untrustworthy: hide it so no L4 rule restates an L1 finding.
+  // A value L1 rejected is untrustworthy: hide it so no L4 rule restates an L1 finding. An
+  // incomplete composite is not rejected: its present leaves passed L1, so L4 still reads them
+  // (ADR D-052). L4 checks read composite leaves defensively and skip the absent ones.
   const hidden = new Set(
     (options.l1Findings ?? [])
-      .filter((f) => f.layer === 'L1' && f.severity === 'error' && f.attributeId)
+      .filter(
+        (f) =>
+          f.layer === 'L1' &&
+          f.severity === 'error' &&
+          f.attributeId &&
+          f.ruleId !== COMPOSITE_INCOMPLETE,
+      )
       .map((f) => f.attributeId as string),
   );
   const field = (id: string): AnyFieldValue | undefined =>

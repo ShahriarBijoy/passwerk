@@ -4,7 +4,14 @@ import { DraftRef, resolveDraft } from '../refs.js';
 import { gapSummary } from '../summary.js';
 import { out, type ToolDefinition } from '../types.js';
 
-const STATUS_VALUES = ['present', 'missing', 'invalid', 'conflict', 'not_applicable'] as const;
+const STATUS_VALUES = [
+  'present',
+  'partial',
+  'missing',
+  'invalid',
+  'conflict',
+  'not_applicable',
+] as const;
 const BUCKET_VALUES = ['required', 'conditional', 'deferred', 'optional'] as const;
 
 const inputSchema = {
