@@ -462,7 +462,7 @@ ModelOutcome  = { modelId; verdict: 'valid' | 'valid_with_warnings' | 'invalid';
 <ul class="plain">
   <li><b>Interview date.</b> If it is within a week, drop S5 and say so in the talk track. Otherwise keep it, because "the task survives a restart" is a strong answer to a scaling question.</li>
   <li><b>Accept threshold.</b> I recommend 0.7. A higher value means fewer mapped attributes and more gaps in the demo.</li>
-  <li><b>Artefacts in the result.</b> I recommend digests in the result and files on disk. If you want the CLI to save AASX files on the laptop, that needs a download path and belongs in 9b.</li>
+  <li><b>Artefacts in the result.</b> Decided after S4: the result keeps the digests and adds a one-use download link for a zip of every model's files, which Claude Code fetches with curl into the user's folder. Nothing goes to disk on the server (ADR D-050).</li>
   <li><b>Docker or systemd on InstaBox.</b> Your S0 answer settles it, so it is not a preference call.</li>
 </ul>
 

@@ -1,10 +1,12 @@
-import { BatteryCategory } from '@passwerk/core';
+import { BatteryCategory, sha256Hex } from '@passwerk/core';
 import { z } from 'zod';
+import type { CreateRefusal, DownloadLimits } from '../downloads.js';
 import { confirmationFor } from '../series/confirm.js';
 import { DEMO_SERIES, loadSeries } from '../series/load.js';
 import { runInWorker } from '../series/runner.js';
 import type { ModelOutcome, ModelRun, SeriesFile, SeriesModel } from '../series/types.js';
-import type { ServerDeps, TaskTool } from '../server.js';
+import { zipRun } from '../series/zip.js';
+import type { RequestScope, ServerDeps, TaskTool } from '../server.js';
 import type { JobContext, Question, ToolResult } from '../tasks.js';
 import { isFileName, type TakeRefusal } from '../uploads.js';
 
@@ -143,8 +145,16 @@ export function seriesSummary(models: ModelOutcome[]): string {
   return [head, ...lines].join('\n');
 }
 
-/** What the first pass through the worker left: the result is built from it, or a question. */
-interface FirstRun {
+/** One tool call, as every step of its run needs it. */
+interface Call {
+  input: Input;
+  source: Source;
+  deps: ServerDeps;
+  scope: RequestScope;
+}
+
+/** A pass through the worker: one run per model, in order. */
+interface Run {
   asOf: string;
   models: SeriesModel[];
   runs: ModelRun[];
@@ -154,6 +164,45 @@ interface FirstRun {
 interface Asked {
   confirmed: number;
   skipped: number;
+}
+
+/** The zip of a finished run, as the result describes it. */
+export interface DownloadLink {
+  url: string;
+  file: string;
+  bytes: number;
+  sha256: string;
+  expiresAt: string;
+}
+
+type Download = { link: DownloadLink } | { refused: CreateRefusal; bytes: number };
+
+const zipName = (source: Source) =>
+  `passwerk-${source.kind === 'series' ? source.series : source.modelId}.zip`;
+
+async function offerDownload({ source, deps, scope }: Call, runs: ModelRun[]): Promise<Download> {
+  const bytes = zipRun(runs);
+  const sha256 = await sha256Hex(bytes);
+  const file = zipName(source);
+  const created = deps.downloads.create(file, bytes);
+  if (typeof created === 'string') return { refused: created, bytes: bytes.byteLength };
+  const url = `${scope.origin}/download/${created.id}/${file}`;
+  return { link: { url, file, bytes: bytes.byteLength, sha256, expiresAt: created.expiresAt } };
+}
+
+const MiB = 1024 * 1024;
+const size = (bytes: number) =>
+  bytes >= MiB ? `${Math.round(bytes / MiB)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+
+function downloadLine(download: Download, { ttlMs, maxZipBytes }: DownloadLimits): string {
+  const minutes = `${Math.round(ttlMs / 60_000)} minutes`;
+  if ('link' in download) {
+    const { file, url } = download.link;
+    return `Download (one use, ${minutes}): curl -fsS -o ${file} "${url}"`;
+  }
+  return download.refused === 'too_large'
+    ? `No download: the zip of this run is ${size(download.bytes)}, more than the ${size(maxZipBytes)} one download holds.`
+    : `No download: the server holds too many downloads right now; run again in ${minutes}.`;
 }
 
 function readingLine(deps: ServerDeps, outcomes: ModelOutcome[], asked?: Asked): string {
@@ -166,16 +215,18 @@ function readingLine(deps: ServerDeps, outcomes: ModelOutcome[], asked?: Asked):
   return `AI reading: on, ${applied} applied, ${rest}`;
 }
 
-function resultOf(
-  input: Input,
-  source: Source,
-  deps: ServerDeps,
-  run: { asOf: string; models: SeriesModel[]; outcomes: ModelOutcome[] },
-  asked?: Asked,
-): ToolResult {
-  const { asOf, models, outcomes } = run;
-  const summary = `${seriesSummary(outcomes)}
-${readingLine(deps, outcomes, asked)}`;
+/** The finished run's result. Its zip is offered only here, once the task completes. */
+async function resultOf(call: Call, run: Run, ctx: JobContext, asked?: Asked): Promise<ToolResult> {
+  const { input, source, deps } = call;
+  const { asOf, models, runs } = run;
+  ctx.signal.throwIfAborted();
+  const outcomes = runs.map((r) => r.outcome);
+  const download = await offerDownload(call, runs);
+  const summary = [
+    seriesSummary(outcomes),
+    readingLine(deps, outcomes, asked),
+    downloadLine(download, deps.downloads.limits),
+  ].join('\n');
   const origin =
     source.kind === 'series'
       ? { series: source.series }
@@ -191,11 +242,14 @@ ${readingLine(deps, outcomes, asked)}`;
       asOf,
       reading: deps.reading.kind === 'off' ? 'off' : 'on',
       models: outcomes,
+      ...('link' in download
+        ? { download: download.link }
+        : { download: null, downloadRefused: download.refused }),
     },
   };
 }
 
-async function firstRun(source: Source, input: Input, deps: ServerDeps, ctx: JobContext) {
+async function firstRun({ source, input, deps }: Call, ctx: JobContext): Promise<Run> {
   const asOf = deps.clock().toISOString();
   const models = await modelsOf(source, deps);
   const runs = await runInWorker(
@@ -205,14 +259,13 @@ async function firstRun(source: Source, input: Input, deps: ServerDeps, ctx: Job
   return { asOf, models, runs };
 }
 
-const finished = (run: FirstRun) => ({ ...run, outcomes: run.runs.map((r) => r.outcome) });
-
 /**
- * The held values as questions. The models' files and readings stay in this closure, never in
- * a result, and the resumed run rebuilds only the models that held values, from their recorded
- * readings: Jev is not asked again.
+ * The held values as questions. The models' files, readings and emitted files stay in this
+ * closure, never in a result, and the resumed run rebuilds only the models that held values,
+ * from their recorded readings: Jev is not asked again. Each rebuilt model replaces its first
+ * run whole, emitted files included, so the zip holds every model's final files.
  */
-function questionOf(first: FirstRun, source: Source, input: Input, deps: ServerDeps) {
+function questionOf(call: Call, first: Run): Question | undefined {
   const held = first.runs.flatMap((r, index) =>
     r.reading && r.reading.held.length > 0
       ? [{ index, modelId: r.outcome.modelId, reading: r.reading }]
@@ -220,7 +273,7 @@ function questionOf(first: FirstRun, source: Source, input: Input, deps: ServerD
   );
   if (held.length === 0) return undefined;
   const confirmation = confirmationFor(held, first.runs.length);
-  const question: Question = {
+  return {
     inputRequests: confirmation.inputRequests,
     resume: (responses) => async (ctx) => {
       const readings = confirmation.readingsFor(responses);
@@ -228,25 +281,24 @@ function questionOf(first: FirstRun, source: Source, input: Input, deps: ServerD
       const reruns = await runInWorker(
         {
           models,
-          category: input.category,
+          category: call.input.category,
           asOf: first.asOf,
           reading: { kind: 'recorded', readings },
         },
         ctx,
       );
-      const outcomes = first.runs.map((r) => r.outcome);
+      const runs = [...first.runs];
       for (const [i, h] of held.entries()) {
         const rerun = reruns[i];
-        if (rerun) outcomes[h.index] = rerun.outcome;
+        if (rerun) runs[h.index] = rerun;
       }
       const asked = {
         confirmed: readings.reduce((n, r) => n + r.confirmed.length, 0),
         skipped: readings.reduce((n, r) => n + r.held.length, 0),
       };
-      return resultOf(input, source, deps, { ...first, outcomes }, asked);
+      return resultOf(call, { ...first, runs }, ctx, asked);
     },
   };
-  return question;
 }
 
 export const runSeries: TaskTool<typeof Input> = {
@@ -262,21 +314,22 @@ export const runSeries: TaskTool<typeof Input> = {
     'the Agent SDK), where a question cancels the task, to finish at once and report the held ' +
     'values instead. The result holds per model the verdict from the validators, fact, mapping ' +
     'and conflict counts, mandatory completeness, missing mandatory attributes, the AI reading ' +
-    'counts with any values still held, and the SHA-256 of each emitted artefact (AAS JSON, ' +
-    'AASX, HTML sheet, gap report).',
+    'counts with any values still held, and the size and SHA-256 of each emitted file (AAS ' +
+    'JSON, AASX, HTML sheet, gap report). The summary ends with a curl command that downloads ' +
+    'every file as one zip, once, within 15 minutes, with no token: run it in the current ' +
+    'folder of the user, then unzip the zip or tell the user where it is.',
   inputSchema: Input,
-  job: (input, deps) => {
-    const source = sourceOf(input, deps);
+  job: (input, deps, scope) => {
+    const call = { input, source: sourceOf(input, deps), deps, scope };
     return async (ctx) => {
-      const first = await firstRun(source, input, deps, ctx);
-      const question = input.confirm === 'ask' ? questionOf(first, source, input, deps) : undefined;
-      return question ?? resultOf(input, source, deps, finished(first));
+      const first = await firstRun(call, ctx);
+      const question = input.confirm === 'ask' ? questionOf(call, first) : undefined;
+      return question ?? resultOf(call, first, ctx);
     };
   },
   // An inline run has no way to ask, so it holds whatever `confirm` says.
-  inline: (input, deps) => {
-    const source = sourceOf(input, deps);
-    return async (ctx) =>
-      resultOf(input, source, deps, finished(await firstRun(source, input, deps, ctx)));
+  inline: (input, deps, scope) => {
+    const call = { input, source: sourceOf(input, deps), deps, scope };
+    return async (ctx) => resultOf(call, await firstRun(call, ctx), ctx);
   },
 };

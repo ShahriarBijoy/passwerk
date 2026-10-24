@@ -1,7 +1,7 @@
 /**
  * Runs one series in one worker thread and turns its messages into task progress. The worker
- * is terminated outright on cancel: pipeline steps have no side effects, artefacts are hashed
- * and never written (ADR D-047).
+ * is terminated outright on cancel: pipeline steps have no side effects, and emitted files only
+ * reach the download store once the whole task completes (ADR D-047, D-050).
  */
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';

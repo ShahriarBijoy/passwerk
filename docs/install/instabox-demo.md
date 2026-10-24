@@ -194,7 +194,7 @@ The security model:
   a read-only file system.
 - The file bytes go from your disk to the server through curl, never through the model. The
   model sees the file names, the command and the results. The task result carries counts,
-  verdicts and SHA-256 digests, never document content.
+  verdicts, SHA-256 digests and a download link, never document content.
 - A body over a limit is refused while it streams. The server never holds more than the limit.
   curl sends `Expect: 100-continue` for a file over 1 MB, so an oversized file is refused
   before its first byte leaves the laptop.
@@ -214,6 +214,39 @@ A host without a shell, such as Claude Desktop, can send documents inline instea
 `run_series` with `{ "documents": [{ "name": "...", "contentBase64": "..." }], "category": "EV" }`,
 at most 1 MB decoded in all. These bytes do pass through the model, so the upload route is the
 one to use wherever Claude can run curl.
+
+## Download the passport files
+
+Every finished `run_series` result ends with a download link for one zip that holds every
+model's four files: the AAS JSON, the AASX, the HTML sheet and the gap report. The last line of
+the summary is a command Claude Code runs from your shell, after you approve it:
+
+```sh
+curl -fsS -o passwerk-musterwerk-complete.zip "https://8080-<id>.instabox.tech/download/dl_.../passwerk-musterwerk-complete.zip"
+```
+
+The zip lands in the folder you started `claude` in. Inside it is one folder per model, for
+example `musterwerk-complete/musterwerk-complete.aasx`. Claude then unzips it or tells you where
+it is. The zip is named after the demo series, or after the `modelId` of an upload or of inline
+documents (`passwerk-upload.zip` by default).
+
+- The link works once and for 15 minutes after the run finished. A second GET, an expired link
+  and a wrong name all get the same `404`. To fetch the files again, run the series again.
+- Like an upload URL, the link needs no bearer token, so the curl command carries none. The
+  download id is 160 random bits. Anyone who sees the URL before it is used can fetch the
+  passport, which holds values read from your documents.
+- The zip lives only in the server's memory. One zip holds at most 64 MB, and the server holds
+  at most 256 MB of zips. Past that, the run still finishes, without a link, and its last line
+  says why.
+- The zip holds the same bytes whose SHA-256 the result lists per model. After confirmed
+  values, it holds the files of the confirmed passport.
+- The server logs `GET /download 200` and nothing about the id or the name.
+
+Check that the proxy passes a download through with a made-up id. The command must print `404`:
+
+```sh
+curl -s -o /dev/null -w '%{http_code}\n' https://8080-<id>.instabox.tech/download/dl_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/passwerk-musterwerk.zip
+```
 
 ## AI reading (optional)
 

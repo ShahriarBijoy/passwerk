@@ -58,7 +58,7 @@ export interface ModelOutcome {
    * lists required attributes whose gap status is not `present` (missing, invalid or conflict).
    */
   gap: { mandatoryCompleteness: number; missingRequired: string[] };
-  /** AAS JSON, AASX, HTML sheet, gap report. Hashed, not stored (ADR D-047). */
+  /** AAS JSON, AASX, HTML sheet, gap report. The bytes travel beside the outcome (ADR D-050). */
   artefacts: ArtefactDigest[];
   /** Present when the AI reading step ran (ADR D-048). */
   reading?: ReadingSummary;
@@ -101,9 +101,20 @@ export interface RunModelOptions {
   read?: boolean;
 }
 
-/** One model's outcome plus the reading behind it, which stays on the server. */
-export interface ModelRun {
+/** One emitted file. Only its digest goes into a result; the bytes go into the run's zip. */
+export interface Artefact {
+  file: string;
+  bytes: Uint8Array;
+}
+
+/** What `runModel` returns: `files` holds the bytes `outcome.artefacts` digests, in order. */
+export interface ModelResult {
   outcome: ModelOutcome;
+  files: Artefact[];
+}
+
+/** One model's result plus the reading behind it, which stays on the server. */
+export interface ModelRun extends ModelResult {
   /** Present when the reading step ran: enough to rebuild the draft without asking again. */
   reading?: ReadingResult;
 }

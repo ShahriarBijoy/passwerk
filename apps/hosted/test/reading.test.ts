@@ -106,7 +106,7 @@ describe('AI reading on the complete Musterwerk pack, replayed', () => {
 
   beforeAll(async () => {
     model = await single('musterwerk-complete');
-    outcome = await runModel(model, READ, replayReader(cassette('musterwerk-complete')));
+    outcome = (await runModel(model, READ, replayReader(cassette('musterwerk-complete')))).outcome;
     toConfirm = outcome.reading?.toConfirm ?? [];
   });
 
@@ -208,7 +208,8 @@ describe('AI reading on the complete Musterwerk pack, replayed', () => {
   });
 
   it('gives a byte-identical outcome on a second replay', async () => {
-    const again = await runModel(model, READ, replayReader(cassette('musterwerk-complete')));
+    const again = (await runModel(model, READ, replayReader(cassette('musterwerk-complete'))))
+      .outcome;
     expect(canonicalJson(again)).toBe(canonicalJson(outcome));
   });
 });
@@ -228,7 +229,7 @@ describe('a recorded reading, replayed without asking Jev', () => {
   beforeAll(async () => {
     model = await single('musterwerk-complete');
     const k = keeping(replayReader(cassette('musterwerk-complete')));
-    first = await runModel(model, READ, k.reader);
+    first = (await runModel(model, READ, k.reader)).outcome;
     if (!k.kept.last) throw new Error('the reader never ran');
     recorded = k.kept.last;
   });
@@ -241,13 +242,13 @@ describe('a recorded reading, replayed without asking Jev', () => {
   });
 
   it('gives the first outcome again when nothing is confirmed', async () => {
-    const again = await runModel(model, READ, recordedReader(recorded));
+    const again = (await runModel(model, READ, recordedReader(recorded))).outcome;
     expect(canonicalJson(again)).toBe(canonicalJson(first));
   });
 
   it('applies every confirmed value with its document provenance: valid at 100 %', async () => {
     const all: ReadingResult = { ...recorded, held: [], confirmed: recorded.held };
-    const outcome = await runModel(model, READ, recordedReader(all));
+    const outcome = (await runModel(model, READ, recordedReader(all))).outcome;
     expect(outcome.verdict).toBe('valid');
     expect(outcome.gap.mandatoryCompleteness).toBe(100);
     expect(outcome.reading).toMatchObject({ applied: 16, confirmed: 11, toConfirm: [] });
@@ -276,9 +277,9 @@ describe('a recorded reading, replayed without asking Jev', () => {
 describe('AI reading on the base Musterwerk pack, replayed', () => {
   it('keeps or raises completeness and writes only values the documents contain', async () => {
     const model = await single('musterwerk');
-    const without = await runModel(model, OPTIONS);
+    const without = (await runModel(model, OPTIONS)).outcome;
     const reader = replayReader(cassette('musterwerk'));
-    const withReading = await runModel(model, READ, reader);
+    const withReading = (await runModel(model, READ, reader)).outcome;
     expect(withReading.gap.mandatoryCompleteness).toBeGreaterThanOrEqual(
       without.gap.mandatoryCompleteness,
     );
@@ -314,12 +315,12 @@ describe('the veto on rule-based accepts', () => {
 
   beforeAll(async () => {
     model = await single('musterwerk');
-    automatic = await runModel(model, OPTIONS);
+    automatic = (await runModel(model, OPTIONS)).outcome;
   });
 
   it('drops every accept a near-certain no (P(no) = 0.99) answers, passport id included', async () => {
     const reader = createReader(answering(0.01));
-    const r = await runModel(model, READ, reader);
+    const r = (await runModel(model, READ, reader)).outcome;
     expect(r.reading?.vetoed).toBe(automatic.accepted);
     expect(r.accepted).toBe(0);
     expect(r.mapped).toBe(0);
@@ -328,7 +329,7 @@ describe('the veto on rule-based accepts', () => {
   });
 
   it('keeps every accept below the veto threshold (P(no) = 0.94)', async () => {
-    const r = await runModel(model, READ, createReader(answering(0.06)));
+    const r = (await runModel(model, READ, createReader(answering(0.06)))).outcome;
     expect(r.reading?.vetoed).toBe(0);
     expect(r.accepted).toBe(automatic.accepted);
     expect(r.mapped).toBe(automatic.mapped);
