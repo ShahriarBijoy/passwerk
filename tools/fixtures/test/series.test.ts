@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   type ModelVariant,
   MUSTERWERK,
+  MUSTERWERK_COMPLETE,
+  musterwerkCompleteContent,
   musterwerkContent,
   NOMINAL_VOLTAGE_V,
 } from '../src/content.js';
@@ -31,10 +33,14 @@ describe('demo/series is exactly what the generator produces', () => {
     expect(listFiles(SERIES_DIR).sort()).toEqual([...want.keys()].sort());
   });
 
-  it('holds the single Musterwerk model and twelve models of five documents each', async () => {
+  it('holds the single Musterwerk model, twelve models and the complete pack of five documents each', async () => {
     const want = await generateSeries();
     const folders = [...new Set([...want.keys()].map((k) => k.slice(0, k.lastIndexOf('/'))))];
-    expect(folders).toEqual(['musterwerk', ...SERIES_MODELS.map((m) => `musterwerk-12/${m.id}`)]);
+    expect(folders).toEqual([
+      'musterwerk',
+      ...SERIES_MODELS.map((m) => `musterwerk-12/${m.id}`),
+      'musterwerk-complete',
+    ]);
     for (const folder of folders) {
       const names = [...want.keys()]
         .filter((k) => k.startsWith(`${folder}/`))
@@ -70,6 +76,33 @@ const datasheet = (rows: string[][], label: string) =>
     rows.map((r) => [r[0] as string, r[1] as string]),
     label,
   );
+
+describe('the complete pack', () => {
+  it('is a distinct battery whose base lines and sheets stay those of its own Musterwerk content', () => {
+    expect(MUSTERWERK_COMPLETE.serial).not.toBe(MUSTERWERK.serial);
+    expect(SERIES_MODELS.map((m) => m.serial)).not.toContain(MUSTERWERK_COMPLETE.serial);
+    const base = musterwerkContent(MUSTERWERK_COMPLETE);
+    const complete = musterwerkCompleteContent(MUSTERWERK_COMPLETE);
+    expect(complete.declarationLines.slice(0, base.declarationLines.length)).toEqual(
+      base.declarationLines,
+    );
+    expect({
+      ...complete,
+      declarationLines: base.declarationLines,
+      leistungRows: base.leistungRows,
+    }).toEqual(base);
+  });
+
+  it('states each label once per document', () => {
+    const complete = musterwerkCompleteContent(MUSTERWERK_COMPLETE);
+    for (const labels of [
+      complete.declarationLines.map(([k]) => k),
+      complete.leistungRows.map((r) => r[0]),
+    ]) {
+      expect(new Set(labels).size).toBe(labels.length);
+    }
+  });
+});
 
 describe('the twelve models', () => {
   it('have distinct ids and serials in the Musterwerk pattern', () => {

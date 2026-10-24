@@ -8,6 +8,7 @@ import {
   parsePath,
   sha256Hex,
   type Verdict,
+  validate,
 } from '@passwerk/core';
 import {
   decodeBase64,
@@ -26,6 +27,8 @@ const ROOT = join(import.meta.dirname, '..', '..', '..');
 const FIXTURES = join(ROOT, 'packages', 'core', 'test', 'fixtures');
 const AS_OF = '2026-10-24T09:00:00Z';
 const OPTIONS = { category: 'EV', asOf: AS_OF } as const;
+/** The Batteriepass-ID cell of the Musterwerk Stammdaten sheet. */
+const STAMMDATEN_PASSPORT_ID = 'https://passport.musterwerk.example/battery/MW-EV-2026-000123';
 
 let musterwerk: SeriesModel;
 let outcome: ModelOutcome;
@@ -84,12 +87,10 @@ describe('runModel', () => {
     });
     const all = suggested['proposals'] as MappingProposal[];
     const accepted = topPerSlot(all);
+    const stated = accepted.find((p) => p.attributeId === 'batteryPassportIdentifier');
+    expect(stated?.value).toBe(STAMMDATEN_PASSPORT_ID);
     const applied = await call(ctx, 'apply_mappings', {
-      meta: {
-        category: 'EV',
-        passportId: 'https://passport.passwerk.example/musterwerk',
-        createdAt: AS_OF,
-      },
+      meta: { category: 'EV', passportId: stated?.value, createdAt: AS_OF },
       mappings: accepted.map((p) => ({
         attributeId: p.attributeId,
         value: p.value,
@@ -171,6 +172,22 @@ describe('runModel', () => {
     expect(seen.at(-1)).toEqual({ step: 'emit', facts: r.facts, mapped: r.mapped });
   });
 
+  it('takes meta.passportId from the Batteriepass-ID the documents state', async () => {
+    const { draft } = await mapModel(musterwerk, OPTIONS);
+    expect(draft.meta.passportId).toBe(STAMMDATEN_PASSPORT_ID);
+    const { findings } = validate(draft, { asOf: AS_OF });
+    expect(findings.map((f) => f.ruleId)).not.toContain('PW-L1-PASSPORT-ID-MISMATCH');
+  });
+
+  it('keeps the model-derived passport id when no document states one', async () => {
+    const withoutStammdaten = {
+      ...musterwerk,
+      files: musterwerk.files.filter((f) => f.name !== 'stueckliste.xlsx'),
+    };
+    const { draft } = await mapModel(withoutStammdaten, OPTIONS);
+    expect(draft.meta.passportId).toBe('https://passport.passwerk.example/musterwerk');
+  });
+
   it('maps at least 80 % of the expected Musterwerk attributes (core recall gate)', async () => {
     const expected = JSON.parse(
       readFileSync(join(FIXTURES, 'musterwerk', 'expected.json'), 'utf8'),
@@ -185,5 +202,58 @@ describe('runModel', () => {
       ratio,
       `missed: ${misses.map((e) => `${e.attributeId}${e.path ? `.${e.path}` : ''}`).join(', ')}`,
     ).toBeGreaterThanOrEqual(0.8);
+  });
+});
+
+/**
+ * Mandatory EV attributes the automatic chain cannot fill from any document: document and
+ * graphic attributes, composites without a structural entry or whose entry fills one leaf only,
+ * and SOCE, whose proposal would carry no LastUpdate (PW-PLAUS-011).
+ */
+const BEYOND_THE_CHAIN = [
+  'batteryChemistry',
+  'componentPartNumbers',
+  'criticalRawMaterials',
+  'dismantlingInformation',
+  'electrodeAndElectrolyteMaterials',
+  'endUserInfoCollectionAndTreatment',
+  'endUserInfoSeparateCollection',
+  'endUserInfoWastePrevention',
+  'euDeclarationOfConformity',
+  'hazardousSubstances',
+  'initialInternalResistance',
+  'manufacturerInformation',
+  'originalPowerCapability',
+  'safetyMeasures',
+  'separateCollectionSymbol',
+  'sparePartSources',
+  'stateOfCertifiedEnergy',
+  'testReportsProvingCompliance',
+];
+
+describe('runModel on the complete Musterwerk pack', () => {
+  let complete: SeriesModel;
+
+  beforeAll(async () => {
+    const models = await loadSeries(join(ROOT, 'demo', 'series'), 'musterwerk-complete');
+    expect(models.map((m) => m.modelId)).toEqual(['musterwerk-complete']);
+    complete = models[0] as SeriesModel;
+  });
+
+  it('fills every mandatory EV attribute except those beyond the chain, without conflicts', async () => {
+    const r = await runModel(complete, OPTIONS);
+    expect(r.conflicts).toBe(0);
+    expect(r.gap.missingRequired).toEqual(BEYOND_THE_CHAIN);
+    expect(r.gap.mandatoryCompleteness).toBe(61.7);
+  });
+
+  it('raises errors only on attributes beyond the chain or on template elements they feed', async () => {
+    const { draft } = await mapModel(complete, OPTIONS);
+    expect(draft.meta.passportId).toBe(
+      'https://passport.musterwerk.example/battery/MW-EV-2026-000124',
+    );
+    const errors = validate(draft, { asOf: AS_OF }).findings.filter((f) => f.severity === 'error');
+    const onAttributes = errors.flatMap((f) => (f.attributeId ? [f.attributeId] : []));
+    expect(onAttributes.filter((id) => !BEYOND_THE_CHAIN.includes(id))).toEqual([]);
   });
 });

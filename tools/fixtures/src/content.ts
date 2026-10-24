@@ -144,3 +144,42 @@ export function musterwerkContent(v: ModelVariant) {
 }
 
 export type MusterwerkContent = ReturnType<typeof musterwerkContent>;
+
+/** The model behind demo/series/musterwerk-complete: the base Musterwerk pack, one serial on. */
+export const MUSTERWERK_COMPLETE: ModelVariant = { ...MUSTERWERK, serial: 'MW-EV-2026-000124' };
+
+/**
+ * The Musterwerk documents of a new battery, extended with every further EV value that a
+ * labelled line or sheet row can carry through extract and suggest. Values follow the golden
+ * sample ev-valid.json, scaled to this pack where they depend on its size. The Leistung sheet
+ * holds initial performance instead of a BMS read-out: a proposal carries no LastUpdate, so any
+ * dynamic value (SOCE, SoC, full cycles) would fail PW-PLAUS-011 and pull in the whole
+ * Product Condition submodel with its mandatory elements.
+ */
+export function musterwerkCompleteContent(v: ModelVariant): MusterwerkContent {
+  const c = musterwerkContent(v);
+  return {
+    ...c,
+    declarationLines: [
+      ...c.declarationLines,
+      ['Batteriestatus:', 'Original'],
+      ['Bedeutung der Symbole:', 'Durchgestrichene Mülltonne – getrennt sammeln'],
+      ['Löschmittel:', 'Wasser in großen Mengen'],
+      ['Gefahrenhinweise:', 'H301, H314 (Elektrolyt LiPF6)'],
+      ['Anteil erneuerbarer Materialien:', '0 %'],
+      ['Referenztest Zyklenlebensdauer:', 'IEC 62660-1'],
+    ],
+    leistungRows: [
+      ['Kapazitätsverlust', 0, '%'],
+      ['Leistungsverlust', 0, '%'],
+      ['Widerstandszunahme', 0, '%'],
+      ['Innenwiderstand Pack', 0.0125, 'Ohm'],
+      ['Anfänglicher Round-Trip-Wirkungsgrad', 96, '%'],
+      ['Wirkungsgrad halbe Lebensdauer', 93, '%'],
+      ['Maximal zulässige Batterieleistung', 110, 'kW'],
+      ['Kalendarische Lebensdauer', 12, 'Jahre'],
+      ['C-Rate', 0.5, 'C'],
+      ['Erschöpfungsschwelle', 70, '%'],
+    ],
+  };
+}

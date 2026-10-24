@@ -59,6 +59,15 @@ export function passportIdFor(modelId: string): string {
   return `https://passport.passwerk.example/${encodeURIComponent(modelId)}`;
 }
 
+/**
+ * The passport identifier the documents state, when the accept policy took one; otherwise an
+ * id derived from the model. Meta and attribute must agree (PW-L1-PASSPORT-ID-MISMATCH).
+ */
+export function passportIdOf(modelId: string, accepted: readonly MappingProposal[]): string {
+  const stated = accepted.find((p) => p.attributeId === 'batteryPassportIdentifier')?.value;
+  return typeof stated === 'string' ? stated : passportIdFor(modelId);
+}
+
 const decisionOf = (p: MappingProposal): MappingDecision => ({
   attributeId: p.attributeId,
   value: p.value,
@@ -113,7 +122,7 @@ export async function mapModel(model: SeriesModel, o: RunModelOptions): Promise<
       newDraft({
         schemaVersion: SCHEMA_VERSION,
         category: o.category,
-        passportId: passportIdFor(modelId),
+        passportId: passportIdOf(modelId, accepted),
         createdAt: o.asOf,
       }),
       accepted.map(decisionOf),

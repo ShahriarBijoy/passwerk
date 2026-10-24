@@ -7,7 +7,7 @@ import { extname, join } from 'node:path';
 import type { SeriesFile, SeriesModel } from './types.js';
 
 /** Series the server offers, generated into `demo/series` by `pnpm series`. */
-export const DEMO_SERIES = ['musterwerk', 'musterwerk-12'] as const;
+export const DEMO_SERIES = ['musterwerk', 'musterwerk-12', 'musterwerk-complete'] as const;
 export type DemoSeries = (typeof DEMO_SERIES)[number];
 
 const DOCUMENT_EXTENSIONS = new Set(['.pdf', '.xlsx', '.docx', '.csv', '.txt']);

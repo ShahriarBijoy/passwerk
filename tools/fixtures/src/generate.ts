@@ -1,7 +1,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type ModelVariant, MUSTERWERK, musterwerkContent } from './content.js';
+import {
+  type ModelVariant,
+  MUSTERWERK,
+  type MusterwerkContent,
+  musterwerkContent,
+} from './content.js';
 import { writeCsv1252 } from './writers/csv.js';
 import { writeDocx } from './writers/docx.js';
 import { writePdf } from './writers/pdf.js';
@@ -20,8 +25,12 @@ export const FIXTURE_DIR = join(
 );
 
 /** The five supplier documents of one Musterwerk battery model, keyed by file name. */
-export async function musterwerkDocuments(v: ModelVariant): Promise<Record<string, Uint8Array>> {
-  const c = musterwerkContent(v);
+export function musterwerkDocuments(v: ModelVariant): Promise<Record<string, Uint8Array>> {
+  return documentsOf(musterwerkContent(v));
+}
+
+/** The five documents written from their content, keyed by file name. */
+export async function documentsOf(c: MusterwerkContent): Promise<Record<string, Uint8Array>> {
   return {
     'lieferantenerklaerung.pdf': await writePdf({
       title: c.declarationTitle,

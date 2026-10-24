@@ -8,8 +8,13 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type ModelVariant, MUSTERWERK } from './content.js';
-import { musterwerkDocuments } from './generate.js';
+import {
+  type ModelVariant,
+  MUSTERWERK,
+  MUSTERWERK_COMPLETE,
+  musterwerkCompleteContent,
+} from './content.js';
+import { documentsOf, musterwerkDocuments } from './generate.js';
 
 export const SERIES_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -74,6 +79,7 @@ export async function generateSeries(): Promise<Map<string, Uint8Array>> {
   };
   add('musterwerk', await musterwerkDocuments(MUSTERWERK));
   for (const m of SERIES_MODELS) add(`musterwerk-12/${m.id}`, await musterwerkDocuments(m));
+  add('musterwerk-complete', await documentsOf(musterwerkCompleteContent(MUSTERWERK_COMPLETE)));
   return out;
 }
 
