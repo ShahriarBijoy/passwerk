@@ -18,6 +18,7 @@
     "@modelcontextprotocol/server": "2.3.1",
     "@passwerk/core": "workspace:*",
     "@passwerk/rules": "workspace:*",
+    "@typesafe-ai/sdk": "0.7.0",
     "zod": "4.5.4"
   },
   "devDependencies": {

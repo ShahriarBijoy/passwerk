@@ -19,7 +19,14 @@ export interface SeriesModel {
   files: SeriesFile[];
 }
 
-export type PipelineStep = 'ingest' | 'extract' | 'suggest' | 'apply' | 'validate' | 'emit';
+export type PipelineStep =
+  | 'ingest'
+  | 'extract'
+  | 'suggest'
+  | 'apply'
+  | 'read'
+  | 'validate'
+  | 'emit';
 
 export interface StepProgress {
   step: PipelineStep;
@@ -52,6 +59,30 @@ export interface ModelOutcome {
   gap: { mandatoryCompleteness: number; missingRequired: string[] };
   /** AAS JSON, AASX, HTML sheet, gap report. Hashed, not stored (ADR D-047). */
   artefacts: ArtefactDigest[];
+  /** Present when the AI reading step ran (ADR D-048). */
+  reading?: ReadingSummary;
+}
+
+/** One value the AI reading step chose but did not apply, for a person to confirm. */
+export interface ReadingProposal {
+  attributeId: string;
+  path?: string;
+  value: unknown;
+  /** Document and location the value was copied from. */
+  source: string;
+  confidence: number;
+  reason: string;
+}
+
+export interface ReadingSummary {
+  /** Decisions applied automatically under the reading policy. */
+  applied: number;
+  /** Decisions held back for confirmation. */
+  toConfirm: ReadingProposal[];
+  /** Rule-based accepts the reader vetoed. */
+  vetoed: number;
+  inputTokens: number;
+  requests: number;
 }
 
 export interface RunModelOptions {
@@ -60,6 +91,8 @@ export interface RunModelOptions {
   asOf: string;
   /** Called before each step starts and after extract/apply with counts. */
   onStep?: (p: StepProgress) => void;
+  /** Run the AI reading step. Off unless the server has a reader configured (ADR D-048). */
+  read?: boolean;
 }
 
 /** Messages the worker posts to the main thread. */
@@ -74,4 +107,6 @@ export interface WorkerStart {
   models: SeriesModel[];
   category: BatteryCategory;
   asOf: string;
+  /** Whether the worker runs the AI reading step; the worker reads its key from the env. */
+  read: boolean;
 }

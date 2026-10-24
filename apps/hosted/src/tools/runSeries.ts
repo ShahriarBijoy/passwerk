@@ -36,7 +36,7 @@ export const runSeries: TaskTool<typeof Input> = {
     async (ctx): Promise<ToolResult> => {
       const asOf = clock().toISOString();
       const models = await loadSeries(seriesDir, series);
-      const outcomes = await runInWorker({ models, category, asOf }, ctx);
+      const outcomes = await runInWorker({ models, category, asOf, read: false }, ctx);
       const summary = seriesSummary(outcomes);
       return {
         content: [{ type: 'text', text: summary }],
