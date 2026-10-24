@@ -1,0 +1,1117 @@
+{
+  "entries": {
+    "042f83ad9825bff3f912d411a597a10e8346de3be2fc5d1cd44ea9d1ad560829": {
+      "questions": [
+        "leaf|initialInternalResistance|cellOhm",
+        "leaf|initialInternalResistance|moduleOhm",
+        "scalar|batteryStatus",
+        "scalar|extinguishingAgent",
+        "scalar|meaningOfLabelsAndSymbols",
+        "scalar|substanceImpacts",
+        "scalar|renewableContentShare",
+        "scalar|stateOfCertifiedEnergy",
+        "scalar|powerFade",
+        "scalar|maximumPermittedBatteryPower",
+        "scalar|initialRoundTripEnergyEfficiency",
+        "scalar|roundTripEnergyEfficiencyAt50PercentCycleLife",
+        "scalar|internalResistanceIncrease"
+      ],
+      "response": {
+        "answers": {
+          "leaf|initialInternalResistance|cellOhm": {
+            "choice": "none",
+            "confidence": 0.99,
+            "probabilities": {
+              "none": 0.99,
+              "stueckliste.xlsx#3:5": 0.01
+            },
+            "type": "choice"
+          },
+          "leaf|initialInternalResistance|moduleOhm": {
+            "choice": "none",
+            "confidence": 0.99,
+            "probabilities": {
+              "none": 0.99,
+              "stueckliste.xlsx#3:5": 0.01
+            },
+            "type": "choice"
+          },
+          "scalar|batteryStatus": {
+            "choice": "none",
+            "confidence": 0.99,
+            "probabilities": {
+              "none": 0.99,
+              "stueckliste.xlsx#1:8": 0.01
+            },
+            "type": "choice"
+          },
+          "scalar|extinguishingAgent": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|initialRoundTripEnergyEfficiency": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|internalResistanceIncrease": {
+            "choice": "none",
+            "confidence": 0.99,
+            "probabilities": {
+              "none": 0.99,
+              "stueckliste.xlsx#3:5": 0.01
+            },
+            "type": "choice"
+          },
+          "scalar|maximumPermittedBatteryPower": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|meaningOfLabelsAndSymbols": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|powerFade": {
+            "choice": "none",
+            "confidence": 0.97,
+            "probabilities": {
+              "none": 0.97,
+              "stueckliste.xlsx#3:2": 0.03
+            },
+            "type": "choice"
+          },
+          "scalar|renewableContentShare": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|roundTripEnergyEfficiencyAt50PercentCycleLife": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|stateOfCertifiedEnergy": {
+            "choice": "none",
+            "confidence": 0.75,
+            "probabilities": {
+              "lieferantenerklaerung.pdf#1:5": 0.01,
+              "none": 0.76,
+              "stueckliste.xlsx#3:1": 0.19,
+              "stueckliste.xlsx#3:2": 0.04
+            },
+            "type": "choice"
+          },
+          "scalar|substanceImpacts": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          }
+        },
+        "inputTokens": 38305,
+        "model": "jev-1.14.0"
+      },
+      "stage": "facts 2/3"
+    },
+    "3208f3985e88f0c97d5699c21a51fc3ee18ad9e2891dcefd9fd7a220031d1542": {
+      "questions": [
+        "table|T1|criticalRawMaterials",
+        "table|T1|electrodeAndElectrolyteMaterials",
+        "table|T1|hazardousSubstances",
+        "table|T1|componentPartNumbers",
+        "table|T1|sparePartSources",
+        "table|T1|register",
+        "table|T2|criticalRawMaterials",
+        "table|T2|electrodeAndElectrolyteMaterials",
+        "table|T2|hazardousSubstances",
+        "table|T2|componentPartNumbers",
+        "table|T2|sparePartSources",
+        "table|T2|register",
+        "table|T3|criticalRawMaterials",
+        "table|T3|electrodeAndElectrolyteMaterials",
+        "table|T3|hazardousSubstances",
+        "table|T3|componentPartNumbers",
+        "table|T3|sparePartSources",
+        "table|T3|register",
+        "table|T4|criticalRawMaterials",
+        "table|T4|electrodeAndElectrolyteMaterials",
+        "table|T4|hazardousSubstances",
+        "table|T4|componentPartNumbers",
+        "table|T4|sparePartSources",
+        "table|T4|register",
+        "table|T5|criticalRawMaterials",
+        "table|T5|electrodeAndElectrolyteMaterials",
+        "table|T5|hazardousSubstances",
+        "table|T5|componentPartNumbers",
+        "table|T5|sparePartSources",
+        "table|T5|register",
+        "table|T6|criticalRawMaterials",
+        "table|T6|electrodeAndElectrolyteMaterials",
+        "table|T6|hazardousSubstances",
+        "table|T6|componentPartNumbers",
+        "table|T6|sparePartSources",
+        "table|T6|register",
+        "table|T7|criticalRawMaterials",
+        "table|T7|electrodeAndElectrolyteMaterials",
+        "table|T7|hazardousSubstances",
+        "table|T7|componentPartNumbers",
+        "table|T7|sparePartSources",
+        "table|T7|register",
+        "table|T8|criticalRawMaterials",
+        "table|T8|electrodeAndElectrolyteMaterials",
+        "table|T8|hazardousSubstances",
+        "table|T8|componentPartNumbers",
+        "table|T8|sparePartSources",
+        "table|T8|register"
+      ],
+      "response": {
+        "answers": {
+          "table|T1|componentPartNumbers": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T1|criticalRawMaterials": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T1|electrodeAndElectrolyteMaterials": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T1|hazardousSubstances": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T1|register": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T1|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T2|componentPartNumbers": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T2|criticalRawMaterials": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T2|electrodeAndElectrolyteMaterials": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "table|T2|hazardousSubstances": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T2|register": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T2|sparePartSources": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "table|T3|componentPartNumbers": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T3|criticalRawMaterials": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T3|electrodeAndElectrolyteMaterials": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T3|hazardousSubstances": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T3|register": {
+            "noul": 0.92,
+            "type": "noul"
+          },
+          "table|T3|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T4|componentPartNumbers": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T4|criticalRawMaterials": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T4|electrodeAndElectrolyteMaterials": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T4|hazardousSubstances": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T4|register": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T4|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T5|componentPartNumbers": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T5|criticalRawMaterials": {
+            "noul": 0.19,
+            "type": "noul"
+          },
+          "table|T5|electrodeAndElectrolyteMaterials": {
+            "noul": 0.08,
+            "type": "noul"
+          },
+          "table|T5|hazardousSubstances": {
+            "noul": 0.13,
+            "type": "noul"
+          },
+          "table|T5|register": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T5|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T6|componentPartNumbers": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T6|criticalRawMaterials": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T6|electrodeAndElectrolyteMaterials": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T6|hazardousSubstances": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T6|register": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T6|sparePartSources": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T7|componentPartNumbers": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T7|criticalRawMaterials": {
+            "noul": 0.35,
+            "type": "noul"
+          },
+          "table|T7|electrodeAndElectrolyteMaterials": {
+            "noul": 0.81,
+            "type": "noul"
+          },
+          "table|T7|hazardousSubstances": {
+            "noul": 0.27,
+            "type": "noul"
+          },
+          "table|T7|register": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T7|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T8|componentPartNumbers": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T8|criticalRawMaterials": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T8|electrodeAndElectrolyteMaterials": {
+            "noul": 0.04,
+            "type": "noul"
+          },
+          "table|T8|hazardousSubstances": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "table|T8|register": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "table|T8|sparePartSources": {
+            "noul": 0.02,
+            "type": "noul"
+          }
+        },
+        "inputTokens": 10622,
+        "model": "jev-1.14.0"
+      },
+      "stage": "tables 1/1"
+    },
+    "3bf7b3aba7ca31998c5388467c4419043c9795ef9865e90998881fda5c3f4608": {
+      "questions": [
+        "series|originalPowerCapability|datasheet-en.csv#1:1",
+        "series|originalPowerCapability|datasheet-en.csv#1:2",
+        "series|originalPowerCapability|datasheet-en.csv#1:3",
+        "series|originalPowerCapability|datasheet-en.csv#1:4",
+        "series|originalPowerCapability|datasheet-en.csv#1:5",
+        "series|originalPowerCapability|datasheet-en.csv#1:6",
+        "series|originalPowerCapability|datasheet-en.csv#1:7",
+        "series|originalPowerCapability|energierechnung.pdf#1:3",
+        "series|originalPowerCapability|energierechnung.pdf#1:4",
+        "series|originalPowerCapability|energierechnung.pdf#1:5",
+        "series|originalPowerCapability|energierechnung.pdf#1:6",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:5",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:6",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:7",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:8",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:9",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:11",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:12",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:13",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:14",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:15",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:16",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:17",
+        "series|originalPowerCapability|lieferantenerklaerung.pdf#1:18",
+        "series|originalPowerCapability|stueckliste.xlsx#1:4",
+        "series|originalPowerCapability|stueckliste.xlsx#1:5",
+        "series|originalPowerCapability|stueckliste.xlsx#2:2",
+        "series|originalPowerCapability|stueckliste.xlsx#2:3",
+        "series|originalPowerCapability|stueckliste.xlsx#2:4",
+        "series|originalPowerCapability|stueckliste.xlsx#2:5",
+        "series|originalPowerCapability|stueckliste.xlsx#2:6",
+        "series|originalPowerCapability|stueckliste.xlsx#2:7",
+        "series|originalPowerCapability|stueckliste.xlsx#2:8",
+        "series|originalPowerCapability|stueckliste.xlsx#2:9",
+        "series|originalPowerCapability|stueckliste.xlsx#3:1",
+        "series|originalPowerCapability|stueckliste.xlsx#3:2",
+        "series|originalPowerCapability|stueckliste.xlsx#3:3",
+        "series|originalPowerCapability|stueckliste.xlsx#3:4",
+        "series|originalPowerCapability|stueckliste.xlsx#3:5"
+      ],
+      "response": {
+        "answers": {
+          "series|originalPowerCapability|datasheet-en.csv#1:1": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:2": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:3": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:4": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:5": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:6": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|datasheet-en.csv#1:7": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|energierechnung.pdf#1:3": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|energierechnung.pdf#1:4": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|energierechnung.pdf#1:5": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|energierechnung.pdf#1:6": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:11": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:12": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:13": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:14": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:15": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:16": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:17": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:18": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:5": {
+            "noul": 0.02,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:6": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:7": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:8": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|lieferantenerklaerung.pdf#1:9": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#1:4": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#1:5": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:2": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:3": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:4": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:5": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:6": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:7": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:8": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#2:9": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#3:1": {
+            "noul": 0.03,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#3:2": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#3:3": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#3:4": {
+            "noul": 0.01,
+            "type": "noul"
+          },
+          "series|originalPowerCapability|stueckliste.xlsx#3:5": {
+            "noul": 0.02,
+            "type": "noul"
+          }
+        },
+        "inputTokens": 11765,
+        "model": "jev-1.14.0"
+      },
+      "stage": "series 1/1"
+    },
+    "41b87844b88b1b0a3c543a3cb7ee8b4c814a46a8a9dd8c8dba943595c599c96a": {
+      "questions": [
+        "scalar|expectedLifetimeCalendarYears",
+        "scalar|cycleLifeReferenceTest",
+        "scalar|cRateOfCycleLifeTest",
+        "scalar|capacityThresholdForExhaustion",
+        "scalar|temperatureInformation",
+        "scalar|timeInExtremeHighTemperature",
+        "scalar|timeInExtremeLowTemperature",
+        "scalar|timeChargingInExtremeHighTemperature",
+        "scalar|timeChargingInExtremeLowTemperature",
+        "time|stateOfCertifiedEnergy",
+        "time|temperatureInformation",
+        "time|timeInExtremeHighTemperature",
+        "time|timeInExtremeLowTemperature",
+        "time|timeChargingInExtremeHighTemperature",
+        "time|timeChargingInExtremeLowTemperature"
+      ],
+      "response": {
+        "answers": {
+          "scalar|cRateOfCycleLifeTest": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|capacityThresholdForExhaustion": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|cycleLifeReferenceTest": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|expectedLifetimeCalendarYears": {
+            "choice": "none",
+            "confidence": 0.85,
+            "probabilities": {
+              "lieferantenerklaerung.pdf#1:11": 0.14,
+              "lieferantenerklaerung.pdf#1:12": 0.01,
+              "none": 0.85
+            },
+            "type": "choice"
+          },
+          "scalar|temperatureInformation": {
+            "choice": "none",
+            "confidence": 0.96,
+            "probabilities": {
+              "datasheet-en.csv#1:6": 0.03,
+              "datasheet-en.csv#1:7": 0.01,
+              "none": 0.96
+            },
+            "type": "choice"
+          },
+          "scalar|timeChargingInExtremeHighTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|timeChargingInExtremeLowTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|timeInExtremeHighTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "scalar|timeInExtremeLowTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|stateOfCertifiedEnergy": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|temperatureInformation": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|timeChargingInExtremeHighTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|timeChargingInExtremeLowTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|timeInExtremeHighTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "time|timeInExtremeLowTemperature": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          }
+        },
+        "inputTokens": 27089,
+        "model": "jev-1.14.0"
+      },
+      "stage": "facts 3/3"
+    },
+    "4fe14eef688a403ecfb9aa8d2166b88c630c86308d7e2a514e95c9fad058e387": {
+      "questions": [
+        "col|T7|electrodeAndElectrolyteMaterials|0",
+        "col|T7|electrodeAndElectrolyteMaterials|1",
+        "col|T7|electrodeAndElectrolyteMaterials|2",
+        "col|T7|electrodeAndElectrolyteMaterials|3",
+        "row|T7|electrodeAndElectrolyteMaterials|0",
+        "row|T7|electrodeAndElectrolyteMaterials|1",
+        "row|T7|electrodeAndElectrolyteMaterials|2",
+        "col|T3|document|0",
+        "col|T3|document|1",
+        "col|T3|document|2",
+        "regrow|T3|0",
+        "regrow|T3|1",
+        "regrow|T3|2"
+      ],
+      "response": {
+        "answers": {
+          "col|T3|document|0": {
+            "choice": "title",
+            "confidence": 0.99,
+            "probabilities": {
+              "id": 0.01,
+              "title": 0.99
+            },
+            "type": "choice"
+          },
+          "col|T3|document|1": {
+            "choice": "languages",
+            "confidence": 1,
+            "probabilities": {
+              "languages": 1
+            },
+            "type": "choice"
+          },
+          "col|T3|document|2": {
+            "choice": "version",
+            "confidence": 1,
+            "probabilities": {
+              "version": 1
+            },
+            "type": "choice"
+          },
+          "col|T7|electrodeAndElectrolyteMaterials|0": {
+            "choice": "name",
+            "confidence": 0.84,
+            "probabilities": {
+              "location.componentName": 0.12,
+              "name": 0.87,
+              "none": 0.01
+            },
+            "type": "choice"
+          },
+          "col|T7|electrodeAndElectrolyteMaterials|1": {
+            "choice": "identifier",
+            "confidence": 1,
+            "probabilities": {
+              "identifier": 1
+            },
+            "type": "choice"
+          },
+          "col|T7|electrodeAndElectrolyteMaterials|2": {
+            "choice": "massKg",
+            "confidence": 1,
+            "probabilities": {
+              "massKg": 1
+            },
+            "type": "choice"
+          },
+          "col|T7|electrodeAndElectrolyteMaterials|3": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "regrow|T3|0": {
+            "choice": "euDeclarationOfConformity",
+            "confidence": 1,
+            "probabilities": {
+              "euDeclarationOfConformity": 1
+            },
+            "type": "choice"
+          },
+          "regrow|T3|1": {
+            "choice": "dismantlingInformation",
+            "confidence": 1,
+            "probabilities": {
+              "dismantlingInformation": 1
+            },
+            "type": "choice"
+          },
+          "regrow|T3|2": {
+            "choice": "safetyMeasures",
+            "confidence": 1,
+            "probabilities": {
+              "safetyMeasures": 1
+            },
+            "type": "choice"
+          },
+          "row|T7|electrodeAndElectrolyteMaterials|0": {
+            "noul": 0.84,
+            "type": "noul"
+          },
+          "row|T7|electrodeAndElectrolyteMaterials|1": {
+            "noul": 0.96,
+            "type": "noul"
+          },
+          "row|T7|electrodeAndElectrolyteMaterials|2": {
+            "noul": 0.95,
+            "type": "noul"
+          }
+        },
+        "inputTokens": 8176,
+        "model": "jev-1.14.0"
+      },
+      "stage": "table detail 1/1"
+    },
+    "845f27aca3fe73a333d8e7fbc1ab314fa7f1bb12e929d26c7b0c6387007eb8d7": {
+      "questions": [
+        "leaf|manufacturerInformation|identifier",
+        "leaf|manufacturerInformation|address.street",
+        "leaf|manufacturerInformation|address.zipCode",
+        "leaf|manufacturerInformation|address.cityTown",
+        "leaf|manufacturerInformation|address.nationalCode",
+        "leaf|manufacturerInformation|address.email",
+        "leaf|manufacturerInformation|address.phone",
+        "leaf|manufacturerInformation|address.website",
+        "leaf|batteryChemistry|clearName",
+        "leaf|initialInternalResistance|packOhm"
+      ],
+      "response": {
+        "answers": {
+          "leaf|batteryChemistry|clearName": {
+            "choice": "none",
+            "confidence": 0.94,
+            "probabilities": {
+              "lieferantenerklaerung.pdf#1:4": 0.04,
+              "none": 0.9400000000000001,
+              "stueckliste.xlsx#2:1": 0.01
+            },
+            "type": "choice"
+          },
+          "leaf|initialInternalResistance|packOhm": {
+            "choice": "stueckliste.xlsx#3:5",
+            "confidence": 0.83,
+            "probabilities": {
+              "none": 0.17,
+              "stueckliste.xlsx#3:5": 0.83
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.cityTown": {
+            "choice": "none",
+            "confidence": 0.96,
+            "probabilities": {
+              "none": 0.96,
+              "stueckliste.xlsx#1:7": 0.04
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.email": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.nationalCode": {
+            "choice": "none",
+            "confidence": 0.85,
+            "probabilities": {
+              "lieferantenerklaerung.pdf#1:2": 0.04,
+              "none": 0.85,
+              "stueckliste.xlsx#1:7": 0.11
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.phone": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.street": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.website": {
+            "choice": "none",
+            "confidence": 0.98,
+            "probabilities": {
+              "none": 0.98,
+              "stueckliste.xlsx#1:1": 0.02
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|address.zipCode": {
+            "choice": "none",
+            "confidence": 1,
+            "probabilities": {
+              "none": 1
+            },
+            "type": "choice"
+          },
+          "leaf|manufacturerInformation|identifier": {
+            "choice": "lieferantenerklaerung.pdf#1:2",
+            "confidence": 0.99,
+            "probabilities": {
+              "lieferantenerklaerung.pdf#1:2": 0.99,
+              "none": 0.01
+            },
+            "type": "choice"
+          }
+        },
+        "inputTokens": 37278,
+        "model": "jev-1.14.0"
+      },
+      "stage": "facts 1/3"
+    },
+    "be265835168b4174226f9cc911d0e85e79cfa9691b16a7ca96e9eeb765fe9964": {
+      "questions": [
+        "veto|0",
+        "veto|1",
+        "veto|2",
+        "veto|3",
+        "veto|4",
+        "veto|5",
+        "veto|6",
+        "veto|7",
+        "veto|8",
+        "veto|9",
+        "veto|10",
+        "veto|11",
+        "veto|12",
+        "veto|13",
+        "veto|14",
+        "veto|15",
+        "veto|16",
+        "veto|17",
+        "veto|18",
+        "veto|19",
+        "veto|20",
+        "veto|21",
+        "veto|22",
+        "veto|23",
+        "veto|24",
+        "veto|25"
+      ],
+      "response": {
+        "answers": {
+          "veto|0": {
+            "noul": 0.95,
+            "type": "noul"
+          },
+          "veto|1": {
+            "noul": 0.75,
+            "type": "noul"
+          },
+          "veto|10": {
+            "noul": 0.89,
+            "type": "noul"
+          },
+          "veto|11": {
+            "noul": 0.88,
+            "type": "noul"
+          },
+          "veto|12": {
+            "noul": 0.96,
+            "type": "noul"
+          },
+          "veto|13": {
+            "noul": 0.64,
+            "type": "noul"
+          },
+          "veto|14": {
+            "noul": 0.73,
+            "type": "noul"
+          },
+          "veto|15": {
+            "noul": 0.93,
+            "type": "noul"
+          },
+          "veto|16": {
+            "noul": 0.96,
+            "type": "noul"
+          },
+          "veto|17": {
+            "noul": 0.94,
+            "type": "noul"
+          },
+          "veto|18": {
+            "noul": 0.95,
+            "type": "noul"
+          },
+          "veto|19": {
+            "noul": 0.95,
+            "type": "noul"
+          },
+          "veto|2": {
+            "noul": 0.81,
+            "type": "noul"
+          },
+          "veto|20": {
+            "noul": 0.95,
+            "type": "noul"
+          },
+          "veto|21": {
+            "noul": 0.95,
+            "type": "noul"
+          },
+          "veto|22": {
+            "noul": 0.74,
+            "type": "noul"
+          },
+          "veto|23": {
+            "noul": 0.88,
+            "type": "noul"
+          },
+          "veto|24": {
+            "noul": 0.92,
+            "type": "noul"
+          },
+          "veto|25": {
+            "noul": 0.93,
+            "type": "noul"
+          },
+          "veto|3": {
+            "noul": 0.93,
+            "type": "noul"
+          },
+          "veto|4": {
+            "noul": 0.91,
+            "type": "noul"
+          },
+          "veto|5": {
+            "noul": 0.72,
+            "type": "noul"
+          },
+          "veto|6": {
+            "noul": 0.89,
+            "type": "noul"
+          },
+          "veto|7": {
+            "noul": 0.18,
+            "type": "noul"
+          },
+          "veto|8": {
+            "noul": 0.94,
+            "type": "noul"
+          },
+          "veto|9": {
+            "noul": 0.88,
+            "type": "noul"
+          }
+        },
+        "inputTokens": 8616,
+        "model": "jev-1.14.0"
+      },
+      "stage": "veto 1/1"
+    }
+  },
+  "model": "jev-1.14.0"
+}

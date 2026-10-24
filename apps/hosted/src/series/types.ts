@@ -68,6 +68,9 @@ export interface ReadingProposal {
   attributeId: string;
   path?: string;
   value: unknown;
+  /** Needed to apply the value once confirmed: a decision without them would not validate. */
+  unit?: string;
+  recordedAt?: string;
   /** Document and location the value was copied from. */
   source: string;
   confidence: number;
