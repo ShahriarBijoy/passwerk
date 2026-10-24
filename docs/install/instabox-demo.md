@@ -147,6 +147,108 @@ Start `claude` in that directory and run `/mcp` to see `passwerk-demo` connected
 the shell, or remove the variable with `unset PASSWERK_DEMO_TOKEN` (PowerShell:
 `Remove-Item Env:PASSWERK_DEMO_TOKEN`).
 
+## Uploads from a Claude chat
+
+A user can hand the server their own supplier documents instead of a demo series. Start
+`claude` in the folder that holds the files and ask, for example:
+
+> Make battery passports from the files in `./supplier-docs` with passwerk-demo. The battery
+> is an EV battery.
+
+Claude then does three things:
+
+1. It calls `create_upload`. The result holds an `uploadId`, a `putUrl` and a curl command.
+2. It runs that command once per file from your shell, after you approve it:
+
+   ```sh
+   curl -sS -X PUT --data-binary @"supplier-docs/stueckliste.xlsx" "https://8080-<id>.instabox.tech/upload/upl_.../stueckliste.xlsx"
+   ```
+
+   A space in a file name is written as `%20` in the URL. curl 7.86 refuses a raw space.
+3. It calls `run_series` with `{ "upload": "<uploadId>", "category": "EV" }`. All files of
+   one upload are one battery model. The run is an MCP task with progress in `/tasks`, like a
+   demo series.
+
+Limits of one upload:
+
+- It expires 15 minutes after `create_upload`.
+- It holds at most 20 files, 10 MB each and 40 MB in all.
+- Only `.pdf`, `.xlsx`, `.docx`, `.csv` and `.txt` files are accepted. A name has 1 to 100
+  letters, digits, dots, dashes, underscores or spaces, and does not start with a dot.
+- The server holds at most 50 open uploads and 200 MB across all of them. Past that, a new
+  upload or a new file is refused until older uploads expire or are used.
+
+The security model:
+
+- The upload id is the only key to its URL. It is 160 random bits, made with
+  `crypto.randomBytes` and derived from nothing. A PUT needs no bearer token, so the curl
+  commands Claude writes carry none. The bearer token stays in your `~/.claude.json`, and
+  Claude Code sends it on `/mcp` without showing it to the model. `/mcp` without the token
+  still answers `401`.
+- An upload is used once. `run_series` takes all its files at the start of the run, and the
+  URL answers `404` from then on. An unknown, an expired and a used id get the same `404` with
+  the same body, so a probe learns nothing about which ids existed.
+- There is no route that reads an upload back. Someone who saw the URL in its 15 minutes could
+  add files to it, but not read any.
+- The bytes live only in the server's memory and never touch a disk. The container runs with
+  a read-only file system.
+- The file bytes go from your disk to the server through curl, never through the model. The
+  model sees the file names, the command and the results. The task result carries counts,
+  verdicts and SHA-256 digests, never document content.
+- A body over a limit is refused while it streams. The server never holds more than the limit.
+  curl sends `Expect: 100-continue` for a file over 1 MB, so an oversized file is refused
+  before its first byte leaves the laptop.
+- The server logs only the method, the route kind and the status, such as `PUT /upload 201`,
+  never an upload id or a file name.
+
+The server builds the `putUrl` from the `X-Forwarded-Proto` and `X-Forwarded-Host` headers the
+InstaBox proxy adds. To pin it instead, add `-e PASSWERK_PUBLIC_URL=https://8080-<id>.instabox.tech`
+to the `docker run` command in step 4. Check that the proxy passes a PUT through with a made-up
+id. The command must print `404`:
+
+```sh
+curl -s -o /dev/null -w '%{http_code}\n' -X PUT --data-binary x https://8080-<id>.instabox.tech/upload/upl_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/a.txt
+```
+
+A host without a shell, such as Claude Desktop, can send documents inline instead:
+`run_series` with `{ "documents": [{ "name": "...", "contentBase64": "..." }], "category": "EV" }`,
+at most 1 MB decoded in all. These bytes do pass through the model, so the upload route is the
+one to use wherever Claude can run curl.
+
+## AI reading (optional)
+
+By default a run maps the documents with passwerk's rules only. With a TypeSafe API key on the
+machine, the server adds an AI reading step to each run. The summary of every run says
+`AI reading: on` or `AI reading: off`.
+
+With AI reading on, the text passwerk extracts from each document of a run goes to TypeSafe's
+cloud service. That covers the demo series and every uploaded document. Leave it off for
+documents that must not leave the machine.
+
+Add the key on the machine without showing it on screen or writing it to the shell history:
+
+```sh
+sudo bash -c 'read -rsp "TypeSafe API key: " k; echo; printf "TYPESAFE_API_KEY=%s\n" "$k" >> /etc/passwerk/hosted.env'
+sudo grep -c '^TYPESAFE_API_KEY=' /etc/passwerk/hosted.env
+sudo stat -c '%a %U %n' /etc/passwerk/hosted.env
+```
+
+Use `bash`, because Debian's `sh` has no `read -s`. The second command must print `1`, and the
+third still `600 root /etc/passwerk/hosted.env`. Then recreate the container, because Docker
+reads the env file only when it creates one:
+
+```sh
+sudo docker rm -f passwerk-hosted
+```
+
+Run the `docker run` command from step 4 again. `sudo docker logs passwerk-hosted` then shows
+`AI reading on` in the line that names the listening URL.
+
+To switch AI reading off and keep the key, append `PASSWERK_AI_READING=off` to
+`/etc/passwerk/hosted.env`, or add `-e PASSWERK_AI_READING=off` to the `docker run` command, and
+recreate the container. To remove the key, run
+`sudo sed -i '/^TYPESAFE_API_KEY=/d' /etc/passwerk/hosted.env` and recreate the container.
+
 ## Rotate the token
 
 Rotate after every interview, and at once if the token appeared anywhere it should not.
@@ -156,8 +258,10 @@ sudo sh -c 'umask 077 && printf "PASSWERK_AUTH_TOKEN=%s\n" "$(openssl rand -hex 
 sudo docker rm -f passwerk-hosted
 ```
 
-Then run the `docker run` command from step 4 again. The old token stops working when the old
-container is gone. On the laptop, remove the old entry with
+The first command rewrites the whole file, so a TypeSafe key in it is gone (see "AI reading
+(optional)"); add it again before the next step if you use AI reading. Then run the
+`docker run` command from step 4 again. The old token stops working when the old container is
+gone. On the laptop, remove the old entry with
 `claude mcp remove passwerk-demo --scope local` and repeat steps 6 and 7.
 
 ## Update the code

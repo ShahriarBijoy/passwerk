@@ -1494,3 +1494,45 @@ terminates the worker at once instead of messaging it to stop between steps: no 
 effect, so nothing is left half-written. The Musterwerk set alone comes out `invalid` with 29.8 %
 mandatory completeness, the same as the server's own tool chain on the same files; the test in
 `apps/hosted/test/pipeline.test.ts` holds the two equal.
+
+## D-048: The hosted server may read documents with an optional typed-judgment model; uploads arrive by capability URL (2026-10-24)
+
+**Context.** D-002 keeps every model call out of `core` and `server`: the host agent does the
+semantic step. A complete supplier pack (`demo/series/musterwerk-complete`, whose every required
+EV value `apps/hosted/test/completePack.test.ts` finds in the document text) still maps to only
+61.7 % mandatory completeness through the rule chain, because the chain cannot turn table rows
+into list attributes, fill multi-leaf composites, link register rows to document attributes or
+attach timestamps. Two measured experiments on that pack: Claude Code (Opus) driving the local
+tools reached 74.5 % for about $2.20 and invented nothing; TypeSafe's Jev (`jev-1.14.0`), a
+typed-judgment model that only chooses among options code supplies, picked correctly 148 of 148
+scalar facts (including relabelled supplier wording where the rule chain got 16 of 37) and, with
+code assembling the values, reproduced 22 of 23 hard reader decisions, for about $0.01 to $0.02
+per passport. The owner wants a clean passport from uploaded files inside a Claude chat, accepts
+that the hosted demo is not offline, and plans on-premise deployments for companies that keep
+data in-house.
+
+**Decision.** `apps/hosted` gains an optional AI reading step (`src/reading`). It runs in the
+series worker after the rule chain, only when the server has `TYPESAFE_API_KEY` and
+`PASSWERK_AI_READING` is not `off`. Jev answers Choice and Noul questions over candidates passwerk
+extracted; code assembles every value from document facts or table cells, normalises it through
+core and checks it against core's schemas, so no value comes from the model. Policy: picks,
+column and register mappings and timestamps apply at confidence 0.9 or more; table membership
+without a confirming competing-tables question, joins and address segments are held as
+`reading.toConfirm` for a person; Jev may veto a rule-based accept at P(no) 0.95 or more. The
+model version is pinned. Tests replay recorded answers (`test/fixtures/jev`), so CI needs no key.
+`core` and `packages/server` stay model-free and keep their sovereignty tests: D-002 still holds
+for them, and this ADR narrows it for the hosted app only.
+
+Uploads: `create_upload` returns a single-use capability URL (160 random bits, 15 minutes, 20
+files of at most 10 MiB, 40 MiB in all, document extensions only, strict names, memory only).
+Claude Code sends files with `curl -X PUT`, so file bytes never pass through the model and the
+bearer token is never shown. `run_series` takes exactly one of `series`, `upload` or `documents`
+(inline base64, at most 1 MiB decoded, for hosts without a shell).
+
+**Consequence.** With the policy above the complete pack reaches 87.2 % with 16 applied and 11
+held decisions; confirming the 11 gives `valid` at 100 %. Asking for those confirmations through
+`input_required` belongs to slice S4. Jev runs in TypeSafe's cloud: its documentation names no
+EU region and no on-premise option, so customers who keep data in-house run with AI reading off
+until TypeSafe confirms one. The evidence is one fictional supplier; real supplier packs will
+show wrong picks, and the thresholds must be recalibrated on them. Jev's probabilities moved by
+about 0.02 between identical requests, enough to cross the 0.9 line near it.

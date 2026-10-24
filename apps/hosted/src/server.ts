@@ -11,8 +11,10 @@ import {
   type ToolResult,
   TooManyTasksError,
 } from './tasks.js';
+import { createUpload } from './tools/createUpload.js';
 import { runSeries } from './tools/runSeries.js';
 import { slowEcho } from './tools/slowEcho.js';
+import type { UploadStore } from './uploads.js';
 
 export const TASKS_EXTENSION = 'io.modelcontextprotocol/tasks';
 export const SERVER_NAME = 'passwerk-hosted';
@@ -25,6 +27,15 @@ export interface ServerDeps {
   /** Folder holding one subfolder per demo series. */
   seriesDir: string;
   clock: () => Date;
+  uploads: UploadStore;
+  /** The AI reading step runs: a TypeSafe key is set and `PASSWERK_AI_READING` is not `off`. */
+  reading: boolean;
+}
+
+/** What one HTTP request contributes to its server instance. */
+export interface RequestScope {
+  /** Origin a client of this request reaches the server at, for URLs handed back to it. */
+  origin: string;
 }
 
 /** A tool whose work runs as a task when the client allows it, inline otherwise. */
@@ -33,6 +44,14 @@ export interface TaskTool<S extends z.ZodType> {
   description: string;
   inputSchema: S;
   job(input: z.infer<S>, deps: ServerDeps): Job;
+}
+
+/** A tool that answers at once with a plain result, task extension or not. */
+export interface PlainTool<S extends z.ZodType> {
+  name: string;
+  description: string;
+  inputSchema: S;
+  call(input: z.infer<S>, deps: ServerDeps, scope: RequestScope): ToolResult;
 }
 
 const TaskIdParams = z.object({ taskId: z.string().max(128) });
@@ -66,8 +85,9 @@ function errorResult(message: string): ToolResult {
 
 // Widened so registerTool sees one schema type rather than a union of tool shapes.
 const TOOLS: TaskTool<z.ZodObject>[] = [slowEcho, runSeries];
+const PLAIN_TOOLS: PlainTool<z.ZodObject>[] = [createUpload];
 
-export function createServer(deps: ServerDeps): McpServer {
+export function createServer(deps: ServerDeps, scope: RequestScope): McpServer {
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     // `extensions` is valid on the 2026-07-28 wire but missing from the SDK's capability type.
@@ -94,6 +114,14 @@ export function createServer(deps: ServerDeps): McpServer {
           throw e;
         }
       },
+    );
+  }
+
+  for (const tool of PLAIN_TOOLS) {
+    server.registerTool(
+      tool.name,
+      { description: tool.description, inputSchema: tool.inputSchema },
+      async (input): Promise<never> => tool.call(input as never, deps, scope) as never,
     );
   }
 

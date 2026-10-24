@@ -7,6 +7,7 @@ export interface RpcOptions {
   tasks?: boolean;
   token?: string | null;
   name?: string;
+  headers?: Record<string, string>;
 }
 
 /** `url` is read per call, so a client can be built before the server listens. */
@@ -18,6 +19,7 @@ export function client(url: () => string) {
       accept: 'application/json, text/event-stream',
       'mcp-protocol-version': MODERN,
       'mcp-method': method,
+      ...o.headers,
     };
     if (o.name !== undefined) headers['mcp-name'] = o.name;
     if (o.token !== null) headers['authorization'] = `Bearer ${o.token ?? TOKEN}`;

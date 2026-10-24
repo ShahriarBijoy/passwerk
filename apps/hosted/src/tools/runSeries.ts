@@ -2,14 +2,126 @@ import { BatteryCategory } from '@passwerk/core';
 import { z } from 'zod';
 import { DEMO_SERIES, loadSeries } from '../series/load.js';
 import { runInWorker } from '../series/runner.js';
-import type { ModelOutcome } from '../series/types.js';
-import type { TaskTool } from '../server.js';
+import type { ModelOutcome, SeriesFile, SeriesModel } from '../series/types.js';
+import type { ServerDeps, TaskTool } from '../server.js';
 import type { ToolResult } from '../tasks.js';
+import { isFileName, type TakeRefusal } from '../uploads.js';
 
-const Input = z.object({
-  series: z.enum(DEMO_SERIES),
-  category: BatteryCategory,
+/** Decoded bytes of every inline document together. */
+export const MAX_INLINE_BYTES = 1024 * 1024;
+const MAX_INLINE_DOCUMENTS = 20;
+const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
+const isBase64 = (s: string) => s.length % 4 === 0 && BASE64.test(s);
+
+const decodedLength = (b64: string) =>
+  (b64.length / 4) * 3 - (b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0);
+
+const FileName = z.string().refine(isFileName, {
+  message:
+    'file name: letters, digits, dot, dash, underscore and space, 1 to 100 characters, no ' +
+    'leading dot, extension .pdf .xlsx .docx .csv or .txt',
 });
+
+const Document = z.object({
+  name: FileName,
+  contentBase64: z
+    .string()
+    .max(Math.ceil(MAX_INLINE_BYTES / 3) * 4)
+    .refine(isBase64, 'contentBase64 must be standard padded base64'),
+});
+
+const ModelId = z
+  .string()
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/, 'modelId: letters, digits, dot, dash, underscore');
+
+const Input = z
+  .object({
+    series: z.enum(DEMO_SERIES).optional().describe('A demo series held on the server.'),
+    upload: z.string().max(64).optional().describe('An uploadId from create_upload.'),
+    documents: z
+      .array(Document)
+      .min(1)
+      .max(MAX_INLINE_DOCUMENTS)
+      .optional()
+      .describe('Inline documents for hosts without a shell, at most 1 MB decoded in all.'),
+    category: BatteryCategory,
+    modelId: ModelId.optional().describe('Model id for upload or documents. Default "upload".'),
+  })
+  .superRefine((input, ctx) => {
+    const sources = [input.series, input.upload, input.documents].filter((s) => s !== undefined);
+    if (sources.length !== 1) {
+      ctx.addIssue({ code: 'custom', message: 'give exactly one of series, upload, documents' });
+    }
+    if (input.series !== undefined && input.modelId !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['modelId'],
+        message: 'modelId needs upload or documents',
+      });
+    }
+    if (input.documents === undefined) return;
+    const names = new Set(input.documents.map((d) => d.name));
+    if (names.size !== input.documents.length) {
+      ctx.addIssue({ code: 'custom', path: ['documents'], message: 'document names must differ' });
+    }
+    const total = input.documents.reduce((n, d) => n + decodedLength(d.contentBase64), 0);
+    if (total > MAX_INLINE_BYTES) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['documents'],
+        message: `documents decode to ${total} bytes; at most ${MAX_INLINE_BYTES}. Use create_upload instead.`,
+      });
+    }
+  });
+
+type Input = z.infer<typeof Input>;
+
+/** Where the documents of one run come from, parsed once at the tool boundary. */
+type Source =
+  | { kind: 'series'; series: (typeof DEMO_SERIES)[number] }
+  | { kind: 'upload'; uploadId: string; modelId: string }
+  | { kind: 'documents'; files: SeriesFile[]; modelId: string };
+
+const DEFAULT_MODEL_ID = 'upload';
+
+const TAKE_MESSAGES: Record<TakeRefusal, string> = {
+  not_found: 'Unknown, expired or already used upload. Call create_upload for a new one.',
+  busy: 'Files are still being uploaded to this slot; wait for every PUT to finish.',
+  empty: 'No file was uploaded to this slot yet; PUT the files first.',
+};
+
+function sourceOf(input: Input, { uploads }: ServerDeps): Source {
+  const modelId = input.modelId ?? DEFAULT_MODEL_ID;
+  if (input.series !== undefined) return { kind: 'series', series: input.series };
+  if (input.upload !== undefined) {
+    const refusal = uploads.check(input.upload);
+    if (refusal !== undefined) throw new Error(TAKE_MESSAGES[refusal]);
+    return { kind: 'upload', uploadId: input.upload, modelId };
+  }
+  const files = (input.documents ?? []).map((d) => ({
+    name: d.name,
+    bytes: new Uint8Array(Buffer.from(d.contentBase64, 'base64')),
+  }));
+  return { kind: 'documents', files, modelId };
+}
+
+async function modelsOf(
+  source: Source,
+  { seriesDir, uploads }: ServerDeps,
+): Promise<SeriesModel[]> {
+  switch (source.kind) {
+    case 'series':
+      return loadSeries(seriesDir, source.series);
+    case 'upload': {
+      // Taken when the run starts, so a refused task start leaves the slot usable.
+      const files = uploads.take(source.uploadId);
+      if (typeof files === 'string') throw new Error(TAKE_MESSAGES[files]);
+      return [{ modelId: source.modelId, files }];
+    }
+    case 'documents':
+      return [{ modelId: source.modelId, files: source.files }];
+  }
+}
 
 const VERDICTS = ['valid', 'valid_with_warnings', 'invalid'] as const;
 
@@ -26,22 +138,40 @@ export function seriesSummary(models: ModelOutcome[]): string {
 export const runSeries: TaskTool<typeof Input> = {
   name: 'run_series',
   description:
-    'Run a whole demo battery series as one MCP task: every model goes through ingest, extract, ' +
-    'suggest, apply, validate and emit. The result holds per model the verdict from the ' +
-    'validators, fact, mapping and conflict counts, mandatory completeness, missing mandatory ' +
-    'attributes and the SHA-256 of each emitted artefact (AAS JSON, AASX, HTML sheet, gap report).',
+    'Run battery models as one MCP task: every model goes through ingest, extract, suggest, ' +
+    'apply, validate and emit. Give exactly one source: `series` (a demo series on the server), ' +
+    '`upload` (an uploadId from create_upload, after the files were PUT; all its files are one ' +
+    'model) or `documents` (inline base64 files, at most 1 MB in all, only for hosts without a ' +
+    'shell). The result holds per model the verdict from the validators, fact, mapping and ' +
+    'conflict counts, mandatory completeness, missing mandatory attributes and the SHA-256 of ' +
+    'each emitted artefact (AAS JSON, AASX, HTML sheet, gap report).',
   inputSchema: Input,
-  job:
-    ({ series, category }, { seriesDir, clock }) =>
-    async (ctx): Promise<ToolResult> => {
-      const asOf = clock().toISOString();
-      const models = await loadSeries(seriesDir, series);
-      const outcomes = await runInWorker({ models, category, asOf, read: false }, ctx);
-      const summary = seriesSummary(outcomes);
+  job: (input, deps) => {
+    const source = sourceOf(input, deps);
+    return async (ctx): Promise<ToolResult> => {
+      const asOf = deps.clock().toISOString();
+      const { category } = input;
+      const models = await modelsOf(source, deps);
+      const outcomes = await runInWorker({ models, category, asOf, read: deps.reading }, ctx);
+      const reading = deps.reading ? 'on' : 'off';
+      const summary = `${seriesSummary(outcomes)}\nAI reading: ${reading}`;
+      const origin =
+        source.kind === 'series'
+          ? { series: source.series }
+          : { documents: models.flatMap((m) => m.files.map((f) => f.name)) };
       return {
         content: [{ type: 'text', text: summary }],
         // Claude Code hands the model this object, not `content`, for a task result.
-        structuredContent: { summary, series, category, asOf, models: outcomes },
+        structuredContent: {
+          summary,
+          source: source.kind,
+          ...origin,
+          category,
+          asOf,
+          reading,
+          models: outcomes,
+        },
       };
-    },
+    };
+  },
 };
