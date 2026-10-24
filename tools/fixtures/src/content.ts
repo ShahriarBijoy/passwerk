@@ -1,3 +1,5 @@
+import type { Sheet } from './writers/xlsx.js';
+
 export const CREATED = new Date('2026-09-01T08:00:00Z');
 
 /**
@@ -105,6 +107,8 @@ export function musterwerkContent(v: ModelVariant) {
       ['Aktuelle Selbstentladung', 1.1, '%/Monat'],
       ['Innenwiderstand Pack', 0.0125, 'Ohm'],
     ],
+    /** Sheets of stueckliste.xlsx after Leistung. */
+    moreSheets: [] as Sheet[],
 
     /** energierechnung.pdf: a negative control, the same for every model. */
     billTitle: 'Stromrechnung August 2026',
@@ -148,13 +152,30 @@ export type MusterwerkContent = ReturnType<typeof musterwerkContent>;
 /** The model behind demo/series/musterwerk-complete: the base Musterwerk pack, one serial on. */
 export const MUSTERWERK_COMPLETE: ModelVariant = { ...MUSTERWERK, serial: 'MW-EV-2026-000124' };
 
+const DOCS = 'https://passport.musterwerk.example/docs';
+const VDI_2770_CERTIFICATES = ['02-04', 'Zertifikate, Erklärungen', 'Certificates, declarations'];
+
+/** One handed-over PDF in the register: id, title, version, languages, then its class and file. */
+const registered = (id: string, title: string, version: string, languages: string) => [
+  id,
+  title,
+  version,
+  languages,
+  ...VDI_2770_CERTIFICATES,
+  'VDI2770:2020',
+  `${id}.pdf`,
+  'application/pdf',
+  `${DOCS}/${id}.pdf`,
+];
+
 /**
- * The Musterwerk documents of a new battery, extended with every further EV value that a
- * labelled line or sheet row can carry through extract and suggest. Values follow the golden
- * sample ev-valid.json, scaled to this pack where they depend on its size. The Leistung sheet
- * holds initial performance instead of a BMS read-out: a proposal carries no LastUpdate, so any
- * dynamic value (SOCE, SoC, full cycles) would fail PW-PLAUS-011 and pull in the whole
- * Product Condition submodel with its mandatory elements.
+ * The Musterwerk documents of a new battery, extended until every required EV value is stated
+ * in them with every leaf its schema and template need, whether or not extract and suggest can
+ * read it yet. Chemical, regulatory and document values come from the golden sample
+ * ev-valid.json: CAS numbers, masses, hazard class and statements, VDI 2770 class, document
+ * ids, addresses, part numbers, cell resistance and the BMS read-out. The powers of the
+ * original power capability are fictional, scaled below this pack's 110 kW maximum; so are the
+ * document versions, file names and the URIs that ev-valid.json does not give.
  */
 export function musterwerkCompleteContent(v: ModelVariant): MusterwerkContent {
   const c = musterwerkContent(v);
@@ -168,12 +189,147 @@ export function musterwerkCompleteContent(v: ModelVariant): MusterwerkContent {
       ['Gefahrenhinweise:', 'H301, H314 (Elektrolyt LiPF6)'],
       ['Anteil erneuerbarer Materialien:', '0 %'],
       ['Referenztest Zyklenlebensdauer:', 'IEC 62660-1'],
+      ['Zellchemie, Klarname:', 'Lithium nickel manganese cobalt oxide'],
+      ['Anschrift:', 'Werkstrasse 1, 28199 Bremen, DE'],
+      ['E-Mail:', 'passport@musterwerk.example'],
+    ],
+    bomRows: [
+      [
+        'Kathodenaktivmaterial NMC811',
+        'siehe Materialdeklaration',
+        118.4,
+        Number(v.recycled.cobalt.post),
+      ],
+      ...c.bomRows.slice(1),
+    ],
+    moreSheets: [
+      {
+        name: 'Materialdeklaration',
+        rows: [
+          ['Material', 'CAS-Nr.', 'Masse [kg]', 'Komponente', 'Kritischer Rohstoff'],
+          ['Lithium', '7439-93-2', 6.4, 'Cathode', 'ja'],
+          ['Cobalt', '7440-48-4', 4.1, 'Cathode', 'ja'],
+          ['Natural graphite', '7782-42-5', 38, 'Anode', 'ja'],
+          ['Copper', '7440-50-8', '-', 'Anode', 'nein'],
+          ['Lithium hexafluorophosphate', '21324-40-3', '-', 'Electrolyte', 'nein'],
+        ],
+      },
+      {
+        name: 'Gefahrstoffe',
+        rows: [
+          [
+            'Stoff',
+            'CAS-Nr.',
+            'Gefahrenklasse',
+            'Konzentration [%]',
+            'Komponente',
+            'Gefahrenhinweise',
+          ],
+          [
+            'Lithium hexafluorophosphate',
+            '21324-40-3',
+            'AcuteToxicity',
+            1.2,
+            'Electrolyte',
+            'H301 Toxic if swallowed; H314 Causes severe skin burns and eye damage',
+          ],
+        ],
+      },
+      {
+        name: 'Ersatzteile',
+        rows: [
+          ['Komponente', 'Teilenummer', 'Bezugsquelle'],
+          ['Battery management system', 'MW-BMS-7', 'Musterwerk Batteriesysteme GmbH'],
+          ['Battery module', 'MW-MOD-48-A', 'Musterwerk Ersatzteile GmbH'],
+          ['Cooling plate', 'MW-CP-12', 'Musterwerk Ersatzteile GmbH'],
+        ],
+      },
+      {
+        name: 'Bezugsquellen',
+        rows: [
+          ['Lieferant', 'Straße', 'PLZ', 'Land', 'E-Mail', 'Website'],
+          [
+            'Musterwerk Ersatzteile GmbH',
+            'Werkstrasse 2',
+            '28199',
+            'DE',
+            'ersatzteile@musterwerk.example',
+            'https://ersatzteile.musterwerk.example',
+          ],
+        ],
+      },
+      {
+        name: 'BMS-Auslesung',
+        rows: [
+          ['Kenngröße', 'Wert', 'Einheit', 'Zeitstempel'],
+          ['State of Certified Energy (SOCE)', 99.5, '%', '2026-08-31T06:00:00Z'],
+          ['Ladezustand (SoC)', 70, '%', '2026-08-31T06:00:00Z'],
+          ['Anzahl Vollzyklen', 12, 'Zyklen', '2026-08-30T18:30:00Z'],
+          ['Batterietemperatur', 23.5, '°C', '2026-08-31T06:00:00Z'],
+        ],
+      },
+    ],
+    datasheetRows: [
+      ...c.datasheetRows,
+      ['Original power capability at 80 % SoC', '100000', 'W'],
+      ['Original power capability at 20 % SoC', '72000', 'W'],
+    ],
+    handoverTable: [
+      [
+        'Dokument-ID',
+        'Titel',
+        'Version',
+        'Sprache',
+        'VDI-2770-Klasse',
+        'Klassenname',
+        'Class name',
+        'Klassifikationssystem',
+        'Datei',
+        'Inhaltstyp',
+        'URI',
+      ],
+      registered('DoC-MW-EV-2026-01', 'EU-Konformitätserklärung', 'V1.0', 'de'),
+      registered('TR-2026-0457', 'Prüfbericht zum Konformitätsnachweis', 'V1.0', 'de'),
+      registered('DISM-MW-EV-2026', 'Demontageanleitung', 'V2.1', 'de'),
+      registered('SAFETY-MW-EV-2026', 'Sicherheitshinweise', 'V1.3', 'de, en'),
+      registered(
+        'EOL-PREVENTION-MW-EV-2026',
+        'Endnutzerinformation zur Abfallvermeidung',
+        'V1.0',
+        'de',
+      ),
+      registered(
+        'EOL-SEPARATE-MW-EV-2026',
+        'Endnutzerinformation zur getrennten Sammlung',
+        'V1.0',
+        'de',
+      ),
+      registered(
+        'EOL-COLLECTION-MW-EV-2026',
+        'Information zu Sammlung, Zweitnutzung und Behandlung am Lebensende',
+        'V1.0',
+        'de',
+      ),
+      [
+        '-',
+        'Symbol für die getrennte Sammlung (durchgestrichene Mülltonne)',
+        'V1.0',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        'separate-collection.png',
+        'image/png',
+        'https://passport.musterwerk.example/files/separate-collection.png',
+      ],
     ],
     leistungRows: [
       ['Kapazitätsverlust', 0, '%'],
       ['Leistungsverlust', 0, '%'],
       ['Widerstandszunahme', 0, '%'],
       ['Innenwiderstand Pack', 0.0125, 'Ohm'],
+      ['Innenwiderstand Zelle', 0.0012, 'Ohm'],
       ['Anfänglicher Round-Trip-Wirkungsgrad', 96, '%'],
       ['Wirkungsgrad halbe Lebensdauer', 93, '%'],
       ['Maximal zulässige Batterieleistung', 110, 'kW'],

@@ -86,10 +86,16 @@ describe('the complete pack', () => {
     expect(complete.declarationLines.slice(0, base.declarationLines.length)).toEqual(
       base.declarationLines,
     );
+    expect(complete.datasheetRows.slice(0, base.datasheetRows.length)).toEqual(base.datasheetRows);
+    expect(complete.bomRows.slice(1)).toEqual(base.bomRows.slice(1));
     expect({
       ...complete,
       declarationLines: base.declarationLines,
+      datasheetRows: base.datasheetRows,
+      bomRows: base.bomRows,
       leistungRows: base.leistungRows,
+      moreSheets: base.moreSheets,
+      handoverTable: base.handoverTable,
     }).toEqual(base);
   });
 

@@ -206,9 +206,10 @@ describe('runModel', () => {
 });
 
 /**
- * Mandatory EV attributes the automatic chain cannot fill from any document: document and
- * graphic attributes, composites without a structural entry or whose entry fills one leaf only,
- * and SOCE, whose proposal would carry no LastUpdate (PW-PLAUS-011).
+ * Mandatory EV attributes the automatic chain leaves open although the documents state them
+ * (completePack.test.ts proves it): document and graphic attributes, composites without a
+ * structural entry or whose entry fills one leaf only, and SOCE, whose proposal carries no
+ * LastUpdate (PW-PLAUS-011).
  */
 const BEYOND_THE_CHAIN = [
   'batteryChemistry',
