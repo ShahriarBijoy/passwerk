@@ -3,7 +3,9 @@
  * Proves the shipped .mcpb actually runs (spec section 5): unzip it, start the launcher the
  * manifest names, complete the MCP handshake, and read a real supplier PDF through the
  * bundled pdfjs-dist — the highest-risk dependency in the tree, because it is a lazy dynamic
- * import with its own asset layout.
+ * import with its own asset layout. The PDF is read twice: once in plain Node, once with the
+ * launcher preloaded as an Electron utility process, which is how Claude Desktop's built-in
+ * Node runs an extension and which pdfjs-dist takes for a browser (ADR D-051).
  *
  *   pnpm package:mcpb && pnpm package:smoke
  *
@@ -13,7 +15,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { unzipSync } from 'fflate';
 import { rpcCollect } from '../../../tools/release/stdio-client.mjs';
 
@@ -51,6 +53,13 @@ try {
 
   // 3. the launcher the manifest names starts and answers
   const bin = join(dir, manifest.server.entry_point);
+  const ingestPdf = {
+    method: 'tools/call',
+    params: {
+      name: 'ingest_documents',
+      arguments: { paths: [join(FIXTURES, 'lieferantenerklaerung.pdf')], detail: 'full' },
+    },
+  };
   const [list, read, ingest] = await rpcCollect({
     bin,
     cwd: dir,
@@ -59,16 +68,7 @@ try {
     requests: [
       { method: 'tools/list' },
       { method: 'resources/read', params: { uri: 'ui://passwerk/workbench.html' } },
-      {
-        method: 'tools/call',
-        params: {
-          name: 'ingest_documents',
-          arguments: {
-            paths: [join(FIXTURES, 'lieferantenerklaerung.pdf')],
-            detail: 'full',
-          },
-        },
-      },
+      ingestPdf,
     ],
   });
 
@@ -112,6 +112,37 @@ try {
   check(
     lines.some((l) => typeof l.text === 'string' && l.text.includes('MW-EV-2026-000123')),
     'page 1 carries the supplier declaration serial',
+  );
+
+  // 5. the same read inside a simulated Electron utility process (Claude Desktop's Node)
+  const electron = join(dir, 'electron-utility.mjs');
+  writeFileSync(
+    electron,
+    [
+      "Object.defineProperty(process.versions, 'electron', { value: '38.0.0' });",
+      "process.type = 'utility';",
+      '',
+    ].join('\n'),
+  );
+  const [ingestElectron] = await rpcCollect({
+    bin,
+    cwd: dir,
+    env: {
+      PASSWERK_ROOT: FIXTURES,
+      PASSWERK_CLOCK: CLOCK,
+      NODE_OPTIONS: `--import=${pathToFileURL(electron).href}`,
+    },
+    timeoutMs: 120000,
+    requests: [ingestPdf],
+  });
+  const electronDoc = ingestElectron.structuredContent?.bundle?.documents?.[0];
+  check(
+    ingestElectron.isError !== true && electronDoc?.error === undefined,
+    `Electron utility process reads the PDF: ${JSON.stringify(electronDoc?.error ?? 'ok')}`,
+  );
+  check(
+    JSON.stringify(electronDoc?.pages) === JSON.stringify(bundleDoc?.pages),
+    'Electron utility process reads the same pages as plain Node',
   );
 } finally {
   // Windows: the killed child process can hold its cwd/handles open for a moment after

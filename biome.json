@@ -16,6 +16,7 @@
       "!packages/rules/artefacts",
       "!packages/rules/kb/generated",
       "!packages/core/test/fixtures/heldout/expected.json",
+      "!packages/core/test/__snapshots__/*.json",
       "!plugins/passwerk"
     ]
   },

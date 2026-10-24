@@ -1,0 +1,833 @@
+{
+  "documents": [
+    {
+      "name": "energierechnung.pdf",
+      "format": "pdf",
+      "contentType": "application/pdf",
+      "sha256": "02c125e80a86aab91b7bc191d6dbc53f11b3cc195849867717e152cfe9ca196b",
+      "lang": "de",
+      "pages": [
+        {
+          "number": 1,
+          "lang": "de",
+          "textless": false,
+          "lines": [
+            {
+              "text": "Stromrechnung August 2026",
+              "segments": [
+                "Stromrechnung August 2026"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 1"
+              }
+            },
+            {
+              "text": "Rechnungsnummer:  RE-2026-08-0042",
+              "segments": [
+                "Rechnungsnummer:",
+                "RE-2026-08-0042"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 2"
+              }
+            },
+            {
+              "text": "Abrechnungszeitraum:  01.07.2026 – 31.07.2026",
+              "segments": [
+                "Abrechnungszeitraum:",
+                "01.07.2026 – 31.07.2026"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 3"
+              }
+            },
+            {
+              "text": "Verbrauch:  48.250 kWh",
+              "segments": [
+                "Verbrauch:",
+                "48.250 kWh"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 4"
+              }
+            },
+            {
+              "text": "Arbeitspreis:  0,2849 EUR/kWh",
+              "segments": [
+                "Arbeitspreis:",
+                "0,2849 EUR/kWh"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 5"
+              }
+            },
+            {
+              "text": "Rechnungsbetrag:  13.746,43 EUR",
+              "segments": [
+                "Rechnungsbetrag:",
+                "13.746,43 EUR"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 6"
+              }
+            },
+            {
+              "text": "Zahlungsziel:  14 Tage",
+              "segments": [
+                "Zahlungsziel:",
+                "14 Tage"
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1,
+                "note": "line 7"
+              }
+            }
+          ],
+          "tables": [
+            {
+              "index": 1,
+              "rows": [
+                [
+                  {
+                    "text": "Rechnungsnummer:",
+                    "ref": "T1:R1C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R1C1"
+                    }
+                  },
+                  {
+                    "text": "RE-2026-08-0042",
+                    "ref": "T1:R1C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R1C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Abrechnungszeitraum:",
+                    "ref": "T1:R2C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R2C1"
+                    }
+                  },
+                  {
+                    "text": "01.07.2026 – 31.07.2026",
+                    "ref": "T1:R2C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R2C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Verbrauch:",
+                    "ref": "T1:R3C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R3C1"
+                    }
+                  },
+                  {
+                    "text": "48.250 kWh",
+                    "ref": "T1:R3C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R3C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Arbeitspreis:",
+                    "ref": "T1:R4C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R4C1"
+                    }
+                  },
+                  {
+                    "text": "0,2849 EUR/kWh",
+                    "ref": "T1:R4C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R4C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Rechnungsbetrag:",
+                    "ref": "T1:R5C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R5C1"
+                    }
+                  },
+                  {
+                    "text": "13.746,43 EUR",
+                    "ref": "T1:R5C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R5C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Zahlungsziel:",
+                    "ref": "T1:R6C1",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R6C1"
+                    }
+                  },
+                  {
+                    "text": "14 Tage",
+                    "ref": "T1:R6C2",
+                    "source": {
+                      "file": "energierechnung.pdf",
+                      "page": 1,
+                      "cell": "T1:R6C2"
+                    }
+                  }
+                ]
+              ],
+              "source": {
+                "file": "energierechnung.pdf",
+                "page": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lieferantenerklaerung.pdf",
+      "format": "pdf",
+      "contentType": "application/pdf",
+      "sha256": "6eda404a50bf0e4dc16e29bdad587e6fa83aac76d5c7e7fceadb545570d1614b",
+      "lang": "de",
+      "pages": [
+        {
+          "number": 1,
+          "lang": "de",
+          "textless": false,
+          "lines": [
+            {
+              "text": "Lieferantenerklärung Batteriesystem MW-EV-2026-000123",
+              "segments": [
+                "Lieferantenerklärung Batteriesystem MW-EV-2026-000123"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 1"
+              }
+            },
+            {
+              "text": "Hersteller:  Musterwerk Batteriesysteme GmbH",
+              "segments": [
+                "Hersteller:",
+                "Musterwerk Batteriesysteme GmbH"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 2"
+              }
+            },
+            {
+              "text": "Herstellernummer:  DE-MW-0001",
+              "segments": [
+                "Herstellernummer:",
+                "DE-MW-0001"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 3"
+              }
+            },
+            {
+              "text": "Batteriekennung:  MW-EV-2026-000123",
+              "segments": [
+                "Batteriekennung:",
+                "MW-EV-2026-000123"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 4"
+              }
+            },
+            {
+              "text": "Zellchemie:  NMC811",
+              "segments": [
+                "Zellchemie:",
+                "NMC811"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 5"
+              }
+            },
+            {
+              "text": "Nennkapazität:  94,5 Ah",
+              "segments": [
+                "Nennkapazität:",
+                "94,5 Ah"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 6"
+              }
+            },
+            {
+              "text": "Nennspannung:  355,2 V",
+              "segments": [
+                "Nennspannung:",
+                "355,2 V"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 7"
+              }
+            },
+            {
+              "text": "Minimalspannung:  270 V",
+              "segments": [
+                "Minimalspannung:",
+                "270 V"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 8"
+              }
+            },
+            {
+              "text": "Maximalspannung:  403,2 V",
+              "segments": [
+                "Maximalspannung:",
+                "403,2 V"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 9"
+              }
+            },
+            {
+              "text": "Batteriemasse:  412,7 kg",
+              "segments": [
+                "Batteriemasse:",
+                "412,7 kg"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 10"
+              }
+            },
+            {
+              "text": "Herstellungsdatum:  10.02.2026",
+              "segments": [
+                "Herstellungsdatum:",
+                "10.02.2026"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 11"
+              }
+            },
+            {
+              "text": "Garantiezeit:  96 Monate",
+              "segments": [
+                "Garantiezeit:",
+                "96 Monate"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 12"
+              }
+            },
+            {
+              "text": "Zyklenlebensdauer:  3000 Zyklen",
+              "segments": [
+                "Zyklenlebensdauer:",
+                "3000 Zyklen"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 13"
+              }
+            },
+            {
+              "text": "Rezyklatanteil  Post-Consumer  Pre-Consumer",
+              "segments": [
+                "Rezyklatanteil",
+                "Post-Consumer",
+                "Pre-Consumer"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 14"
+              }
+            },
+            {
+              "text": "Kobalt  12,5 %  4,0 %",
+              "segments": [
+                "Kobalt",
+                "12,5 %",
+                "4,0 %"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 15"
+              }
+            },
+            {
+              "text": "Lithium  6,0 %  2,5 %",
+              "segments": [
+                "Lithium",
+                "6,0 %",
+                "2,5 %"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 16"
+              }
+            },
+            {
+              "text": "Nickel  8,0 %  3,0 %",
+              "segments": [
+                "Nickel",
+                "8,0 %",
+                "3,0 %"
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1,
+                "note": "line 17"
+              }
+            }
+          ],
+          "tables": [
+            {
+              "index": 1,
+              "rows": [
+                [
+                  {
+                    "text": "Hersteller:",
+                    "ref": "T1:R1C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R1C1"
+                    }
+                  },
+                  {
+                    "text": "Musterwerk Batteriesysteme GmbH",
+                    "ref": "T1:R1C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R1C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Herstellernummer:",
+                    "ref": "T1:R2C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R2C1"
+                    }
+                  },
+                  {
+                    "text": "DE-MW-0001",
+                    "ref": "T1:R2C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R2C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Batteriekennung:",
+                    "ref": "T1:R3C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R3C1"
+                    }
+                  },
+                  {
+                    "text": "MW-EV-2026-000123",
+                    "ref": "T1:R3C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R3C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Zellchemie:",
+                    "ref": "T1:R4C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R4C1"
+                    }
+                  },
+                  {
+                    "text": "NMC811",
+                    "ref": "T1:R4C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R4C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Nennkapazität:",
+                    "ref": "T1:R5C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R5C1"
+                    }
+                  },
+                  {
+                    "text": "94,5 Ah",
+                    "ref": "T1:R5C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R5C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Nennspannung:",
+                    "ref": "T1:R6C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R6C1"
+                    }
+                  },
+                  {
+                    "text": "355,2 V",
+                    "ref": "T1:R6C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R6C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Minimalspannung:",
+                    "ref": "T1:R7C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R7C1"
+                    }
+                  },
+                  {
+                    "text": "270 V",
+                    "ref": "T1:R7C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R7C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Maximalspannung:",
+                    "ref": "T1:R8C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R8C1"
+                    }
+                  },
+                  {
+                    "text": "403,2 V",
+                    "ref": "T1:R8C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R8C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Batteriemasse:",
+                    "ref": "T1:R9C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R9C1"
+                    }
+                  },
+                  {
+                    "text": "412,7 kg",
+                    "ref": "T1:R9C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R9C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Herstellungsdatum:",
+                    "ref": "T1:R10C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R10C1"
+                    }
+                  },
+                  {
+                    "text": "10.02.2026",
+                    "ref": "T1:R10C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R10C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Garantiezeit:",
+                    "ref": "T1:R11C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R11C1"
+                    }
+                  },
+                  {
+                    "text": "96 Monate",
+                    "ref": "T1:R11C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R11C2"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Zyklenlebensdauer:",
+                    "ref": "T1:R12C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R12C1"
+                    }
+                  },
+                  {
+                    "text": "3000 Zyklen",
+                    "ref": "T1:R12C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T1:R12C2"
+                    }
+                  }
+                ]
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1
+              }
+            },
+            {
+              "index": 2,
+              "rows": [
+                [
+                  {
+                    "text": "Rezyklatanteil",
+                    "ref": "T2:R1C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R1C1"
+                    }
+                  },
+                  {
+                    "text": "Post-Consumer",
+                    "ref": "T2:R1C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R1C2"
+                    }
+                  },
+                  {
+                    "text": "Pre-Consumer",
+                    "ref": "T2:R1C3",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R1C3"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Kobalt",
+                    "ref": "T2:R2C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R2C1"
+                    }
+                  },
+                  {
+                    "text": "12,5 %",
+                    "ref": "T2:R2C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R2C2"
+                    }
+                  },
+                  {
+                    "text": "4,0 %",
+                    "ref": "T2:R2C3",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R2C3"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Lithium",
+                    "ref": "T2:R3C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R3C1"
+                    }
+                  },
+                  {
+                    "text": "6,0 %",
+                    "ref": "T2:R3C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R3C2"
+                    }
+                  },
+                  {
+                    "text": "2,5 %",
+                    "ref": "T2:R3C3",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R3C3"
+                    }
+                  }
+                ],
+                [
+                  {
+                    "text": "Nickel",
+                    "ref": "T2:R4C1",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R4C1"
+                    }
+                  },
+                  {
+                    "text": "8,0 %",
+                    "ref": "T2:R4C2",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R4C2"
+                    }
+                  },
+                  {
+                    "text": "3,0 %",
+                    "ref": "T2:R4C3",
+                    "source": {
+                      "file": "lieferantenerklaerung.pdf",
+                      "page": 1,
+                      "cell": "T2:R4C3"
+                    }
+                  }
+                ]
+              ],
+              "source": {
+                "file": "lieferantenerklaerung.pdf",
+                "page": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

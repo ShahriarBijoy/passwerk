@@ -13,12 +13,36 @@ function loadPdfJs(): Promise<PdfJs> {
   return pdfjsPromise;
 }
 
+/**
+ * The pdfjs worker module, as a variable so bundlers leave it alone: only a Node caller
+ * loads it, and the browser apps ship their own worker asset instead.
+ */
+const PDF_WORKER = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
+let mainThreadWorker: Promise<unknown> | undefined;
+
+/**
+ * pdfjs decides at load time whether it runs in Node, and an Electron utility process (how
+ * Claude Desktop runs a local extension) fails that test: pdfjs then asks for a worker script.
+ * Importing the worker module sets `globalThis.pdfjsWorker`, which pdfjs uses on the main
+ * thread before it looks for `workerSrc`. Plain Node reaches the same handler on its own.
+ */
+function loadMainThreadWorker(): Promise<unknown> {
+  mainThreadWorker ??= import(/* @vite-ignore */ PDF_WORKER);
+  return mainThreadWorker;
+}
+
+function isNodeRuntime(): boolean {
+  const proc = (globalThis as { process?: { versions?: { node?: unknown } } }).process;
+  return typeof proc?.versions?.node === 'string';
+}
+
 export interface PdfReadOptions {
   /**
-   * `pdfjs-dist` needs a worker script outside Node; it throws
-   * `No "GlobalWorkerOptions.workerSrc" specified` without one. Node ignores this (it runs
-   * pdfjs on the main thread regardless), so only a browser caller (Phase 7a) must supply it,
-   * typically a URL to the `pdf.worker.min.mjs` asset it bundles alongside pdfjs-dist.
+   * `pdfjs-dist` needs a worker script in a browser; it throws
+   * `No "GlobalWorkerOptions.workerSrc" specified` without one. A browser caller (Phase 7a)
+   * must supply it, typically a URL to the `pdf.worker.min.mjs` asset it bundles alongside
+   * pdfjs-dist. A Node caller leaves it out: pdfjs then runs on the main thread, also inside an
+   * Electron utility process that pdfjs would otherwise take for a browser (ADR D-051).
    */
   workerSrc?: string;
 }
@@ -26,7 +50,7 @@ export interface PdfReadOptions {
 /**
  * Reads a PDF's text, tables and per-page language. In a browser, pass
  * `{ pdf: { workerSrc } }` (via {@link ingest}'s `options.pdf` or directly here) before the
- * first call; Node needs nothing.
+ * first call; Node, Electron's Node included, needs nothing.
  */
 export async function readPdf(
   file: InputFile,
@@ -35,6 +59,8 @@ export async function readPdf(
   const pdfjs = await loadPdfJs();
   if (options?.pdf?.workerSrc !== undefined) {
     pdfjs.GlobalWorkerOptions.workerSrc = options.pdf.workerSrc;
+  } else if (isNodeRuntime()) {
+    await loadMainThreadWorker();
   }
   const task = pdfjs.getDocument({
     data: new Uint8Array(file.bytes),

@@ -103,8 +103,8 @@ function majorityLang(pages: Page[]): 'de' | 'en' {
 
 /**
  * Ingest every file; a failing file becomes a document with `error` and no pages. Order is
- * preserved. `options.pdf.workerSrc` is forwarded to {@link readPdf}; Node ignores it, a
- * browser caller must supply it (Phase 7a).
+ * preserved. `options.pdf.workerSrc` is forwarded to {@link readPdf}; a browser caller must supply it
+ * (Phase 7a), a Node caller leaves it out.
  */
 export async function ingest(files: InputFile[], options?: IngestOptions): Promise<DocumentBundle> {
   const documents: IngestedDocument[] = [];
