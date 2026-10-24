@@ -1,0 +1,10 @@
+Parameter;Value;Unit
+Rated capacity;103.0;Ah
+Nominal voltage;355.2;V
+Battery mass;449.8;kg
+Cycle life;3300;cycles
+Rated energy;36600;Wh
+Temperature range – idle, lower;-20;°C
+Temperature range – idle, upper;45;°C
+Original power capability at 80 % SoC;100000;W
+Original power capability at 20 % SoC;72000;W

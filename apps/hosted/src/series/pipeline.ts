@@ -2,10 +2,12 @@ import {
   applyMappings,
   byCodePoint,
   canonicalJson,
+  type DocumentBundle,
   emitAasJson,
   emitAasx,
   emitHtml,
   extractFacts,
+  type FactSet,
   type Finding,
   gapReport,
   ingest,
@@ -20,10 +22,12 @@ import {
   type Verdict,
   validate,
 } from '@passwerk/core';
+import { openTargets, type Reader } from '../reading/index.js';
 import type {
   ArtefactDigest,
   ModelOutcome,
   PipelineStep,
+  ReadingSummary,
   RunModelOptions,
   SeriesModel,
 } from './types.js';
@@ -59,6 +63,15 @@ export function passportIdFor(modelId: string): string {
   return `https://passport.passwerk.example/${encodeURIComponent(modelId)}`;
 }
 
+/**
+ * The passport identifier the documents state, when the accept policy took one; otherwise an
+ * id derived from the model. Meta and attribute must agree (PW-L1-PASSPORT-ID-MISMATCH).
+ */
+export function passportIdOf(modelId: string, accepted: readonly MappingProposal[]): string {
+  const stated = accepted.find((p) => p.attributeId === 'batteryPassportIdentifier')?.value;
+  return typeof stated === 'string' ? stated : passportIdFor(modelId);
+}
+
 const decisionOf = (p: MappingProposal): MappingDecision => ({
   attributeId: p.attributeId,
   value: p.value,
@@ -82,6 +95,8 @@ async function inStep<T>(
 }
 
 export interface MappedModel {
+  bundle: DocumentBundle;
+  factSet: FactSet;
   facts: number;
   /** Attributes whose field is `present` after apply. */
   mapped: number;
@@ -113,17 +128,78 @@ export async function mapModel(model: SeriesModel, o: RunModelOptions): Promise<
       newDraft({
         schemaVersion: SCHEMA_VERSION,
         category: o.category,
-        passportId: passportIdFor(modelId),
+        passportId: passportIdOf(modelId, accepted),
         createdAt: o.asOf,
       }),
       accepted.map(decisionOf),
     ),
   );
-  const mapped = Object.values(result.draft.attributes).filter(
-    (f) => f?.status === 'present',
-  ).length;
+  const mapped = presentCount(result.draft);
   o.onStep?.({ step: 'apply', facts, mapped });
-  return { facts, mapped, proposals, accepted, draft: result.draft, conflicts: result.conflicts };
+  return {
+    bundle,
+    factSet,
+    facts,
+    mapped,
+    proposals,
+    accepted,
+    draft: result.draft,
+    conflicts: result.conflicts,
+  };
+}
+
+const presentCount = (draft: PassportDraft) =>
+  Object.values(draft.attributes).filter((f) => f?.status === 'present').length;
+
+/**
+ * The reader reads the mapped model; its vetoes leave the accepted proposals, and the draft
+ * is rebuilt from what remains plus its decisions, so a vetoed passport id falls back too.
+ */
+export async function readModel(
+  modelId: string,
+  m: MappedModel,
+  o: RunModelOptions,
+  reader: Reader | undefined,
+): Promise<MappedModel & { reading: ReadingSummary }> {
+  if (!reader) throw new Error(`model ${modelId}: AI reading is on but no reader is configured`);
+  o.onStep?.({ step: 'read', facts: m.facts, mapped: m.mapped });
+  const r = await inStep(modelId, 'read', () =>
+    reader.read({
+      category: o.category,
+      bundle: m.bundle,
+      facts: m.factSet.facts,
+      draft: m.draft,
+      open: openTargets(m.draft, o.asOf),
+      accepted: m.accepted,
+    }),
+  );
+  const vetoed = new Set(r.vetoed);
+  const accepted = m.accepted.filter((p) => !vetoed.has(p));
+  const result = await inStep(modelId, 'read', () =>
+    applyMappings(
+      newDraft({
+        schemaVersion: SCHEMA_VERSION,
+        category: o.category,
+        passportId: passportIdOf(modelId, accepted),
+        createdAt: o.asOf,
+      }),
+      [...accepted.map(decisionOf), ...r.decisions],
+    ),
+  );
+  return {
+    ...m,
+    accepted,
+    draft: result.draft,
+    conflicts: result.conflicts,
+    mapped: presentCount(result.draft),
+    reading: {
+      applied: r.decisions.length,
+      toConfirm: r.toConfirm,
+      vetoed: r.vetoed.length,
+      inputTokens: r.inputTokens,
+      requests: r.requests,
+    },
+  };
 }
 
 const RANK: Record<Verdict, number> = { valid: 0, valid_with_warnings: 1, invalid: 2 };
@@ -134,10 +210,19 @@ async function digest(file: string, bytes: Uint8Array): Promise<ArtefactDigest> 
   return { file, bytes: bytes.byteLength, sha256: await sha256Hex(bytes) };
 }
 
-/** Runs one model through ingest, extract, suggest, apply, validate and emit. */
-export async function runModel(model: SeriesModel, o: RunModelOptions): Promise<ModelOutcome> {
+/**
+ * Runs one model through ingest, extract, suggest, apply, validate and emit, with the AI
+ * reading step after apply when `o.read` is set.
+ */
+export async function runModel(
+  model: SeriesModel,
+  o: RunModelOptions,
+  reader?: Reader,
+): Promise<ModelOutcome> {
   const { modelId } = model;
-  const mapped = await mapModel(model, o);
+  const automatic = await mapModel(model, o);
+  const read = o.read ? await readModel(modelId, automatic, o, reader) : undefined;
+  const mapped = read ?? automatic;
   const { draft, facts, mapped: present } = mapped;
   o.onStep?.({ step: 'validate', facts, mapped: present });
   const asOf = { asOf: o.asOf };
@@ -185,5 +270,6 @@ export async function runModel(model: SeriesModel, o: RunModelOptions): Promise<
         .sort(byCodePoint),
     },
     artefacts,
+    ...(read ? { reading: read.reading } : {}),
   };
 }

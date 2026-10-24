@@ -168,7 +168,7 @@ describe('runInWorker', () => {
     { modelId: 'alpha', files: [{ name: 'a.txt', bytes: new Uint8Array([1]) }] },
     { modelId: 'beta', files: [{ name: 'b.txt', bytes: new Uint8Array([2]) }] },
   ];
-  const start: WorkerStart = { models, category: 'EV', asOf: AS_OF };
+  const start: WorkerStart = { models, category: 'EV', asOf: AS_OF, read: false };
   const ctx = (signal = new AbortController().signal, lines: string[] = []) => ({
     signal,
     progress: (line: string) => void lines.push(line),
