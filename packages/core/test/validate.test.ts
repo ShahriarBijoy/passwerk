@@ -22,10 +22,10 @@ describe('validate (L1 -> emit -> L2 + L3)', () => {
     expect(r.layers.L2.ran).toBe(false);
     expect(r.aasJson).toBeUndefined();
   });
-  it('still runs L2 and L3 on value errors and reports both layers', () => {
+  it('still runs L2 and L3 on L1 errors and reports both layers', () => {
     const r = validate(brokenSamples['ev-missing-material-identifier'].draft);
     const ids = r.findings.map((f) => f.ruleId);
-    expect(ids).toContain('PW-L1-VALUE');
+    expect(ids).toContain('PW-L1-COMPOSITE-INCOMPLETE');
     expect(ids).toContain('PW-L3-MISSING');
     expect(r.layers.L3.ran).toBe(true);
     expect(r.verdict).toBe('invalid');

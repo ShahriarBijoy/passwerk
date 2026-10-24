@@ -44,7 +44,10 @@ describe('L1 validateSchema', () => {
       attributes: {
         manufacturingDate: { value: '01.03.2026', status: 'present' },
         carbonFootprintPerFunctionalUnit: { value: '61,2', unit: 'kgCO2e/kWh', status: 'present' },
-        criticalRawMaterials: { value: [{ name: 'Lithium' }], status: 'present' },
+        criticalRawMaterials: {
+          value: [{ name: 'Lithium', identifier: '7439-93-2', massKg: '6,4' }],
+          status: 'present',
+        },
       },
     });
     const bad = r.findings.filter((f) => f.ruleId === 'PW-L1-VALUE');
@@ -56,6 +59,15 @@ describe('L1 validateSchema', () => {
     expect(bad[0]?.message.de.length).toBeGreaterThan(5);
     expect(bad[0]?.message.en.length).toBeGreaterThan(5);
     expect(bad[0]?.severity).toBe('error');
+  });
+  it('reports absent composite leaves as incomplete, not as a value error (ADR D-052)', () => {
+    const r = validateSchema({
+      meta,
+      attributes: { criticalRawMaterials: { value: [{ name: 'Lithium' }], status: 'present' } },
+    });
+    expect(ids(r)).toEqual(['PW-L1-COMPOSITE-INCOMPLETE']);
+    expect(r.findings[0]?.message.en).toContain('0.identifier');
+    expect(r.findings[0]?.severity).toBe('error');
   });
   it('flags a passport id mismatch', () => {
     const r = validateSchema({

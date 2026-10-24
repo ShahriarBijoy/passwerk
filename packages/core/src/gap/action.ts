@@ -1,7 +1,13 @@
 import type { ApplicabilityStatus, LangText } from '@passwerk/rules';
 
 export type GapBucket = 'required' | 'conditional' | 'deferred' | 'optional';
-export type GapStatus = 'present' | 'missing' | 'invalid' | 'conflict' | 'not_applicable';
+export type GapStatus =
+  | 'present'
+  | 'partial'
+  | 'missing'
+  | 'invalid'
+  | 'conflict'
+  | 'not_applicable';
 
 /**
  * Workflow instructions, not legal claims: what to do next about one attribute. The deferred
@@ -18,10 +24,13 @@ export function suggestedAction(
   bucket: GapBucket,
   applicability: ApplicabilityStatus,
   whoTypicallyHasIt: LangText,
+  missingLeaves: readonly string[] = [],
 ): LangText {
+  // A partial value is a value the supplier holds, so the deferred wording treats it as held.
+  const held = status === 'present' || status === 'partial';
   if (bucket === 'deferred') {
     if (applicability === 'not_yet_applicable') {
-      return status === 'present'
+      return held
         ? {
             en: 'No action. This data point is not yet applicable for this battery category; the value you already hold is informational until the enabling act applies.',
             de: 'Keine Aktion. Dieser Datenpunkt ist für diese Batteriekategorie noch nicht anwendbar; der bereits vorliegende Wert ist bis zum Geltungsbeginn des Rechtsakts informativ.',
@@ -31,7 +40,7 @@ export function suggestedAction(
             de: 'Noch keine Aktion. Die Kommission stuft diesen Datenpunkt für diese Batteriekategorie als noch nicht anwendbar ein; er wird zu einem späteren Zeitpunkt relevant (siehe Pflichten-Zeitplan), sein Fehlen ist heute keine Lücke.',
           };
     }
-    return status === 'present'
+    return held
       ? {
           en: 'No action. The Commission marks this data point as not to be filled or displayed for this battery category; the value you hold is not a passport requirement.',
           de: 'Keine Aktion. Die Kommission stuft diesen Datenpunkt für diese Batteriekategorie als nicht auszufüllen bzw. nicht anzuzeigen ein; der vorliegende Wert ist keine Passanforderung.',
@@ -46,6 +55,11 @@ export function suggestedAction(
       return {
         en: 'Nothing to do. Keep the source document with the passport for verification.',
         de: 'Nichts zu tun. Belegdokument zusammen mit dem Pass für die Prüfung aufbewahren.',
+      };
+    case 'partial':
+      return {
+        en: `Part of the value is present and checked; these sub-fields are missing: ${missingLeaves.join(', ')}. Request them from the typical data holder: ${whoTypicallyHasIt.en}`,
+        de: `Ein Teil des Werts liegt vor und ist geprüft; es fehlen diese Teilfelder: ${missingLeaves.join(', ')}. Beim typischen Datenhalter anfordern: ${whoTypicallyHasIt.de}`,
       };
     case 'invalid':
       return {

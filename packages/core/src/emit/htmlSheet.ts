@@ -169,7 +169,10 @@ function findingsSection(report: ValidationReport): string {
 function gapSection(gap: GapReport): string {
   const open = (i: GapItem) =>
     (i.bucket === 'required' || i.bucket === 'conditional') &&
-    (i.status === 'missing' || i.status === 'invalid' || i.status === 'conflict');
+    (i.status === 'missing' ||
+      i.status === 'partial' ||
+      i.status === 'invalid' ||
+      i.status === 'conflict');
   const byId = new Map(gap.items.map((i) => [i.attributeId, i]));
   const completeness = `<p>${both(T.completeness)}: ${both(T.mandatory)} ${gap.completeness.mandatory.present}/${gap.completeness.mandatory.total} (${gap.completeness.mandatory.percent} %), ${both(T.overall)} ${gap.completeness.overall.present}/${gap.completeness.overall.total} (${gap.completeness.overall.percent} %)</p>`;
   const groups: string[] = [];

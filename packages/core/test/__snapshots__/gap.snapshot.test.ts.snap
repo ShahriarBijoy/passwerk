@@ -120,12 +120,10 @@ exports[`gap report snapshots > is stable for ev-missing-material-identifier 1`]
       "total": 60,
     },
   },
-  "invalid": [
-    "criticalRawMaterials",
-  ],
+  "invalid": [],
   "statuses": {
-    "invalid": 1,
     "missing": 71,
+    "partial": 1,
     "present": 21,
   },
 }

@@ -31,6 +31,7 @@ interface GapItem {
   attributeId: string;
   status: GapStatus;
   bucket: GapBucket;
+  missingLeaves?: string[];
 }
 interface GapStructured {
   draftId: string;
@@ -254,5 +255,36 @@ describe('gap_report detail and filters', () => {
     });
     expect(r.isError).toBe(false);
     expect(r.text.toLowerCase()).toContain('whole passport');
+  });
+});
+
+describe('gap_report on a partly filled composite (ADR D-052)', () => {
+  const partialDraft = () => {
+    const draft = structuredClone(getSample('ev-valid')) as {
+      attributes: Record<string, { value?: unknown }>;
+    };
+    const chemistry = draft.attributes['batteryChemistry'];
+    if (chemistry) chemistry.value = { shortName: 'NMC811' };
+    return draft;
+  };
+
+  it('filters on status partial and names the missing leaf in the full text', async () => {
+    const r = await call<GapStructured>(session.client, 'gap_report', {
+      draft: partialDraft(),
+      status: ['partial'],
+      detail: 'full',
+    });
+    expect(r.isError).toBe(false);
+    expect(r.structured.items.map((i) => [i.attributeId, i.status, i.missingLeaves])).toEqual([
+      ['batteryChemistry', 'partial', ['clearName']],
+    ]);
+    expect(r.text).toContain('[partial, missing: clearName]');
+  });
+
+  it('lists the partial item as open in the summary text', async () => {
+    const r = await call<GapStructured>(session.client, 'gap_report', { draft: partialDraft() });
+    expect(r.text).toMatch(/- batteryChemistry \(.*\) \[partial, missing: clearName\]/);
+    const item = r.structured.items.find((i) => i.attributeId === 'batteryChemistry');
+    expect(item?.status).toBe('partial');
   });
 });

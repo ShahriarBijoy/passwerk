@@ -125,6 +125,8 @@ export const en: Record<keyof typeof de, string> = {
   'gaps.bucket.optional': 'Optional',
   'gaps.status.present': 'present',
   'gaps.status.missing': 'missing',
+  'gaps.status.partial': 'partial',
+  'gaps.missingLeaves': 'Missing sub-fields',
   'gaps.status.conflict': 'conflict',
   'gaps.status.invalid': 'invalid',
   'gaps.status.not_applicable': 'not applicable',

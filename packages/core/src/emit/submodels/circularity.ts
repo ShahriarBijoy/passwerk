@@ -3,7 +3,7 @@ import { type PassportDraft, presentValue } from '../../model/passport.js';
 import type * as aas from '../../vendor/aasCore.js';
 import { collection, list, multiLanguageProperty, property } from '../elements.js';
 import type { EmitIds } from '../ids.js';
-import { documentIds, hasAny, submodelFromTemplate } from './shared.js';
+import { documentIds, hasAny, langStrings, submodelFromTemplate } from './shared.js';
 
 const P = '7';
 const SUPPLIER = `${P}/SparePartSources/SparePartSupplier`;
@@ -55,10 +55,9 @@ function components(items: readonly ComponentIn[]): aas.types.SubmodelElementLis
 
 function supplier(s: SupplierIn, fallback: ComponentIn[]): aas.types.SubmodelElementCollection {
   const el: aas.types.ISubmodelElement[] = [];
-  const name = s.name ?? {};
-  const lang = Object.keys(name).sort()[0] ?? 'en';
-  if (Object.keys(name).length > 0)
-    el.push(multiLanguageProperty(`${SUPPLIER}/NameOfSupplier`, name));
+  const name = langStrings(s.name);
+  const lang = Object.keys(name ?? {}).sort()[0] ?? 'en';
+  if (name) el.push(multiLanguageProperty(`${SUPPLIER}/NameOfSupplier`, name));
   if (s.address) {
     const ADDR = `${SUPPLIER}/AddressOfSupplier`;
     const a: aas.types.ISubmodelElement[] = [];

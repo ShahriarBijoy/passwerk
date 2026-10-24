@@ -59,12 +59,15 @@ re-validate. `explain_attribute` with a rule id explains a PW-PLAUS finding.
 Read: `completeness.mandatory` and `.overall` (`present`, `total`, `percent`), `items[]`
 (`attributeId`, `name`, `status`, `bucket` required | conditional | deferred | optional,
 `legalRefs`, `whoTypicallyHasIt`, `suggestedAction`, `findings`), `bySubmodel[]`,
-`byDataOwner[]`. Items with `verify: true` carry a knowledge-base entry still to be checked
+`byDataOwner[]`. `status` is present | partial | missing | invalid | conflict |
+not_applicable; a `partial` composite holds some sub-fields and lists the absent required
+ones in `missingLeaves` (for example `clearName`, `0.identifier`). Ask for exactly those; a
+partial value does not count toward completeness. Items with `verify: true` carry a knowledge-base entry still to be checked
 by a domain expert; say so.
 
 To close open gaps from facts without the structured content (a text-only host such as
 Claude Desktop), call `gap_report(detail:'full', bucket:['required','conditional'],
-status:['missing','invalid'])`, then `suggest_mappings(attributeIds: <those ids>,
+status:['missing','partial','invalid'])`, then `suggest_mappings(attributeIds: <those ids>,
 detail:'full')`, then `apply_mappings` with each accepted proposal's `source` copied through
 unchanged. `detail:'full'` prints every filtered item or proposal as one line with
 provenance, no cap and no "… N more"; a `status`/`bucket` filter narrows `items` but never

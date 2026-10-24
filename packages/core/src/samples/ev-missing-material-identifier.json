@@ -1,5 +1,5 @@
 {
-  "$comment": "Broken golden sample derived from ev-valid (fictional values). Defect: the first critical raw material has no identifier, so L1 rejects the composite and the emitted BatteryMaterialIdentifier is missing (PW-L1-VALUE, PW-L3-MISSING).",
+  "$comment": "Broken golden sample derived from ev-valid (fictional values). Defect: the first critical raw material has no identifier, so L1 reports the composite as incomplete and the emitted BatteryMaterialIdentifier is missing (PW-L1-COMPOSITE-INCOMPLETE, PW-L3-MISSING).",
   "meta": {
     "schemaVersion": "1.0",
     "category": "EV",

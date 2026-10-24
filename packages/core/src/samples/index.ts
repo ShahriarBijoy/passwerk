@@ -37,8 +37,9 @@ export interface BrokenSample {
 export const brokenSamples: Record<BrokenSampleName, BrokenSample> = {
   'ev-missing-material-identifier': {
     draft: evMissing as unknown as PassportDraftInput,
-    // L1 rejects the composite; the fail-honest emit then lacks the template element.
-    expectedFindings: ['PW-L1-VALUE', 'PW-L3-MISSING'],
+    // L1 reports the absent leaf as incomplete (ADR D-052, not a value error); the emitted
+    // output then lacks the template element.
+    expectedFindings: ['PW-L1-COMPOSITE-INCOMPLETE', 'PW-L3-MISSING'],
   },
   'lmt-wrong-date-format': {
     draft: lmtWrongDate as unknown as PassportDraftInput,

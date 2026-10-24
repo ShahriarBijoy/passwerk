@@ -7,10 +7,12 @@ import {
 } from '@passwerk/rules';
 import { Decimal } from 'decimal.js';
 import { byCodePoint } from '../mapping/propose.js';
+import { checkComposite } from '../model/composites.js';
 import type { AnyFieldValue } from '../model/field.js';
 import { getField, type PassportDraft } from '../model/passport.js';
 import type { Provenance } from '../model/provenance.js';
 import type { ValidationReport } from '../validate/finding.js';
+import { COMPOSITE_INCOMPLETE } from '../validate/schema.js';
 import { type GapBucket, type GapStatus, suggestedAction } from './action.js';
 
 export type { GapBucket, GapStatus } from './action.js';
@@ -26,6 +28,12 @@ export interface GapItem {
   attributeId: string;
   name: LangText;
   status: GapStatus;
+  /**
+   * Set only when a composite value is partial: the dotted paths of its required sub-fields
+   * that hold nothing ("clearName", "0.identifier"). Also kept on an `invalid` item whose
+   * present leaves are wrong, so the to-do list names both problems (ADR D-052).
+   */
+  missingLeaves?: string[];
   bucket: GapBucket;
   applicability: ApplicabilityStatus;
   applicabilityText?: string;
@@ -82,11 +90,22 @@ function completeness(present: number, total: number): Completeness {
   return { present, total, percent: percent.toFixed(1) };
 }
 
-function statusOf(field: AnyFieldValue | undefined, hasError: boolean): GapStatus {
+/** Required composite leaves the field's value lacks; empty for a scalar or complete value. */
+function missingLeavesOf(attributeId: string, field: AnyFieldValue | undefined): string[] {
+  if (field?.value === undefined) return [];
+  if (field.status !== 'present' && field.status !== 'conflict') return [];
+  return checkComposite(attributeId, field.value)?.missingLeaves ?? [];
+}
+
+function statusOf(
+  field: AnyFieldValue | undefined,
+  hasError: boolean,
+  missingLeaves: readonly string[],
+): GapStatus {
   if (hasError) return 'invalid';
   if (field?.status === 'conflict') return 'conflict';
   if (field?.status === 'not_applicable') return 'not_applicable';
-  if (field?.status === 'present') return 'present';
+  if (field?.status === 'present') return missingLeaves.length > 0 ? 'partial' : 'present';
   return 'missing';
 }
 
@@ -101,7 +120,9 @@ export function gapReport(draft: PassportDraft, options: GapReportOptions = {}):
     if (!finding.attributeId) continue;
     const entry = findingsByAttribute.get(finding.attributeId) ?? { ids: [], error: false };
     entry.ids.push(finding.ruleId);
-    entry.error ||= finding.severity === 'error';
+    // Missing leaves make the item `partial`, read from the draft below; only an error about
+    // a value that is there makes it `invalid` (ADR D-052).
+    entry.error ||= finding.severity === 'error' && finding.ruleId !== COMPOSITE_INCOMPLETE;
     findingsByAttribute.set(finding.attributeId, entry);
   }
 
@@ -110,12 +131,14 @@ export function gapReport(draft: PassportDraft, options: GapReportOptions = {}):
     const bucket = BUCKETS[cell.status];
     const field = getField(draft, attribute.id);
     const found = findingsByAttribute.get(attribute.id);
-    const status = statusOf(field, found?.error ?? false);
+    const missingLeaves = missingLeavesOf(attribute.id, field);
+    const status = statusOf(field, found?.error ?? false, missingLeaves);
     const submodel = attribute.part === null ? null : getTemplate(attribute.part);
     return {
       attributeId: attribute.id,
       name: attribute.name,
       status,
+      ...(missingLeaves.length > 0 ? { missingLeaves } : {}),
       bucket,
       applicability: cell.status,
       ...(cell.text ? { applicabilityText: cell.text } : {}),
@@ -124,7 +147,13 @@ export function gapReport(draft: PassportDraft, options: GapReportOptions = {}):
       legalRefs: attribute.legalRefs,
       whoTypicallyHasIt: attribute.whoTypicallyHasIt,
       explanation: attribute.explanation,
-      suggestedAction: suggestedAction(status, bucket, cell.status, attribute.whoTypicallyHasIt),
+      suggestedAction: suggestedAction(
+        status,
+        bucket,
+        cell.status,
+        attribute.whoTypicallyHasIt,
+        missingLeaves,
+      ),
       sources: field?.source ?? [],
       ...(field?.confidence !== undefined ? { confidence: field.confidence } : {}),
       findings: [...(found?.ids ?? [])].sort(),
