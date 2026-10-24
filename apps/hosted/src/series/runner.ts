@@ -4,7 +4,7 @@
  * and never written (ADR D-047).
  */
 import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import type { JobContext } from '../tasks.js';
 import type { ModelOutcome, WorkerMessage, WorkerStart } from './types.js';
@@ -16,11 +16,17 @@ export interface WorkerEntry {
 
 // Under Vitest this file is TypeScript whose `.js` import specifiers only tsx resolves. A worker
 // ignores `--import tsx` in its execArgv (measured on Node 22.20), so a one-line bootstrap loads
-// worker.ts through tsx's tsImport. The build runs dist/series/worker.js as plain JavaScript.
+// worker.ts through tsx's tsImport. The worker escapes Vitest's aliases, so tsconfig.source.json
+// maps the workspace packages to their sources, as the aliases do: the suite needs no dist/.
+// The build runs dist/series/worker.js as plain JavaScript.
 function typeScriptEntry(): WorkerEntry {
   const tsx = pathToFileURL(createRequire(import.meta.url).resolve('tsx/esm/api')).href;
   const worker = new URL('./worker.ts', import.meta.url).href;
-  const boot = `import { tsImport } from ${JSON.stringify(tsx)}; await tsImport(${JSON.stringify(worker)}, ${JSON.stringify(import.meta.url)});`;
+  const options = {
+    parentURL: import.meta.url,
+    tsconfig: fileURLToPath(new URL('../../tsconfig.source.json', import.meta.url)),
+  };
+  const boot = `import { tsImport } from ${JSON.stringify(tsx)}; await tsImport(${JSON.stringify(worker)}, ${JSON.stringify(options)});`;
   return { url: new URL(`data:text/javascript,${encodeURIComponent(boot)}`) };
 }
 
