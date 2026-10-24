@@ -26,6 +26,7 @@
     "tools/*/src/**/*.ts",
     "tools/*/test/**/*.ts",
     "packaging/*/test/**/*.ts",
+    "apps/hosted/test/**/*.ts",
     "vitest.config.ts"
   ]
 }

@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+# passwerk hosted MCP server: long tool calls answer as MCP tasks on revision 2026-07-28
+# (ADR D-047). Build from the repository root:
+#   docker build -f apps/hosted/Dockerfile -t passwerk-hosted .
+# Multi-stage like the root Dockerfile: build the workspace with pnpm, deploy only
+# @passwerk/hosted and its production dependencies (workspace packages included), run on
+# distroless Node 22 as non-root with no shell. Needs PASSWERK_AUTH_TOKEN at run time.
+FROM node:22-bookworm-slim AS build
+RUN corepack enable
+WORKDIR /src
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+RUN pnpm --filter @passwerk/hosted --prod deploy --legacy /out
+
+FROM gcr.io/distroless/nodejs22-debian12:nonroot
+LABEL org.opencontainers.image.title="passwerk-hosted" \
+      org.opencontainers.image.description="Hosted passwerk MCP server: long tool calls run as MCP tasks" \
+      org.opencontainers.image.source="https://github.com/ShahriarBijoy/passwerk" \
+      org.opencontainers.image.licenses="Apache-2.0"
+WORKDIR /app
+# Root-owned on purpose: the nonroot process can read its code but not rewrite it.
+COPY --from=build /out /app
+# Inside the container the port forward arrives on eth0, so loopback would be unreachable.
+# Bind the published port to 127.0.0.1 on the host instead (docs/install/instabox-demo.md).
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
+EXPOSE 8080
+CMD ["dist/main.js"]

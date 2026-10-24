@@ -1401,3 +1401,81 @@ gaps now apply to the web only). The emitted file can differ from what the scree
 downloaded only by the `asOf` of the click, since the draft is re-derived at that moment. Not
 verified: saving through the button in the desktop app itself (the tests drive the real
 server through the SDK's host bridge), and the plugin install path in that app.
+
+## D-047: A hosted server on MCP SDK v2 runs long tool calls as MCP tasks for the Claude Code CLI (2026-10-24)
+
+D-046 is reserved by PR #48 (`feat/hosted-connector`), which is not merged.
+
+**Context.** The interview demo (Phase 9a, `docs/plans/hosted-tasks.md`) runs a whole battery
+series as one long tool call from the Claude Code CLI against a remote server. Claude Code turns
+a tool call into an MCP task, with progress in `/tasks` and a result after `claude --resume`,
+only on protocol revision `2026-07-28`, and only when the request carries the
+`io.modelcontextprotocol/tasks` extension. passwerk runs on `@modelcontextprotocol/sdk` 1.30.0,
+which cannot negotiate that revision. The CLI does not render MCP Apps, and the desktop app and
+VS Code do not run MCP tasks. PR #48 holds a Cloudflare Worker with OAuth, which is limited by
+the Worker CPU limit, a 3 MiB bundle cap and SDK 1.x.
+
+What the S0 and S1 work measured or read:
+
+- `@modelcontextprotocol/server` 2.3.1 negotiates `2026-07-28` through `server/discover`. It has
+  no tasks helper. The 2025 task API (`isTaskAugmentedRequestParams`) is deprecated with no
+  runtime behind it.
+- The SDK checks every `tools/call` result for `content`. A task answer passes that check with
+  `content: []` beside `resultType: "task"`.
+- `tasks/get` and `tasks/cancel` register only through the three-argument
+  `setRequestHandler(method, { params, result }, handler)`, and `tasks/get` must answer with
+  `resultType: "complete"`.
+- The `@modelcontextprotocol/client` 2.3.1 client rejects a `resultType: "task"` answer.
+- `@modelcontextprotocol/server` 2.4.0 and `@modelcontextprotocol/node` 2.1.2 were published on
+  2026-10-23 and fail the 3-day `minimumReleaseAge`.
+- The InstaBox proxy answers `502` when the first byte takes more than about 20 s, rewrites
+  `Host` to `127.0.0.1:8080`, and reaches the machine on `127.0.0.1:8080`. It passes
+  `Authorization` and does not buffer server-sent events.
+
+**Decision.** A new private app, `apps/hosted` (`@passwerk/hosted`), is the hosted server. It
+runs on SDK v2 and pins `@modelcontextprotocol/server` 2.3.1, `@modelcontextprotocol/node`
+2.1.1 and, for tests, `@modelcontextprotocol/client` 2.3.1. `packages/server` stays on SDK
+1.30.0, so the published npm package, the MCPB bundle and the plugins do not change. Network
+code lives only in `apps/hosted`. `core` and `server` keep their sovereignty tests unchanged.
+
+The tasks extension is built by hand. `tools/call` answers with a task only when
+`params._meta["io.modelcontextprotocol/clientCapabilities"].extensions` carries
+`io.modelcontextprotocol/tasks`, and with a plain result otherwise. The task answer carries
+`content: []` to pass the SDK's result check. `tasks/get` and `tasks/cancel` use the
+three-argument `setRequestHandler`. An unknown task id answers `-32602`. `tasks/update` arrives
+with the `input_required` slice. The endpoint is modern-only: it rejects legacy (2025-era)
+requests instead of serving them on SDK 1.x semantics. Tests drive the task path with raw
+JSON-RPC over `fetch`, because the 2.3.1 client cannot read it. The client covers the
+plain-result path only.
+
+In 9a the hosted app exposes only task tools (`slow_echo` now, `run_series` from S2). It does
+not reuse the `TOOLS` registry, `SessionStore` or the workbench loader. `SessionStore` is per
+connection, which means nothing in the stateless per-request mode of `2026-07-28`, the
+workbench loader imports SDK 1.x, and the CLI does not render the workbench. The other tools
+arrive in 9b with a store scoped to the token's subject. The demo uses two surfaces: the desktop
+app shows the workbench through the local stdio server, and the CLI runs the series task.
+
+The demo host is a free InstaBox machine with one static bearer token (`PASSWERK_AUTH_TOKEN`,
+at least 32 characters, compared in constant time as in `packages/server/src/http.ts`).
+`GET /healthz` stays open. The server does not check `Host`, because the proxy rewrites it. The
+bearer token is the access control. The image (`apps/hosted/Dockerfile`) runs on distroless
+Node 22 as `nonroot` with no shell, and the documented `docker run`
+(`docs/install/instabox-demo.md`) adds `--read-only`, `--cap-drop ALL`,
+`--security-opt no-new-privileges`, `--pids-limit 256`, `--memory 2g`,
+`--restart unless-stopped`, and a port published on `127.0.0.1` only. The token lives in a
+root-owned `600` file on the machine and reaches the laptop through a `--scope local` Claude
+Code entry. The demo is never called production or offline (ADR D-019). OAuth and a hardened
+Hetzner VPS follow in Phase 9b, which reuses PR #48's OAuth design (one scope `mcp`, an
+allowlist that is empty by default and checked on every request). PR #48 becomes a draft and is
+decided after 9b.
+
+Phase 9a ships as seven vertical slices, S0 to S6 (`docs/plans/hosted-tasks-slices.html`),
+each one branch and one PR that deploys to InstaBox and ends with a live check in the CLI.
+
+**Consequence.** The repository has two MCP servers until Phase 9d moves `packages/server` to
+SDK v2. The hand-built tasks extension is the code to delete when an SDK release ships a tasks
+helper that passes `minimumReleaseAge`. On InstaBox a plain tool result that takes longer than
+20 s returns `502` unless the server sends an early byte, so long work must go through the task
+path. Not verified at the time of writing: Claude Code showing `1 MCP task` against the
+InstaBox URL, and the container coming back by itself after the machine restarts. Both are S1
+live checks.

@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>passwerk hosted slices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f4f1;
+  --panel: #ffffff;
+  --ink: #141414;
+  --muted: #5d5d58;
+  --line: #d9d9d3;
+  --accent: #d71921;
+  --ok: #1f7a3d;
+  --warn: #9a6200;
+  --chip: #ececE7;
+  --code: #efefea;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c0c;
+    --panel: #151515;
+    --ink: #ececea;
+    --muted: #9a9a94;
+    --line: #2a2a28;
+    --accent: #ff3b3b;
+    --ok: #4cc27a;
+    --warn: #e0a640;
+    --chip: #222220;
+    --code: #1d1d1b;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0c0c;
+  --panel: #151515;
+  --ink: #ececea;
+  --muted: #9a9a94;
+  --line: #2a2a28;
+  --accent: #ff3b3b;
+  --ok: #4cc27a;
+  --warn: #e0a640;
+  --chip: #222220;
+  --code: #1d1d1b;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 "Space Grotesk", system-ui, sans-serif;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+.label {
+  font: 700 11px/1.4 "Space Mono", ui-monospace, monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 { font-size: 34px; line-height: 1.15; margin: 8px 0 12px; font-weight: 600; letter-spacing: -.01em; }
+h2 { font-size: 22px; margin: 48px 0 12px; font-weight: 600; }
+h3 { font-size: 18px; margin: 0 0 6px; font-weight: 600; }
+h4 { margin: 18px 0 6px; }
+p { margin: 8px 0; }
+a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+code, .mono {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: .86em;
+  background: var(--code);
+  padding: 1px 5px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+pre {
+  font: 13px/1.5 "Space Mono", ui-monospace, monospace;
+  background: var(--code);
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.lede { color: var(--muted); max-width: 70ch; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.next { border-color: var(--accent); }
+ol.steps { padding-left: 22px; margin: 8px 0; }
+ol.steps li { margin: 8px 0; }
+
+/* slice track */
+.track {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+.stop {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  min-height: 112px;
+}
+.stop:hover { border-color: var(--accent); }
+.stop .id { font: 700 12px "Space Mono", monospace; color: var(--accent); }
+.stop .t { font-weight: 600; font-size: 14px; line-height: 1.35; margin: 4px 0; }
+.stop .d { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.stop.owner .id { color: var(--muted); }
+.stop.optional { border-style: dashed; }
+@media (max-width: 760px) {
+  .track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* slice cards */
+.slice { scroll-margin-top: 16px; }
+.slice header { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+.slice .sid { font: 700 13px "Space Mono", monospace; color: var(--accent); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 4px; }
+.chip {
+  font: 700 11px/1.3 "Space Mono", monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: var(--chip);
+  padding: 6px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+.chip.risk { color: var(--warn); }
+.chip.gate { color: var(--accent); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+ul.box { list-style: none; padding: 0; margin: 4px 0 8px; }
+ul.box li { display: flex; gap: 10px; align-items: flex-start; padding: 4px 0; }
+ul.box input { margin-top: 5px; accent-color: var(--accent); flex: none; width: 15px; height: 15px; }
+ul.box label { flex: 1; }
+ul.plain { padding-left: 20px; margin: 4px 0 8px; }
+ul.plain li { margin: 4px 0; }
+.done-when {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--ok);
+  border-radius: 8px;
+}
+.done-when .label { color: var(--ok); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font: 700 11px "Space Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+.progress { font: 12px "Space Mono", monospace; color: var(--muted); margin-left: auto; }
+.toolbar { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+button {
+  font: 700 11px "Space Mono", monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+.foot { color: var(--muted); font-size: 13px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="label">passwerk · phase 9a · hosted MCP tasks · 2026-10-23</div>
+<h1>Hosted passwerk in seven vertical slices</h1>
+<p class="lede">
+This page reorders <code>HOSTED_TASKS_PLAN.md</code> into slices that each run end to end, from the
+InstaBox URL to the Claude Code CLI. After every slice there is something you can show in the terminal.
+The goal and the decisions in the plan stay. The order, a few facts, and two scope items change. Section
+"What changed from the plan" lists each change with its evidence.
+</p>
+<div class="toolbar">
+  <button type="button" id="theme">Toggle theme</button>
+  <button type="button" id="reset">Clear checkboxes</button>
+  <span class="progress" id="progress"></span>
+</div>
+
+<div class="panel next">
+  <div class="label">What you do next</div>
+  <ol class="steps">
+    <li>Read the slice track below and the open decisions near the end. Reply "go" or name what to change.</li>
+    <li>Convert PR #48 to a draft with <code>gh pr ready 48 --undo</code>. I can run it once you say so. It changes a public PR, so I did not do it.</li>
+    <li>Create the InstaBox machine and publish one HTTPS port. Tell me two things you see there. Does <code>docker run hello-world</code> work? What is the published URL pattern?</li>
+    <li>In Claude Code, run <code>/status</code> and confirm the session signs in through claude.ai, not an API key or Bedrock. Tasks need feature-flag fetching. Your local Claude Code is 2.1.309, which meets the 2.1.304 minimum (measured with <code>claude --version</code>).</li>
+    <li>I then start slice S1 on a new branch off <code>main</code>. Your current branch <code>feat/save-to-folder</code> merged as PR #47.</li>
+  </ol>
+</div>
+
+<h2>Slice track</h2>
+<p>Each slice is one branch and one PR, the same way Phase 6 shipped as 6.1 and 6.2. Each ends with a live check in the Claude Code CLI against the deployed server. S5 is the one slice you can drop before the interview.</p>
+<nav class="track" aria-label="Slices">
+  <a class="stop owner" href="#s0"><div class="id">S0</div><div class="t">Prepare</div><div class="d">You. PR #48 to draft, InstaBox machine, login check.</div></a>
+  <a class="stop" href="#s1"><div class="id">S1</div><div class="t">A task reaches Claude Code</div><div class="d"><code>slow_echo</code> on SDK v2, deployed on InstaBox.</div></a>
+  <a class="stop" href="#s2"><div class="id">S2</div><div class="t">One passport as a task</div><div class="d">Musterwerk set through the real pipeline in a worker.</div></a>
+  <a class="stop" href="#s3"><div class="id">S3</div><div class="t">Twelve models</div><div class="d">Generated series, live progress in <code>/tasks</code>.</div></a>
+  <a class="stop" href="#s4"><div class="id">S4</div><div class="t">Ask on conflict</div><div class="d"><code>input_required</code> dialog, answer lands in the draft.</div></a>
+  <a class="stop optional" href="#s5"><div class="id">S5</div><div class="t">Survive a restart</div><div class="d">SQLite task store. Optional before the interview.</div></a>
+  <a class="stop" href="#s6"><div class="id">S6</div><div class="t">Rehearsed demo</div><div class="d">Script runs twice in a row against InstaBox.</div></a>
+</nav>
+<p style="margin-top:6px;color:var(--muted)">Dependencies. S1, then S2, S3, S4 and S6 in order. S5 branches from S3 and can land before or after S4.</p>
+
+<h2>Why this order</h2>
+<p>The plan deploys in step 9a.5, after all the code. The riskiest unknowns are not in the code. They are whether SDK v2 and Claude Code agree on revision <code>2026-07-28</code>, whether Anthropic has tasks turned on for your session, and whether the InstaBox HTTPS proxy passes the <code>Authorization</code> header and answers within the 60-second request timer. A five-second <code>slow_echo</code> answers all of them. S1 therefore ships the thinnest task and deploys it. Every later slice deploys the same way and re-runs the S1 checks.</p>
+<p>The demo story is "a series runs as one task". The slices build that story in the order a viewer sees it: one model, then twelve, then the question, then the polish.</p>
+
+<!-- S0 -->
+<section class="panel slice" id="s0">
+  <header><span class="sid">S0</span><h3>Prepare the ground</h3></header>
+  <div class="chips"><span class="chip">you</span><span class="chip">no PR</span><span class="chip">15 minutes</span></div>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s0-1"><label for="c-s0-1">Convert PR #48 to a draft. <code>gh pr ready 48 --undo</code>. Its branch already holds ADR D-046, so the new ADR is D-047 as the plan says.</label></li>
+    <li><input type="checkbox" id="c-s0-2"><label for="c-s0-2">Move <code>HOSTED_TASKS_PLAN.md</code> to <code>docs/plans/hosted-tasks.md</code> next to this page. It lands with S1.</label></li>
+    <li><input type="checkbox" id="c-s0-3"><label for="c-s0-3">Create the InstaBox machine (4 vCPU, 8 GiB). Publish one HTTPS port. Note the URL.</label></li>
+    <li><input type="checkbox" id="c-s0-4"><label for="c-s0-4">Confirm <code>/status</code> in Claude Code shows a claude.ai sign-in.</label></li>
+  </ul>
+  <h4 class="label">Measured on 2026-10-24</h4>
+  <ul class="plain">
+    <li>The machine is <code>passwerk-demo</code> on the free <code>standard-medium</code> template, with 4 vCPU, 8 GiB and 20 GiB (16 GiB usable on <code>/</code>). It runs Debian 13 on x86_64 with systemd as PID 1, passwordless sudo, git 2.47.3 and Node 22.23.3. GitHub and the npm registry both answer 200.</li>
+    <li>Docker 29.8.2 is enabled under systemd, and <code>user</code> is in the <code>docker</code> group. <code>hello-world</code> runs, and <code>node:22-bookworm-slim</code> runs with <code>--read-only</code> and reports v22.23.4. So S1 uses Docker with <code>--restart unless-stopped</code>.</li>
+    <li>Port 8080 is published as <code>https://8080-&lt;id&gt;.instabox.tech</code>. The real URL stays out of the repo.</li>
+    <li>The proxy passes <code>Authorization</code>, <code>Origin</code> and POST bodies. It adds <code>X-Forwarded-For</code>, <code>X-Forwarded-Host</code> and <code>X-Forwarded-Proto: https</code>. It rewrites <code>Host</code> to <code>127.0.0.1:8080</code>. A round trip from the laptop takes 0.75 to 0.80 s over 10 calls.</li>
+    <li>The proxy answers 502 if the first byte takes longer than about 20 s. Responses at 10 s and 18 s came back 200, and at 22 s, 30 s and 65 s came back 502 after 20.7 to 20.9 s. Once the first byte is sent, a stream survives 25 s silences and ran for 76 s. SSE events arrive one second apart, as written, so the proxy does not buffer them.</li>
+  </ul>
+</section>
+
+<!-- S1 -->
+<section class="panel slice" id="s1">
+  <header><span class="sid">S1</span><h3>A task travels from InstaBox to Claude Code</h3></header>
+  <div class="chips"><span class="chip">branch feat/hosted-tasks-s1</span><span class="chip">ADR D-047</span><span class="chip risk">highest risk</span></div>
+  <p>A remote passwerk server answers <code>slow_echo</code> as an MCP task. Claude Code shows <code>1 MCP task</code>, lists it in <code>/tasks</code>, and reports the echoed text when it completes.</p>
+
+  <h4 class="label">Data shape first</h4>
+  <pre>type TaskId = string &amp; { readonly brand: 'TaskId' }   // 'ser_' + 26 random base32 chars
+type Task =
+  | Base &amp; { status: 'working' }
+  | Base &amp; { status: 'input_required'; inputRequests: Record&lt;string, InputRequest&gt; }
+  | Base &amp; { status: 'completed'; result: CallToolResult }
+  | Base &amp; { status: 'failed'; error: { code: number; message: string; data?: unknown } }
+  | Base &amp; { status: 'cancelled' }
+type Base = { taskId: TaskId; tool: string; statusMessage?: string;
+              createdAt: string; lastUpdatedAt: string; ttlMs: number | null; pollIntervalMs: number }
+interface TaskStore { create; get; update; list }   // in memory now, SQLite in S5</pre>
+  <p>The union makes a completed task without a result, or a failed task without an error, impossible to construct. <code>tasks/get</code> serialises exactly the fields of its variant.</p>
+
+  <div class="grid2">
+  <div>
+  <h4 class="label">Files</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s1-f1"><label for="c-s1-f1">Create <code>apps/hosted/package.json</code> (<code>@passwerk/hosted</code>, private). Pins <code>@modelcontextprotocol/server</code> 2.3.1, <code>@modelcontextprotocol/node</code> 2.1.1, dev <code>@modelcontextprotocol/client</code> 2.3.1.</label></li>
+    <li><input type="checkbox" id="c-s1-f2"><label for="c-s1-f2">Create <code>apps/hosted/src/main.ts</code>, <code>http.ts</code>, <code>tasks.ts</code>, <code>tools/slowEcho.ts</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-f3"><label for="c-s1-f3">Create <code>apps/hosted/test/wire.test.ts</code> and add the project to <code>vitest.config.ts</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-f4"><label for="c-s1-f4">Create <code>apps/hosted/Dockerfile</code>, or a systemd unit if InstaBox has no Docker. Decide from the S0 answer.</label></li>
+    <li><input type="checkbox" id="c-s1-f5"><label for="c-s1-f5">Create <code>docs/install/instabox-demo.md</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-f6"><label for="c-s1-f6">Edit <code>docs/DECISIONS.md</code> (D-047) and the repository map in <code>AGENTS.md</code>.</label></li>
+  </ul>
+  </div>
+  <div>
+  <h4 class="label">Build</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s1-b1"><label for="c-s1-b1"><code>POST /mcp</code> with a constant-time bearer check, copied from <code>bearerMatches</code> in <code>packages/server/src/http.ts</code>. <code>GET /healthz</code> stays open.</label></li>
+    <li><input type="checkbox" id="c-s1-b2"><label for="c-s1-b2"><code>createMcpHandler(factory)</code> from <code>@modelcontextprotocol/server</code>, wrapped for <code>node:http</code> by <code>toNodeHandler</code> from <code>@modelcontextprotocol/node</code>. The factory builds one server per request.</label></li>
+    <li><input type="checkbox" id="c-s1-b2b"><label for="c-s1-b2b">First spike, before anything else. Does a task answer survive the SDK's <code>tools/call</code> result check? The SDK requires <code>content</code>, so try <code>content: []</code> beside <code>resultType: "task"</code>. If the SDK still rewrites it, answer <code>tools/call</code> from a low-level <code>Server</code> handler instead of <code>McpServer.registerTool</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-b3"><label for="c-s1-b3"><code>tools/call</code> answers with a task only when <code>params._meta["io.modelcontextprotocol/clientCapabilities"].extensions</code> carries <code>"io.modelcontextprotocol/tasks"</code>. Otherwise it waits and returns a plain result. The server declares the extension under <code>capabilities.extensions</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-b4"><label for="c-s1-b4"><code>tasks/get</code> and <code>tasks/cancel</code> through the three-argument <code>setRequestHandler(method, { params, result }, handler)</code>. The modern era accepts them only in that form. Unknown id answers <code>-32602</code>. <code>tasks/update</code> waits for S4.</label></li>
+    <li><input type="checkbox" id="c-s1-b5"><label for="c-s1-b5"><code>slow_echo { text, seconds }</code> with <code>statusMessage</code> "3 of 10 s".</label></li>
+    <li><input type="checkbox" id="c-s1-b6"><label for="c-s1-b6">Start on boot with Docker <code>--restart unless-stopped</code>. Docker is enabled under systemd on the machine (S0).</label></li>
+    <li><input type="checkbox" id="c-s1-b7"><label for="c-s1-b7">Do not validate <code>Host</code> against the public name. The proxy rewrites it to <code>127.0.0.1:8080</code>. If the SDK's host check is on, allow that value or check <code>X-Forwarded-Host</code>. The bearer token is the access control.</label></li>
+  </ul>
+  </div>
+  </div>
+
+  <h4 class="label">Verify, unit</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s1-u1"><label for="c-s1-u1"><code>wire.test.ts</code> drives raw JSON-RPC over <code>fetch</code> and asserts exact shapes. Without the extension a plain result. With it a task answer within 500 ms. <code>tasks/get</code> moves from <code>working</code> to <code>completed</code> with the result at top level. Unknown id gives <code>-32602</code>. Cancel gives <code>cancelled</code> and stays there. Missing bearer gives 401. <code>/healthz</code> gives 200 without one.</label></li>
+    <li><input type="checkbox" id="c-s1-u2"><label for="c-s1-u2">The plain-result path through <code>@modelcontextprotocol/client</code> 2.3.1 with <code>mode: 'auto'</code>. Only that path. The 2.3.1 client rejects a <code>resultType: "task"</code> answer, so the task path stays on raw <code>fetch</code> and on Claude Code itself.</label></li>
+    <li><input type="checkbox" id="c-s1-u3"><label for="c-s1-u3"><code>pnpm check</code> green. The sovereignty tests of <code>core</code> and <code>server</code> stay unchanged.</label></li>
+  </ul>
+  <h4 class="label">Verify, live in the Claude Code CLI</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s1-l1"><label for="c-s1-l1">Local run, added with <code>claude mcp add --transport http</code>. Footer shows <code>1 MCP task</code>, then completion.</label></li>
+    <li><input type="checkbox" id="c-s1-l2"><label for="c-s1-l2">The same against the InstaBox URL.</label></li>
+    <li><input type="checkbox" id="c-s1-l3"><label for="c-s1-l3"><code>slow_echo seconds=90</code> completes. That proves the server answers first and works after, past the 60-second timer.</label></li>
+    <li><input type="checkbox" id="c-s1-l4"><label for="c-s1-l4">Stop the task in <code>/tasks</code> with <code>x</code>. The server log shows <code>tasks/cancel</code>.</label></li>
+    <li><input type="checkbox" id="c-s1-l5"><label for="c-s1-l5"><code>MCP_SDK_GENERATION=v1 claude</code> gets a plain result, which covers the non-task branch on the real client.</label></li>
+    <li><input type="checkbox" id="c-s1-l6"><label for="c-s1-l6">A wrong token gives an auth error in Claude Code, not a hang.</label></li>
+    <li><input type="checkbox" id="c-s1-l7"><label for="c-s1-l7">Restart the InstaBox machine. <code>/healthz</code> answers again without a manual start.</label></li>
+  </ul>
+  <h4 class="label">Verify, perf</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s1-p1"><label for="c-s1-p1">Time from <code>tools/call</code> to task answer, 20 calls with <code>curl -w %{time_total}</code> against InstaBox. Budget p95 under 1.5 s, against a measured 0.8 s round trip. The real limit is the proxy's 20 s to first byte, not Claude Code's 60 s.</label></li>
+    <li><input type="checkbox" id="c-s1-p2"><label for="c-s1-p2">The plain-result path (no tasks extension) on <code>slow_echo seconds=30</code> through InstaBox. A JSON response hits the proxy's 20 s limit and returns 502. Either answer in SSE mode with an early keep-alive byte (<code>keepAliveMs</code> under 20 s), or record that this path is limited to 20 s on InstaBox.</label></li>
+  </ul>
+  <div class="done-when"><div class="label">Done when</div>
+  Unit and live boxes are checked and the InstaBox run shows <code>1 MCP task</code> completing. If Claude Code never shows a task, stop and find out why before S2. Nothing later works without it.</div>
+</section>
+
+<!-- S2 -->
+<section class="panel slice" id="s2">
+  <header><span class="sid">S2</span><h3>One Musterwerk passport runs as a task</h3></header>
+  <div class="chips"><span class="chip">branch feat/hosted-tasks-s2</span><span class="chip">worker_threads</span></div>
+  <p><code>run_series { series: "musterwerk", category: "EV" }</code> runs the five existing fixtures as a one-model series through the real pipeline. Claude Code reports the verdict, and the verdict equals what core gives in a Node test on the same files.</p>
+
+  <h4 class="label">Data shape first</h4>
+  <pre>SeriesInput   = { series: DemoSetName } | { documents: InlineDocument[] }, plus category, onConflict
+WorkerMessage = { type: 'progress'; model: number; of: number; step: Step; facts: number; mapped: number }
+              | { type: 'model'; outcome: ModelOutcome }
+              | { type: 'done' } | { type: 'failed'; message: string }
+ParentMessage = { type: 'cancel' }
+ModelOutcome  = { modelId; verdict: 'valid' | 'valid_with_warnings' | 'invalid'; draftId; gapSummary;
+                  artefacts: { file: string; sha256: string; bytes: number }[] }</pre>
+
+  <div class="grid2">
+  <div>
+  <h4 class="label">Build</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s2-b1"><label for="c-s2-b1">The worker runs ingest, extract, suggest, apply, validate, then emit AAS JSON, AASX, HTML and the gap report through <code>@passwerk/core</code>. It writes artefacts under <code>PASSWERK_DATA/series/&lt;id&gt;/</code>.</label></li>
+    <li><input type="checkbox" id="c-s2-b2"><label for="c-s2-b2">Accept policy for headless mapping. Accept the top proposal per attribute at confidence 0.7 or higher, the recall-gate threshold from Phase 4. Record it in D-047.</label></li>
+    <li><input type="checkbox" id="c-s2-b3"><label for="c-s2-b3">Cancel posts <code>{ type: 'cancel' }</code>. The worker owns its <code>AbortController</code> and stops between steps.</label></li>
+    <li><input type="checkbox" id="c-s2-b4"><label for="c-s2-b4">The result text carries counts of <code>valid</code>, <code>valid_with_warnings</code> and <code>invalid</code>. <code>structuredContent</code> carries <code>seriesId</code>, the outcomes and the gap reports. Verdicts come only from the validators.</label></li>
+  </ul>
+  </div>
+  <div>
+  <h4 class="label">Verify</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s2-u1"><label for="c-s2-u1">Unit. The task result for <code>musterwerk</code> equals a direct core pipeline run on <code>packages/core/test/fixtures/musterwerk/</code>, compared as canonical JSON.</label></li>
+    <li><input type="checkbox" id="c-s2-u2"><label for="c-s2-u2">Unit. Cancel during extract ends in <code>cancelled</code> and writes no outcome for that model.</label></li>
+    <li><input type="checkbox" id="c-s2-l1"><label for="c-s2-l1">Live. "Build the passport for the musterwerk series, category EV" on InstaBox. Footer shows <code>1 MCP task</code> and the verdict line arrives.</label></li>
+    <li><input type="checkbox" id="c-s2-l2"><label for="c-s2-l2">Live. The S1 <code>slow_echo</code> checks still pass.</label></li>
+    <li><input type="checkbox" id="c-s2-p1"><label for="c-s2-p1">Perf. <code>tasks/get</code> latency while the worker parses PDFs, p95 under 200 ms locally. It proves the main thread stays free.</label></li>
+  </ul>
+  </div>
+  </div>
+  <div class="done-when"><div class="label">Done when</div>
+  The InstaBox run returns the same verdict as the Node test and the poll latency budget holds.</div>
+</section>
+
+<!-- S3 -->
+<section class="panel slice" id="s3">
+  <header><span class="sid">S3</span><h3>Twelve models with live progress</h3></header>
+  <div class="chips"><span class="chip">branch feat/hosted-tasks-s3</span><span class="chip">generator</span></div>
+  <p>The <code>musterwerk-12</code> series runs as one task. <code>/tasks</code> shows <code>Model 4 of 12 · 41 facts · 30 mapped</code> and the line moves as models finish.</p>
+  <div class="grid2">
+  <div>
+  <h4 class="label">Build</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s3-b1"><label for="c-s3-b1">Extend <code>tools/fixtures</code>. It already generates the Musterwerk set from <code>src/content.ts</code> with PDF, XLSX, CSV and DOCX writers. Add <code>src/series.ts</code> that varies model id, serial and a few values across 12 models.</label></li>
+    <li><input type="checkbox" id="c-s3-b2"><label for="c-s3-b2">Commit the generated <code>demo/series/musterwerk-12/</code> and add a <code>--check</code> mode to CI, the same pattern as <code>pnpm sync:plugin</code>. The server reads committed files and the generator stays the only author.</label></li>
+    <li><input type="checkbox" id="c-s3-b3"><label for="c-s3-b3"><code>pollIntervalMs</code> 2000 for the first 30 s, then 5000. Every <code>tasks/get</code> repeats the <code>statusMessage</code>, because an answer without it clears the line in <code>/tasks</code>.</label></li>
+  </ul>
+  </div>
+  <div>
+  <h4 class="label">Verify</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s3-u1"><label for="c-s3-u1">Unit. Generator output is byte-identical on two runs. The 12 outcomes sum to 12 across the three verdicts.</label></li>
+    <li><input type="checkbox" id="c-s3-l1"><label for="c-s3-l1">Live. <code>/tasks</code> on InstaBox shows the progress line advancing through all 12 models.</label></li>
+    <li><input type="checkbox" id="c-s3-p1"><label for="c-s3-p1">Perf. Wall time of the 12-model run, locally and on InstaBox. Record the first measurement and set the budget from it, with what limits it (likely PDF parsing).</label></li>
+  </ul>
+  </div>
+  </div>
+  <div class="done-when"><div class="label">Done when</div>
+  The 12-model set completes as one task with visible progress, which is the plan's 9a.3 definition.</div>
+</section>
+
+<!-- S4 -->
+<section class="panel slice" id="s4">
+  <header><span class="sid">S4</span><h3>The task asks when two documents disagree</h3></header>
+  <div class="chips"><span class="chip">branch feat/hosted-tasks-s4</span><span class="chip">input_required</span><span class="chip gate">you review the dialog</span></div>
+  <p>Model 6 says <code>NMC811</code> in the supplier declaration and <code>NMC622</code> in the datasheet. Claude Code opens a dialog with both candidates and "skip". The chosen value lands in the draft with the provenance of the chosen fact.</p>
+  <div class="grid2">
+  <div>
+  <h4 class="label">Build</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s4-b0"><label for="c-s4-b0">First write a failing test that the planted pair produces a conflict under the S2 accept policy. Two proposals for one attribute may resolve inside <code>suggestMappings</code> and never reach <code>applyMappings</code>. The test decides where the question is raised.</label></li>
+    <li><input type="checkbox" id="c-s4-b1"><label for="c-s4-b1">Plant the conflict in the generator for model 06 only.</label></li>
+    <li><input type="checkbox" id="c-s4-b2"><label for="c-s4-b2">Each conflict becomes one <code>inputRequests</code> key with <code>method: "elicitation/create"</code> and an enum of the candidates plus <code>skip</code>. At most 16 keys per round.</label></li>
+    <li><input type="checkbox" id="c-s4-b3"><label for="c-s4-b3"><code>tasks/update { taskId, inputResponses }</code> applies the choice with <code>override</code> and resumes the worker.</label></li>
+    <li><input type="checkbox" id="c-s4-b4"><label for="c-s4-b4"><code>onConflict: 'skip' | 'highest_confidence'</code> for headless runs.</label></li>
+  </ul>
+  </div>
+  <div>
+  <h4 class="label">Verify</h4>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s4-u1"><label for="c-s4-u1">Unit. Wire shapes of <code>input_required</code> and <code>tasks/update</code>. A second answer to the same key changes nothing.</label></li>
+    <li><input type="checkbox" id="c-s4-l1"><label for="c-s4-l1">Live. The dialog opens in the CLI. Pick <code>NMC622</code>. Model 6's draft shows <code>NMC622</code> with the datasheet as source.</label></li>
+    <li><input type="checkbox" id="c-s4-l2"><label for="c-s4-l2">Live. Quit Claude Code while the dialog is open, <code>claude --resume</code>, and answer. The result arrives.</label></li>
+    <li><input type="checkbox" id="c-s4-l3"><label for="c-s4-l3">Live. <code>claude -p</code> with <code>onConflict: 'ask'</code> ends <code>cancelled</code>, not <code>failed</code>. With <code>highest_confidence</code> it completes.</label></li>
+  </ul>
+  </div>
+  </div>
+  <div class="done-when"><div class="label">Done when</div>
+  The planted conflict opens a dialog and the answer lands in the draft. You watch this one before merge, because it is the demo's key moment.</div>
+</section>
+
+<!-- S5 -->
+<section class="panel slice" id="s5">
+  <header><span class="sid">S5</span><h3>Tasks survive a server restart</h3></header>
+  <div class="chips"><span class="chip">branch feat/hosted-tasks-s5</span><span class="chip">node:sqlite</span><span class="chip risk">optional before the interview</span></div>
+  <p>A task that completed before a restart still answers with its result. A task that was running answers <code>failed</code> with "server restarted during model 4 of 12, start the series again". A known id never answers <code>-32602</code>.</p>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s5-b1"><label for="c-s5-b1">A SQLite <code>TaskStore</code> behind the S1 interface, in <code>PASSWERK_DATA/passwerk.db</code>. One contract test suite runs against both stores.</label></li>
+    <li><input type="checkbox" id="c-s5-b2"><label for="c-s5-b2">Use <code>node:sqlite</code>. It needs no flag from Node 22.13, and your local Node is 22.20.0 (measured). It still prints an <code>ExperimentalWarning</code>, so start with <code>--disable-warning=ExperimentalWarning</code>. Check the Node version inside the distroless image before relying on it.</label></li>
+    <li><input type="checkbox" id="c-s5-b3"><label for="c-s5-b3">On boot, mark every <code>working</code> or <code>input_required</code> row whose worker is gone as <code>failed</code>. The boot step reads the rows and sets only those, so running it twice changes nothing.</label></li>
+    <li><input type="checkbox" id="c-s5-l1"><label for="c-s5-l1">Live. Restart the container mid-run. <code>/tasks</code> shows the failure message. An earlier completed task still returns its result.</label></li>
+  </ul>
+  <p>Not in this slice. The plan also moves <code>SessionStore</code> into SQLite. No hosted tool in 9a reads it, so that move waits for 9b, where the other twelve tools arrive with a store scoped to the token's subject.</p>
+  <div class="done-when"><div class="label">Done when</div>
+  The plan's 9a.2 definition holds against a real container restart.</div>
+</section>
+
+<!-- S6 -->
+<section class="panel slice" id="s6">
+  <header><span class="sid">S6</span><h3>The interview demo is rehearsed</h3></header>
+  <div class="chips"><span class="chip">branch docs/interview-demo</span><span class="chip gate">you rehearse</span></div>
+  <ul class="box">
+    <li><input type="checkbox" id="c-s6-1"><label for="c-s6-1">Write <code>docs/demo/interview.md</code> with the plan's three parts. The desktop app shows the workbench through the local stdio server. The CLI runs the series task. The talk track follows.</label></li>
+    <li><input type="checkbox" id="c-s6-2"><label for="c-s6-2">Rehearsal checklist. Start the machine 15 minutes before, because the free plan pauses after 30 idle minutes and after 8 running hours. Warm it with <code>slow_echo</code>. Update Claude Code. Keep a fallback recording of a good run.</label></li>
+    <li><input type="checkbox" id="c-s6-3"><label for="c-s6-3">Run the script twice in a row against the InstaBox URL.</label></li>
+    <li><input type="checkbox" id="c-s6-4"><label for="c-s6-4">After the interview, unpublish the port and rotate the token.</label></li>
+  </ul>
+  <div class="done-when"><div class="label">Done when</div>
+  Two clean runs in a row and a saved fallback recording.</div>
+</section>
+
+<h2>What changed from the plan</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Plan says</th><th>Change</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr><td>Deploy in 9a.5, after the code.</td><td>Deploy in S1 with <code>slow_echo</code>. Every slice redeploys.</td><td>The open unknowns are the protocol handshake, the feature flag and the proxy. None of them depend on passwerk code.</td></tr>
+    <tr><td>One branch for all of 9a.</td><td>One branch and PR per slice.</td><td>Phase 6 shipped as 6.1 and 6.2. Small PRs are already the repo convention in <code>AGENTS.md</code>.</td></tr>
+    <tr><td>Pin companion packages at least 3 days old.</td><td><code>@modelcontextprotocol/node</code> 2.1.1, not 2.1.2. <code>@modelcontextprotocol/client</code> 2.3.1.</td><td><code>npm view</code> shows node 2.1.2 published 2026-10-23 18:19 UTC and 2.1.1 on 2026-10-02. Client 2.3.1 is from 2026-10-05. Server 2.3.1 is from 2026-10-05 and 2.4.0 from today, as the plan says.</td></tr>
+    <tr><td>Reuse <code>TOOLS</code>, <code>SessionStore</code> and the workbench loader.</td><td>9a exposes only <code>slow_echo</code> and <code>run_series</code>. The other tools wait for 9b.</td><td><code>registry.ts</code>, <code>types.ts</code> and <code>session.ts</code> are SDK-free. <code>ui.ts</code> imports SDK 1.x. <code>SessionStore</code> is per connection, which has no meaning in stateless per-request mode. The CLI does not render the workbench anyway.</td></tr>
+    <tr><td>Move <code>SessionStore</code> to SQLite in 9a.2.</td><td>Deferred to 9b. S5 persists tasks only.</td><td>No 9a tool reads the session store.</td></tr>
+    <tr><td>Conflict between the datasheet and the safety data sheet.</td><td>Conflict between the supplier declaration PDF and the datasheet CSV.</td><td>The Musterwerk set has five documents and no safety data sheet. The declaration carries <code>Zellchemie: NMC811</code> in <code>tools/fixtures/src/content.ts</code>.</td></tr>
+    <tr><td>Generate the series with a new script under <code>demo/series/</code>.</td><td>Extend <code>tools/fixtures</code>.</td><td>That package already writes the Musterwerk set and the held-out set with its own PDF, XLSX, CSV and DOCX writers.</td></tr>
+    <tr><td>Cancel through an <code>AbortController</code>.</td><td>The parent posts a cancel message. The worker owns the controller.</td><td>An <code>AbortSignal</code> does not cross a <code>worker_threads</code> boundary.</td></tr>
+    <tr><td>Silent on how proposals are accepted.</td><td>Accept the top proposal per attribute at 0.7 or higher, recorded in D-047.</td><td>A headless run needs a rule, and 0.7 is the Phase 4 recall-gate threshold.</td></tr>
+    <tr><td><code>structuredContent { drafts[], reports[] }</code>.</td><td>Outcomes carry draft ids, gap reports and artefact digests. Bytes stay on disk.</td><td>Twelve AASX files in base64 would make one tool result several MB. Phase 7b measured a 10 MB stdio cap in Claude Desktop, and the CLI only needs the summary.</td></tr>
+    <tr><td>Look for <code>isTaskAugmentedRequestParams</code> and a tasks helper in SDK v2.</td><td>Build the tasks extension by hand from day one. Spike the <code>tools/call</code> result check first.</td><td>No tasks helper exists in 2.3.1. The 2025 task API is deprecated with no runtime. The <code>tools/call</code> result check requires <code>content</code>. See the SDK appendix.</td></tr>
+    <tr><td>Claude Code needs a claude.ai login.</td><td>The requirement is feature-flag fetching, which rules out Bedrock and turned-off telemetry.</td><td>code.claude.com/docs/en/mcp, "Requirements for MCP tasks", read today.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Open decisions for you</h2>
+<ul class="plain">
+  <li><b>Interview date.</b> If it is within a week, drop S5 and say so in the talk track. Otherwise keep it, because "the task survives a restart" is a strong answer to a scaling question.</li>
+  <li><b>Accept threshold.</b> I recommend 0.7. A higher value means fewer mapped attributes and more gaps in the demo.</li>
+  <li><b>Artefacts in the result.</b> I recommend digests in the result and files on disk. If you want the CLI to save AASX files on the laptop, that needs a download path and belongs in 9b.</li>
+  <li><b>Docker or systemd on InstaBox.</b> Your S0 answer settles it, so it is not a preference call.</li>
+</ul>
+
+<h2>After the interview</h2>
+<p>The plan's 9b, 9c and 9d stay. Cut into slices, 9b becomes the following, each again deployed and checked from the CLI.</p>
+<ol class="steps">
+  <li>The S6 image on a hardened Hetzner VPS behind Caddy, with the S1 live checks re-run against the new URL.</li>
+  <li>A prototype first. Does Clerk or WorkOS AuthKit register Claude Code through DCR or CIMD? The answer picks the IdP. Then the resource server with RFC 9728 metadata and a JWKS check.</li>
+  <li>Tasks scoped to the token subject. Another user's task id answers <code>-32602</code>.</li>
+  <li>The other twelve tools, with a subject-scoped store in SQLite.</li>
+  <li><code>passwerk push</code>, <code>/review/:id</code>, and the claude.ai custom connector.</li>
+</ol>
+
+<h2>Appendix. SDK v2 facts</h2>
+<div class="panel" id="sdk">
+  <p>Read from the extracted <code>@modelcontextprotocol/server</code> 2.3.1, <code>node</code> 2.1.1, <code>client</code> 2.3.1 and <code>core</code> 2.3.1 tarballs. Nothing from them was run.</p>
+  <ul class="plain">
+    <li>2.3.1 negotiates <code>2026-07-28</code> through <code>server/discover</code>. The constant is internal (<code>FIRST_MODERN_PROTOCOL_VERSION</code>). The public <code>LATEST_PROTOCOL_VERSION</code> still reads <code>2025-11-25</code>, so do not test against it.</li>
+    <li>Stateless HTTP is <code>createMcpHandler(factory, { legacy, responseMode, maxRequestBodySize })</code>, which returns <code>{ fetch, close, notify, bus }</code>. <code>toNodeHandler</code> adapts it to <code>node:http</code>. The node package pulls in <code>hono</code> and <code>@hono/node-server</code>.</li>
+    <li>There is no tasks helper. The plan's fallback applies. Build the extension by hand. The 2025 task API (<code>isTaskAugmentedRequestParams</code>) is deprecated with no runtime behind it, so the plan's pointer to it is a dead end.</li>
+    <li><code>tasks/get</code> must return <code>resultType: "complete"</code>, which the SDK also enforces for custom methods.</li>
+    <li>The SDK's <code>input_required</code> helpers are for same-request round trips, not task status. S4 builds <code>inputRequests</code> on the task itself.</li>
+    <li>A tool with an <code>outputSchema</code> turns a task result into <code>isError</code>. Register <code>run_series</code> without one.</li>
+    <li>All four packages want <code>zod ^4.2.0</code> and Node 20 or later. passwerk pins Zod 4.5.4.</li>
+    <li>Not confirmed. Whether <code>content: []</code> passes the result check unchanged. The S1 spike settles it.</li>
+  </ul>
+</div>
+
+<h2>Appendix. Facts checked today</h2>
+<ul class="plain">
+  <li>Claude Code docs, "MCP tasks for server authors". The task shape, the 60-second timer, <code>tasks/get</code> with <code>resultType: "complete"</code>, the 250 to 30000 ms clamp, 16 input keys, <code>elicitation/create</code> only in interactive terminals, and no tasks in the desktop app or VS Code. All match the plan's reference section.</li>
+  <li>Local toolchain. Node v22.20.0, <code>.nvmrc</code> 22, engines <code>&gt;=22.13</code>, Claude Code 2.1.309.</li>
+  <li>Repository. Last merged ADR is D-045. D-046 exists only on PR #48's branch. PR #48 is open and not a draft. PR #47 (<code>feat/save-to-folder</code>) is merged.</li>
+  <li><code>packages/server</code> pins <code>@modelcontextprotocol/sdk</code> 1.30.0. <code>apps/mcp-app</code> pins the same plus <code>ext-apps</code> 1.7.5. Neither changes in 9a.</li>
+</ul>
+
+<p class="foot">Checkboxes save in this browser only. Source of truth stays <code>docs/plans/hosted-tasks.md</code> and the PRs.</p>
+</div>
+<script>
+(() => {
+  const boxes = [...document.querySelectorAll('ul.box input[type=checkbox]')];
+  const KEY = 'passwerk-hosted-slices';
+  const THEME_KEY = `${KEY}-theme`;
+  const root = document.documentElement;
+  let state = {};
+  try {
+    state = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+  } catch {
+    state = {};
+  }
+  const save = () => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch {}
+  };
+  const count = () => {
+    const done = boxes.filter((b) => b.checked).length;
+    document.getElementById('progress').textContent = `${done} of ${boxes.length} boxes`;
+  };
+  for (const b of boxes) {
+    b.checked = Boolean(state[b.id]);
+    b.addEventListener('change', () => {
+      state[b.id] = b.checked;
+      save();
+      count();
+    });
+  }
+  document.getElementById('reset').addEventListener('click', () => {
+    state = {};
+    save();
+    for (const b of boxes) b.checked = false;
+    count();
+  });
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) root.setAttribute('data-theme', saved);
+  } catch {}
+  document.getElementById('theme').addEventListener('click', () => {
+    const cur =
+      root.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {}
+  });
+  count();
+})();
+</script>
+</body>
+</html>
