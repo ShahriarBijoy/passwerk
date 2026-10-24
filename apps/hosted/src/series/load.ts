@@ -7,12 +7,17 @@ import { extname, join } from 'node:path';
 import type { SeriesFile, SeriesModel } from './types.js';
 
 /** Series the server offers, generated into `demo/series` by `pnpm series`. */
-export const DEMO_SERIES = ['musterwerk', 'musterwerk-12', 'musterwerk-complete'] as const;
+export const DEMO_SERIES = [
+  'musterwerk',
+  'musterwerk-12',
+  'musterwerk-complete',
+  'musterwerk-60',
+] as const;
 export type DemoSeries = (typeof DEMO_SERIES)[number];
 
 const DOCUMENT_EXTENSIONS = new Set(['.pdf', '.xlsx', '.docx', '.csv', '.txt']);
 const MAX_FILE_BYTES = 16 * 1024 * 1024;
-const MAX_MODELS = 50;
+const MAX_MODELS = 100;
 
 export class UnknownSeriesError extends Error {}
 

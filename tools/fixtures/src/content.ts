@@ -339,3 +339,43 @@ export function musterwerkCompleteContent(v: ModelVariant): MusterwerkContent {
     ],
   };
 }
+
+const withoutSheets =
+  (...names: string[]) =>
+  (c: MusterwerkContent): MusterwerkContent => ({
+    ...c,
+    moreSheets: c.moreSheets.filter((s) => !names.includes(s.name)),
+  });
+
+/**
+ * The kinds of paperwork a real supplier pack tends to lack, each as what it removes from the
+ * complete pack. Nothing else changes, so the documents that remain still agree.
+ */
+export const OMISSIONS = {
+  /** The BMS read-out sheet with SOCE, state of charge, full cycles and temperature. */
+  'bms-readout': withoutSheets('BMS-Auslesung'),
+  /** The manufacturer's postal address line in the declaration. */
+  'manufacturer-address': (c) => ({
+    ...c,
+    declarationLines: c.declarationLines.filter(([label]) => label !== 'Anschrift:'),
+  }),
+  /** The three end-user information documents in the handover register. */
+  'end-user-documents': (c) => ({
+    ...c,
+    handoverTable: c.handoverTable.filter((row) => !row[0]?.startsWith('EOL-')),
+  }),
+  /** The material declaration sheet the bill of materials refers to. */
+  'material-declaration': withoutSheets('Materialdeklaration'),
+  /** The spare-part and spare-part source sheets. */
+  'spare-part-sheets': withoutSheets('Ersatzteile', 'Bezugsquellen'),
+} as const satisfies Record<string, (c: MusterwerkContent) => MusterwerkContent>;
+
+export type Omission = keyof typeof OMISSIONS;
+
+/** The complete pack of one model with the given kinds of paperwork left out. */
+export function supplierPackContent(
+  v: ModelVariant,
+  missing: readonly Omission[],
+): MusterwerkContent {
+  return missing.reduce((c, kind) => OMISSIONS[kind](c), musterwerkCompleteContent(v));
+}
