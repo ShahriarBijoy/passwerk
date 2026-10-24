@@ -82,7 +82,9 @@ with `apps/hosted`.
 - Cancel: `tasks/cancel` → `AbortController` → worker stops between steps → status `cancelled`.
 - Result: text summary (counts of `valid` / `valid_with_warnings` / `invalid`) plus
   `structuredContent { seriesId, drafts[], reports[] }`. Never claim `valid` without the validators
-  (non-negotiable rule).
+  (non-negotiable rule). As built, each model reports its verdict, counts and the size and
+  SHA-256 of its four files, and the result ends with a one-use, 15-minute download link for a zip
+  of every model's files, fetched with curl into the user's folder (ADR D-047, amended by D-050).
 - **Done when:** the 12-model set completes as one task with progress visible in `/tasks`.
 
 ### 9a.4 Questions with `input_required`

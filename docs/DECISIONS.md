@@ -1615,3 +1615,69 @@ up to `maxTasks` (200) of them can hold uploads at once. That is acceptable behi
 token on the demo host and needs a cap per subject in 9b. The titled `oneOf` options have not yet
 been seen in a Claude Code dialog; the S4 live check settles that. Tasks still live in memory, so
 a restart loses a waiting task (S5).
+
+## D-050: A finished series run hands back a one-use download link for its files (2026-10-24)
+
+This amends D-047, whose S2 addendum hashed the four emitted files of each model and kept none.
+
+**Context.** The owner ran the demo in Claude Code and asked where the files had been saved.
+They had not been saved anywhere. `run_series` built the AAS JSON, AASX, HTML sheet and gap
+report of every model, validated them, reported each file's size and SHA-256, and dropped the
+bytes. The demo needs the passport on the user's laptop. Uploads (D-048) already move bytes
+the other way without the bearer: a capability URL with 160 random bits, held in memory, used
+once, gone after 15 minutes.
+
+**Decision.** When a `run_series` task completes, the server zips every model's four files into
+one zip and offers it at `GET /download/<id>/<name>.zip`. The result's `structuredContent` gains
+`download: { url, file, bytes, sha256, expiresAt }`, and the summary ends with one line Claude
+Code can run as it stands:
+`Download (one use, 15 minutes): curl -fsS -o passwerk-musterwerk-complete.zip "<url>"`. The tool
+description tells Claude Code to run it in the user's current folder and then unzip it or say
+where the zip is. An inline run, for a client without the tasks extension, gets a link too.
+
+- **One zip per run.** Entries are `<modelId>/<file>`, models in run order and each model's
+  files in the order the pipeline emits them. One command fetches a twelve-model series, and
+  one link is one capability to guard. The entries hold exactly the bytes whose SHA-256 the
+  result reports. Entry times are fixed, so the same run gives a byte-identical zip. The fixed
+  date is built from local fields (`new Date(1980, 0, 1)`), because fflate writes the local-time
+  fields of the date it is given.
+- **Stored, not deflated.** The zip is built on the main thread, which also answers `tasks/get`.
+  For a sixty-model run (19.5 MB of files), fflate's deflate held the thread 445 to 637 ms over
+  five runs at levels 1 to 6. Storing took 49 to 79 ms. The AASX inside is already deflated.
+- **Only final files.** The worker sends each model's bytes to the main thread beside its
+  outcome, as transferred buffers, and never inside `ModelOutcome`, which goes into
+  `structuredContent`. With `confirm: "ask"`, a model the resume re-ran replaces its first run
+  whole, files included. A model it did not re-run keeps its first-run files. The zip is built
+  only when the task completes, so a cancelled or failed task offers nothing.
+- **The URL is the capability.** The id is `dl_` plus 32 base32 characters (160 bits from
+  `crypto.randomBytes`), and the bearer is not needed, as with `PUT /upload`. Claude Code keeps
+  the bearer token out of the model's view, and the curl line must not carry it. The URL uses the
+  origin the client reached the server at (`RequestScope.origin`, the same rules as `putUrl`).
+  The task job runs after `tools/call` has returned, so `TaskTool.job` and `TaskTool.inline` now
+  take the request's scope as a third argument.
+- **Single use.** The entry is deleted once the response has finished sending, meaning Node
+  handed every byte to the operating system. A transfer that fails or is aborted before that keeps
+  the entry until it expires. While one GET is sending, a second gets `404`. On Windows loopback
+  Node reported a 64 MiB response finished before a paused client had read a byte, so "finished"
+  does not prove the client received the zip. A client that drops the connection late loses the
+  link and runs the series again. No HTTP/1.1 signal does better without a second request.
+- **Memory only, capped.** Links expire 15 minutes after the task completes. A zip may be at
+  most 64 MiB and all held zips 256 MiB together. Expired entries are purged on every create and
+  open. When a cap would be passed, the run still completes with `download: null` and
+  `downloadRefused: "too_large" | "store_full"`, and the summary's last line says why.
+- **Strict route.** The raw request target must match `/download/<id>/<name>` whole, with no
+  query, no percent-encoding and no extra segment, and the name must equal the stored name. An
+  unknown, expired, used, busy or misnamed request gets the same `404` and body, so a probe
+  learns nothing. Any method other than `GET` gets `405` with `Allow: GET`. The log says only
+  `GET /download 200` (or `404`, `499`, `405`), never an id or a name.
+
+**Consequence.** The demo's passport lands on the laptop with one approved command, with no
+token and no document bytes in the conversation. The zip holds values read from the supplier
+documents, so anyone who sees the URL in its 15 minutes, before it is used, can fetch the
+passport. That is the same exposure the upload URL already accepts, in the other direction. A
+task that waits for answers keeps its first-run files in memory beside its models' documents
+until it is answered, cancelled or expires. The store is per process: a restart loses unused
+links, as it loses tasks (S5). `apps/hosted` now depends on `fflate` 0.8.3, the version
+`@passwerk/core` already pins. `@passwerk/core`'s AASX packer passes `Date.UTC(1980, 0, 1)`, so
+its bytes, and the AASX hash in every result, depend on the host's time zone; the container
+runs in UTC. That is left for a core fix of its own.
