@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { IngestFailure, readPdf } from '@passwerk/core';
 import { describe, expect, it } from 'vitest';
+import { ingestMusterwerkPdfs, MUSTERWERK_PDF_GOLDEN } from './helpers/musterwerkPdfs.js';
 
 const FIX = join(import.meta.dirname, 'fixtures');
 const file = (dir: string, name: string) => ({
@@ -25,6 +26,11 @@ describe('pdf reader', () => {
       page: 1,
       cell: `T${shares.index}:R2C2`,
     });
+  });
+  it('plain Node reads both Musterwerk PDFs byte-identically to the golden', async () => {
+    const { errors, json } = await ingestMusterwerkPdfs();
+    expect(errors).toEqual([]);
+    await expect(json).toMatchFileSnapshot(MUSTERWERK_PDF_GOLDEN);
   });
   it('an encrypted PDF is reported as encrypted', async () => {
     await expect(readPdf(file('edge', 'encrypted.pdf'))).rejects.toMatchObject({

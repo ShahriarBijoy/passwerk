@@ -1681,3 +1681,35 @@ links, as it loses tasks (S5). `apps/hosted` now depends on `fflate` 0.8.3, the 
 `@passwerk/core` already pins. `@passwerk/core`'s AASX packer passes `Date.UTC(1980, 0, 1)`, so
 its bytes, and the AASX hash in every result, depend on the host's time zone; the container
 runs in UTC. That is left for a core fix of its own.
+
+## D-051: A Node caller reads PDFs through pdfjs's main-thread worker, Electron included (2026-10-24)
+
+**Context.** In Claude Desktop the MCPB extension reported every PDF as `corrupt` with
+`No "GlobalWorkerOptions.workerSrc" specified.` Claude Desktop runs an extension with its
+built-in Node, which is an Electron utility process. pdfjs-dist 6.3.289 decides once, when
+`pdf.mjs` loads, whether it runs in Node: `process.versions.electron` set and `process.type`
+not `'browser'` (here `'utility'`) counts as a browser. A browser needs a worker script, and
+`readPdf` sets `workerSrc` only when a browser caller passes one. Plain Node never noticed.
+
+**Decision.** When no `workerSrc` is given and `process.versions.node` is a string, `readPdf`
+first imports `pdfjs-dist/legacy/build/pdf.worker.mjs` once. That module sets
+`globalThis.pdfjsWorker`, and `PDFWorker` checks `globalThis.pdfjsWorker?.WorkerMessageHandler`
+before it reads `workerSrc` or tries `new Worker`, so pdfjs parses on the main thread exactly
+as it does in plain Node. Plain Node now takes the same path (it imported the same worker module
+through `./pdf.worker.mjs` before). The browser path is unchanged: a caller that passes
+`workerSrc` never reaches the import. The specifier is a variable with `@vite-ignore`, so Vite
+does not bundle the 1.3 MB worker a second time into `apps/web` or the inlined MCP App
+workbench; each main bundle grew by about 0.2 kB.
+
+We did not spoof `process.type` or `process.versions` before loading pdfjs. That would change
+global state other code in the host reads, and it depends on pdfjs's private detection rule.
+The other branches pdfjs takes for a "browser" (DOM canvas and filter factories, no Node
+polyfills for `DOMMatrix` and `Path2D`) are only reached when rendering; text extraction does
+not touch them, and the Musterwerk PDFs read byte-identically in both runtimes.
+
+**Consequence.** `packages/core/test/ingest.pdf.electron.test.ts` simulates the utility process
+before pdfjs first loads and compares the ingest bundle with the plain-Node golden
+`test/__snapshots__/ingest.pdf.musterwerk.json`. `pnpm package:smoke` reads the supplier PDF a
+second time with the launcher preloaded as an Electron utility process (`NODE_OPTIONS=--import`)
+and fails on any difference. A pdfjs upgrade that changes either the detection or the
+`globalThis.pdfjsWorker` hook shows up there.
