@@ -43,7 +43,10 @@ export interface TaskTool<S extends z.ZodType> {
   name: string;
   description: string;
   inputSchema: S;
+  /** The job of a task, which may ask the client through `input_required`. */
   job(input: z.infer<S>, deps: ServerDeps): Job;
+  /** The job of an inline run, which has no way to ask. */
+  inline(input: z.infer<S>, deps: ServerDeps): Job<ToolResult>;
 }
 
 /** A tool that answers at once with a plain result, task extension or not. */
@@ -101,12 +104,12 @@ export function createServer(deps: ServerDeps, scope: RequestScope): McpServer {
       // Every return is cast: ToolResult and the task answer are valid wire results that the
       // SDK's CallToolResult union cannot express.
       async (input, ctx): Promise<never> => {
-        const job = tool.job(input as never, deps);
         try {
           if (!clientAllowsTasks(ctx.mcpReq.envelope)) {
+            const job = tool.inline(input as never, deps);
             return (await deps.registry.runInline(job, ctx.mcpReq.signal)) as never;
           }
-          const task = deps.registry.start(tool.name, job);
+          const task = deps.registry.start(tool.name, tool.job(input as never, deps));
           // The SDK checks every tools/call result for `content`; the task answer has none.
           return { content: [], resultType: 'task', ...wireTask(task) } as never;
         } catch (e) {
@@ -129,6 +132,19 @@ export function createServer(deps: ServerDeps, scope: RequestScope): McpServer {
     const task = deps.registry.get(taskId) ?? unknownTask(taskId);
     return { resultType: 'complete', ...wireTask(task) } as never;
   });
+
+  // The SDK lifts `inputResponses` off the params, as for a multi-round-trip retry, and drops
+  // entries that are not bare results. The values stay untrusted: each job parses its own. The
+  // extension's UpdateTaskResult is an empty acknowledgement; the client polls tasks/get.
+  server.server.setRequestHandler(
+    'tasks/update',
+    { params: TaskIdParams },
+    async ({ taskId }, ctx) => {
+      const responses = ctx.mcpReq.inputResponses ?? {};
+      if (deps.registry.update(taskId, responses) === undefined) unknownTask(taskId);
+      return { resultType: 'complete' } as never;
+    },
+  );
 
   server.server.setRequestHandler('tasks/cancel', { params: TaskIdParams }, async ({ taskId }) => {
     const task = deps.registry.cancel(taskId) ?? unknownTask(taskId);

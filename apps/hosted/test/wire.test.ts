@@ -1,13 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type HostedHandle, startHosted } from '../src/http.js';
-import { TaskRegistry } from '../src/tasks.js';
+import { type Question, TaskRegistry } from '../src/tasks.js';
 import { client, MODERN, type RpcOptions, TASKS, TOKEN } from './rpc.js';
 
 let hosted: HostedHandle;
+const registry = new TaskRegistry();
 const { rpc, getTask, pollUntil } = client(() => hosted.url);
 
 beforeAll(async () => {
-  hosted = await startHosted({ host: '127.0.0.1', port: 0, token: TOKEN, tickMs: 20 });
+  hosted = await startHosted({ host: '127.0.0.1', port: 0, token: TOKEN, tickMs: 20, registry });
 });
 
 afterAll(async () => {
@@ -122,6 +123,82 @@ describe('tasks extension', () => {
   it('rejects seconds outside 1 to 120', async () => {
     const r = await callEcho({ text: 'x', seconds: 121 });
     expect(r.body.error?.code ?? (r.body.result?.isError ? 'tool-error' : undefined)).toBeDefined();
+  });
+});
+
+const CONFIRM = {
+  method: 'elicitation/create',
+  params: {
+    mode: 'form',
+    message: 'Use this value?',
+    requestedSchema: {
+      type: 'object',
+      properties: { answer: { type: 'string', enum: ['apply', 'skip'] } },
+      required: ['answer'],
+    },
+  },
+};
+
+/** A task that asks `first` and `second`, then echoes the answers it got. */
+function startAsking(): string {
+  const question: Question = {
+    inputRequests: { first: CONFIRM, second: CONFIRM },
+    resume: (responses) => async () => ({
+      content: [{ type: 'text', text: JSON.stringify(responses) }],
+    }),
+  };
+  return registry.start('run_series', async () => question).taskId;
+}
+
+const update = (taskId: string, inputResponses: Record<string, unknown>) =>
+  rpc('tasks/update', { taskId, inputResponses }, { name: taskId });
+
+describe('input_required over the wire', () => {
+  it('shows the questions on tasks/get', async () => {
+    const taskId = startAsking();
+    const task = await pollUntil(taskId, (s) => s === 'input_required');
+    expect(task).toMatchObject({ resultType: 'complete', taskId, status: 'input_required' });
+    expect(task.inputRequests).toEqual({ first: CONFIRM, second: CONFIRM });
+    expect(task.inputRequests.first.method).toBe('elicitation/create');
+    expect(task).not.toHaveProperty('tool');
+  });
+
+  it('acknowledges tasks/update, resumes once every key is answered and completes', async () => {
+    const taskId = startAsking();
+    await pollUntil(taskId, (s) => s === 'input_required');
+    const accept = { action: 'accept', content: { answer: 'apply' } };
+    const partial = await update(taskId, { first: accept });
+    expect(partial.body).toMatchObject({ result: { resultType: 'complete' } });
+    expect(partial.body.result).not.toHaveProperty('status');
+    expect((await getTask(taskId)).body.result.status).toBe('input_required');
+    await update(taskId, { second: { action: 'decline' } });
+    const done = await pollUntil(taskId, (s) => s === 'completed');
+    expect(JSON.parse(done.result.content[0].text)).toEqual({
+      first: accept,
+      second: { action: 'decline' },
+    });
+  });
+
+  it('acknowledges tasks/update on a task that is not waiting, and changes nothing', async () => {
+    const { taskId } = (await callEcho({ text: 'busy', seconds: 100 })).body.result;
+    const r = await update(taskId, { first: { action: 'accept' } });
+    const { _meta: _server, ...ack } = r.body.result;
+    expect(ack).toEqual({ resultType: 'complete' });
+    expect((await getTask(taskId)).body.result.status).toBe('working');
+    await rpc('tasks/cancel', { taskId }, { name: taskId });
+  });
+
+  it('answers -32602 for tasks/update on an unknown task id', async () => {
+    const r = await update('ser_aaaaaaaaaaaaaaaaaaaaaaaaaa', { first: {} });
+    expect(r.body.error.code).toBe(-32602);
+  });
+
+  it('cancels a task that waits for input', async () => {
+    const taskId = startAsking();
+    await pollUntil(taskId, (s) => s === 'input_required');
+    const r = await rpc('tasks/cancel', { taskId }, { name: taskId });
+    expect(r.body.result).toMatchObject({ taskId, status: 'cancelled' });
+    expect(r.body.result).not.toHaveProperty('inputRequests');
   });
 });
 

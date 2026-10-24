@@ -4,7 +4,7 @@ import { DEMO_SERIES, loadSeries } from '../series/load.js';
 import { runInWorker } from '../series/runner.js';
 import type { ModelOutcome, SeriesFile, SeriesModel } from '../series/types.js';
 import type { ServerDeps, TaskTool } from '../server.js';
-import type { ToolResult } from '../tasks.js';
+import type { Job, ToolResult } from '../tasks.js';
 import { isFileName, type TakeRefusal } from '../uploads.js';
 
 /** Decoded bytes of every inline document together. */
@@ -146,32 +146,35 @@ export const runSeries: TaskTool<typeof Input> = {
     'conflict counts, mandatory completeness, missing mandatory attributes and the SHA-256 of ' +
     'each emitted artefact (AAS JSON, AASX, HTML sheet, gap report).',
   inputSchema: Input,
-  job: (input, deps) => {
-    const source = sourceOf(input, deps);
-    return async (ctx): Promise<ToolResult> => {
-      const asOf = deps.clock().toISOString();
-      const { category } = input;
-      const models = await modelsOf(source, deps);
-      const outcomes = await runInWorker({ models, category, asOf, read: deps.reading }, ctx);
-      const reading = deps.reading ? 'on' : 'off';
-      const summary = `${seriesSummary(outcomes)}\nAI reading: ${reading}`;
-      const origin =
-        source.kind === 'series'
-          ? { series: source.series }
-          : { documents: models.flatMap((m) => m.files.map((f) => f.name)) };
-      return {
-        content: [{ type: 'text', text: summary }],
-        // Claude Code hands the model this object, not `content`, for a task result.
-        structuredContent: {
-          summary,
-          source: source.kind,
-          ...origin,
-          category,
-          asOf,
-          reading,
-          models: outcomes,
-        },
-      };
-    };
-  },
+  job: (input, deps) => seriesJob(input, deps),
+  inline: (input, deps) => seriesJob(input, deps),
 };
+
+function seriesJob(input: Input, deps: ServerDeps): Job<ToolResult> {
+  const source = sourceOf(input, deps);
+  return async (ctx): Promise<ToolResult> => {
+    const asOf = deps.clock().toISOString();
+    const { category } = input;
+    const models = await modelsOf(source, deps);
+    const outcomes = await runInWorker({ models, category, asOf, read: deps.reading }, ctx);
+    const reading = deps.reading ? 'on' : 'off';
+    const summary = `${seriesSummary(outcomes)}\nAI reading: ${reading}`;
+    const origin =
+      source.kind === 'series'
+        ? { series: source.series }
+        : { documents: models.flatMap((m) => m.files.map((f) => f.name)) };
+    return {
+      content: [{ type: 'text', text: summary }],
+      // Claude Code hands the model this object, not `content`, for a task result.
+      structuredContent: {
+        summary,
+        source: source.kind,
+        ...origin,
+        category,
+        asOf,
+        reading,
+        models: outcomes,
+      },
+    };
+  };
+}
