@@ -41,7 +41,8 @@
   },
   "scripts": {
     "build": "tsc -b && node scripts/bundle-vendor.mjs",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "fonts:sheet": "node scripts/sheet-fonts.mjs"
   },
   "dependencies": {
     "@aas-core-works/aas-core3.0-typescript": "1.0.5",

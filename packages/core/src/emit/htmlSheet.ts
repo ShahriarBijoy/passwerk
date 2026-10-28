@@ -39,10 +39,14 @@ const T = {
   generated: { de: 'Erzeugt', en: 'Generated' },
   qr: { de: 'QR-Code der Kennung', en: 'QR code of the identifier' },
   verdict: { de: 'Prüfergebnis', en: 'Verdict' },
-  layer: { de: 'Ebene', en: 'Layer' },
+  findings: { de: 'Befunde', en: 'Findings' },
+  errors: { de: 'Fehler', en: 'Errors' },
+  warnings: { de: 'Warnungen', en: 'Warnings' },
+  error: { de: 'Fehler', en: 'Error' },
+  warning: { de: 'Warnung', en: 'Warning' },
+  passportData: { de: 'Passdaten', en: 'Passport data' },
   rule: { de: 'Regel', en: 'Rule' },
   severity: { de: 'Schwere', en: 'Severity' },
-  path: { de: 'Pfad', en: 'Path' },
   message: { de: 'Meldung', en: 'Message' },
   legalRef: { de: 'Rechtsgrundlage', en: 'Legal reference' },
   noFindings: { de: 'Keine Befunde.', en: 'No findings.' },
@@ -52,9 +56,8 @@ const T = {
   status: { de: 'Status', en: 'Status' },
   otherData: { de: 'Weitere Datenpunkte', en: 'Other data points' },
   gaps: { de: 'Offene Datenpunkte', en: 'Open data points' },
-  completeness: { de: 'Vollständigkeit', en: 'Completeness' },
-  mandatory: { de: 'Pflicht', en: 'mandatory' },
-  overall: { de: 'gesamt', en: 'overall' },
+  mandatory: { de: 'Pflichtangaben', en: 'Mandatory data' },
+  overall: { de: 'Gesamt', en: 'Overall' },
   owner: { de: 'Wer die Daten typischerweise hat', en: 'Who typically has the data' },
   bucket: { de: 'Einstufung', en: 'Bucket' },
   action: { de: 'Nächster Schritt', en: 'Next step' },
@@ -75,6 +78,12 @@ const CATEGORY: Record<BatteryCategory, LangText> = {
   EV: { de: 'Elektrofahrzeugbatterie', en: 'Electric vehicle battery' },
   LMT: { de: 'Batterie für leichte Verkehrsmittel', en: 'Light means of transport battery' },
   INDUSTRIAL_GT_2KWH: { de: 'Industriebatterie > 2 kWh', en: 'Industrial battery > 2 kWh' },
+};
+
+const VERDICT: Record<ValidationReport['verdict'], LangText> = {
+  valid: { de: 'Gültig', en: 'Valid' },
+  valid_with_warnings: { de: 'Gültig mit Warnungen', en: 'Valid with warnings' },
+  invalid: { de: 'Ungültig', en: 'Invalid' },
 };
 
 const FIELD_STATUS: Record<string, LangText> = {
@@ -104,23 +113,63 @@ export function escapeHtml(s: string): string {
 const both = (t: LangText): string =>
   `<span lang="de">${escapeHtml(t.de)}</span><span lang="en">${escapeHtml(t.en)}</span>`;
 
-function renderValue(v: unknown): string {
-  if (v === null || v === undefined) return '';
+/** A scalar becomes text; a composite becomes one `path › to › leaf` line per leaf, keys sorted. */
+function flatten(v: unknown, path: string[], out: [string, string][]): void {
+  if (v === null || v === undefined) return;
   if (Array.isArray(v)) {
-    return `<ul class="nested">${v.map((x) => `<li>${renderValue(x)}</li>`).join('')}</ul>`;
+    v.forEach((x, i) => {
+      flatten(x, [...path, `#${i + 1}`], out);
+    });
+    return;
   }
   if (typeof v === 'object') {
     const entries = Object.entries(v as Record<string, unknown>).sort(([a], [b]) =>
       a < b ? -1 : a > b ? 1 : 0,
     );
-    return `<ul class="nested">${entries
-      .map(([k, x]) => `<li><code>${escapeHtml(k)}</code>: ${renderValue(x)}</li>`)
-      .join('')}</ul>`;
+    for (const [k, x] of entries) flatten(x, [...path, k], out);
+    return;
   }
-  return escapeHtml(String(v));
+  out.push([path.join(' › '), String(v)]);
 }
 
-function attributeRows(draft: PassportDraft, part: number | null): string {
+function renderValue(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  if (typeof v !== 'object') return escapeHtml(String(v));
+  const leaves: [string, string][] = [];
+  flatten(v, [], leaves);
+  return `<dl class="kv">${leaves
+    .map(([p, x]) => `<dt>${escapeHtml(p)}</dt><dd>${escapeHtml(x)}</dd>`)
+    .join('')}</dl>`;
+}
+
+type DotTone = 'ok' | 'bad' | 'part' | 'none';
+
+/** The dot before an attribute name: green present, red wrong, amber partial, hollow absent. */
+const attrCell = (tone: DotTone, name: LangText, id: string): string =>
+  `<td class="attr"><span class="dot ${tone}" aria-hidden="true"></span><span class="n">${both(name)}</span><code>${escapeHtml(id)}</code></td>`;
+
+const FIELD_DOT: Record<string, DotTone> = { present: 'ok', conflict: 'bad' };
+const GAP_DOT: Record<string, DotTone> = { invalid: 'bad', conflict: 'bad', partial: 'part' };
+const GAP_COLS = ['gattr', 'bucket', 'legal', 'action'];
+
+/** Fixed column widths (the `w-*` classes) keep tables aligned across the groups of a section. */
+function rowsTable(cols: string[], head: LangText[] | null, rows: string[]): string {
+  const colgroup = cols.map((c) => `<col class="w-${c}">`).join('');
+  const thead =
+    head === null
+      ? ''
+      : `<thead><tr>${head.map((h) => `<th>${both(h)}</th>`).join('')}</tr></thead>`;
+  const tbody = rows.length === 0 ? '' : `<tbody>\n${rows.join('\n')}\n</tbody>`;
+  return `<table class="rows"><colgroup>${colgroup}</colgroup>${thead}${tbody}</table>`;
+}
+
+/** A foldable section, open by default: a native `<details>`, so no script is needed. */
+function group(name: string, meta: string | null, count: number, body: string): string {
+  const metaSpan = meta === null ? '' : `<span class="label">${escapeHtml(meta)}</span>`;
+  return `<details class="group" open><summary><span class="name">${name}</span>${metaSpan}<span class="label count">${count}</span></summary>${body}</details>`;
+}
+
+function attributeRows(draft: PassportDraft, part: number | null): string[] {
   const rows: string[] = [];
   for (const a of attributes) {
     if (a.part !== part) continue;
@@ -128,42 +177,40 @@ function attributeRows(draft: PassportDraft, part: number | null): string {
     if (!field || field.status === 'missing') continue;
     const unit = field.unit ?? a.unit ?? '';
     const statusText = FIELD_STATUS[field.status] ?? (FIELD_STATUS['missing'] as LangText);
+    const tag = field.status === 'conflict' ? 'label tag-bad' : 'label';
     rows.push(
-      `<tr><td>${both(a.name)}<br><code>${escapeHtml(a.id)}</code></td><td>${renderValue(field.value)}</td><td>${escapeHtml(unit)}</td><td>${both(statusText)}</td></tr>`,
+      `<tr>${attrCell(FIELD_DOT[field.status] ?? 'none', a.name, a.id)}<td class="val wide">${renderValue(field.value)}</td><td class="unit">${escapeHtml(unit)}</td><td class="${tag}">${both(statusText)}</td></tr>`,
     );
   }
-  return rows.join('\n');
+  return rows;
 }
 
 function attributeSections(draft: PassportDraft): string {
+  const table = (rows: string[]) =>
+    rowsTable(['attr', 'val', 'unit', 'status'], [T.attribute, T.value, T.unit, T.status], rows);
   const out: string[] = [];
-  const header = `<tr><th>${both(T.attribute)}</th><th>${both(T.value)}</th><th>${both(T.unit)}</th><th>${both(T.status)}</th></tr>`;
   for (const t of templates) {
     const rows = attributeRows(draft, t.part);
-    if (rows === '') continue;
+    if (rows.length === 0) continue;
     out.push(
-      `<h2>${escapeHtml(`${t.idta} ${t.version}: ${t.submodelIdShort}`)}</h2><table>${header}${rows}</table>`,
+      group(escapeHtml(t.submodelIdShort), `${t.idta} · ${t.version}`, rows.length, table(rows)),
     );
   }
   const other = attributeRows(draft, null);
-  if (other !== '') out.push(`<h2>${both(T.otherData)}</h2><table>${header}${other}</table>`);
-  return out.join('\n');
+  if (other.length > 0) out.push(group(both(T.otherData), null, other.length, table(other)));
+  return `<h2 class="section label">${both(T.passportData)}</h2>\n${out.join('\n')}`;
 }
 
 function findingsSection(report: ValidationReport): string {
-  const badge = `<span class="verdict ${report.verdict}">${escapeHtml(report.verdict)}</span>`;
-  if (report.findings.length === 0) {
-    return `<h2>${both(T.verdict)}</h2><p>${badge} ${both(T.noFindings)}</p>`;
-  }
-  const rows = report.findings
-    .map((f: Finding) => {
-      const legal = f.legalRef
-        ? `<br><small>${both(T.legalRef)}: ${escapeHtml(f.legalRef)}</small>`
-        : '';
-      return `<tr><td>${escapeHtml(f.layer)}</td><td><code>${escapeHtml(f.ruleId)}</code></td><td class="sev-${f.severity}">${escapeHtml(f.severity)}</td><td><code>${escapeHtml(f.path)}</code></td><td>${both(f.message)}${legal}</td></tr>`;
-    })
-    .join('\n');
-  return `<h2>${both(T.verdict)}</h2><p>${badge}</p><table><tr><th>${both(T.layer)}</th><th>${both(T.rule)}</th><th>${both(T.severity)}</th><th>${both(T.path)}</th><th>${both(T.message)}</th></tr>${rows}</table>`;
+  if (report.findings.length === 0) return '';
+  const rows = report.findings.map((f: Finding) => {
+    const legal = f.legalRef ? `<small>${both(T.legalRef)}: ${escapeHtml(f.legalRef)}</small>` : '';
+    const tone = f.severity === 'error' ? 'tag-bad' : 'tag-warn';
+    const severity = f.severity === 'error' ? T.error : T.warning;
+    return `<tr><td class="label ${tone}">${both(severity)} · ${escapeHtml(f.layer)}</td><td class="rule wide"><code>${escapeHtml(f.ruleId)}</code><code class="path">${escapeHtml(f.path)}</code></td><td class="msg wide">${both(f.message)}${legal}</td></tr>`;
+  });
+  const table = rowsTable(['sev', 'rule', 'msg'], [T.severity, T.rule, T.message], rows);
+  return group(both(T.findings), null, rows.length, table);
 }
 
 function gapSection(gap: GapReport): string {
@@ -174,24 +221,53 @@ function gapSection(gap: GapReport): string {
       i.status === 'invalid' ||
       i.status === 'conflict');
   const byId = new Map(gap.items.map((i) => [i.attributeId, i]));
-  const completeness = `<p>${both(T.completeness)}: ${both(T.mandatory)} ${gap.completeness.mandatory.present}/${gap.completeness.mandatory.total} (${gap.completeness.mandatory.percent} %), ${both(T.overall)} ${gap.completeness.overall.present}/${gap.completeness.overall.total} (${gap.completeness.overall.percent} %)</p>`;
   const groups: string[] = [];
+  let total = 0;
   for (const g of gap.byDataOwner) {
     const items = g.attributeIds
       .map((id) => byId.get(id))
       .filter((i): i is GapItem => !!i && open(i));
     if (items.length === 0) continue;
-    const rows = items
-      .map((i) => {
-        const bucketText = BUCKET[i.bucket] ?? (BUCKET['optional'] as LangText);
-        return `<tr><td>${both(i.name)}<br><code>${escapeHtml(i.attributeId)}</code></td><td>${both(bucketText)}</td><td>${i.legalRefs.map(escapeHtml).join('<br>')}</td><td>${both(i.suggestedAction)}</td></tr>`;
-      })
-      .join('\n');
-    groups.push(
-      `<h3>${both(g.owner)}</h3><table><tr><th>${both(T.attribute)}</th><th>${both(T.bucket)}</th><th>${both(T.legalRef)}</th><th>${both(T.action)}</th></tr>${rows}</table>`,
-    );
+    total += items.length;
+    const rows = items.map((i) => {
+      const bucketText = BUCKET[i.bucket] ?? (BUCKET['optional'] as LangText);
+      return `<tr>${attrCell(GAP_DOT[i.status] ?? 'none', i.name, i.attributeId)}<td class="label">${both(bucketText)}</td><td class="refs">${i.legalRefs.map(escapeHtml).join('<br>')}</td><td class="note wide">${both(i.suggestedAction)}</td></tr>`;
+    });
+    groups.push(group(both(g.owner), null, items.length, rowsTable(GAP_COLS, null, rows)));
   }
-  return `<h2>${both(T.gaps)}</h2>${completeness}${groups.length === 0 ? `<p>${both(T.noGaps)}</p>` : groups.join('\n')}`;
+  const heading = `<h2 class="section label"><span>${both(T.gaps)}</span><span>${total}</span></h2>`;
+  if (groups.length === 0) return `${heading}\n<p class="note">${both(T.noGaps)}</p>`;
+  // One owner usually holds one or two values, so the column heads are said once, not per group.
+  const head = rowsTable(GAP_COLS, [T.attribute, T.bucket, T.legalRef, T.action], []);
+  return `${heading}\n${head}\n${groups.join('\n')}`;
+}
+
+/** 36 discrete blocks like the workbench's SegmentedBar; the number beside it is the precision. */
+function segmentedBar(present: number, total: number): string {
+  const segments = 36;
+  const on = total > 0 ? Math.floor((Math.min(present, total) / total) * segments) : 0;
+  const cells = Array.from({ length: segments }, (_, i) =>
+    i < on ? '<i class="on"></i>' : '<i></i>',
+  );
+  return `<div class="seg" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${present}">${cells.join('')}</div>`;
+}
+
+function summarySection(report: ValidationReport, gap: GapReport): string {
+  const verdict = VERDICT[report.verdict];
+  const long = /\s/.test(verdict.de) || /\s/.test(verdict.en) ? ' long' : '';
+  const errors = report.findings.filter((f) => f.severity === 'error').length;
+  const warnings = report.findings.length - errors;
+  const tally =
+    report.findings.length === 0
+      ? `<p class="note">${both(T.noFindings)}</p>`
+      : `<p class="tally">${errors > 0 ? `<span class="label tag-bad">${both(T.errors)} ${errors}</span>` : ''}${warnings > 0 ? `<span class="label tag-warn">${both(T.warnings)} ${warnings}</span>` : ''}</p>`;
+  const meter = (label: LangText, c: GapReport['completeness']['mandatory']) =>
+    `<div class="cell"><p class="label">${both(label)}</p><p class="hero"><span class="display">${escapeHtml(String(c.percent))}</span><span class="unit">%</span></p>${segmentedBar(c.present, c.total)}<p class="label">${c.present} / ${c.total}</p></div>`;
+  return `<section class="summary">
+<div class="cell" data-verdict="${report.verdict}"><p class="label">${both(T.verdict)}</p><p class="hero"><span class="display${long}">${both(verdict)}</span></p>${tally}</div>
+${meter(T.mandatory, gap.completeness.mandatory)}
+${meter(T.overall, gap.completeness.overall)}
+</section>`;
 }
 
 function renderSheet(
@@ -215,7 +291,9 @@ function renderSheet(
     : identifier;
   const caps = listCapabilities();
   const generated =
-    options.asOf !== undefined ? `<p>${both(T.generated)}: ${escapeHtml(options.asOf)}</p>` : '';
+    options.asOf !== undefined
+      ? `<dt>${both(T.generated)}</dt><dd><code>${escapeHtml(options.asOf)}</code></dd>\n`
+      : '';
   return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -227,28 +305,29 @@ function renderSheet(
 <body>
 <input type="radio" name="lang" id="lang-de"${lang === 'de' ? ' checked' : ''}>
 <input type="radio" name="lang" id="lang-en"${lang === 'en' ? ' checked' : ''}>
-<nav class="toggle"><label for="lang-de">Deutsch</label><label for="lang-en">English</label></nav>
+<header class="bar"><span class="label">passwerk</span><nav class="toggle label"><label for="lang-de">Deutsch</label><label for="lang-en">English</label></nav></header>
 <main class="sheet">
 <header class="head">
 <div>
-<h1>${both(T.title)}</h1>
-<p>${both(T.subtitle)}</p>
+<p class="label">${both(T.title)} · IDTA 02035</p>
+<h1>${both(CATEGORY[draft.meta.category])}</h1>
 <dl class="meta">
 <dt>${both(T.identifier)}</dt><dd>${identifierLink}</dd>
-<dt>${both(T.category)}</dt><dd>${both(CATEGORY[draft.meta.category])} (<code>${escapeHtml(draft.meta.category)}</code>)</dd>
-<dt>${both(T.created)}</dt><dd>${escapeHtml(draft.meta.createdAt)}</dd>
-</dl>
+<dt>${both(T.category)}</dt><dd><code>${escapeHtml(draft.meta.category)}</code></dd>
+<dt>${both(T.created)}</dt><dd><code>${escapeHtml(draft.meta.createdAt)}</code></dd>
+${generated}</dl>
 </div>
-<figure class="qr"><figcaption>${both(T.qr)}</figcaption>${qr}</figure>
+<figure class="qr">${qr}<figcaption class="label">${both(T.qr)}</figcaption></figure>
 </header>
+${summarySection(report, gap)}
+<p class="note lede">${both(T.subtitle)}</p>
 ${findingsSection(report)}
 ${attributeSections(draft)}
 ${gapSection(gap)}
 <footer>
-<p>${both(T.notLegal)}</p>
-<p>${both(T.sources)}: ${gap.sources.map(escapeHtml).join('; ')}</p>
-<p>${both(T.kb)} ${escapeHtml(caps.artefactsRetrievedAt)}. ${both(T.generator)}.</p>
-${generated}
+<p class="note">${both(T.notLegal)}</p>
+<p class="note">${both(T.sources)}: ${gap.sources.map(escapeHtml).join('; ')}</p>
+<p class="label">${both(T.kb)} ${escapeHtml(caps.artefactsRetrievedAt)} · ${both(T.generator)}</p>
 </footer>
 </main>
 </body>

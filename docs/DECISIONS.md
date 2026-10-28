@@ -1769,3 +1769,47 @@ gap snapshot follow). Its AAS output is unchanged, so oracle parity is unaffecte
 `invalid`. The web and MCP App gaps view shows `partial` / `unvollständig` with the missing
 sub-fields in the item sheet. Leaf labels are paths, not DE/EN names: the knowledge base has no
 per-leaf labels, and we did not invent any.
+
+## D-053: The passport sheet speaks the workbench's design language (2026-10-29)
+
+**Context.** The HTML sheet (`emitHtml`, D-033) was a plain document: a system font, grey
+tables, the findings and every gap group with its own column heads, composite values as nested
+bullet lists, and at 390 px it overflowed sideways by 396 px. The workbench had meanwhile
+become the product's face (D-040). Nothing in IDTA 02035 or Regulation (EU) 2023/1542 fixes how
+a human-readable view looks; the AAS files stay the authoritative passport, so the sheet's look
+is ours to choose.
+
+**Decision.**
+
+1. **Same tokens, same idiom.** The sheet uses the workbench's light and dark colour tokens, mono
+   caps only for short labels, Doto only for the three hero values, and red only for what is
+   wrong (an invalid verdict, an error, a conflict). It follows `prefers-color-scheme` on screen
+   and always prints light. Status reads twice: a coloured dot before the attribute name and the
+   status word after it.
+2. **A summary strip first.** Under the header (category as the title, identifier, dates, QR),
+   three cells: the verdict as a word, mandatory and overall completeness as a percentage with a
+   36-block segmented bar and `present / total`. The completeness line further down is gone.
+3. **Fold without script.** Each submodel, the findings and each data owner's gaps are a native
+   `<details open>`, so the file still carries no JavaScript (D-033). Gap groups share one column
+   head under the section heading, because most owners hold one or two values.
+4. **Composite values are flat.** One `path › to › leaf` line per leaf, keys sorted, arrays as
+   `#1`, `#2`. Units keep their case (`kg`, `Ah`), and finding severities are translated.
+5. **The fonts are embedded.** `packages/core/scripts/sheet-fonts.mjs` (`pnpm --filter
+   @passwerk/core fonts:sheet`) writes `src/emit/htmlSheet.fonts.ts` from `apps/web/src/fonts`:
+   Space Grotesk, Space Mono regular and Doto as base64 `@font-face` rules, about 68 KB. Without
+   them the sheet would fall back to system fonts on nearly every machine and the dot-matrix
+   heroes would be lost. Core never imports from the web app; the generated module is committed,
+   and `emit.htmlSheet.test.ts` fails if its bytes drift from the web app's files. The
+   self-containment test now allows exactly one kind of `url()`: `data:font/woff2;base64`.
+   Snapshots replace the font data with a placeholder.
+
+**Consequences.** A sheet grows from about 45 KB to about 150 KB for the Musterwerk passport.
+Every caller (server `html` target, CLI, web and MCP App exports, hosted series) gets the new
+sheet unchanged in API; verdicts and findings are untouched, which the existing
+verdict-equals-`validate()` test keeps proving.
+
+*Open for the owner:* the OFL 1.1 asks that a redistributed font carry its copyright notice and
+licence. `apps/web/src/fonts` holds no `OFL.txt` (its `PROVENANCE.md` names the licence), and
+now `@passwerk/core` and every emitted sheet carry the fonts as well. Adding the licence text to
+the package (and a one-line notice in the sheet's CSS) is a small follow-up this change did not
+make.

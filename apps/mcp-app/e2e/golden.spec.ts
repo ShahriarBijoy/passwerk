@@ -34,7 +34,7 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
       const res = d?.contents[0]?.resource;
       expect(res?.uri).toMatch(/^passwerk:\/\/export\/.+\.html$/);
       const html = Buffer.from(res?.blob ?? '', 'base64').toString('utf8');
-      expect(html).toContain(`<span class="verdict ${expected.verdict}">`);
+      expect(html).toContain(`<div class="cell" data-verdict="${expected.verdict}">`);
       for (const f of expected.findings) expect(html).toContain(f.ruleId);
     }
   });

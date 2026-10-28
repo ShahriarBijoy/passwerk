@@ -63,7 +63,7 @@ describe('exports', () => {
     expect(readAasxEnvironment(out.files.aasx?.bytes ?? new Uint8Array())).toEqual(json);
     const html = new TextDecoder().decode(out.files.html?.bytes);
     expect(html).toContain('id="lang-de" checked');
-    expect(html).toContain('<span class="verdict valid">valid</span>');
+    expect(html).toContain('<div class="cell" data-verdict="valid">');
     expect(new TextDecoder().decode(out.files.qr?.bytes).startsWith('<svg')).toBe(true);
     expect(out.files.html?.type).toBe('text/html');
     expect(out.files.qr?.type).toBe('image/svg+xml');

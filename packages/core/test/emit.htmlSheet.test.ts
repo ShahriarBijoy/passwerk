@@ -1,7 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   BROKEN_SAMPLE_NAMES,
   brokenSamples,
   emitHtml,
+  gapReport,
+  type PassportDraft,
   type PassportDraftInput,
   samples,
   VALID_SAMPLE_NAMES,
@@ -10,6 +15,10 @@ import {
 import { describe, expect, it } from 'vitest';
 
 const AS_OF = '2026-09-06T12:00:00Z';
+
+/** The embedded fonts are proven byte for byte below; snapshots keep only the markup and CSS. */
+const withoutFonts = (html: string): string =>
+  html.replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,<font>');
 
 /** Every href / src value in the document. */
 function links(html: string): string[] {
@@ -56,8 +65,8 @@ describe('emitHtml', () => {
       expect(de.output).toContain('lang="de"');
       expect(de.output).toContain('lang="en"');
       expect(de.output).toContain('<svg');
-      expect(de.output).toMatchSnapshot();
-      expect(en.output).toMatchSnapshot();
+      expect(withoutFonts(de.output)).toMatchSnapshot();
+      expect(withoutFonts(en.output)).toMatchSnapshot();
     });
   }
   it.each([...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES])(
@@ -79,7 +88,11 @@ describe('emitHtml', () => {
     const draft = samples['ev-valid'];
     const html = emitHtml(draft).output;
     expect(html).not.toMatch(/<script/i);
-    expect(html).not.toMatch(/@import|url\(/i);
+    expect(html).not.toMatch(/@import/i);
+    // The only url() is an embedded font: nothing is fetched to render the sheet.
+    for (const m of html.matchAll(/url\(([^)]*)\)/gi)) {
+      expect(m[1]?.startsWith('data:font/woff2;base64,'), m[1]?.slice(0, 40)).toBe(true);
+    }
     expect(html).not.toContain('<link');
     for (const l of links(html)) {
       expect(l === draft.meta.passportId || l.startsWith('#'), l).toBe(true);
@@ -99,6 +112,66 @@ describe('emitHtml', () => {
     const html = emitHtml(draft).output;
     expect(html).toContain('&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;');
     expect(html).not.toContain('<b>&"x"</b>');
+  });
+  it('embeds the workbench fonts byte for byte', () => {
+    const html = emitHtml(samples['ev-valid']).output;
+    const embedded = new Map(
+      [
+        ...html.matchAll(
+          /font-family:"([^"]+)";src:url\(data:font\/woff2;base64,([A-Za-z0-9+/=]+)\)/g,
+        ),
+      ].map((m) => [m[1], m[2]]),
+    );
+    const fontDir = fileURLToPath(new URL('../../../apps/web/src/fonts/', import.meta.url));
+    const files = {
+      'Space Grotesk': 'space-grotesk.woff2',
+      'Space Mono': 'space-mono-regular.woff2',
+      Doto: 'doto.woff2',
+    };
+    expect([...embedded.keys()].sort()).toEqual(Object.keys(files).sort());
+    for (const [family, file] of Object.entries(files)) {
+      expect(embedded.get(family), family).toBe(
+        readFileSync(join(fontDir, file)).toString('base64'),
+      );
+    }
+  });
+  it('follows the reader’s colour scheme on screen and prints light', () => {
+    const html = emitHtml(samples['ev-valid']).output;
+    expect(html).toContain('@media (prefers-color-scheme:dark)');
+    expect(html).toMatch(/@media print\{:root\{[^}]*--page:#fff/);
+  });
+  it('opens with a summary strip: verdict, mandatory and overall completeness', () => {
+    const draft = samples['ev-valid'];
+    const { completeness } = gapReport(draft as PassportDraft, { report: validate(draft) });
+    const html = emitHtml(draft).output;
+    expect(html).toContain('<section class="summary">');
+    expect(html).toContain('data-verdict="valid"');
+    expect(html).toContain('<span lang="de">Gültig</span><span lang="en">Valid</span>');
+    for (const c of [completeness.mandatory, completeness.overall]) {
+      expect(html).toContain(
+        `role="progressbar" aria-valuemin="0" aria-valuemax="${c.total}" aria-valuenow="${c.present}"`,
+      );
+    }
+  });
+  it('an invalid passport says so in the summary', () => {
+    const name = BROKEN_SAMPLE_NAMES.find(
+      (n) => validate(brokenSamples[n].draft).verdict === 'invalid',
+    );
+    if (!name) throw new Error('no invalid broken sample');
+    const html = emitHtml(brokenSamples[name].draft).output;
+    expect(html).toContain('data-verdict="invalid"');
+    expect(html).toContain('<span lang="de">Ungültig</span><span lang="en">Invalid</span>');
+  });
+  it('each submodel is a section a reader can fold without script', () => {
+    const html = emitHtml(samples['ev-valid']).output;
+    expect(html).toMatch(
+      /<details class="group" open><summary><span class="name">BatteryNameplate<\/span><span class="label">IDTA 02035-1 · 1\.0<\/span><span class="label count">\d+<\/span><\/summary>/,
+    );
+  });
+  it('flattens a composite value into one path per leaf', () => {
+    const html = emitHtml(samples['ev-valid']).output;
+    expect(html).toMatch(/<dl class="kv"><dt>address › cityTown<\/dt><dd>[^<]+<\/dd>/);
+    expect(html).not.toContain('class="nested"');
   });
   it('prints no time without asOf and is byte-identical across runs', () => {
     const a = emitHtml(samples['industrial-valid']).output;

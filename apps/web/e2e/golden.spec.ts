@@ -42,7 +42,7 @@ for (const name of [...VALID_SAMPLE_NAMES, ...BROKEN_SAMPLE_NAMES]) {
       ]);
       const html = await download.path().then((p) => (p ? readFileSync(p, 'utf8') : ''));
       expect(download.suggestedFilename()).toMatch(/\.html$/);
-      expect(html).toContain(`<span class="verdict ${expected.verdict}">`);
+      expect(html).toContain(`<div class="cell" data-verdict="${expected.verdict}">`);
       for (const f of expected.findings) expect(html).toContain(f.ruleId);
     }
   });
